@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/source"
 )
 
@@ -37,7 +37,7 @@ func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Sou
 	return &s, nil
 }
 
-func (s *Subscriber) Subscribe(ctx context.Context, events chan *events.Event) error {
+func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) error {
 	for {
 			select {
 			case <-s.done:
