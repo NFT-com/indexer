@@ -1,8 +1,9 @@
 package block
 
 import (
-	"github.com/NFT-com/indexer/events"
 	"golang.org/x/net/context"
+
+	"github.com/NFT-com/indexer/events"
 )
 
 type Block struct {
