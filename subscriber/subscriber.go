@@ -24,7 +24,7 @@ type Subscriber struct {
 	parser        block.Parser
 }
 
-func NewSubscriber(log zerolog.Logger, parser block.Parser, sources ...source.Source) (*Subscriber, error) {
+func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Source) (*Subscriber, error) {
 	s := &Subscriber{
 		log:           log.With().Str("component", "subscriber").Logger(),
 		currentSource: 0,

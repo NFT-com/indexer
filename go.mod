@@ -7,6 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.15
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/pflag v1.0.5
+	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 )
 
 require (

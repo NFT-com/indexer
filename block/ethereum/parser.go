@@ -2,12 +2,11 @@ package ethereum
 
 import (
 	"context"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-	
+
 	"github.com/NFT-com/indexer/block"
 	"github.com/NFT-com/indexer/contracts"
 	"github.com/NFT-com/indexer/events"
@@ -17,10 +16,10 @@ type Parser struct {
 	log zerolog.Logger
 
 	client   *ethclient.Client
-	contract contracts.Contract
+	contract *contracts.Contract
 }
 
-func NewParser(log zerolog.Logger, client *ethclient.Client, contract contracts.Contract) *Parser {
+func NewParser(log zerolog.Logger, client *ethclient.Client, contract *contracts.Contract) *Parser {
 	return &Parser{
 		log:      log.With().Str("component", "parser").Logger(),
 		client:   client,
@@ -47,7 +46,7 @@ func (p *Parser) ParseBlock(ctx context.Context, block *block.Block) ([]events.E
 
 		event, err := p.contract.ParseEvent(ctx, l)
 		if err != nil {
-			p.log.Error().Err(err).Str("address", l.Address.Hex()).Msg("could not parse event")
+			//p.log.Error().Err(err).Str("address", l.Address.Hex()).Msg("could not parse event")
 			continue
 		}
 

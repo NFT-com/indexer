@@ -13,13 +13,15 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	ethParser "github.com/NFT-com/indexer/block/ethereum"
 	"github.com/NFT-com/indexer/contracts"
 	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/parse/cryptokitties"
 	"github.com/NFT-com/indexer/parse/opensea"
+	"github.com/NFT-com/indexer/source"
+	ethSource "github.com/NFT-com/indexer/source/ethereum"
 	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/subscriber"
-	"github.com/NFT-com/indexer/subscriber/ethereum"
 )
 
 func main() {
@@ -47,7 +49,7 @@ func run() error {
 
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
 	pflag.Int64VarP(&flagEndHeight, "end", "e", 0, "height at which to stop indexing")
-	pflag.StringVarP(&flagLogLevel, "log-level", "-l", "info", "log level")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 
 	pflag.Parse()
 
@@ -76,19 +78,43 @@ func run() error {
 	}
 
 	manager := contracts.New(log, client, contractStore)
+	parser := ethParser.NewParser(log, client, manager)
 
 	// FIXME: Handle hybrid subscribing (historical + live) instead of one at a time.
-	var subs subscriber.Subscriber
+	sources := make([]source.Source, 0, 2)
+
 	switch {
 	case flagStartHeight == 0 && flagEndHeight == 0:
-		liveSub := ethereum.NewLive(log, client, manager)
+		live, err := ethSource.NewLive(ctx, log, client)
+		if err != nil {
+			return err
+		}
 
-		subs = liveSub
+		sources = append(sources, live)
+	case flagStartHeight != 0 && flagEndHeight == 0:
+		historical, err := ethSource.NewHistorical(ctx, log, client, flagStartHeight, flagEndHeight)
+		if err != nil {
+			return err
+		}
 
-	default:
-		historicalSub := ethereum.NewHistorical(log, client, manager, flagStartHeight, flagEndHeight)
+		live, err := ethSource.NewLive(ctx, log, client)
+		if err != nil {
+			return err
+		}
 
-		subs = historicalSub
+		sources = append(sources, historical, live)
+	case flagEndHeight != 0:
+		historical, err := ethSource.NewHistorical(ctx, log, client, flagStartHeight, flagEndHeight)
+		if err != nil {
+			return err
+		}
+
+		sources = append(sources, historical)
+	}
+
+	subs, err := subscriber.NewSubscriber(log, parser, sources)
+	if err != nil {
+		return err
 	}
 
 	failed := make(chan error)

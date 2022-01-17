@@ -52,7 +52,6 @@ func (s *LiveSource) Next() *block.Block {
 }
 
 func (s *LiveSource) Close() error {
-	close(s.headers)
 	close(s.done)
 	return nil
 }
