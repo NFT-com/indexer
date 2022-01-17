@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/parse"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
@@ -16,6 +15,7 @@ import (
 	ethParser "github.com/NFT-com/indexer/block/ethereum"
 	"github.com/NFT-com/indexer/contracts"
 	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/parse"
 	"github.com/NFT-com/indexer/parse/cryptokitties"
 	"github.com/NFT-com/indexer/parse/opensea"
 	"github.com/NFT-com/indexer/source"
