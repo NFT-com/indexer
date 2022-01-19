@@ -12,17 +12,20 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	ethParser "github.com/NFT-com/indexer/block/ethereum"
 	"github.com/NFT-com/indexer/contracts"
 	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/parse"
 	"github.com/NFT-com/indexer/parse/cryptokitties"
+	ethParse "github.com/NFT-com/indexer/parse/ethereum"
 	"github.com/NFT-com/indexer/parse/opensea"
 	"github.com/NFT-com/indexer/source"
-	ethSource "github.com/NFT-com/indexer/source/ethereum"
+	"github.com/NFT-com/indexer/source/ethereum"
 	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/subscriber"
 )
+
+// FIXME: ethParse no longer needs an alias once we remove the test code which
+//        currently imports the parse package.
 
 func main() {
 	if err := run(); err != nil {
@@ -78,38 +81,28 @@ func run() error {
 	}
 
 	manager := contracts.New(log, client, contractStore)
-	parser := ethParser.NewParser(log, client, manager)
+	parser := ethParse.NewParser(log, client, manager)
 
-	// FIXME: Handle hybrid subscribing (historical + live) instead of one at a time.
-	sources := make([]source.Source, 0, 2)
-
-	switch {
-	case flagStartHeight == 0 && flagEndHeight == 0:
-		live, err := ethSource.NewLive(ctx, log, client)
-		if err != nil {
-			return err
-		}
-
-		sources = append(sources, live)
-	case flagStartHeight != 0 && flagEndHeight == 0:
-		historical, err := ethSource.NewHistorical(ctx, log, client, flagStartHeight, flagEndHeight)
-		if err != nil {
-			return err
-		}
-
-		live, err := ethSource.NewLive(ctx, log, client)
-		if err != nil {
-			return err
-		}
-
-		sources = append(sources, historical, live)
-	case flagEndHeight != 0:
-		historical, err := ethSource.NewHistorical(ctx, log, client, flagStartHeight, flagEndHeight)
+	// TODO: Currently, we omit the case where start height is 0 and end height is non-zero,
+	//       since this use-case (indexing part of the historical data from the beginning)
+	//       is not yet relevant. It can be handled later if it becomes so.
+	//       See https://github.com/NFT-com/indexer/issues/3.
+	var sources []source.Source
+	if flagStartHeight != 0 {
+		historical, err := ethereum.NewHistorical(ctx, log, client, flagStartHeight, flagEndHeight)
 		if err != nil {
 			return err
 		}
 
 		sources = append(sources, historical)
+	}
+	if flagEndHeight == 0 {
+		live, err := ethereum.NewLive(ctx, log, client)
+		if err != nil {
+			return err
+		}
+
+		sources = append(sources, live)
 	}
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)

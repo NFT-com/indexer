@@ -3,11 +3,10 @@ package ethereum
 import (
 	"context"
 
+	"github.com/NFT-com/indexer/parse"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-
-	"github.com/NFT-com/indexer/block"
 )
 
 type LiveSource struct {
@@ -36,16 +35,18 @@ func NewLive(ctx context.Context, log zerolog.Logger, client *ethclient.Client) 
 	return &l, nil
 }
 
-func (s *LiveSource) Next() *block.Block {
+func (s *LiveSource) Next() *parse.Block {
 	select {
 	case header := <-s.headers:
-		b := &block.Block{
-			Hash: header.Hash().Hex(),
-		}
+		b := parse.Block(header.Hash().Hex())
+		return &b
 
-		return b
 	case err := <-s.done:
-		s.log.Error().Err(err).Msg("failed to subscribe to header")
+		if err != nil {
+			s.log.Error().Err(err).Msg("could not subscribe to header")
+			break
+		}
+		s.log.Info().Msg("gracefully stopped")
 	}
 
 	return nil

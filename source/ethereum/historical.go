@@ -5,10 +5,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/NFT-com/indexer/parse"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-
-	"github.com/NFT-com/indexer/block"
 )
 
 type HistoricalSource struct {
@@ -29,7 +28,7 @@ func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Cl
 
 	latestHeader, err := client.HeaderByNumber(ctx, nil)
 	if err != nil {
-		h.log.Error().Err(err).Msg("failed to get latest block header")
+		h.log.Error().Err(err).Msg("could not get latest block header")
 		return nil, err
 	}
 
@@ -40,22 +39,20 @@ func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Cl
 	return &h, nil
 }
 
-func (s *HistoricalSource) Next() *block.Block {
+func (s *HistoricalSource) Next() *parse.Block {
 	// FIXME: Should this be here? Or Next should take the ctx?
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
 	header, err := s.client.HeaderByNumber(ctx, big.NewInt(s.nextIndex))
 	if err != nil {
-		s.log.Error().Err(err).Int64("header", s.nextIndex).Msg("failed to get block header")
+		s.log.Error().Err(err).Int64("header", s.nextIndex).Msg("could not get block header")
 		return nil
 	}
 
 	s.nextIndex++
-	b := &block.Block{
-		Hash: header.Hash().Hex(),
-	}
-	return b
+	b := parse.Block(header.Hash().Hex())
+	return &b
 }
 
 func (s *HistoricalSource) Close() error {

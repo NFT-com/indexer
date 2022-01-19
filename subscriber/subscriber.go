@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NFT-com/indexer/parse"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/block"
 	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/source"
 )
@@ -21,38 +21,37 @@ type Subscriber struct {
 
 	currentSource int
 	sources       []source.Source
-	parser        block.Parser
+	parser        parse.BlockParser
 }
 
-func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Source) (*Subscriber, error) {
-	s := &Subscriber{
+func NewSubscriber(log zerolog.Logger, parser parse.BlockParser, sources []source.Source) (*Subscriber, error) {
+	// FIXME: Sanitize input?
+	if len(sources) == 0 {
+		return nil, errors.New("invalid sources amount")
+	}
+
+	s := Subscriber{
 		log:           log.With().Str("component", "subscriber").Logger(),
 		currentSource: 0,
 		sources:       sources,
 		parser:        parser,
 	}
 
-	// FIXME: Sanitize input?
-	if len(sources) == 0 {
-		return nil, errors.New("invalid sources amount")
-	}
-
-	return s, nil
+	return &s, nil
 }
 
 func (s *Subscriber) Subscribe(ctx context.Context, events chan events.Event) error {
-loop:
 	for {
 		nextBlock := s.sources[s.currentSource].Next()
 		if nextBlock == nil {
 			s.currentSource++
 
 			if len(s.sources) >= s.currentSource {
-				break loop
+				return nil
 			}
 		}
 
-		blockEvents, err := s.parser.ParseBlock(ctx, nextBlock)
+		blockEvents, err := s.parser.Parse(ctx, nextBlock)
 		if err != nil {
 			s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
 		}
@@ -61,15 +60,13 @@ loop:
 			events <- event
 		}
 	}
-
-	return nil
 }
 
 func (s *Subscriber) Close() error {
 	for _, sc := range s.sources {
 		err := sc.Close()
 		if err != nil {
-			s.log.Error().Err(err).Msg("failed to close source")
+			s.log.Error().Err(err).Msg("could not close source")
 		}
 	}
 	return nil
