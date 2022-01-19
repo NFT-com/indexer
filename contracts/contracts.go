@@ -18,13 +18,6 @@ import (
 	"github.com/NFT-com/indexer/store"
 )
 
-const (
-	TopicTransfer       = "Transfer"
-	TopicTransferSingle = "TransferSingle"
-	TopicTransferBatch  = "TransferBatch"
-	TopicURI            = "URI"
-)
-
 type Contract struct {
 	log zerolog.Logger
 
