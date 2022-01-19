@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
