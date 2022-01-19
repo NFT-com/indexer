@@ -18,7 +18,7 @@ import (
 func dispatch(nodeURL string) {
 	client, err := ethclient.Dial(nodeURL)
 	if err != nil {
-		log.Println("failed to connect to node", err)
+		log.Println("could not connect to node", err)
 		os.Exit(1)
 	}
 
