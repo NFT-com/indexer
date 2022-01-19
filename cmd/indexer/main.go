@@ -7,17 +7,13 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
 	"github.com/NFT-com/indexer/contracts"
 	"github.com/NFT-com/indexer/events"
-	"github.com/NFT-com/indexer/parse"
-	"github.com/NFT-com/indexer/parse/cryptokitties"
 	ethParse "github.com/NFT-com/indexer/parse/ethereum"
-	"github.com/NFT-com/indexer/parse/opensea"
 	"github.com/NFT-com/indexer/source"
 	"github.com/NFT-com/indexer/source/ethereum"
 	"github.com/NFT-com/indexer/store"
@@ -127,36 +123,6 @@ func run() error {
 			event := <-eventChannel
 
 			log.Info().Interface("event", event).Msg("received")
-
-			// FIXME this code is just for testing purposes
-			switch ev := event.(type) {
-			case *events.Transfer:
-				if ev.Address == common.HexToAddress("0x06012c8cf97bead5deae237070f9587f8e7a266d") {
-					nft := parse.NFT{
-						ID:      int64(ev.NftID),
-						Address: ev.Address.Hex(),
-						Chain:   ev.Chain(),
-						Network: ev.Network(),
-					}
-
-					err = cryptokitties.Handler(client)(ctx, nft)
-					if err != nil {
-						log.Error().Err(err).Msg("could not handle CryptoKitties event")
-					}
-				}
-			case *events.OrdersMatched:
-				nft := parse.NFT{
-					ID:      int64(ev.Price),
-					Address: ev.Address.Hex(),
-					Chain:   ev.Chain(),
-					Network: ev.Network(),
-				}
-
-				err = opensea.Handler(client)(ctx, nft)
-				if err != nil {
-					log.Error().Err(err).Msg("could not handle OpenSea event")
-				}
-			}
 		}
 	}()
 
