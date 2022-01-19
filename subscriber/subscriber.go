@@ -3,6 +3,7 @@ package subscriber
 import (
 	"context"
 	"errors"
+
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
@@ -38,7 +39,6 @@ func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Sou
 
 func (s *Subscriber) Subscribe(ctx context.Context, events chan *events.Event) error {
 	for {
-		for {
 			select {
 			case <-s.done:
 				return nil
@@ -64,7 +64,6 @@ func (s *Subscriber) Subscribe(ctx context.Context, events chan *events.Event) e
 					events <- event
 				}
 			}
-		}
 	}
 }
 
