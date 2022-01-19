@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
 	"github.com/NFT-com/indexer/subscriber"
@@ -98,7 +98,7 @@ func run() error {
 
 	failed := make(chan error)
 	done := make(chan struct{})
-	eventChannel := make(chan *events.Event)
+	eventChannel := make(chan *event.Event)
 	go func() {
 		log.Info().Msg("Launching subscriber")
 		if err := subs.Subscribe(ctx, eventChannel); err != nil {
