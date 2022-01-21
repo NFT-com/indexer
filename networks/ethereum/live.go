@@ -49,7 +49,7 @@ func (s *LiveSource) Next(ctx context.Context) *block.Block {
 		}
 		s.log.Info().Msg("gracefully stopped")
 	case <-ctx.Done():
-		s.log.Info().Msg("context closed stopped")
+		s.log.Info().Msg("interrupted")
 	}
 
 	return nil

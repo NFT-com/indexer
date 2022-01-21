@@ -17,11 +17,6 @@ import (
 	"github.com/NFT-com/indexer/subscriber"
 )
 
-const (
-	EthereumNetwork = "ETH"
-	MainnetChain    = "mainnet"
-)
-
 func main() {
 	if err := run(); err != nil {
 		fmt.Printf("failure: %v\n", err)
@@ -93,7 +88,7 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser := ethereum.NewParser(log, client, EthereumNetwork, MainnetChain)
+	parser := ethereum.NewParser(log, client, ethereum.EthereumNetwork, ethereum.MainnetChain)
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {

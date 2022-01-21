@@ -2,7 +2,7 @@ package ethereum
 
 import (
 	"context"
-	
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -10,6 +10,11 @@ import (
 
 	"github.com/NFT-com/indexer/block"
 	"github.com/NFT-com/indexer/events"
+)
+
+const (
+	EthereumNetwork = "Ethereum"
+	MainnetChain    = "mainnet"
 )
 
 type Parser struct {
