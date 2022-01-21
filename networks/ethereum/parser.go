@@ -2,7 +2,6 @@ package ethereum
 
 import (
 	"context"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -35,8 +34,18 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 	hash := common.HexToHash(block.String())
 	outEvents := make([]*events.Event, 0, 64)
 
-	// FIXME: Filter by address/topic as well, to fetch only relevant data and speed up the parsing process.
-	logs, err := p.client.FilterLogs(ctx, ethereum.FilterQuery{BlockHash: &hash})
+	query := ethereum.FilterQuery{
+		BlockHash: &hash,
+		Topics: [][]common.Hash{
+			{
+				TopicHash(TopicTransfer),
+				TopicHash(TopicTransferSingle),
+				TopicHash(TopicTransferBatch),
+				TopicHash(TopicURI),
+			},
+		},
+	}
+	logs, err := p.client.FilterLogs(ctx, query)
 	if err != nil {
 		return nil, err
 	}
