@@ -2,10 +2,12 @@ package ethereum
 
 import (
 	"context"
-	"github.com/NFT-com/indexer/block"
+	"math/big"
+	
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-	"math/big"
+
+	"github.com/NFT-com/indexer/block"
 )
 
 type HistoricalSource struct {

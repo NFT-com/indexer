@@ -3,10 +3,11 @@ package ethereum
 import (
 	"context"
 
-	"github.com/NFT-com/indexer/block"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
+
+	"github.com/NFT-com/indexer/block"
 )
 
 type LiveSource struct {

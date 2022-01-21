@@ -57,7 +57,7 @@ func (s *Subscriber) Subscribe(ctx context.Context, events chan *events.Event) e
 
 				blockEvents, err := s.parser.Parse(ctx, nextBlock)
 				if err != nil {
-					s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not block header")
+					s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
 					continue
 				}
 
