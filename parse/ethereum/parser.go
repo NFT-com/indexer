@@ -35,8 +35,18 @@ func (p *Parser) Parse(ctx context.Context, block *parse.Block) ([]events.Event,
 	logger := p.log.With().Str("block_hash", block.String()).Logger()
 	outEvents := make([]events.Event, 0, 64)
 
-	// FIXME: Filter by address/topic as well, to fetch only relevant data and speed up the parsing process.
-	logs, err := p.client.FilterLogs(ctx, ethereum.FilterQuery{BlockHash: &hash})
+	query := ethereum.FilterQuery{
+		BlockHash: &hash,
+		Topics: [][]common.Hash{
+			{
+				contracts.TopicHash(contracts.TopicTransfer),
+				contracts.TopicHash(contracts.TopicTransferSingle),
+				contracts.TopicHash(contracts.TopicTransferBatch),
+				contracts.TopicHash(contracts.TopicURI),
+			},
+		},
+	}
+	logs, err := p.client.FilterLogs(ctx, query)
 	if err != nil {
 		// FIXME: Should we stop the subscriber in this case?
 		logger.Error().Err(err).Msg("could not filter ethereum client logs")
