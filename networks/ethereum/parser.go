@@ -3,7 +3,6 @@ package ethereum
 import (
 	"context"
 
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
@@ -38,7 +37,7 @@ func NewParser(log zerolog.Logger, client *ethclient.Client, network string, cha
 
 func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event, error) {
 	hash := common.HexToHash(block.String())
-	outEvents := make([]*events.Event, 0, 64)
+	evts := make([]*events.Event, 0, 64)
 
 	query := ethereum.FilterQuery{
 		BlockHash: &hash,
@@ -69,8 +68,8 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 			Data:            l.Data,
 		}
 
-		outEvents = append(outEvents, &event)
+		evts = append(evts, &event)
 	}
 
-	return outEvents, nil
+	return evts, nil
 }
