@@ -3,7 +3,7 @@ package block
 import (
 	"golang.org/x/net/context"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 )
 
 type Block string
@@ -13,5 +13,5 @@ func (b *Block) String() string {
 }
 
 type Parser interface {
-	Parse(ctx context.Context, block *Block) ([]*events.Event, error)
+	Parse(ctx context.Context, block *Block) ([]*event.Event, error)
 }

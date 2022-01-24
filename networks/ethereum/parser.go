@@ -10,12 +10,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
-	"github.com/NFT-com/indexer/events"
-)
-
-const (
-	EthereumNetwork = "Ethereum"
-	MainnetChain    = "mainnet"
+	"github.com/NFT-com/indexer/event"
 )
 
 type Parser struct {

@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/NFT-com/indexer/dispatch/local"
+	"github.com/NFT-com/indexer/function"
 	"os"
 	"os/signal"
 	"time"
@@ -47,10 +49,12 @@ func run() error {
 
 	pflag.Parse()
 
-	if len(os.Args) < 2 {
-		return fmt.Errorf("required argument: <node_url>")
+	if len(os.Args) < 4 {
+		return fmt.Errorf("required argument: <node_url> <network> <chain>")
 	}
 	nodeURL := os.Args[1]
+	network := os.Args[2]
+	chain := os.Args[3]
 
 	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
@@ -88,7 +92,8 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser := ethereum.NewParser(log, client, ethereum.EthereumNetwork, ethereum.MainnetChain)
+	parser := ethereum.NewParser(log, client, network, chain)
+	dispatcher := local.New("http://127.0.0.1:8081/%s")
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {
@@ -109,9 +114,15 @@ func run() error {
 
 	go func() {
 		for {
-			event := <-eventChannel
-
-			log.Info().Interface("event", event).Msg("received")
+			select {
+			case e := <-eventChannel:
+				functionName := function.Name(e.Network, e.Chain, "")
+				if err := dispatcher.Dispatch(functionName, e); err != nil {
+					log.Error().Err(err).Str("function", functionName).Str("event", e.ID).Msg("failed to dispatch event")
+				}
+			case <-done:
+				return
+			}
 		}
 	}()
 
