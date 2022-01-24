@@ -3,10 +3,11 @@ package ethereum
 import (
 	"context"
 
-	"github.com/NFT-com/indexer/parse"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
+
+	"github.com/NFT-com/indexer/block"
 )
 
 type LiveSource struct {
@@ -35,10 +36,10 @@ func NewLive(ctx context.Context, log zerolog.Logger, client *ethclient.Client) 
 	return &l, nil
 }
 
-func (s *LiveSource) Next() *parse.Block {
+func (s *LiveSource) Next(ctx context.Context) *block.Block {
 	select {
 	case header := <-s.headers:
-		b := parse.Block(header.Hash().Hex())
+		b := block.Block(header.Hash().Hex())
 		return &b
 
 	case err := <-s.done:
@@ -47,6 +48,8 @@ func (s *LiveSource) Next() *parse.Block {
 			break
 		}
 		s.log.Info().Msg("gracefully stopped")
+	case <-ctx.Done():
+		s.log.Info().Msg("interrupted")
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-package parse
+package block
 
 import (
 	"golang.org/x/net/context"
@@ -12,6 +12,6 @@ func (b *Block) String() string {
 	return string(*b)
 }
 
-type BlockParser interface {
-	Parse(ctx context.Context, block *Block) ([]events.Event, error)
+type Parser interface {
+	Parse(ctx context.Context, block *Block) ([]*events.Event, error)
 }

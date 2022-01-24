@@ -11,17 +11,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/contracts"
 	"github.com/NFT-com/indexer/events"
-	ethParse "github.com/NFT-com/indexer/parse/ethereum"
+	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
-	"github.com/NFT-com/indexer/source/ethereum"
-	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/subscriber"
 )
-
-// FIXME: ethParse no longer needs an alias once we remove the test code which
-//        currently imports the parse package.
 
 func main() {
 	if err := run(); err != nil {
@@ -33,7 +27,8 @@ func main() {
 }
 
 func run() error {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
@@ -71,14 +66,6 @@ func run() error {
 		return err
 	}
 
-	contractStore, err := store.NewMockStore()
-	if err != nil {
-		return err
-	}
-
-	manager := contracts.New(log, client, contractStore)
-	parser := ethParse.NewParser(log, client, manager)
-
 	// TODO: Currently, we omit the case where start height is 0 and end height is non-zero,
 	//       since this use-case (indexing part of the historical data from the beginning)
 	//       is not yet relevant. It can be handled later if it becomes so.
@@ -101,6 +88,8 @@ func run() error {
 		sources = append(sources, live)
 	}
 
+	parser := ethereum.NewParser(log, client, ethereum.EthereumNetwork, ethereum.MainnetChain)
+
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {
 		return err
@@ -108,7 +97,7 @@ func run() error {
 
 	failed := make(chan error)
 	done := make(chan struct{})
-	eventChannel := make(chan events.Event)
+	eventChannel := make(chan *events.Event)
 	go func() {
 		log.Info().Msg("Launching subscriber")
 		if err := subs.Subscribe(ctx, eventChannel); err != nil {

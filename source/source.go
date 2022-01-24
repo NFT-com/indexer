@@ -1,10 +1,12 @@
 package source
 
 import (
-	"github.com/NFT-com/indexer/parse"
+	"context"
+
+	"github.com/NFT-com/indexer/block"
 )
 
 type Source interface {
-	Next() *parse.Block
+	Next(ctx context.Context) *block.Block
 	Close() error
 }
