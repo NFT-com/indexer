@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/NFT-com/indexer/dispatch/local"
-	"github.com/NFT-com/indexer/function"
 	"os"
 	"os/signal"
 	"time"
@@ -14,6 +12,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/dispatch/local"
+	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
 	"github.com/NFT-com/indexer/subscriber"

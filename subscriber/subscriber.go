@@ -60,8 +60,8 @@ func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) er
 					continue
 				}
 
-				for _, event := range blockEvents {
-					events <- event
+				for _, e := range blockEvents {
+					events <- e
 				}
 			}
 	}
