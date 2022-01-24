@@ -32,9 +32,8 @@ func NewParser(log zerolog.Logger, client *ethclient.Client, network string, cha
 	return &p
 }
 
-func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event, error) {
-	blockHash := common.HexToHash(block.String())
-	evts := make([]*events.Event, 0, 64)
+func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event, error) {
+	hash := common.HexToHash(block.String())
 
 	query := ethereum.FilterQuery{
 		BlockHash: &blockHash,
@@ -52,6 +51,7 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 		return nil, err
 	}
 
+	evts := make([]*event.Event, 0, 64)
 	for _, l := range logs {
 		eventJson, err := l.MarshalJSON()
 		if err != nil {
@@ -72,7 +72,7 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 			Data:            l.Data,
 		}
 
-		evts = append(evts, &event)
+		evts = append(evts, &e)
 	}
 
 	return evts, nil
