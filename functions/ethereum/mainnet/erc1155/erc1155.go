@@ -1,21 +1,29 @@
-package erc721
+package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/NFT-com/indexer/store/mock"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-
 	"github.com/NFT-com/indexer/event"
-	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
 )
 
 const (
-	Name              = "Ethereum-mainnet-erc721"
-	transferEventName = "Transfer"
+	transferSingleEventName = "TransferSingle"
+	transferBatchEventName  = "TransferBatch"
+	uriEventName            = "URI"
 )
+
+func main() {
+	store := mock.New()
+	handler := New(store)
+
+	lambda.Start(handler.Handle)
+}
 
 type Handler struct {
 	store store.Storer
@@ -45,21 +53,24 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 		return err
 	}
 
-	if abiEvent.Name != transferEventName {
-		// We only care about transfer events, for now approve event is not worth unpack or saving
+	switch abiEvent.Name {
+	case transferSingleEventName:
+		// FIXME: Do the transfer single
+	case transferBatchEventName:
+		// FIXME: Do the transfer batch
+	case uriEventName:
+		// FIXME: Do the uri
+	default:
+		// We only care about the above events, for now other event is not worth unpack or saving
 		return nil
 	}
 
-	if len(e.IndexedData) != 3 {
-		// This needs to have from, to and id fields
-		return nil
+	data, err := abiEvent.Inputs.Unpack(e.Data)
+	if err != nil {
+		return err
 	}
 
-	var (
-		from = e.IndexedData[0]
-		to   = e.IndexedData[1]
-		id   = e.IndexedData[2].Big()
-	)
+	fmt.Println(data)
 
 	parsedEvent := event.ParsedEVent{
 		ID:              e.ID,
@@ -73,23 +84,6 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 
 	if err := h.store.SaveEvent(ctx, &parsedEvent); err != nil {
 		return err
-	}
-
-	if from == common.HexToHash("") {
-		// FIXME: GET METADATA
-
-		storeNFT := nft.NFT{
-			ID:       id.String(),
-			Network:  e.Network,
-			Chain:    e.Chain,
-			Contract: e.Address.Hex(),
-			Owner:    to.Hex(),
-			// FIXME: DATA
-		}
-
-		if err := h.store.SaveNFT(ctx, &storeNFT); err != nil {
-			return err
-		}
 	}
 
 	return nil

@@ -7,15 +7,21 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	dispatcher "github.com/NFT-com/indexer/dispatch/aws"
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/dispatch/local"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
+	"github.com/NFT-com/indexer/store/mock"
 	"github.com/NFT-com/indexer/subscriber"
 )
 
@@ -93,12 +99,23 @@ func run() error {
 	}
 
 	parser := ethereum.NewParser(log, client, network, chain)
-	dispatcher := local.New("http://127.0.0.1:8081/%s")
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {
 		return err
 	}
+
+	// FIXME: Update to handle not only local
+	sess := session.Must(session.NewSession(&aws.Config{
+		Credentials: credentials.AnonymousCredentials,
+		Region:      aws.String("us-west-2"),
+	}))
+
+	lambdaClient := lambda.New(sess, &aws.Config{
+		Endpoint: aws.String("http://127.0.0.1:3001"),
+	})
+
+	dispatcher := dispatcher.New(lambdaClient, mock.New())
 
 	failed := make(chan error)
 	done := make(chan struct{})
@@ -116,9 +133,9 @@ func run() error {
 		for {
 			select {
 			case e := <-eventChannel:
-				functionName := function.Name(e.Network, e.Chain, "")
-				if err := dispatcher.Dispatch(functionName, e); err != nil {
-					log.Error().Err(err).Str("function", functionName).Str("event", e.ID).Msg("failed to dispatch event")
+				log.Info().Interface("event", e).Msg("received")
+				if err := dispatcher.Dispatch(ctx, e); err != nil {
+					//log.Error().Err(err).Str("event", e.ID).Msg("failed to dispatch event")
 				}
 			case <-done:
 				return

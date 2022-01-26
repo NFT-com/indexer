@@ -1,4 +1,4 @@
-package function
+package functions
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 
 func Name(network, chain, custom string) string {
 	if custom == "" {
-		return network + "-" + chain
+		return network + chain
 	}
 
-	return network + "-" + chain + "-" + custom
+	return network + chain + custom
 }
 
 type Function func(ctx context.Context, event *event.Event) error

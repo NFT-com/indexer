@@ -1,7 +1,11 @@
 package dispatch
 
-import "github.com/NFT-com/indexer/event"
+import (
+	"context"
+
+	"github.com/NFT-com/indexer/event"
+)
 
 type Dispatcher interface {
-	Dispatch(function string, event *event.Event) error
+	Dispatch(ctx context.Context, event *event.Event) error
 }

@@ -22,5 +22,5 @@ type ParsedEVent struct {
 	TransactionHash string `json:"transaction_hash"`
 	Address         string `json:"address"`
 	Type            string `json:"type"`
-	// TODO: DATA
+	Data            map[string]interface{}
 }

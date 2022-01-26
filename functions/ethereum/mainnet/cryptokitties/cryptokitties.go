@@ -1,21 +1,26 @@
-package erc1155
+package main
 
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"strings"
-
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/store"
+	"github.com/NFT-com/indexer/store/mock"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"strings"
 )
 
 const (
-	Name                    = "Ethereum-mainnet-erc1155"
-	transferSingleEventName = "TransferSingle"
-	transferBatchEventName  = "TransferBatch"
-	uriEventName            = "URI"
+	transferEventName = "Transfer"
 )
+
+func main() {
+	store := mock.New()
+	handler := New(store)
+
+	lambda.Start(handler.Handle)
+}
 
 type Handler struct {
 	store store.Storer
@@ -45,15 +50,8 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 		return err
 	}
 
-	switch abiEvent.Name {
-	case transferSingleEventName:
-		// FIXME: Do the transfer single
-	case transferBatchEventName:
-		// FIXME: Do the transfer batch
-	case uriEventName:
-		// FIXME: Do the uri
-	default:
-		// We only care about the above events, for now other event is not worth unpack or saving
+	if abiEvent.Name != transferEventName {
+		// We only care about transfer events, for now approve event is not worth unpack or saving
 		return nil
 	}
 
