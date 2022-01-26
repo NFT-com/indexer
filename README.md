@@ -10,9 +10,9 @@ go build -o indexer ./cmd/indexer/main.go
 
 ### Testing locally
 
-In order to test locally the indexer its required to have access to an ethereum node.
+In order to run a local test of the indexer, access to an Ethereum node is required.
 
-### Starting the indexer
+### Starting the Indexer
 
 There are two ways to run the indexer.
 
