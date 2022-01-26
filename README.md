@@ -2,6 +2,12 @@
 
 ## Local Development
 
+### Building the indexer
+
+```bash
+go build -o indexer ./cmd/indexer/main.go
+```
+
 ### Testing locally
 
 In order to test locally the indexer its required to have access to an ethereum node.
