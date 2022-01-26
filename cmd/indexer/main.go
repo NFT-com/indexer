@@ -17,8 +17,6 @@ import (
 
 	dispatcher "github.com/NFT-com/indexer/dispatch/aws"
 	"github.com/NFT-com/indexer/event"
-	"github.com/NFT-com/indexer/dispatch/local"
-	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
 	"github.com/NFT-com/indexer/store/mock"
