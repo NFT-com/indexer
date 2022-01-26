@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/store/mock"
+
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"strings"
 )
 
 const (

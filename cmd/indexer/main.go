@@ -54,7 +54,7 @@ func run() error {
 	pflag.Parse()
 
 	if len(os.Args) < 4 {
-		return fmt.Errorf("required argument: <node_url> <network> <chain>")
+		return fmt.Errorf("required arguments: <node_url> <network> <chain>")
 	}
 	nodeURL := os.Args[1]
 	network := os.Args[2]
