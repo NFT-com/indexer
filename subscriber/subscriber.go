@@ -3,7 +3,6 @@ package subscriber
 import (
 	"context"
 	"errors"
-
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
