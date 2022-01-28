@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"log"
+	"math/big"
 	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -20,11 +22,13 @@ import (
 const (
 	EnvVarNodeURL = "NODE_URL"
 
+	uriMethod         = "tokenURI"
 	transferEventName = "Transfer"
 
 	fromKeyword = "from"
 	toKeyword   = "to"
 	idKeyword   = "id"
+	uriKeyword  = "uri"
 )
 
 func main() {
@@ -110,21 +114,71 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 		return err
 	}
 
-	if from == common.HexToHash("") {
-		// FIXME: GET METADATA
+	switch {
+	case from == common.HexToHash(""):
+		return h.handleMintEvent(ctx, parsedABI, id, to, e)
+	case to == common.HexToHash(""):
+		return h.handleBurnEvent(ctx, id, e)
+	default:
+		return h.handleTransferEvent(ctx, id, to, e)
+	}
+}
 
-		storeNFT := nft.NFT{
-			ID:       id.String(),
-			Network:  e.Network,
-			Chain:    e.Chain,
-			Contract: e.Address.Hex(),
-			Owner:    to.Hex(),
-			// FIXME: DATA
-		}
+func (h *Handler) handleMintEvent(ctx context.Context, parsedABI abi.ABI, id *big.Int, to common.Hash, e *event.Event) error {
+	input, err := parsedABI.Pack(uriMethod, id)
+	if err != nil {
+		return err
+	}
 
-		if err := h.store.SaveNFT(ctx, &storeNFT); err != nil {
-			return err
-		}
+	msg := ethereum.CallMsg{To: &e.Address, Data: input}
+	data, err := h.client.CallContract(ctx, msg, nil)
+	if err != nil {
+		return err
+	}
+
+	unpackedData, err := parsedABI.Unpack(uriMethod, data)
+	if err != nil {
+		return err
+	}
+
+	if len(unpackedData) == 0 {
+		return nil // FIXME
+	}
+
+	uri, ok := unpackedData[0].(string)
+	if !ok {
+		return nil // FIXME
+	}
+
+	storeNFT := nft.NFT{
+		ID:       id.String(),
+		Network:  e.Network,
+		Chain:    e.Chain,
+		Contract: e.Address.Hex(),
+		Owner:    to.Hex(),
+		Data: map[string]interface{}{
+			uriKeyword: uri,
+		},
+	}
+
+	if err := h.store.SaveNFT(ctx, &storeNFT); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *Handler) handleBurnEvent(ctx context.Context, id *big.Int, e *event.Event) error {
+	if err := h.store.BurnNFT(ctx, e.Network, e.Chain, e.Address.Hex(), id.String()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *Handler) handleTransferEvent(ctx context.Context, id *big.Int, to common.Hash, e *event.Event) error {
+	if err := h.store.UpdateNFTOwner(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), to.Hex()); err != nil {
+		return err
 	}
 
 	return nil

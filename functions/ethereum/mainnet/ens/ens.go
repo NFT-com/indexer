@@ -21,17 +21,16 @@ import (
 const (
 	EnvVarNodeURL = "NODE_URL"
 
-	birthEventName    = "Birth"
-	transferEventName = "Transfer"
+	nameMigratedEventName = "NameMigrated"
+	nameRegisterEventName = "NameRegistered"
+	nameRenewedEventName  = "NameRenewed"
+	transferEventName     = "Transfer"
 
-	fromKeyword     = "from"
-	toKeyword       = "to"
-	idKeyword       = "id"
-	ownerKeyword    = "owner"
-	kittyIDKeyword  = "kitty_id"
-	matronIDKeyword = "matron_id"
-	sireIDKeyword   = "sire_id"
-	genesKeyword    = "genes"
+	fromKeyword    = "from"
+	toKeyword      = "to"
+	idKeyword      = "id"
+	ownerKeyword   = "owner"
+	expiresKeyword = "expires"
 )
 
 func main() {
@@ -88,8 +87,12 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 	}
 
 	switch abiEvent.Name {
-	case birthEventName:
-		return h.handleBirthEvent(ctx, birthEventName, e, data)
+	case nameMigratedEventName:
+		return h.handleNameMigratedEvent(ctx, nameMigratedEventName, e, data)
+	case nameRegisterEventName:
+		return h.handleNameRegisterEvent(ctx, nameRegisterEventName, e, data)
+	case nameRenewedEventName:
+		return h.handleNameRenewedEvent(ctx, nameRenewedEventName, e, data)
 	case transferEventName:
 		return h.handleTransferEvent(ctx, transferEventName, e, data)
 	default:
@@ -97,13 +100,11 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 	}
 }
 
-func (h *Handler) handleBirthEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
 	var (
-		owner    = abi.ConvertType(data[0], new(common.Address)).(*common.Address)
-		kittyID  = abi.ConvertType(data[1], new(big.Int)).(*big.Int)
-		matronID = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
-		sireID   = abi.ConvertType(data[3], new(big.Int)).(*big.Int)
-		genes    = abi.ConvertType(data[4], new(big.Int)).(*big.Int)
+		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
+		owner   = abi.ConvertType(data[1], new(common.Address)).(*common.Address)
+		expires = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
 	)
 
 	parsedEvent := event.ParsedEVent{
@@ -115,11 +116,44 @@ func (h *Handler) handleBirthEvent(ctx context.Context, name string, e *event.Ev
 		Address:         e.Address.Hex(),
 		Type:            name,
 		Data: map[string]interface{}{
-			ownerKeyword:    owner.Hex(),
-			kittyIDKeyword:  kittyID.String(),
-			matronIDKeyword: matronID.String(),
-			sireIDKeyword:   sireID.String(),
-			genesKeyword:    genes.String(),
+			idKeyword:      id.String(),
+			ownerKeyword:   owner.Hex(),
+			expiresKeyword: expires.String(),
+		},
+	}
+
+	if err := h.store.SaveEvent(ctx, &parsedEvent); err != nil {
+		return err
+	}
+
+	if err := h.store.UpdateNFTOwner(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), owner.Hex()); err != nil {
+		return err
+	}
+
+	// FIXME UPDATE EXPIRES
+
+	return nil
+}
+
+func (h *Handler) handleNameRegisterEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+	var (
+		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
+		owner   = abi.ConvertType(data[1], new(common.Address)).(*common.Address)
+		expires = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
+	)
+
+	parsedEvent := event.ParsedEVent{
+		ID:              e.ID,
+		Network:         e.Network,
+		Chain:           e.Chain,
+		Block:           e.Block,
+		TransactionHash: e.TransactionHash.Hex(),
+		Address:         e.Address.Hex(),
+		Type:            name,
+		Data: map[string]interface{}{
+			idKeyword:      id.String(),
+			ownerKeyword:   owner.Hex(),
+			expiresKeyword: expires.String(),
 		},
 	}
 
@@ -128,21 +162,48 @@ func (h *Handler) handleBirthEvent(ctx context.Context, name string, e *event.Ev
 	}
 
 	storeNFT := nft.NFT{
-		ID:       kittyID.String(),
+		ID:       id.String(),
 		Network:  e.Network,
 		Chain:    e.Chain,
 		Contract: e.Address.Hex(),
 		Owner:    owner.Hex(),
 		Data: map[string]interface{}{
-			matronIDKeyword: matronID.String(),
-			sireIDKeyword:   sireID.String(),
-			genesKeyword:    genes.String(),
+			expiresKeyword: expires.String(),
 		},
 	}
 
 	if err := h.store.SaveNFT(ctx, &storeNFT); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+	var (
+		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
+		expires = abi.ConvertType(data[1], new(big.Int)).(*big.Int)
+	)
+
+	parsedEvent := event.ParsedEVent{
+		ID:              e.ID,
+		Network:         e.Network,
+		Chain:           e.Chain,
+		Block:           e.Block,
+		TransactionHash: e.TransactionHash.Hex(),
+		Address:         e.Address.Hex(),
+		Type:            name,
+		Data: map[string]interface{}{
+			idKeyword:      id.String(),
+			expiresKeyword: expires.String(),
+		},
+	}
+
+	if err := h.store.SaveEvent(ctx, &parsedEvent); err != nil {
+		return err
+	}
+
+	// FIXME UPDATE EXPIRES
 
 	return nil
 }
@@ -175,7 +236,7 @@ func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event
 
 	switch {
 	case from == common.HexToHash(""):
-		// Already handled by the birth event
+		// Already handled by the name registered event
 		return nil
 	case to == common.HexToHash(""):
 		return h.handleBurnEvent(ctx, id, e)

@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"encoding/json"
+	"github.com/NFT-com/indexer/functions"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -10,6 +11,10 @@ import (
 	"github.com/NFT-com/indexer/dispatch"
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/store"
+)
+
+const (
+	customContractType = "custom"
 )
 
 type Dispatcher struct {
@@ -27,20 +32,15 @@ func New(lambdaClient *lambda.Lambda, store store.Storer) dispatch.Dispatcher {
 }
 
 func (d *Dispatcher) Dispatch(ctx context.Context, e *event.Event) error {
-	/*contractType, err := d.store.GetContractType(ctx, e.Network, e.Chain, e.Address.Hex())
+	contractType, err := d.store.GetContractType(ctx, e.Network, e.Chain, e.Address.Hex())
 	if err != nil {
 		return err
 	}
-	*/
-	functionName := "test" /*
-		switch contractType {
-		case "erc721":
-			functionName = functions.Name(e.Network, e.Chain, "erc721")
-		case "erc1155":
-			functionName = functions.Name(e.Network, e.Chain, "erc1155")
-		case "custom":
-			functionName = functions.Name(e.Network, e.Chain, e.Address.Hex())
-		}*/
+
+	functionName := functions.Name(e.Network, e.Chain, contractType)
+	if contractType == customContractType {
+		functionName = functions.Name(e.Network, e.Chain, e.Address.Hex())
+	}
 
 	payload, err := json.Marshal(e)
 	if err != nil {
