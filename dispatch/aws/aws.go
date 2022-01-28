@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"encoding/json"
+	"github.com/NFT-com/indexer/functions"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
