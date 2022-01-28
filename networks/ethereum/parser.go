@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"crypto/sha256"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -37,11 +38,11 @@ func NewParser(log zerolog.Logger, client *ethclient.Client, network string, cha
 }
 
 func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event, error) {
-	hash := common.HexToHash(block.String())
+	blockHash := common.HexToHash(block.String())
 	evts := make([]*events.Event, 0, 64)
 
 	query := ethereum.FilterQuery{
-		BlockHash: &hash,
+		BlockHash: &blockHash,
 		Topics: [][]common.Hash{
 			{
 				TopicHash(TopicTransfer),
@@ -57,8 +58,15 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 	}
 
 	for _, l := range logs {
+		eventJson, err := l.MarshalJSON()
+		if err != nil {
+			p.log.Error().Err(err).Str("block_hash", block.String()).Msg("failed to marshal event")
+			continue
+		}
+
+		hash := sha256.Sum256(eventJson)
 		event := events.Event{
-			ID:              l.TxHash.Hex(),
+			ID:              common.Bytes2Hex(hash[:]),
 			Chain:           p.network,
 			Network:         p.chain,
 			Block:           l.BlockNumber,

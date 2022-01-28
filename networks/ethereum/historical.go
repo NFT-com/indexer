@@ -3,7 +3,7 @@ package ethereum
 import (
 	"context"
 	"math/big"
-	
+
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
@@ -40,6 +40,10 @@ func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Cl
 }
 
 func (s *HistoricalSource) Next(ctx context.Context) *block.Block {
+	if s.nextIndex == s.endIndex {
+		return nil
+	}
+
 	header, err := s.client.HeaderByNumber(ctx, big.NewInt(s.nextIndex))
 	if err != nil {
 		s.log.Error().Err(err).Int64("header", s.nextIndex).Msg("could not get block header")

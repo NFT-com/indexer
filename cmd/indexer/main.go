@@ -116,6 +116,8 @@ func run() error {
 	}()
 
 	select {
+	case <-done:
+		return nil
 	case <-sig:
 		if err := subs.Close(); err != nil {
 			failed <- err
