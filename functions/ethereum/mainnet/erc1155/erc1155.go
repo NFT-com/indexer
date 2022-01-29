@@ -91,7 +91,7 @@ func (h *Handler) handleSingleEvent(ctx context.Context, name string, e *event.E
 		value = *abi.ConvertType(data[1], new(*big.Int)).(**big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,

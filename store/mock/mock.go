@@ -10,13 +10,13 @@ import (
 
 type Mock struct {
 	nfts   map[string]*nft.NFT
-	events map[string]*event.ParsedEVent
+	events map[string]*event.ParsedEvent
 }
 
 func New() *Mock {
 	m := Mock{
 		nfts:   map[string]*nft.NFT{},
-		events: map[string]*event.ParsedEVent{},
+		events: map[string]*event.ParsedEvent{},
 	}
 
 	return &m
@@ -41,7 +41,7 @@ func (m *Mock) BurnNFT(ctx context.Context, _, _, _, id string) error {
 	return nil
 }
 
-func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEVent) error {
+func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
 	m.events[event.ID] = event
 	return nil
 }

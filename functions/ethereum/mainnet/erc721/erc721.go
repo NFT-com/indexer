@@ -95,7 +95,7 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 		id   = e.IndexedData[2].Big()
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,

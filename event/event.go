@@ -14,7 +14,7 @@ type Event struct {
 	Data            []byte         `json:"data"`
 }
 
-type ParsedEVent struct {
+type ParsedEvent struct {
 	ID              string `json:"id"`
 	Network         string `json:"network"`
 	Chain           string `json:"chain"`

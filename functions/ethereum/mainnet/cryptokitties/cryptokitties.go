@@ -106,7 +106,7 @@ func (h *Handler) handleBirthEvent(ctx context.Context, name string, e *event.Ev
 		genes    = abi.ConvertType(data[4], new(big.Int)).(*big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,
@@ -154,7 +154,7 @@ func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event
 		id   = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,

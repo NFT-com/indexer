@@ -107,7 +107,7 @@ func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *e
 		expires = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,
@@ -142,7 +142,7 @@ func (h *Handler) handleNameRegisterEvent(ctx context.Context, name string, e *e
 		expires = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,
@@ -185,7 +185,7 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 		expires = abi.ConvertType(data[1], new(big.Int)).(*big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,
@@ -215,7 +215,7 @@ func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event
 		id   = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
 	)
 
-	parsedEvent := event.ParsedEVent{
+	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
 		Chain:           e.Chain,

@@ -17,7 +17,7 @@ type Storer interface {
 	UpdateNFTOwner(ctx context.Context, network, chain, address, id, newOwner string) error
 	BurnNFT(ctx context.Context, network, chain, address, id string) error
 
-	SaveEvent(ctx context.Context, event *event.ParsedEVent) error
+	SaveEvent(ctx context.Context, event *event.ParsedEvent) error
 
 	GetContractType(ctx context.Context, network, chain, address string) (string, error)
 	GetContractABI(ctx context.Context, network, chain, address string) (string, error)
