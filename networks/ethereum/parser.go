@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
@@ -18,10 +17,10 @@ type Parser struct {
 
 	network string
 	chain   string
-	client  *ethclient.Client
+	client  Client
 }
 
-func NewParser(log zerolog.Logger, client *ethclient.Client, network string, chain string) *Parser {
+func NewParser(log zerolog.Logger, client Client, network string, chain string) *Parser {
 	p := Parser{
 		log:     log.With().Str("component", "parser").Logger(),
 		network: network,

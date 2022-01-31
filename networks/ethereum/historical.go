@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
@@ -13,12 +12,12 @@ import (
 type HistoricalSource struct {
 	log zerolog.Logger
 
-	client    *ethclient.Client
+	client    Client
 	nextIndex int64
 	endIndex  int64
 }
 
-func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Client, startIndex, endIndex int64) (*HistoricalSource, error) {
+func NewHistorical(ctx context.Context, log zerolog.Logger, client Client, startIndex, endIndex int64) (*HistoricalSource, error) {
 	h := HistoricalSource{
 		log:       log.With().Str("component", "historical_source").Logger(),
 		client:    client,
@@ -40,7 +39,7 @@ func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Cl
 }
 
 func (s *HistoricalSource) Next(ctx context.Context) *block.Block {
-	if s.nextIndex == s.endIndex {
+	if s.nextIndex > s.endIndex {
 		return nil
 	}
 
