@@ -34,6 +34,11 @@ func New(lambdaClient *lambda.Lambda, store store.Storer) dispatch.Dispatcher {
 func (d *Dispatcher) Dispatch(ctx context.Context, e *event.Event) error {
 	contractType, err := d.store.GetContractType(ctx, e.Network, e.Chain, e.Address.Hex())
 	if err != nil {
+		// FIXME: remove ton of logs just for testing, remove this before merging
+		if err == store.ErrNotFound {
+			return nil
+		}
+
 		return err
 	}
 
