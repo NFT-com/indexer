@@ -2,24 +2,24 @@ package main
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"log"
 	"math/big"
 	"os"
 	"strings"
-
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"time"
 
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/store/mock"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	EnvVarNodeURL = "NODE_URL"
+	EnvVarLogLevel = "LOG_LEVEL"
 
 	birthEventName    = "Birth"
 	transferEventName = "Transfer"
@@ -35,32 +35,32 @@ const (
 )
 
 func main() {
-	val, ok := os.LookupEnv(EnvVarNodeURL)
+	logLevel, ok := os.LookupEnv(EnvVarLogLevel)
 	if !ok {
-		log.Fatalln("missing environment variable")
+		logLevel = "info"
 	}
 
-	store := mock.New()
-
-	client, err := ethclient.Dial(val)
+	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
+	level, err := zerolog.ParseLevel(logLevel)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("failed to parse log level", err)
 	}
+	logger = logger.Level(level)
 
-	handler := New(store, client)
+	store := mock.New(logger)
+	handler := New(store)
 
 	lambda.Start(handler.Handle)
 }
 
 type Handler struct {
-	store  store.Storer
-	client *ethclient.Client
+	store store.Storer
 }
 
-func New(store store.Storer, client *ethclient.Client) *Handler {
+func New(store store.Storer) *Handler {
 	h := Handler{
-		store:  store,
-		client: client,
+		store: store,
 	}
 
 	return &h

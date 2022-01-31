@@ -5,16 +5,19 @@ import (
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
+	"github.com/rs/zerolog"
 	"strings"
 )
 
 type Mock struct {
+	log    zerolog.Logger
 	nfts   map[string]*nft.NFT
 	events map[string]*event.ParsedEvent
 }
 
-func New() *Mock {
+func New(log zerolog.Logger) *Mock {
 	m := Mock{
+		log:    log,
 		nfts:   map[string]*nft.NFT{},
 		events: map[string]*event.ParsedEvent{},
 	}
@@ -23,6 +26,7 @@ func New() *Mock {
 }
 
 func (m *Mock) SaveNFT(_ context.Context, nft *nft.NFT) error {
+	m.log.Info().Interface("nft", *nft).Msg("new nft inserted")
 	m.nfts[nft.ID] = nft
 	return nil
 }
@@ -32,16 +36,19 @@ func (m *Mock) UpdateNFTOwner(_ context.Context, _, _, _, id, newOwner string) e
 		return store.ErrNotFound
 	}
 
+	m.log.Info().Str("id", id).Str("owner", newOwner).Msg("nft owner updated")
 	m.nfts[id].Owner = newOwner
 	return nil
 }
 
 func (m *Mock) BurnNFT(ctx context.Context, _, _, _, id string) error {
+	m.log.Info().Str("id", id).Msg("nft burnt")
 	delete(m.nfts, id)
 	return nil
 }
 
 func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
+	m.log.Info().Interface("id", *event).Msg("new event saved")
 	m.events[event.ID] = event
 	return nil
 }
@@ -49,6 +56,7 @@ func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
 func (m *Mock) GetContractType(_ context.Context, _, _, address string) (string, error) {
 	value, ok := map[string]string{
 		strings.ToLower("0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85"): "erc721",
+		strings.ToLower("0x86b18D285C1990Ea16f67D3F22D79970D418C3CE"): "erc721",
 		strings.ToLower("0x06012c8cf97bead5deae237070f9587f8e7a266d"): "custom",
 	}[strings.ToLower(address)]
 	if !ok {

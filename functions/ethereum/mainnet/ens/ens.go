@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"log"
 	"math/big"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -19,7 +21,8 @@ import (
 )
 
 const (
-	EnvVarNodeURL = "NODE_URL"
+	EnvVarNodeURL  = "NODE_URL"
+	EnvVarLogLevel = "LOG_LEVEL"
 
 	nameMigratedEventName = "NameMigrated"
 	nameRegisterEventName = "NameRegistered"
@@ -34,14 +37,27 @@ const (
 )
 
 func main() {
-	val, ok := os.LookupEnv(EnvVarNodeURL)
+	nodeURL, ok := os.LookupEnv(EnvVarNodeURL)
 	if !ok {
 		log.Fatalln("missing environment variable")
 	}
 
-	store := mock.New()
+	logLevel, ok := os.LookupEnv(EnvVarLogLevel)
+	if !ok {
+		logLevel = "info"
+	}
 
-	client, err := ethclient.Dial(val)
+	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
+	level, err := zerolog.ParseLevel(logLevel)
+	if err != nil {
+		log.Fatalln("failed to parse log level", err)
+	}
+	logger = logger.Level(level)
+
+	store := mock.New(logger)
+
+	client, err := ethclient.Dial(nodeURL)
 	if err != nil {
 		log.Fatalln(err)
 	}

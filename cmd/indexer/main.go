@@ -122,7 +122,7 @@ func run() error {
 	sess := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(sess, lambdaConfig)
 
-	dispatcher := dispatcher.New(lambdaClient, mock.New())
+	dispatcher := dispatcher.New(lambdaClient, mock.New(log))
 
 	failed := make(chan error)
 	done := make(chan struct{})
@@ -142,7 +142,7 @@ func run() error {
 			case e := <-eventChannel:
 				log.Info().Interface("event", e).Msg("received")
 				if err := dispatcher.Dispatch(ctx, e); err != nil {
-					//log.Error().Err(err).Str("event", e.ID).Msg("failed to dispatch event")
+					log.Error().Err(err).Str("event", e.ID).Msg("failed to dispatch event")
 				}
 			case <-done:
 				return

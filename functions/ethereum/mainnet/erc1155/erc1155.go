@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"log"
 	"math/big"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -17,6 +20,8 @@ import (
 )
 
 const (
+	EnvVarLogLevel = "LOG_LEVEL"
+
 	transferSingleEventName = "TransferSingle"
 	transferBatchEventName  = "TransferBatch"
 	uriEventName            = "URI"
@@ -30,7 +35,20 @@ const (
 )
 
 func main() {
-	store := mock.New()
+	logLevel, ok := os.LookupEnv(EnvVarLogLevel)
+	if !ok {
+		logLevel = "info"
+	}
+
+	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
+	level, err := zerolog.ParseLevel(logLevel)
+	if err != nil {
+		log.Fatalln("failed to parse log level", err)
+	}
+	logger = logger.Level(level)
+
+	store := mock.New(logger)
 	handler := New(store)
 
 	lambda.Start(handler.Handle)
