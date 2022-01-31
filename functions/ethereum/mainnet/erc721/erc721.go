@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"log"
 	"math/big"
 	"os"
