@@ -42,14 +42,20 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagEndHeight   int64
-		flagStartHeight int64
-		flagLogLevel    string
+		flagEndHeight          int64
+		flagStartHeight        int64
+		flagLogLevel           string
+		flagSessionCredentials bool
+		flagLambdaURL          string
+		flagRegion             string
 	)
 
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
 	pflag.Int64VarP(&flagEndHeight, "end", "e", 0, "height at which to stop indexing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.BoolVarP(&flagSessionCredentials, "aws-credentials", "c", false, "aws credentials")
+	pflag.StringVarP(&flagLambdaURL, "lambda-url", "u", "", "lambda url")
+	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
 
 	pflag.Parse()
 
@@ -103,15 +109,18 @@ func run() error {
 		return err
 	}
 
-	// FIXME: Update to handle not only local
-	sess := session.Must(session.NewSession(&aws.Config{
-		Credentials: credentials.AnonymousCredentials,
-		Region:      aws.String("us-west-2"),
-	}))
+	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	if flagSessionCredentials {
+		sessionConfig.Credentials = credentials.AnonymousCredentials
+	}
 
-	lambdaClient := lambda.New(sess, &aws.Config{
-		Endpoint: aws.String("http://127.0.0.1:3001"),
-	})
+	lambdaConfig := &aws.Config{}
+	if flagLambdaURL != "" {
+		lambdaConfig.Endpoint = aws.String(flagLambdaURL)
+	}
+
+	sess := session.Must(session.NewSession(&sessionConfig))
+	lambdaClient := lambda.New(sess, lambdaConfig)
 
 	dispatcher := dispatcher.New(lambdaClient, mock.New())
 
