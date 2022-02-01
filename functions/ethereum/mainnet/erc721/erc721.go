@@ -82,8 +82,6 @@ func New(log zerolog.Logger, store store.Storer, client *ethclient.Client) *Hand
 }
 
 func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
-	h.log.Info().Msg("got request")
-
 	jsonABI, err := h.store.GetContractABI(ctx, e.Network, e.Chain, e.Address.Hex())
 	if err != nil {
 		return err
