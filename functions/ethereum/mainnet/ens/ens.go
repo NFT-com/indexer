@@ -222,16 +222,11 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 	return nil
 }
 
-func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event.Event, abiEvent *abi.Event) error {
-	data, err := abiEvent.Inputs.Unpack(e.Data)
-	if err != nil {
-		return err
-	}
-	
+func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event.Event) error {
 	var (
-		from = *abi.ConvertType(data[0], new(common.Hash)).(*common.Hash)
-		to   = *abi.ConvertType(data[1], new(common.Hash)).(*common.Hash)
-		id   = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
+		from = e.IndexedData[0]
+		to   = e.IndexedData[1]
+		id   = e.IndexedData[2].Big()
 	)
 
 	parsedEvent := event.ParsedEvent{
