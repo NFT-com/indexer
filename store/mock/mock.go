@@ -43,8 +43,8 @@ func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
 
 func (m *Mock) GetContractType(_ context.Context, _, _, address string) (string, error) {
 	value, ok := map[string]string{
-		strings.ToLower("0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85"): "erc721",
 		strings.ToLower("0x86b18D285C1990Ea16f67D3F22D79970D418C3CE"): "erc721",
+		strings.ToLower("0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85"): "custom",
 		strings.ToLower("0x06012c8cf97bead5deae237070f9587f8e7a266d"): "custom",
 	}[strings.ToLower(address)]
 	if !ok {

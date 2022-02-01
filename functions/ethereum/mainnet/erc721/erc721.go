@@ -59,21 +59,18 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	handler := New(logger, store, client)
+	handler := New(store, client)
 
-	logger.Info().Msg("starting lambda")
 	lambda.Start(handler.Handle)
 }
 
 type Handler struct {
-	log    zerolog.Logger
 	store  store.Storer
 	client *ethclient.Client
 }
 
-func New(log zerolog.Logger, store store.Storer, client *ethclient.Client) *Handler {
+func New(store store.Storer, client *ethclient.Client) *Handler {
 	h := Handler{
-		log:    log,
 		store:  store,
 		client: client,
 	}

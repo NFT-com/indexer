@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog"
 	"log"
 	"math/big"
@@ -147,6 +148,7 @@ func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *e
 	}
 
 	// FIXME UPDATE EXPIRES
+	fmt.Println("missing updating the expiring date")
 
 	return nil
 }
@@ -220,6 +222,7 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 	}
 
 	// FIXME UPDATE EXPIRES
+	fmt.Println("missing updating the expiring date")
 
 	return nil
 }

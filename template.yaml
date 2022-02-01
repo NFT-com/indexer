@@ -31,3 +31,12 @@ Resources:
       Environment:
         Variables:
           NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71
+  ethereummainnet0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85: # ENS FIXME: alphanumeric name... How do we do it?
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/ethereum/mainnet/ens/
+      Handler: ens
+      Runtime: go1.x
+      Environment:
+        Variables:
+          NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71
