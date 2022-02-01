@@ -91,7 +91,7 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 	case nameRenewedEventName:
 		return h.handleNameRenewedEvent(ctx, nameRenewedEventName, e, abiEvent)
 	case transferEventName:
-		return h.handleTransferEvent(ctx, transferEventName, e, abiEvent)
+		return h.handleTransferEvent(ctx, transferEventName, e)
 	default:
 		return nil
 	}
