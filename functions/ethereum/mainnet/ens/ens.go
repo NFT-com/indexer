@@ -75,7 +75,6 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 
 	parsedABI, err := abi.JSON(strings.NewReader(jsonABI))
 	if err != nil {
-		fmt.Println("parsed abi failed", jsonABI)
 		return err
 	}
 
@@ -84,26 +83,26 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 		return err
 	}
 
-	data, err := abiEvent.Inputs.Unpack(e.Data)
-	if err != nil {
-		return err
-	}
-
 	switch abiEvent.Name {
 	case nameMigratedEventName:
-		return h.handleNameMigratedEvent(ctx, nameMigratedEventName, e, data)
+		return h.handleNameMigratedEvent(ctx, nameMigratedEventName, e, abiEvent)
 	case nameRegisterEventName:
-		return h.handleNameRegisterEvent(ctx, nameRegisterEventName, e, data)
+		return h.handleNameRegisterEvent(ctx, nameRegisterEventName, e, abiEvent)
 	case nameRenewedEventName:
-		return h.handleNameRenewedEvent(ctx, nameRenewedEventName, e, data)
+		return h.handleNameRenewedEvent(ctx, nameRenewedEventName, e, abiEvent)
 	case transferEventName:
-		return h.handleTransferEvent(ctx, transferEventName, e, data)
+		return h.handleTransferEvent(ctx, transferEventName, e, abiEvent)
 	default:
 		return nil
 	}
 }
 
-func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *event.Event, abiEvent *abi.Event) error {
+	data, err := abiEvent.Inputs.Unpack(e.Data)
+	if err != nil {
+		return err
+	}
+
 	var (
 		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
 		owner   = abi.ConvertType(data[1], new(common.Address)).(*common.Address)
@@ -139,7 +138,12 @@ func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *e
 	return nil
 }
 
-func (h *Handler) handleNameRegisterEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+func (h *Handler) handleNameRegisterEvent(ctx context.Context, name string, e *event.Event, abiEvent *abi.Event) error {
+	data, err := abiEvent.Inputs.Unpack(e.Data)
+	if err != nil {
+		return err
+	}
+
 	var (
 		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
 		owner   = abi.ConvertType(data[1], new(common.Address)).(*common.Address)
@@ -183,7 +187,12 @@ func (h *Handler) handleNameRegisterEvent(ctx context.Context, name string, e *e
 	return nil
 }
 
-func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *event.Event, abiEvent *abi.Event) error {
+	data, err := abiEvent.Inputs.Unpack(e.Data)
+	if err != nil {
+		return err
+	}
+
 	var (
 		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
 		expires = abi.ConvertType(data[1], new(big.Int)).(*big.Int)
@@ -213,7 +222,12 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 	return nil
 }
 
-func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
+func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event.Event, abiEvent *abi.Event) error {
+	data, err := abiEvent.Inputs.Unpack(e.Data)
+	if err != nil {
+		return err
+	}
+	
 	var (
 		from = *abi.ConvertType(data[0], new(common.Hash)).(*common.Hash)
 		to   = *abi.ConvertType(data[1], new(common.Hash)).(*common.Hash)
