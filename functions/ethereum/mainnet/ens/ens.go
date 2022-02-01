@@ -104,9 +104,9 @@ func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *e
 	}
 
 	var (
-		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
-		owner   = abi.ConvertType(data[1], new(common.Address)).(*common.Address)
-		expires = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
+		id      = e.IndexedData[0].Big()
+		owner   = e.IndexedData[1]
+		expires = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
 	)
 
 	parsedEvent := event.ParsedEvent{
@@ -145,9 +145,9 @@ func (h *Handler) handleNameRegisterEvent(ctx context.Context, name string, e *e
 	}
 
 	var (
-		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
-		owner   = abi.ConvertType(data[1], new(common.Address)).(*common.Address)
-		expires = abi.ConvertType(data[2], new(big.Int)).(*big.Int)
+		id      = e.IndexedData[0].Big()
+		owner   = e.IndexedData[1]
+		expires = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
 	)
 
 	parsedEvent := event.ParsedEvent{
@@ -194,8 +194,8 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 	}
 
 	var (
-		id      = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
-		expires = abi.ConvertType(data[1], new(big.Int)).(*big.Int)
+		id      = e.IndexedData[0].Big()
+		expires = abi.ConvertType(data[0], new(big.Int)).(*big.Int)
 	)
 
 	parsedEvent := event.ParsedEvent{
@@ -229,6 +229,11 @@ func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event
 		id   = e.IndexedData[2].Big()
 	)
 
+	if from == common.HexToHash("") {
+		// Already handled by the name registered event
+		return nil
+	}
+
 	parsedEvent := event.ParsedEvent{
 		ID:              e.ID,
 		Network:         e.Network,
@@ -249,9 +254,6 @@ func (h *Handler) handleTransferEvent(ctx context.Context, name string, e *event
 	}
 
 	switch {
-	case from == common.HexToHash(""):
-		// Already handled by the name registered event
-		return nil
 	case to == common.HexToHash(""):
 		return h.handleBurnEvent(ctx, id, e)
 	default:
