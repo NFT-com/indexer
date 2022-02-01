@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog"
 	"log"
 	"math/big"
 	"os"
@@ -13,7 +12,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
@@ -22,7 +21,6 @@ import (
 )
 
 const (
-	EnvVarNodeURL  = "NODE_URL"
 	EnvVarLogLevel = "LOG_LEVEL"
 
 	nameMigratedEventName = "NameMigrated"
@@ -38,11 +36,6 @@ const (
 )
 
 func main() {
-	nodeURL, ok := os.LookupEnv(EnvVarNodeURL)
-	if !ok {
-		log.Fatalln("missing environment variable")
-	}
-
 	logLevel, ok := os.LookupEnv(EnvVarLogLevel)
 	if !ok {
 		logLevel = "info"
@@ -57,26 +50,18 @@ func main() {
 	logger = logger.Level(level)
 
 	store := mock.New(logger)
-
-	client, err := ethclient.Dial(nodeURL)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	handler := New(store, client)
+	handler := New(store)
 
 	lambda.Start(handler.Handle)
 }
 
 type Handler struct {
-	store  store.Storer
-	client *ethclient.Client
+	store store.Storer
 }
 
-func New(store store.Storer, client *ethclient.Client) *Handler {
+func New(store store.Storer) *Handler {
 	h := Handler{
-		store:  store,
-		client: client,
+		store: store,
 	}
 
 	return &h
@@ -90,6 +75,7 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 
 	parsedABI, err := abi.JSON(strings.NewReader(jsonABI))
 	if err != nil {
+		fmt.Println("parsed abi failed", jsonABI)
 		return err
 	}
 

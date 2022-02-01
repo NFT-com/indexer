@@ -2,20 +2,21 @@ package main
 
 import (
 	"context"
-	"github.com/rs/zerolog"
 	"log"
 	"math/big"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/rs/zerolog"
+
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/store/mock"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
