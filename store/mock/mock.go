@@ -10,16 +10,12 @@ import (
 )
 
 type Mock struct {
-	log    zerolog.Logger
-	nfts   map[string]*nft.NFT
-	events map[string]*event.ParsedEvent
+	log zerolog.Logger
 }
 
 func New(log zerolog.Logger) *Mock {
 	m := Mock{
-		log:    log,
-		nfts:   map[string]*nft.NFT{},
-		events: map[string]*event.ParsedEvent{},
+		log: log,
 	}
 
 	return &m
@@ -27,29 +23,21 @@ func New(log zerolog.Logger) *Mock {
 
 func (m *Mock) SaveNFT(_ context.Context, nft *nft.NFT) error {
 	m.log.Info().Interface("nft", *nft).Msg("new nft inserted")
-	m.nfts[nft.ID] = nft
 	return nil
 }
 
 func (m *Mock) UpdateNFTOwner(_ context.Context, _, _, _, id, newOwner string) error {
-	if _, ok := m.nfts[id]; !ok {
-		return store.ErrNotFound
-	}
-
-	m.log.Info().Str("id", id).Str("owner", newOwner).Msg("nft owner updated")
-	m.nfts[id].Owner = newOwner
+	m.log.Info().Str("id", id).Str("newOwner", newOwner).Msg("nft owner updated")
 	return nil
 }
 
 func (m *Mock) BurnNFT(ctx context.Context, _, _, _, id string) error {
 	m.log.Info().Str("id", id).Msg("nft burnt")
-	delete(m.nfts, id)
 	return nil
 }
 
 func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
 	m.log.Info().Interface("id", *event).Msg("new event saved")
-	m.events[event.ID] = event
 	return nil
 }
 
@@ -79,6 +67,7 @@ func (m *Mock) GetContractABI(_ context.Context, _, _, address string) (string, 
 	return value, nil
 }
 
-func (m *Mock) UpdateContractURI(_ context.Context, _, _, _, _ string) error {
+func (m *Mock) UpdateContractURI(_ context.Context, _, _, address, uri string) error {
+	m.log.Info().Str("contract", address).Str("uri", uri).Msg("contract uri updated")
 	return nil
 }
