@@ -3,13 +3,13 @@ package aws
 import (
 	"context"
 	"encoding/json"
-	"github.com/NFT-com/indexer/functions"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
 	"github.com/NFT-com/indexer/dispatch"
 	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/functions"
 	"github.com/NFT-com/indexer/store"
 )
 
@@ -34,11 +34,6 @@ func New(lambdaClient *lambda.Lambda, store store.Storer) dispatch.Dispatcher {
 func (d *Dispatcher) Dispatch(ctx context.Context, e *event.Event) error {
 	contractType, err := d.store.GetContractType(ctx, e.Network, e.Chain, e.Address.Hex())
 	if err != nil {
-		// FIXME: remove ton of logs just for testing, remove this before merging
-		if err == store.ErrNotFound {
-			return nil
-		}
-
 		return err
 	}
 
@@ -49,14 +44,14 @@ func (d *Dispatcher) Dispatch(ctx context.Context, e *event.Event) error {
 
 	payload, err := json.Marshal(e)
 	if err != nil {
-		// LOG
 		return err
 	}
 
-	_, err = d.lambdaClient.Invoke(&lambda.InvokeInput{
+	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,
-	})
+	}
+	_, err = d.lambdaClient.Invoke(input)
 	if err != nil {
 		return err
 	}

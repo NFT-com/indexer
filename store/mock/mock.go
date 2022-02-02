@@ -2,11 +2,13 @@ package mock
 
 import (
 	"context"
+	"strings"
+
+	"github.com/rs/zerolog"
+
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
-	"github.com/rs/zerolog"
-	"strings"
 )
 
 type Mock struct {

@@ -7,7 +7,7 @@
 * [Docker](https://docs.docker.com/get-docker/)
 * [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 
-### Testing locally
+### Testing Locally
 
 In order to run a local test of the indexer, access to an Ethereum node is required.
 
