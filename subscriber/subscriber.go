@@ -39,31 +39,31 @@ func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Sou
 
 func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) error {
 	for {
-			select {
-			case <-s.done:
-				return nil
-			default:
-				nextBlock := s.sources[s.currentSource].Next(ctx)
-				if nextBlock == nil {
-					s.currentSource++
+		select {
+		case <-s.done:
+			return nil
+		default:
+			nextBlock := s.sources[s.currentSource].Next(ctx)
+			if nextBlock == nil {
+				s.currentSource++
 
-					if s.currentSource >= len(s.sources) {
-						return nil
-					}
-
-					continue
+				if s.currentSource >= len(s.sources) {
+					return nil
 				}
 
-				blockEvents, err := s.parser.Parse(ctx, nextBlock)
-				if err != nil {
-					s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
-					continue
-				}
-
-				for _, e := range blockEvents {
-					events <- e
-				}
+				continue
 			}
+
+			blockEvents, err := s.parser.Parse(ctx, nextBlock)
+			if err != nil {
+				s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
+				continue
+			}
+
+			for _, e := range blockEvents {
+				events <- e
+			}
+		}
 	}
 }
 

@@ -57,7 +57,7 @@ func run() error {
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
 	pflag.Int64VarP(&flagEndHeight, "end", "e", 0, "height at which to stop indexing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagEnvironment, "environment", "e", "", "indexer environment")
+	pflag.StringVarP(&flagEnvironment, "environment", "n", "", "indexer environment")
 	pflag.StringVarP(&flagLambdaURL, "lambda-url", "u", "", "lambda url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
 

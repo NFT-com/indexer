@@ -33,7 +33,7 @@ func NewParser(log zerolog.Logger, client *ethclient.Client, network string, cha
 }
 
 func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event, error) {
-	hash := common.HexToHash(block.String())
+	blockHash := common.HexToHash(block.String())
 
 	query := ethereum.FilterQuery{
 		BlockHash: &blockHash,
@@ -60,7 +60,7 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event,
 		}
 
 		hash := sha256.Sum256(eventJson)
-		event := events.Event{
+		e := event.Event{
 			ID:              common.Bytes2Hex(hash[:]),
 			Chain:           p.network,
 			Network:         p.chain,
