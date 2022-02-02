@@ -43,7 +43,7 @@ func run() error {
 
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
 	pflag.Int64VarP(&flagEndHeight, "end", "e", 0, "height at which to stop indexing")
-	pflag.StringVarP(&flagLogLevel, "log-level", "-l", "info", "log level")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 
 	pflag.Parse()
 
