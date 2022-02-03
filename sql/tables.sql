@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS chain (
     name VARCHAR(64) NOT NULL,
     description TEXT NOT NULL,
     symbol VARCHAR(16) NOT NULL,
-    network VARCHAR(64) NOT NULL
+    network VARCHAR(64) NOT NULL,
+    chain_id INT NOT NULL
 );
 
 -- Creation of collection table
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS event (
     id VARCHAR(66) PRIMARY KEY,
     network_id BIGINT NOT NULL, -- FOREIGN
     collection_id BIGINT NOT NULL, -- FOREIGN
-    block NUMERIC NOT NULL,
+    block BIGINT NOT NULL,
     transaction_hash VARCHAR(66) NOT NULL,
     type VARCHAR(64) NOT NULL,
     data JSONB
