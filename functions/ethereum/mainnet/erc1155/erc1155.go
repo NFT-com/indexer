@@ -152,7 +152,7 @@ func (h *Handler) handleBatchEvent(ctx context.Context, name string, e *event.Ev
 		ids    = abi.ConvertType(data[0], make([]*big.Int, 0)).([]*big.Int)
 		values = abi.ConvertType(data[1], make([]*big.Int, 0)).([]*big.Int)
 	)
-
+  
 	for i, id := range ids {
 		if values[i].Cmp(big.NewInt(1)) != 0 {
 			// We don't care about fungible tokens, so ignore it for now.

@@ -51,7 +51,6 @@ func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) er
 			nextBlock := s.sources[s.currentSource].Next(ctx)
 			if nextBlock == nil {
 				s.currentSource++
-
 				if s.currentSource >= len(s.sources) {
 					return nil
 				}
