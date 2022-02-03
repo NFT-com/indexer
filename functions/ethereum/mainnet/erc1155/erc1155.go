@@ -144,21 +144,39 @@ func (h *Handler) handleSingleEvent(ctx context.Context, name string, e *event.E
 	}
 }
 
-func (h *Handler) handleBatchEvent(ctx context.Context, _ string, e *event.Event, data []interface{}) error {
+func (h *Handler) handleBatchEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
 	var (
 		// We don't care about the operator for now, so just skipping that indexed field and skipping it.
 		from   = e.IndexedData[2]
 		to     = e.IndexedData[3]
-		ids    = abi.ConvertType(data[0], make([]*big.Int, 0)).([]*big.Int) // FIXME: Test if this tests
+		ids    = abi.ConvertType(data[0], make([]*big.Int, 0)).([]*big.Int)
 		values = abi.ConvertType(data[1], make([]*big.Int, 0)).([]*big.Int)
 	)
-
-	// FIXME STORE EVENT
 
 	for i, id := range ids {
 		if values[i].Cmp(big.NewInt(1)) != 0 {
 			// We don't care about fungible tokens, so ignore it for now.
 			continue
+		}
+
+		parsedEvent := event.ParsedEvent{
+			ID:              e.ID,
+			Network:         e.Network,
+			Chain:           e.Chain,
+			Block:           e.Block,
+			TransactionHash: e.TransactionHash.Hex(),
+			Address:         e.Address.Hex(),
+			Type:            name,
+			Data: map[string]interface{}{
+				fromKeyword:  from.Hex(),
+				toKeyword:    to.Hex(),
+				idKeyword:    id.String(),
+				valueKeyword: values[i].String(),
+			},
+		}
+
+		if err := h.store.SaveEvent(ctx, &parsedEvent); err != nil {
+			return err
 		}
 
 		switch {
@@ -175,10 +193,7 @@ func (h *Handler) handleBatchEvent(ctx context.Context, _ string, e *event.Event
 }
 
 func (h *Handler) handleURIEvent(ctx context.Context, e *event.Event, data []interface{}) error {
-	log.Println("URI", data)
-	// FIXME
-
-	newURI := ""
+	newURI := *abi.ConvertType(data[0], new(string)).(*string)
 	if err := h.store.UpdateContractURI(ctx, e.Network, e.Chain, e.Address.Hex(), newURI); err != nil {
 		return err
 	}

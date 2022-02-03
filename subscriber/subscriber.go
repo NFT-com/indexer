@@ -21,7 +21,8 @@ type Subscriber struct {
 }
 
 func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Source) (*Subscriber, error) {
-	// FIXME: Sanitize input?
+	if
+
 	if len(sources) == 0 {
 		return nil, errors.New("invalid sources amount")
 	}
@@ -43,6 +44,10 @@ func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) er
 		case <-s.done:
 			return nil
 		default:
+			if len(s.sources) == 0 {
+				return nil
+			}
+
 			nextBlock := s.sources[s.currentSource].Next(ctx)
 			if nextBlock == nil {
 				s.currentSource++

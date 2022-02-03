@@ -33,6 +33,11 @@ func (m *Mock) UpdateNFTOwner(_ context.Context, _, _, _, id, newOwner string) e
 	return nil
 }
 
+func (m *Mock) UpdateNFTMetadata(ctx context.Context, _, _, _, id string, data map[string]interface{}) error {
+	m.log.Info().Str("id", id).Interface("data", data).Msg("nft owner updated")
+	return nil
+}
+
 func (m *Mock) BurnNFT(ctx context.Context, _, _, _, id string) error {
 	m.log.Info().Str("id", id).Msg("nft burnt")
 	return nil
