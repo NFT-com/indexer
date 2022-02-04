@@ -26,12 +26,11 @@ const (
 	transferBatchEventName  = "TransferBatch"
 	uriEventName            = "URI"
 
-	fromKeyword   = "from"
-	toKeyword     = "to"
-	idKeyword     = "id"
-	idsKeyword    = "ids"
-	valueKeyword  = "value"
-	valuesKeyword = "values"
+	fromKeyword  = "from"
+	toKeyword    = "to"
+	idKeyword    = "id"
+	valueKeyword = "value"
+	uriKeyword   = "uri"
 )
 
 func main() {
@@ -93,7 +92,7 @@ func (h *Handler) Handle(ctx context.Context, e *event.Event) error {
 	case transferBatchEventName:
 		return h.handleBatchEvent(ctx, transferBatchEventName, e, data)
 	case uriEventName:
-		return h.handleURIEvent(ctx, e, data)
+		return h.handleURIEvent(ctx, uriEventName, e, data)
 	default:
 		// We only care about the above events, for now other event is not worth unpack or saving
 		return nil
@@ -192,8 +191,26 @@ func (h *Handler) handleBatchEvent(ctx context.Context, name string, e *event.Ev
 	return nil
 }
 
-func (h *Handler) handleURIEvent(ctx context.Context, e *event.Event, data []interface{}) error {
+func (h *Handler) handleURIEvent(ctx context.Context, name string, e *event.Event, data []interface{}) error {
 	newURI := *abi.ConvertType(data[0], new(string)).(*string)
+
+	parsedEvent := event.ParsedEvent{
+		ID:              e.ID,
+		Network:         e.Network,
+		Chain:           e.Chain,
+		Block:           e.Block,
+		TransactionHash: e.TransactionHash.Hex(),
+		Address:         e.Address.Hex(),
+		Type:            name,
+		Data: map[string]interface{}{
+			uriKeyword: newURI,
+		},
+	}
+
+	if err := h.store.SaveEvent(ctx, &parsedEvent); err != nil {
+		return err
+	}
+
 	if err := h.store.UpdateContractURI(ctx, e.Network, e.Chain, e.Address.Hex(), newURI); err != nil {
 		return err
 	}
