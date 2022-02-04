@@ -15,6 +15,7 @@ var (
 type Storer interface {
 	SaveNFT(ctx context.Context, nft *nft.NFT) error
 	UpdateNFTOwner(ctx context.Context, network, chain, address, id, newOwner string) error
+	UpdateNFTMetadata(ctx context.Context, network, chain, address, id string, data map[string]interface{}) error
 	BurnNFT(ctx context.Context, network, chain, address, id string) error
 
 	SaveEvent(ctx context.Context, event *event.ParsedEvent) error

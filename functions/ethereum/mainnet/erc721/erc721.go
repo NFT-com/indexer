@@ -157,14 +157,10 @@ func (h *Handler) handleMintEvent(ctx context.Context, parsedABI abi.ABI, id *bi
 	}
 
 	if len(unpackedData) == 0 {
-		return nil // FIXME
+		return nil
 	}
 
-	uri, ok := unpackedData[0].(string)
-	if !ok {
-		return nil // FIXME
-	}
-
+	uri := *abi.ConvertType(unpackedData[0], new(string)).(*string)
 	storeNFT := nft.NFT{
 		ID:       id.String(),
 		Network:  e.Network,

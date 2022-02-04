@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math/big"
 	"os"
@@ -132,8 +131,13 @@ func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *e
 		return err
 	}
 
-	// FIXME UPDATE EXPIRES
-	fmt.Println("missing updating the expiring date")
+	newData := map[string]interface{}{
+		expiresKeyword: expires.String(),
+	}
+	err = h.store.UpdateNFTMetadata(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), newData)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -216,8 +220,13 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 		return err
 	}
 
-	// FIXME UPDATE EXPIRES
-	fmt.Println("missing updating the expiring date")
+	newData := map[string]interface{}{
+		expiresKeyword: expires.String(),
+	}
+	err = h.store.UpdateNFTMetadata(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), newData)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
