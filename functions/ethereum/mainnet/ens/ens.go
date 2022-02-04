@@ -134,7 +134,8 @@ func (h *Handler) handleNameMigratedEvent(ctx context.Context, name string, e *e
 	newData := map[string]interface{}{
 		expiresKeyword: expires.String(),
 	}
-	if err := h.store.UpdateNFTMetadata(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), newData); err != nil {
+	err = h.store.UpdateNFTMetadata(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), newData)
+	if err != nil {
 		return err
 	}
 
@@ -222,7 +223,8 @@ func (h *Handler) handleNameRenewedEvent(ctx context.Context, name string, e *ev
 	newData := map[string]interface{}{
 		expiresKeyword: expires.String(),
 	}
-	if err := h.store.UpdateNFTMetadata(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), newData); err != nil {
+	err = h.store.UpdateNFTMetadata(ctx, e.Network, e.Chain, e.Address.Hex(), id.String(), newData)
+	if err != nil {
 		return err
 	}
 
