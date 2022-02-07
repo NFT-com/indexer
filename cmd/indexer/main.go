@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	dispatcher "github.com/NFT-com/indexer/dispatch"
 	"os"
 	"os/signal"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	dispatcher "github.com/NFT-com/indexer/dispatch/aws"
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
