@@ -1,4 +1,4 @@
-package printter
+package noop
 
 import (
 	"context"
@@ -11,44 +11,44 @@ import (
 	"github.com/NFT-com/indexer/store"
 )
 
-type Mock struct {
+type Noop struct {
 	log zerolog.Logger
 }
 
-func New(log zerolog.Logger) *Mock {
-	m := Mock{
+func New(log zerolog.Logger) *Noop {
+	m := Noop{
 		log: log,
 	}
 
 	return &m
 }
 
-func (m *Mock) SaveNFT(_ context.Context, nft *nft.NFT) error {
+func (m *Noop) SaveNFT(_ context.Context, nft *nft.NFT) error {
 	m.log.Info().Interface("nft", *nft).Msg("new nft inserted")
 	return nil
 }
 
-func (m *Mock) UpdateNFTOwner(_ context.Context, _, _, _, id, newOwner string) error {
+func (m *Noop) UpdateNFTOwner(_ context.Context, _, _, _, id, newOwner string) error {
 	m.log.Info().Str("id", id).Str("newOwner", newOwner).Msg("nft owner updated")
 	return nil
 }
 
-func (m *Mock) UpdateNFTMetadata(ctx context.Context, _, _, _, id string, data map[string]interface{}) error {
+func (m *Noop) UpdateNFTMetadata(ctx context.Context, _, _, _, id string, data map[string]interface{}) error {
 	m.log.Info().Str("id", id).Interface("data", data).Msg("nft owner updated")
 	return nil
 }
 
-func (m *Mock) BurnNFT(ctx context.Context, _, _, _, id string) error {
+func (m *Noop) BurnNFT(ctx context.Context, _, _, _, id string) error {
 	m.log.Info().Str("id", id).Msg("nft burnt")
 	return nil
 }
 
-func (m *Mock) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
+func (m *Noop) SaveEvent(_ context.Context, event *event.ParsedEvent) error {
 	m.log.Info().Interface("id", *event).Msg("new event saved")
 	return nil
 }
 
-func (m *Mock) GetContractType(_ context.Context, _, _, address string) (string, error) {
+func (m *Noop) GetContractType(_ context.Context, _, _, address string) (string, error) {
 	value, ok := map[string]string{
 		strings.ToLower("0x86b18D285C1990Ea16f67D3F22D79970D418C3CE"): "erc721",
 		strings.ToLower("0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85"): "custom",
@@ -61,7 +61,7 @@ func (m *Mock) GetContractType(_ context.Context, _, _, address string) (string,
 	return value, nil
 }
 
-func (m *Mock) GetContractABI(_ context.Context, _, _, address string) (string, error) {
+func (m *Noop) GetContractABI(_ context.Context, _, _, address string) (string, error) {
 	value, ok := map[string]string{
 		strings.ToLower("0x86b18D285C1990Ea16f67D3F22D79970D418C3CE"): erc721ABI,
 		strings.ToLower("0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85"): ensABI,
@@ -74,7 +74,7 @@ func (m *Mock) GetContractABI(_ context.Context, _, _, address string) (string, 
 	return value, nil
 }
 
-func (m *Mock) UpdateContractURI(_ context.Context, _, _, address, uri string) error {
+func (m *Noop) UpdateContractURI(_ context.Context, _, _, address, uri string) error {
 	m.log.Info().Str("contract", address).Str("uri", uri).Msg("contract uri updated")
 	return nil
 }
