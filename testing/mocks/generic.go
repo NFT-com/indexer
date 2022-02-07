@@ -1,12 +1,13 @@
 package mocks
 
 import (
-	"github.com/NFT-com/indexer/block"
-	"github.com/NFT-com/indexer/event"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/NFT-com/indexer/block"
+	"github.com/NFT-com/indexer/event"
 )
 
 var (

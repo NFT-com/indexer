@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	dispatcher "github.com/NFT-com/indexer/dispatch"
 	"os"
 	"os/signal"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/dispatch"
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
@@ -122,7 +122,7 @@ func run() error {
 	sess := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(sess, lambdaConfig)
 
-	dispatcher := dispatcher.New(lambdaClient, noop.New(log))
+	dispatcher := dispatch.NewClient(lambdaClient, noop.New(log))
 
 	failed := make(chan error)
 	done := make(chan struct{})

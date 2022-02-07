@@ -21,7 +21,7 @@ type Client struct {
 	store        store.Storer
 }
 
-func New(lambdaClient *lambda.Lambda, store store.Storer) *Client {
+func NewClient(lambdaClient *lambda.Lambda, store store.Storer) *Client {
 	d := Client{
 		lambdaClient: lambdaClient,
 		store:        store,
