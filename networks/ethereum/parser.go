@@ -62,8 +62,8 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event,
 		hash := sha256.Sum256(eventJson)
 		e := event.Event{
 			ID:              common.Bytes2Hex(hash[:]),
-			Chain:           p.network,
-			Network:         p.chain,
+			Network:         p.network,
+			Chain:           p.chain,
 			Block:           l.BlockNumber,
 			TransactionHash: l.TxHash,
 			Address:         l.Address,

@@ -23,10 +23,6 @@ import (
 	"github.com/NFT-com/indexer/subscriber"
 )
 
-const (
-	localEnvironment = "local"
-)
-
 func main() {
 	if err := run(); err != nil {
 		fmt.Printf("failure: %v\n", err)
@@ -49,7 +45,7 @@ func run() error {
 		flagEndHeight   int64
 		flagStartHeight int64
 		flagLogLevel    string
-		flagEnvironment string
+		flagTestMode    bool
 		flagLambdaURL   string
 		flagRegion      string
 	)
@@ -57,7 +53,7 @@ func run() error {
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
 	pflag.Int64VarP(&flagEndHeight, "end", "e", 0, "height at which to stop indexing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagEnvironment, "environment", "n", "", "indexer environment")
+	pflag.BoolVarP(&flagTestMode, "test", "t", false, "test mode")
 	pflag.StringVarP(&flagLambdaURL, "lambda-url", "u", "", "lambda url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
 
@@ -114,8 +110,7 @@ func run() error {
 	}
 
 	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
-	switch flagEnvironment {
-	case localEnvironment:
+	if flagTestMode {
 		sessionConfig.Credentials = credentials.AnonymousCredentials
 	}
 
