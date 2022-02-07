@@ -16,7 +16,7 @@ import (
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
-	"github.com/NFT-com/indexer/store/mock"
+	"github.com/NFT-com/indexer/store/printter"
 )
 
 const (
@@ -48,7 +48,7 @@ func main() {
 	}
 	logger = logger.Level(level)
 
-	store := mock.New(logger)
+	store := printter.New(logger)
 	handler := New(store)
 
 	lambda.Start(handler.Handle)
