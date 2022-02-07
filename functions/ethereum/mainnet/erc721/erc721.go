@@ -18,7 +18,7 @@ import (
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/nft"
 	"github.com/NFT-com/indexer/store"
-	"github.com/NFT-com/indexer/store/printter"
+	"github.com/NFT-com/indexer/store/noop"
 )
 
 const (
@@ -53,7 +53,7 @@ func main() {
 	}
 	logger = logger.Level(level)
 
-	store := printter.New(logger)
+	store := noop.New(logger)
 	client, err := ethclient.Dial(nodeURL)
 	if err != nil {
 		log.Fatalln(err)

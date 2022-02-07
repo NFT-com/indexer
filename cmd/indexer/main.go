@@ -19,7 +19,7 @@ import (
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
-	"github.com/NFT-com/indexer/store/printter"
+	"github.com/NFT-com/indexer/store/noop"
 	"github.com/NFT-com/indexer/subscriber"
 )
 
@@ -122,7 +122,7 @@ func run() error {
 	sess := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(sess, lambdaConfig)
 
-	dispatcher := dispatcher.New(lambdaClient, printter.New(log))
+	dispatcher := dispatcher.New(lambdaClient, noop.New(log))
 
 	failed := make(chan error)
 	done := make(chan struct{})
