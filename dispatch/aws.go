@@ -1,4 +1,4 @@
-package aws
+package dispatch
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
-	"github.com/NFT-com/indexer/dispatch"
 	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/functions"
 	"github.com/NFT-com/indexer/store"
@@ -17,13 +16,13 @@ const (
 	customContractType = "custom"
 )
 
-type Dispatcher struct {
+type Client struct {
 	lambdaClient *lambda.Lambda
 	store        store.Storer
 }
 
-func New(lambdaClient *lambda.Lambda, store store.Storer) dispatch.Dispatcher {
-	d := Dispatcher{
+func New(lambdaClient *lambda.Lambda, store store.Storer) *Client {
+	d := Client{
 		lambdaClient: lambdaClient,
 		store:        store,
 	}
@@ -31,7 +30,7 @@ func New(lambdaClient *lambda.Lambda, store store.Storer) dispatch.Dispatcher {
 	return &d
 }
 
-func (d *Dispatcher) Dispatch(ctx context.Context, e *event.Event) error {
+func (d *Client) Dispatch(ctx context.Context, e *event.Event) error {
 	contractType, err := d.store.GetContractType(ctx, e.Network, e.Chain, e.Address.Hex())
 	if err != nil {
 		return err
