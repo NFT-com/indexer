@@ -10,12 +10,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
-	"github.com/NFT-com/indexer/events"
-)
-
-const (
-	EthereumNetwork = "Ethereum"
-	MainnetChain    = "mainnet"
+	"github.com/NFT-com/indexer/event"
 )
 
 type Parser struct {
@@ -37,9 +32,8 @@ func NewParser(log zerolog.Logger, client *ethclient.Client, network string, cha
 	return &p
 }
 
-func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event, error) {
+func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event, error) {
 	blockHash := common.HexToHash(block.String())
-	evts := make([]*events.Event, 0, 64)
 
 	query := ethereum.FilterQuery{
 		BlockHash: &blockHash,
@@ -57,6 +51,7 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 		return nil, err
 	}
 
+	evts := make([]*event.Event, 0, 64)
 	for _, l := range logs {
 		eventJson, err := l.MarshalJSON()
 		if err != nil {
@@ -65,10 +60,10 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 		}
 
 		hash := sha256.Sum256(eventJson)
-		event := events.Event{
+		e := event.Event{
 			ID:              common.Bytes2Hex(hash[:]),
-			Chain:           p.network,
-			Network:         p.chain,
+			Network:         p.network,
+			Chain:           p.chain,
 			Block:           l.BlockNumber,
 			TransactionHash: l.TxHash,
 			Address:         l.Address,
@@ -77,7 +72,7 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*events.Event
 			Data:            l.Data,
 		}
 
-		evts = append(evts, &event)
+		evts = append(evts, &e)
 	}
 
 	return evts, nil

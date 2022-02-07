@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  NFT Analytics functions.
+
+Resources:
+  ethereummainneterc721: # FIXME: alphanumeric name... How do we do it?
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/ethereum/mainnet/erc721/
+      Handler: erc721
+      Runtime: go1.x
+      Environment:
+        Variables:
+          NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71
+  ethereummainneterc1155: # FIXME: alphanumeric name... How do we do it?
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/ethereum/mainnet/erc1155/
+      Handler: erc1155
+      Runtime: go1.x
+      Environment:
+        Variables:
+          NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71
+  ethereummainnet0x06012c8cf97bead5deae237070f9587f8e7a266d: # Cryptokitties FIXME: alphanumeric name... How do we do it?
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/ethereum/mainnet/cryptokitties/
+      Handler: cryptokitties
+      Runtime: go1.x
+      Environment:
+        Variables:
+          NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71
+  ethereummainnet0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85: # ENS FIXME: alphanumeric name... How do we do it?
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/ethereum/mainnet/ens/
+      Handler: ens
+      Runtime: go1.x
+      Environment:
+        Variables:
+          NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71

@@ -3,10 +3,11 @@ package subscriber
 import (
 	"context"
 	"errors"
+
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/source"
 )
 
@@ -20,7 +21,6 @@ type Subscriber struct {
 }
 
 func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Source) (*Subscriber, error) {
-	// FIXME: Sanitize input?
 	if len(sources) == 0 {
 		return nil, errors.New("invalid sources amount")
 	}
@@ -36,33 +36,30 @@ func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Sou
 	return &s, nil
 }
 
-func (s *Subscriber) Subscribe(ctx context.Context, events chan *events.Event) error {
+func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) error {
 	for {
-		for {
-			select {
-			case <-s.done:
-				return nil
-			default:
-				nextBlock := s.sources[s.currentSource].Next(ctx)
-				if nextBlock == nil {
-					s.currentSource++
-
-					if s.currentSource >= len(s.sources) {
-						return nil
-					}
-
-					continue
+		select {
+		case <-s.done:
+			return nil
+		default:
+			nextBlock := s.sources[s.currentSource].Next(ctx)
+			if nextBlock == nil {
+				s.currentSource++
+				if s.currentSource >= len(s.sources) {
+					return nil
 				}
 
-				blockEvents, err := s.parser.Parse(ctx, nextBlock)
-				if err != nil {
-					s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
-					continue
-				}
+				continue
+			}
 
-				for _, event := range blockEvents {
-					events <- event
-				}
+			blockEvents, err := s.parser.Parse(ctx, nextBlock)
+			if err != nil {
+				s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
+				continue
+			}
+
+			for _, e := range blockEvents {
+				events <- e
 			}
 		}
 	}

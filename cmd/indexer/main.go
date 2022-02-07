@@ -7,13 +7,19 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/events"
+	dispatcher "github.com/NFT-com/indexer/dispatch/aws"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
+	"github.com/NFT-com/indexer/store/mock"
 	"github.com/NFT-com/indexer/subscriber"
 )
 
@@ -39,18 +45,26 @@ func run() error {
 		flagEndHeight   int64
 		flagStartHeight int64
 		flagLogLevel    string
+		flagTestMode    bool
+		flagLambdaURL   string
+		flagRegion      string
 	)
 
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
 	pflag.Int64VarP(&flagEndHeight, "end", "e", 0, "height at which to stop indexing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.BoolVarP(&flagTestMode, "test", "t", false, "test mode")
+	pflag.StringVarP(&flagLambdaURL, "lambda-url", "u", "", "lambda url")
+	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
 
 	pflag.Parse()
 
-	if len(os.Args) < 2 {
-		return fmt.Errorf("required argument: <node_url>")
+	if len(os.Args) < 4 {
+		return fmt.Errorf("required arguments: <node_url> <network> <chain>")
 	}
 	nodeURL := os.Args[1]
+	network := os.Args[2]
+	chain := os.Args[3]
 
 	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
@@ -88,16 +102,31 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser := ethereum.NewParser(log, client, ethereum.EthereumNetwork, ethereum.MainnetChain)
+	parser := ethereum.NewParser(log, client, network, chain)
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {
 		return err
 	}
 
+	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	if flagTestMode {
+		sessionConfig.Credentials = credentials.AnonymousCredentials
+	}
+
+	lambdaConfig := &aws.Config{}
+	if flagLambdaURL != "" {
+		lambdaConfig.Endpoint = aws.String(flagLambdaURL)
+	}
+
+	sess := session.Must(session.NewSession(&sessionConfig))
+	lambdaClient := lambda.New(sess, lambdaConfig)
+
+	dispatcher := dispatcher.New(lambdaClient, mock.New(log))
+
 	failed := make(chan error)
 	done := make(chan struct{})
-	eventChannel := make(chan *events.Event)
+	eventChannel := make(chan *event.Event)
 	go func() {
 		log.Info().Msg("Launching subscriber")
 		if err := subs.Subscribe(ctx, eventChannel); err != nil {
@@ -109,9 +138,15 @@ func run() error {
 
 	go func() {
 		for {
-			event := <-eventChannel
-
-			log.Info().Interface("event", event).Msg("received")
+			select {
+			case e := <-eventChannel:
+				log.Info().Interface("event", e).Msg("received")
+				if err := dispatcher.Dispatch(ctx, e); err != nil {
+					log.Error().Err(err).Str("event", e.ID).Msg("failed to dispatch event")
+				}
+			case <-done:
+				return
+			}
 		}
 	}()
 
