@@ -123,7 +123,10 @@ func run() error {
 	sess := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(sess, lambdaConfig)
 
-	dispatcher := dispatch.NewClient(lambdaClient, noop.New(log))
+	dispatcher, err := dispatch.NewClient(lambdaClient, noop.New(log))
+	if err != nil {
+		return err
+	}
 
 	failed := make(chan error)
 	done := make(chan struct{})

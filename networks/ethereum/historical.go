@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"errors"
 	"math/big"
 
 	"github.com/rs/zerolog"
@@ -18,6 +19,10 @@ type HistoricalSource struct {
 }
 
 func NewHistorical(ctx context.Context, log zerolog.Logger, client Client, startIndex, endIndex int64) (*HistoricalSource, error) {
+	if client == nil {
+		return nil, errors.New("invalid ethereum client")
+	}
+
 	h := HistoricalSource{
 		log:       log.With().Str("component", "historical_source").Logger(),
 		client:    client,

@@ -21,6 +21,9 @@ type Subscriber struct {
 }
 
 func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Source) (*Subscriber, error) {
+	if parser == nil {
+		return nil, errors.New("invalid parser")
+	}
 	if len(sources) == 0 {
 		return nil, errors.New("invalid sources amount")
 	}

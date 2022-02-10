@@ -9,6 +9,10 @@ import (
 type Block string
 
 func (b *Block) String() string {
+	if b == nil {
+		return ""
+	}
+
 	return string(*b)
 }
 

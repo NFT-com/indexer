@@ -3,6 +3,7 @@ package ethereum
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -23,6 +24,10 @@ type Parser struct {
 }
 
 func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client) (*Parser, error) {
+	if client == nil {
+		return nil, errors.New("invalid ethereum client")
+	}
+
 	p := Parser{
 		log:    log.With().Str("component", "parser").Logger(),
 		client: client,

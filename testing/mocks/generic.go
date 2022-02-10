@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -101,5 +103,11 @@ var (
 				common.HexToHash("0xc2a774a71c5c0b82d7dc3ddc44182605d50feeda3a3cef90dd117adcaa317be3"),
 			},
 		},
+	}
+
+	GenericLambdaInvokeOutput = lambda.InvokeOutput{
+		ExecutedVersion: aws.String("version_1"),
+		LogResult:       aws.String("logs_results"),
+		StatusCode:      aws.Int64(200),
 	}
 )
