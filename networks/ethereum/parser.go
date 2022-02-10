@@ -3,6 +3,7 @@ package ethereum
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -20,7 +21,17 @@ type Parser struct {
 	client  Client
 }
 
-func NewParser(log zerolog.Logger, client Client, network string, chain string) *Parser {
+func NewParser(log zerolog.Logger, client Client, network string, chain string) (*Parser, error) {
+	if client == nil {
+		return nil, errors.New("invalid ethereum client")
+	}
+	if network == "" {
+		return nil, errors.New("invalid network")
+	}
+	if chain == "" {
+		return nil, errors.New("invalid chain")
+	}
+
 	p := Parser{
 		log:     log.With().Str("component", "parser").Logger(),
 		network: network,
@@ -28,7 +39,7 @@ func NewParser(log zerolog.Logger, client Client, network string, chain string) 
 		client:  client,
 	}
 
-	return &p
+	return &p, nil
 }
 
 func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event, error) {

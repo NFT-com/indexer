@@ -102,7 +102,10 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser := ethereum.NewParser(log, client, network, chain)
+	parser, err := ethereum.NewParser(log, client, network, chain)
+	if err != nil {
+		return err
+	}
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {
@@ -122,7 +125,10 @@ func run() error {
 	sess := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(sess, lambdaConfig)
 
-	dispatcher := dispatch.NewClient(lambdaClient, noop.New(log))
+	dispatcher, err := dispatch.NewClient(lambdaClient, noop.New(log))
+	if err != nil {
+		return err
+	}
 
 	failed := make(chan error)
 	done := make(chan struct{})

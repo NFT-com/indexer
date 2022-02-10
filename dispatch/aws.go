@@ -3,6 +3,7 @@ package dispatch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -16,18 +17,29 @@ const (
 	customContractType = "custom"
 )
 
+type Lambda interface {
+	Invoke(input *lambda.InvokeInput) (*lambda.InvokeOutput, error)
+}
+
 type Client struct {
-	lambdaClient *lambda.Lambda
+	lambdaClient Lambda
 	store        store.Storer
 }
 
-func NewClient(lambdaClient *lambda.Lambda, store store.Storer) *Client {
+func NewClient(lambdaClient Lambda, store store.Storer) (*Client, error) {
+	if lambdaClient == nil {
+		return nil, errors.New("invalid lambda client")
+	}
+	if store == nil {
+		return nil, errors.New("invalid store")
+	}
+
 	d := Client{
 		lambdaClient: lambdaClient,
 		store:        store,
 	}
 
-	return &d
+	return &d, nil
 }
 
 func (d *Client) Dispatch(ctx context.Context, e *event.Event) error {

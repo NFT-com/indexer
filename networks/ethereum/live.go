@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
@@ -16,6 +17,10 @@ type LiveSource struct {
 }
 
 func NewLive(ctx context.Context, log zerolog.Logger, client Client) (*LiveSource, error) {
+	if client == nil {
+		return nil, errors.New("invalid ethereum client")
+	}
+
 	l := LiveSource{
 		log:     log.With().Str("component", "live_source").Logger(),
 		headers: make(chan *types.Header),
