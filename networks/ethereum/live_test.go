@@ -40,7 +40,7 @@ func TestNewLive(t *testing.T) {
 			client       = mocks.BaselineClient(t, subscription)
 		)
 
-		client.SubscribeNewHeadFunc = func(ctx context.Context, ch chan<- *types.Header) (goethereum.Subscription, error) {
+		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
 			return nil, errors.New("failed to subscribe to headers")
 		}
 

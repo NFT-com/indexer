@@ -1,8 +1,9 @@
 package mocks
 
 import (
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/lambda"
 )
 
 type Lambda struct {
