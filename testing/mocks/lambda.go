@@ -14,7 +14,7 @@ func BaselineLambda(t *testing.T) *Lambda {
 	t.Helper()
 
 	c := Lambda{
-		InvokeFunc: func(input *lambda.InvokeInput) (*lambda.InvokeOutput, error) {
+		InvokeFunc: func(*lambda.InvokeInput) (*lambda.InvokeOutput, error) {
 			return &GenericLambdaInvokeOutput, nil
 		},
 	}

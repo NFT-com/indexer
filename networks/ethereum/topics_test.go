@@ -43,6 +43,8 @@ func TestTopicHash(t *testing.T) {
 
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			hash := ethereum.TopicHash(tt.topic)
 			assert.Equal(t, tt.hash, hash.Hex())
 		})

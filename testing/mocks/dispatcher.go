@@ -14,7 +14,7 @@ func BaselineDispatcher(t *testing.T) *Dispatcher {
 	t.Helper()
 
 	c := Dispatcher{
-		DispatchFunc: func(_ context.Context, _ *event.Event) error {
+		DispatchFunc: func(context.Context, *event.Event) error {
 			return nil
 		},
 	}

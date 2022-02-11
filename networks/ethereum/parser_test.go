@@ -62,11 +62,13 @@ func TestNewParser(t *testing.T) {
 			network:     "ethereum",
 			chain:       "mainnet",
 			assertValue: assert.NotNil,
-			assertError: assert.Error,
+			assertError: assert.NoError,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			subs, err := ethereum.NewParser(test.log, test.client, test.network, test.chain)
 			test.assertError(t, err)
 			test.assertValue(t, subs)
@@ -110,7 +112,7 @@ func TestParser_Parse(t *testing.T) {
 		}
 
 		events, err := parser.Parse(ctx, &b)
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		assert.Len(t, events, 3)
 	})
 }
