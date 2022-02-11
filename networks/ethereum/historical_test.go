@@ -9,57 +9,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/testing/mocks"
 )
 
 func TestNewHistorical(t *testing.T) {
-	t.Run("should return error on failed header retrieval", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			log         = zerolog.Nop()
-			start int64 = 1
-			end   int64 = 2
-		)
-
-		historical, err := ethereum.NewHistorical(ctx, log, nil, start, end)
-		if err == nil {
-			t.Error("expected error creating historical but got none")
-			return
-		}
-
-		if historical != nil {
-			t.Error("unexpected historical struct")
-			return
-		}
-	})
-	t.Run("should return error on failed header retrieval", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			client       = mocks.BaselineClient(t, nil)
-			start  int64 = 1
-			end    int64 = 2
-		)
-
-		client.HeaderByNumberFunc = func(ctx context.Context, number *big.Int) (*types.Header, error) {
-			return nil, errors.New("failed to retrieve header")
-		}
-
-		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
-		if err == nil {
-			t.Error("expected error creating historical but got none")
-			return
-		}
-
-		if historical != nil {
-			t.Error("unexpected historical struct")
-			return
-		}
-	})
-
-	t.Run("should return correctly", func(t *testing.T) {
+	t.Run("return correctly historical client", func(t *testing.T) {
 		var (
 			ctx          = context.Background()
 			log          = zerolog.Nop()
@@ -68,20 +26,44 @@ func TestNewHistorical(t *testing.T) {
 			end    int64 = 6
 		)
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
-		if err != nil {
-			t.Error("unexpected error creating historical")
-			return
+		assert.Error(t, err)
+		assert.Nil(t, historical)
+	})
+
+	t.Run("return error on failed header retrieval", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			log         = zerolog.Nop()
+			start int64 = 1
+			end   int64 = 2
+		)
+
+		historical, err := ethereum.NewHistorical(ctx, log, nil, start, end)
+		assert.Error(t, err)
+		assert.Nil(t, historical)
+	})
+
+	t.Run("return error on failed header retrieval", func(t *testing.T) {
+		var (
+			ctx          = context.Background()
+			log          = zerolog.Nop()
+			client       = mocks.BaselineClient(t, nil)
+			start  int64 = 1
+			end    int64 = 2
+		)
+
+		client.HeaderByNumberFunc = func(context.Context, *big.Int) (*types.Header, error) {
+			return nil, errors.New("failed to retrieve header")
 		}
 
-		if historical == nil {
-			t.Error("unexpected nil historical struct")
-			return
-		}
+		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
+		assert.Error(t, err)
+		assert.Nil(t, historical)
 	})
 }
 
 func TestHistoricalSource_Next(t *testing.T) {
-	t.Run("should return blocks correctly and stop on error", func(t *testing.T) {
+	t.Run("return blocks correctly and stop on error", func(t *testing.T) {
 		var (
 			ctx          = context.Background()
 			log          = zerolog.Nop()
@@ -99,12 +81,9 @@ func TestHistoricalSource_Next(t *testing.T) {
 		}
 
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
-		if err != nil {
-			t.Error("unexpected error creating historical")
-			return
-		}
+		require.Error(t, err)
 
-		client.HeaderByNumberFunc = func(ctx context.Context, number *big.Int) (*types.Header, error) {
+		client.HeaderByNumberFunc = func(_ context.Context, number *big.Int) (*types.Header, error) {
 			if number.Cmp(big.NewInt(10)) == 0 {
 				return nil, errors.New("failed to get header")
 			}
@@ -124,12 +103,10 @@ func TestHistoricalSource_Next(t *testing.T) {
 			}
 		}
 
-		if count != (newEnd - start) {
-			t.Errorf("expected %v blocks but only got %v", newEnd-start, count)
-			return
-		}
+		assert.Equal(t, newEnd-start, count)
 	})
-	t.Run("should return blocks correctly and stop on end", func(t *testing.T) {
+
+	t.Run("return blocks correctly and stop on end", func(t *testing.T) {
 		var (
 			ctx          = context.Background()
 			log          = zerolog.Nop()
@@ -147,10 +124,7 @@ func TestHistoricalSource_Next(t *testing.T) {
 		}
 
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
-		if err != nil {
-			t.Error("unexpected error creating historical")
-			return
-		}
+		require.NoError(t, err)
 
 		client.HeaderByNumberFunc = func(ctx context.Context, number *big.Int) (*types.Header, error) {
 			h := types.Header{
@@ -168,15 +142,12 @@ func TestHistoricalSource_Next(t *testing.T) {
 			}
 		}
 
-		if count != (newEnd-start)+1 {
-			t.Errorf("expected %v blocks but only got %v", newEnd-start+1, count)
-			return
-		}
+		assert.Equal(t, (newEnd-start)+1, count)
 	})
 }
 
 func TestHistoricalSource_Close(t *testing.T) {
-	t.Run("should return no error", func(t *testing.T) {
+	t.Run("return no error", func(t *testing.T) {
 		var (
 			ctx          = context.Background()
 			log          = zerolog.Nop()
@@ -184,16 +155,9 @@ func TestHistoricalSource_Close(t *testing.T) {
 			start  int64 = 1
 			end    int64 = 6
 		)
-		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
-		if err != nil {
-			t.Error("unexpected error creating historical")
-			return
-		}
 
-		err = historical.Close()
-		if err != nil {
-			t.Error("unexpected error closing historical")
-			return
-		}
+		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
+		require.Error(t, err)
+		assert.NoError(t, historical.Close())
 	})
 }
