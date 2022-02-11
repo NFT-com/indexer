@@ -2,7 +2,6 @@ package ethereum_test
 
 import (
 	"context"
-	"errors"
 	"math/big"
 	"testing"
 
@@ -43,7 +42,7 @@ func TestNewHistorical(t *testing.T) {
 		end = 2
 
 		client.HeaderByNumberFunc = func(context.Context, *big.Int) (*types.Header, error) {
-			return nil, errors.New("failed to retrieve header")
+			return nil, mocks.GenericError
 		}
 
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
@@ -75,7 +74,7 @@ func TestHistoricalSource_Next(t *testing.T) {
 
 		client.HeaderByNumberFunc = func(_ context.Context, number *big.Int) (*types.Header, error) {
 			if number.Cmp(big.NewInt(10)) == 0 {
-				return nil, errors.New("failed to get header")
+				return nil, mocks.GenericError
 			}
 
 			h := types.Header{

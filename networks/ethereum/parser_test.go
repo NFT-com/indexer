@@ -89,7 +89,7 @@ func TestParser_Parse(t *testing.T) {
 		require.NoError(t, err)
 
 		mockClient.FilterLogsFunc = func(context.Context, goethereum.FilterQuery) ([]types.Log, error) {
-			return nil, errors.New("failed to filter logs")
+			return nil, mocks.GenericError
 		}
 
 		events, err := parser.Parse(ctx, &b)
