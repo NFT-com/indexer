@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"math/big"
@@ -13,6 +14,7 @@ import (
 )
 
 var (
+	GenericError      = errors.New("failed")
 	GenericErrChannel = make(chan error)
 
 	GenericContractType = "erc721"

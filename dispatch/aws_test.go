@@ -2,7 +2,6 @@ package dispatch_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -74,7 +73,7 @@ func TestClient_Dispatch(t *testing.T) {
 		require.NoError(t, err)
 
 		mockedStore.GetContractTypeFunc = func(context.Context, string, string, string) (string, error) {
-			return "", errors.New("failed to get abi")
+			return "", mocks.GenericError
 		}
 
 		assert.Error(t, client.Dispatch(ctx, e))
@@ -85,11 +84,11 @@ func TestClient_Dispatch(t *testing.T) {
 		require.NoError(t, err)
 
 		mockedStore.GetContractTypeFunc = func(context.Context, string, string, string) (string, error) {
-			return "custom", nil
+			return mocks.GenericContractType, nil
 		}
 
 		mockedLambdaClient.InvokeFunc = func(*lambda.InvokeInput) (*lambda.InvokeOutput, error) {
-			return nil, errors.New("failed to invoke lambda")
+			return nil, mocks.GenericError
 		}
 
 		assert.Error(t, client.Dispatch(ctx, e))

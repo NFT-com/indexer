@@ -2,7 +2,6 @@ package ethereum_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -38,7 +37,7 @@ func TestNewLive(t *testing.T) {
 
 	t.Run("return error on failed to subscribe for headers", func(t *testing.T) {
 		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
-			return nil, errors.New("failed to subscribe to headers")
+			return nil, mocks.GenericError
 		}
 
 		live, err := ethereum.NewLive(ctx, log, client)
@@ -82,7 +81,6 @@ func TestLiveSource_Next(t *testing.T) {
 		require.NoError(t, err)
 
 		go func() {
-			<-time.After(time.Second)
 			_ = live.Close()
 		}()
 
@@ -106,7 +104,6 @@ func TestLiveSource_Next(t *testing.T) {
 		}
 
 		go func() {
-			<-time.After(time.Second)
 			errChannel <- nil
 		}()
 
@@ -123,8 +120,7 @@ func TestLiveSource_Next(t *testing.T) {
 		}
 
 		go func() {
-			<-time.After(time.Second)
-			errChannel <- errors.New("failed to subscription")
+			errChannel <- mocks.GenericError
 		}()
 
 		live, err := ethereum.NewLive(ctx, log, client)

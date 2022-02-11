@@ -126,9 +126,8 @@ func TestSubscriber_Subscribe(t *testing.T) {
 		subs, err := subscriber.NewSubscriber(log, parser, []source.Source{s})
 		require.NoError(t, err)
 
-		b := block.Block("block_hash_1")
 		s.NextFunc = func(_ context.Context) *block.Block {
-			return &b
+			return &block1
 		}
 
 		parser.ParseFunc = func(context.Context, *block.Block) ([]*event.Event, error) {
@@ -145,10 +144,7 @@ func TestSubscriber_Subscribe(t *testing.T) {
 		go func(t *testing.T) {
 			t.Helper()
 			err = subs.Subscribe(ctx, events)
-			if err != nil {
-				t.Errorf("unexpected error closing subscriber")
-				return
-			}
+			require.NoError(t, err)
 
 			close(done)
 		}(t)
@@ -184,7 +180,7 @@ func TestSubscriber_Close(t *testing.T) {
 
 		source2.CloseFunc = func() error {
 			closed++
-			return errors.New("failed to close source")
+			return mocks.GenericError
 		}
 
 		assert.NoError(t, subs.Close())
