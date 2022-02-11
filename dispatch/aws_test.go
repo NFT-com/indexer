@@ -46,6 +46,8 @@ func TestNewClient(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			client, err := dispatch.NewClient(test.lambdaClient, test.store)
 			test.assertError(t, err)
 			test.assertValue(t, client)
@@ -65,7 +67,15 @@ func TestClient_Dispatch(t *testing.T) {
 		client, err := dispatch.NewClient(mockedLambdaClient, mockedStore)
 		require.NoError(t, err)
 
-		assert.Error(t, client.Dispatch(ctx, e))
+		mockedStore.GetContractTypeFunc = func(context.Context, string, string, string) (string, error) {
+			return mocks.GenericContractType, nil
+		}
+
+		mockedLambdaClient.InvokeFunc = func(*lambda.InvokeInput) (*lambda.InvokeOutput, error) {
+			return &mocks.GenericLambdaInvokeOutput, nil
+		}
+
+		assert.NoError(t, client.Dispatch(ctx, e))
 	})
 
 	t.Run("return an error on failed store request", func(t *testing.T) {

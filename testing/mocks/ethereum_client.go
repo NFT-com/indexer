@@ -19,13 +19,13 @@ func BaselineClient(t *testing.T, subscription ethereum.Subscription) *Client {
 	t.Helper()
 
 	c := Client{
-		SubscribeNewHeadFunc: func(ctx context.Context, ch chan<- *types.Header) (ethereum.Subscription, error) {
+		SubscribeNewHeadFunc: func(context.Context, chan<- *types.Header) (ethereum.Subscription, error) {
 			return subscription, nil
 		},
-		HeaderByNumberFunc: func(ctx context.Context, number *big.Int) (*types.Header, error) {
+		HeaderByNumberFunc: func(context.Context, *big.Int) (*types.Header, error) {
 			return GenericEthereumBlockHeader, nil
 		},
-		FilterLogsFunc: func(ctx context.Context, q ethereum.FilterQuery) ([]types.Log, error) {
+		FilterLogsFunc: func(context.Context, ethereum.FilterQuery) ([]types.Log, error) {
 			return GenericEthereumLogs, nil
 		},
 	}

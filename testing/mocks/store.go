@@ -23,28 +23,28 @@ func BaselineStore(t *testing.T) *Store {
 	t.Helper()
 
 	c := Store{
-		SaveNFTFunc: func(_ context.Context, _ *nft.NFT) error {
+		SaveNFTFunc: func(context.Context, *nft.NFT) error {
 			return nil
 		},
-		UpdateNFTOwnerFunc: func(_ context.Context, _, _, _, _, _ string) error {
+		UpdateNFTOwnerFunc: func(context.Context, string, string, string, string, string) error {
 			return nil
 		},
-		UpdateNFTMetadataFunc: func(_ context.Context, _, _, _, _ string, _ map[string]interface{}) error {
+		UpdateNFTMetadataFunc: func(context.Context, string, string, string, string, map[string]interface{}) error {
 			return nil
 		},
-		BurnNFTFunc: func(_ context.Context, _, _, _, _ string) error {
+		BurnNFTFunc: func(context.Context, string, string, string, string) error {
 			return nil
 		},
-		SaveEventFunc: func(_ context.Context, _ *event.ParsedEvent) error {
+		SaveEventFunc: func(context.Context, *event.ParsedEvent) error {
 			return nil
 		},
-		GetContractTypeFunc: func(_ context.Context, _, _, _ string) (string, error) {
+		GetContractTypeFunc: func(context.Context, string, string, string) (string, error) {
 			return GenericContractType, nil
 		},
-		GetContractABIFunc: func(_ context.Context, _, _, _ string) (string, error) {
+		GetContractABIFunc: func(context.Context, string, string, string) (string, error) {
 			return GenericContractABI, nil
 		},
-		UpdateContractURIFunc: func(_ context.Context, _, _, _, _ string) error {
+		UpdateContractURIFunc: func(context.Context, string, string, string, string) error {
 			return nil
 		},
 	}

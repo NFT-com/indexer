@@ -16,7 +16,7 @@ func BaselineSource(t *testing.T) *Source {
 	t.Helper()
 
 	c := Source{
-		NextFunc: func(ctx context.Context) *block.Block {
+		NextFunc: func(context.Context) *block.Block {
 			return &GenericBlock
 		},
 		CloseFunc: func() error {

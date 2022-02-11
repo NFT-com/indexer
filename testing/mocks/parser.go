@@ -16,7 +16,7 @@ func BaselineParser(t *testing.T) *Parser {
 	t.Helper()
 
 	c := Parser{
-		ParseFunc: func(ctx context.Context, block *block.Block) ([]*event.Event, error) {
+		ParseFunc: func(context.Context, *block.Block) ([]*event.Event, error) {
 			return GenericEvents, nil
 		},
 	}

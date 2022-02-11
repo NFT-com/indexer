@@ -24,15 +24,23 @@ func TestNewLive(t *testing.T) {
 	)
 
 	t.Run("return the live source correctly", func(t *testing.T) {
+		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
+			return subscription, nil
+		}
+
 		live, err := ethereum.NewLive(ctx, log, client)
 		assert.NoError(t, err)
 		assert.NotNil(t, live)
 	})
 
 	t.Run("return error on invalid client", func(t *testing.T) {
+		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
+			return subscription, nil
+		}
+
 		live, err := ethereum.NewLive(ctx, log, nil)
-		assert.NoError(t, err)
-		assert.NotNil(t, live)
+		assert.Error(t, err)
+		assert.Nil(t, live)
 	})
 
 	t.Run("return error on failed to subscribe for headers", func(t *testing.T) {
@@ -41,8 +49,8 @@ func TestNewLive(t *testing.T) {
 		}
 
 		live, err := ethereum.NewLive(ctx, log, client)
-		assert.NoError(t, err)
-		assert.NotNil(t, live)
+		assert.Error(t, err)
+		assert.Nil(t, live)
 	})
 }
 
@@ -141,6 +149,6 @@ func TestLiveSource_Close(t *testing.T) {
 	t.Run("return no error", func(t *testing.T) {
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
-		assert.Error(t, live.Close())
+		assert.NoError(t, live.Close())
 	})
 }

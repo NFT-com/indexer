@@ -58,6 +58,8 @@ func TestNewSubscriber(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			
 			subs, err := subscriber.NewSubscriber(test.log, test.parser, test.sources)
 			test.assertError(t, err)
 			test.assertValue(t, subs)
@@ -89,15 +91,20 @@ func TestSubscriber_Subscribe(t *testing.T) {
 		subs, err := subscriber.NewSubscriber(log, parser, sources)
 		require.NoError(t, err)
 
+		index = 0
+		source1Count := 0
+		source2Count := 0
 		source1.NextFunc = func(context.Context) *block.Block {
 			b := blocks[index]
 			index++
+			source1Count++
 			return b
 		}
 
 		source2.NextFunc = func(context.Context) *block.Block {
 			b := blocks[index]
 			index++
+			source2Count++
 			return b
 		}
 
@@ -118,6 +125,8 @@ func TestSubscriber_Subscribe(t *testing.T) {
 
 		err = subs.Subscribe(ctx, events)
 		assert.NoError(t, err)
+		assert.Equal(t, 3, source1Count)
+		assert.Equal(t, 2, source2Count)
 		assert.Equal(t, 1, eventCount)
 	})
 
@@ -143,9 +152,8 @@ func TestSubscriber_Subscribe(t *testing.T) {
 		done := make(chan struct{})
 		go func(t *testing.T) {
 			t.Helper()
-			err = subs.Subscribe(ctx, events)
-			require.NoError(t, err)
 
+			require.NoError(t, subs.Subscribe(ctx, events))
 			close(done)
 		}(t)
 
@@ -172,18 +180,22 @@ func TestSubscriber_Close(t *testing.T) {
 		subs, err := subscriber.NewSubscriber(log, parser, sources)
 		require.NoError(t, err)
 
-		closed := 0
+		var (
+			source1Closed bool
+			source2Closed bool
+		)
 		source1.CloseFunc = func() error {
-			closed++
+			source1Closed = true
 			return nil
 		}
 
 		source2.CloseFunc = func() error {
-			closed++
+			source2Closed = true
 			return mocks.GenericError
 		}
 
 		assert.NoError(t, subs.Close())
-		assert.Len(t, sources, closed)
+		assert.True(t, source1Closed)
+		assert.True(t, source2Closed)
 	})
 }
