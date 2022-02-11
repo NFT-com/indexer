@@ -17,26 +17,22 @@ import (
 )
 
 func TestNewHistorical(t *testing.T) {
+	var (
+		ctx          = context.Background()
+		log          = zerolog.Nop()
+		client       = mocks.BaselineClient(t, nil)
+		start  int64 = 1
+		end    int64 = 6
+	)
+
 	t.Run("return correctly historical client", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			client       = mocks.BaselineClient(t, nil)
-			start  int64 = 1
-			end    int64 = 6
-		)
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
 		assert.Error(t, err)
 		assert.Nil(t, historical)
 	})
 
 	t.Run("return error on failed header retrieval", func(t *testing.T) {
-		var (
-			ctx         = context.Background()
-			log         = zerolog.Nop()
-			start int64 = 1
-			end   int64 = 2
-		)
+		end = 2
 
 		historical, err := ethereum.NewHistorical(ctx, log, nil, start, end)
 		assert.Error(t, err)
@@ -44,13 +40,7 @@ func TestNewHistorical(t *testing.T) {
 	})
 
 	t.Run("return error on failed header retrieval", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			client       = mocks.BaselineClient(t, nil)
-			start  int64 = 1
-			end    int64 = 2
-		)
+		end = 2
 
 		client.HeaderByNumberFunc = func(context.Context, *big.Int) (*types.Header, error) {
 			return nil, errors.New("failed to retrieve header")
@@ -63,16 +53,16 @@ func TestNewHistorical(t *testing.T) {
 }
 
 func TestHistoricalSource_Next(t *testing.T) {
-	t.Run("return blocks correctly and stop on error", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			client       = mocks.BaselineClient(t, nil)
-			start  int64 = 1
-			end    int64 = 20
-			newEnd int64 = 10
-		)
+	var (
+		ctx          = context.Background()
+		log          = zerolog.Nop()
+		client       = mocks.BaselineClient(t, nil)
+		start  int64 = 1
+		end    int64 = 20
+		newEnd int64 = 10
+	)
 
+	t.Run("return blocks correctly and stop on error", func(t *testing.T) {
 		client.HeaderByNumberFunc = func(ctx context.Context, number *big.Int) (*types.Header, error) {
 			h := types.Header{
 				Number: big.NewInt(newEnd),
@@ -107,15 +97,6 @@ func TestHistoricalSource_Next(t *testing.T) {
 	})
 
 	t.Run("return blocks correctly and stop on end", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			client       = mocks.BaselineClient(t, nil)
-			start  int64 = 1
-			end    int64 = 20
-			newEnd int64 = 10
-		)
-
 		client.HeaderByNumberFunc = func(ctx context.Context, number *big.Int) (*types.Header, error) {
 			h := types.Header{
 				Number: big.NewInt(newEnd),
@@ -147,15 +128,15 @@ func TestHistoricalSource_Next(t *testing.T) {
 }
 
 func TestHistoricalSource_Close(t *testing.T) {
-	t.Run("return no error", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			client       = mocks.BaselineClient(t, nil)
-			start  int64 = 1
-			end    int64 = 6
-		)
+	var (
+		ctx          = context.Background()
+		log          = zerolog.Nop()
+		client       = mocks.BaselineClient(t, nil)
+		start  int64 = 1
+		end    int64 = 6
+	)
 
+	t.Run("return no error", func(t *testing.T) {
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
 		require.Error(t, err)
 		assert.NoError(t, historical.Close())

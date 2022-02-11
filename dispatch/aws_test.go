@@ -55,36 +55,23 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestClient_Dispatch(t *testing.T) {
-	t.Run("return successfully invoke with function name", func(t *testing.T) {
-		var (
-			mockedLambdaClient = mocks.BaselineLambda(t)
-			mockedStore        = mocks.BaselineStore(t)
-		)
+	var (
+		ctx                = context.Background()
+		mockedLambdaClient = mocks.BaselineLambda(t)
+		mockedStore        = mocks.BaselineStore(t)
+		e                  = mocks.GenericEvents[0]
+	)
 
+	t.Run("return successfully invoke with function name", func(t *testing.T) {
 		client, err := dispatch.NewClient(mockedLambdaClient, mockedStore)
 		require.NoError(t, err)
-
-		var (
-			ctx = context.Background()
-			e   = mocks.GenericEvents[0]
-		)
 
 		assert.Error(t, client.Dispatch(ctx, e))
 	})
 
 	t.Run("return an error on failed store request", func(t *testing.T) {
-		var (
-			mockedLambdaClient = mocks.BaselineLambda(t)
-			mockedStore        = mocks.BaselineStore(t)
-		)
-
 		client, err := dispatch.NewClient(mockedLambdaClient, mockedStore)
 		require.NoError(t, err)
-
-		var (
-			ctx = context.Background()
-			e   = mocks.GenericEvents[0]
-		)
 
 		mockedStore.GetContractTypeFunc = func(context.Context, string, string, string) (string, error) {
 			return "", errors.New("failed to get abi")
@@ -94,18 +81,8 @@ func TestClient_Dispatch(t *testing.T) {
 	})
 
 	t.Run("return an error on failed invoke", func(t *testing.T) {
-		var (
-			mockedLambdaClient = mocks.BaselineLambda(t)
-			mockedStore        = mocks.BaselineStore(t)
-		)
-
 		client, err := dispatch.NewClient(mockedLambdaClient, mockedStore)
 		require.NoError(t, err)
-
-		var (
-			ctx = context.Background()
-			e   = mocks.GenericEvents[0]
-		)
 
 		mockedStore.GetContractTypeFunc = func(context.Context, string, string, string) (string, error) {
 			return "custom", nil

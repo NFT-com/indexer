@@ -66,33 +66,28 @@ func TestNewSubscriber(t *testing.T) {
 }
 
 func TestSubscriber_Subscribe(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		events     = make(chan *event.Event)
+		log        = zerolog.New(os.Stderr)
+		parser     = mocks.BaselineParser(t)
+		source1    = mocks.BaselineSource(t)
+		source2    = mocks.BaselineSource(t)
+		sources    = []source.Source{source1, source2}
+		index      = 0
+		eventCount = 0
+		block1     = block.Block("block_hash_1")
+		block2     = block.Block("block_hash_2")
+		block3     = block.Block("block_hash_3")
+		blocks     = []*block.Block{
+			&block1, &block2, nil,
+			&block3, nil,
+		}
+	)
+
 	t.Run("should run with any problem and return", func(t *testing.T) {
-		t.Parallel()
-
-		var (
-			ctx     = context.Background()
-			events  = make(chan *event.Event)
-			log     = zerolog.New(os.Stderr)
-			parser  = mocks.BaselineParser(t)
-			source1 = mocks.BaselineSource(t)
-			source2 = mocks.BaselineSource(t)
-			sources = []source.Source{source1, source2}
-		)
-
 		subs, err := subscriber.NewSubscriber(log, parser, sources)
 		require.NoError(t, err)
-
-		var (
-			index      = 0
-			eventCount = 0
-			block1     = block.Block("block_hash_1")
-			block2     = block.Block("block_hash_2")
-			block3     = block.Block("block_hash_3")
-			blocks     = []*block.Block{
-				&block1, &block2, nil,
-				&block3, nil,
-			}
-		)
 
 		source1.NextFunc = func(context.Context) *block.Block {
 			b := blocks[index]
@@ -127,18 +122,8 @@ func TestSubscriber_Subscribe(t *testing.T) {
 	})
 
 	t.Run("should stop the subscription", func(t *testing.T) {
-		t.Parallel()
-
-		var (
-			ctx     = context.Background()
-			events  = make(chan *event.Event)
-			log     = zerolog.New(os.Stderr)
-			parser  = mocks.BaselineParser(t)
-			s       = mocks.BaselineSource(t)
-			sources = []source.Source{s}
-		)
-
-		subs, err := subscriber.NewSubscriber(log, parser, sources)
+		s := mocks.BaselineSource(t)
+		subs, err := subscriber.NewSubscriber(log, parser, []source.Source{s})
 		require.NoError(t, err)
 
 		b := block.Block("block_hash_1")
@@ -179,17 +164,15 @@ func TestSubscriber_Subscribe(t *testing.T) {
 }
 
 func TestSubscriber_Close(t *testing.T) {
+	var (
+		log     = zerolog.New(os.Stderr)
+		parser  = mocks.BaselineParser(t)
+		source1 = mocks.BaselineSource(t)
+		source2 = mocks.BaselineSource(t)
+		sources = []source.Source{source1, source2}
+	)
+
 	t.Run("should close all the sources on close", func(t *testing.T) {
-		t.Parallel()
-
-		var (
-			log     = zerolog.New(os.Stderr)
-			parser  = mocks.BaselineParser(t)
-			source1 = mocks.BaselineSource(t)
-			source2 = mocks.BaselineSource(t)
-			sources = []source.Source{source1, source2}
-		)
-
 		subs, err := subscriber.NewSubscriber(log, parser, sources)
 		require.NoError(t, err)
 

@@ -3,6 +3,8 @@ package block_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/NFT-com/indexer/block"
 )
 
@@ -27,10 +29,7 @@ func TestBlock_String(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			output := test.input.String()
-			if output != test.expected {
-				t.Errorf("test: %s failed due to %s is not the expected %s", test.name, output, test.expected)
-				return
-			}
+			assert.Equal(t, test.expected, output)
 		})
 	}
 }
