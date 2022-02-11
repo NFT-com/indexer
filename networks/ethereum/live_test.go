@@ -17,38 +17,26 @@ import (
 )
 
 func TestNewLive(t *testing.T) {
-	t.Run("return the live source correctly", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-		)
+	var (
+		ctx          = context.Background()
+		log          = zerolog.Nop()
+		subscription = mocks.BaselineSubscription(t)
+		client       = mocks.BaselineClient(t, subscription)
+	)
 
+	t.Run("return the live source correctly", func(t *testing.T) {
 		live, err := ethereum.NewLive(ctx, log, client)
 		assert.NoError(t, err)
 		assert.NotNil(t, live)
 	})
 
 	t.Run("return error on invalid client", func(t *testing.T) {
-		var (
-			ctx = context.Background()
-			log = zerolog.Nop()
-		)
-
 		live, err := ethereum.NewLive(ctx, log, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, live)
 	})
 
 	t.Run("return error on failed to subscribe for headers", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-		)
-
 		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
 			return nil, errors.New("failed to subscribe to headers")
 		}
@@ -60,15 +48,15 @@ func TestNewLive(t *testing.T) {
 }
 
 func TestLiveSource_Next(t *testing.T) {
-	t.Run("should return live block successfully", func(t *testing.T) {
-		var (
-			ctx           = context.Background()
-			log           = zerolog.Nop()
-			subscription  = mocks.BaselineSubscription(t)
-			client        = mocks.BaselineClient(t, subscription)
-			headerChannel = make(chan *types.Header)
-		)
+	var (
+		ctx           = context.Background()
+		log           = zerolog.Nop()
+		subscription  = mocks.BaselineSubscription(t)
+		client        = mocks.BaselineClient(t, subscription)
+		headerChannel = make(chan *types.Header)
+	)
 
+	t.Run("should return live block successfully", func(t *testing.T) {
 		client.SubscribeNewHeadFunc = func(ctx context.Context, ch chan<- *types.Header) (goethereum.Subscription, error) {
 			go func() {
 				for {
@@ -90,13 +78,6 @@ func TestLiveSource_Next(t *testing.T) {
 	})
 
 	t.Run("should close successfully", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-		)
-
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
 
@@ -109,13 +90,7 @@ func TestLiveSource_Next(t *testing.T) {
 	})
 
 	t.Run("should cancel the context successfully", func(t *testing.T) {
-		var (
-			ctx, cancel  = context.WithTimeout(context.Background(), time.Second)
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-		)
-
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
 
 		live, err := ethereum.NewLive(ctx, log, client)
@@ -125,14 +100,7 @@ func TestLiveSource_Next(t *testing.T) {
 	})
 
 	t.Run("should close due to failed subscription with no error", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-			errChannel   = make(chan error)
-		)
-
+		errChannel := make(chan error)
 		subscription.ErrFunc = func() <-chan error {
 			return errChannel
 		}
@@ -149,14 +117,7 @@ func TestLiveSource_Next(t *testing.T) {
 	})
 
 	t.Run("should close due to failed subscription with error", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-			errChannel   = make(chan error)
-		)
-
+		errChannel := make(chan error)
 		subscription.ErrFunc = func() <-chan error {
 			return errChannel
 		}
@@ -174,14 +135,14 @@ func TestLiveSource_Next(t *testing.T) {
 }
 
 func TestLiveSource_Close(t *testing.T) {
-	t.Run("return no error", func(t *testing.T) {
-		var (
-			ctx          = context.Background()
-			log          = zerolog.Nop()
-			subscription = mocks.BaselineSubscription(t)
-			client       = mocks.BaselineClient(t, subscription)
-		)
+	var (
+		ctx          = context.Background()
+		log          = zerolog.Nop()
+		subscription = mocks.BaselineSubscription(t)
+		client       = mocks.BaselineClient(t, subscription)
+	)
 
+	t.Run("return no error", func(t *testing.T) {
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
 		assert.Error(t, live.Close())

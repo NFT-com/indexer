@@ -75,14 +75,16 @@ func TestNewParser(t *testing.T) {
 }
 
 func TestParser_Parse(t *testing.T) {
-	t.Run("return error filtering log", func(t *testing.T) {
-		var (
-			log        = zerolog.Nop()
-			mockClient = mocks.BaselineClient(t, nil)
-			network    = "ethereum"
-			chain      = "mainnet"
-		)
+	var (
+		ctx        = context.Background()
+		log        = zerolog.Nop()
+		mockClient = mocks.BaselineClient(t, nil)
+		network    = "ethereum"
+		chain      = "mainnet"
+		b          = block.Block("block_1")
+	)
 
+	t.Run("return error filtering log", func(t *testing.T) {
 		parser, err := ethereum.NewParser(log, mockClient, network, chain)
 		require.NoError(t, err)
 
@@ -90,26 +92,16 @@ func TestParser_Parse(t *testing.T) {
 			return nil, errors.New("failed to filter logs")
 		}
 
-		ctx := context.Background()
-		b := block.Block("block_1")
-
 		events, err := parser.Parse(ctx, &b)
 		assert.Error(t, err)
 		assert.Nil(t, events)
 	})
 
 	t.Run("should parse event correctly", func(t *testing.T) {
-		var (
-			log        = zerolog.Nop()
-			mockClient = mocks.BaselineClient(t, nil)
-			network    = "ethereum"
-			chain      = "mainnet"
-		)
-
 		parser, err := ethereum.NewParser(log, mockClient, network, chain)
 		require.NoError(t, err)
 
-		mockClient.FilterLogsFunc = func(ctx context.Context, q goethereum.FilterQuery) ([]types.Log, error) {
+		mockClient.FilterLogsFunc = func(_ context.Context, q goethereum.FilterQuery) ([]types.Log, error) {
 			if q.BlockHash == nil && q.BlockHash.String() != "0x000000000000000000000000000000000000000000000000000000000000000b" {
 				return nil, errors.New("bad block hash")
 			}
@@ -117,8 +109,6 @@ func TestParser_Parse(t *testing.T) {
 			return mocks.GenericEthereumLogs, nil
 		}
 
-		ctx := context.Background()
-		b := block.Block("block_1")
 		events, err := parser.Parse(ctx, &b)
 		assert.Error(t, err)
 		assert.Len(t, events, 3)
