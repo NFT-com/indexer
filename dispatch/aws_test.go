@@ -5,15 +5,15 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/lambda"
+	
 	"github.com/NFT-com/indexer/dispatch"
 	"github.com/NFT-com/indexer/store"
 	"github.com/NFT-com/indexer/testing/mocks"
-
-	"github.com/aws/aws-sdk-go/service/lambda"
 )
 
 func TestNewClient(t *testing.T) {
-	tts := []struct {
+	tests := []struct {
 		name          string
 		lambdaClient  dispatch.Lambda
 		store         store.Storer
@@ -39,7 +39,7 @@ func TestNewClient(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tts {
+	for _, test := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client, err := dispatch.NewClient(tt.lambdaClient, tt.store)
 			if tt.expectedError && err == nil {
