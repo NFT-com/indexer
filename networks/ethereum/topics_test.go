@@ -3,6 +3,8 @@ package ethereum_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/NFT-com/indexer/networks/ethereum"
 )
 
@@ -42,10 +44,7 @@ func TestTopicHash(t *testing.T) {
 	for _, tt := range tts {
 		t.Run(tt.name, func(t *testing.T) {
 			hash := ethereum.TopicHash(tt.topic)
-			if hash.Hex() != tt.hash {
-				t.Errorf("expected hash %s got %s", tt.hash, hash.Hex())
-				return
-			}
+			assert.Equal(t, tt.hash, hash.Hex())
 		})
 	}
 }
