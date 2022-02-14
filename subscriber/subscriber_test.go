@@ -29,7 +29,6 @@ func TestNewSubscriber(t *testing.T) {
 	}{
 		{
 			name:   "should return error on missing parser",
-			log:    zerolog.Logger{},
 			parser: nil,
 			sources: []source.Source{
 				mocks.BaselineSource(t),
@@ -39,7 +38,6 @@ func TestNewSubscriber(t *testing.T) {
 		},
 		{
 			name:        "should return error on missing sources",
-			log:         zerolog.Logger{},
 			parser:      mocks.BaselineParser(t),
 			sources:     []source.Source{},
 			assertValue: assert.Nil,
@@ -47,7 +45,6 @@ func TestNewSubscriber(t *testing.T) {
 		},
 		{
 			name:   "should return no error",
-			log:    zerolog.Logger{},
 			parser: mocks.BaselineParser(t),
 			sources: []source.Source{
 				mocks.BaselineSource(t),
@@ -59,8 +56,8 @@ func TestNewSubscriber(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			
-			subs, err := subscriber.NewSubscriber(test.log, test.parser, test.sources)
+
+			subs, err := subscriber.NewSubscriber(zerolog.Nop(), test.parser, test.sources)
 			test.assertError(t, err)
 			test.assertValue(t, subs)
 		})

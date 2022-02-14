@@ -30,7 +30,6 @@ func TestNewParser(t *testing.T) {
 	}{
 		{
 			name:        "should return error on missing client",
-			log:         zerolog.Nop(),
 			client:      nil,
 			network:     "ethereum",
 			chain:       "mainnet",
@@ -39,7 +38,6 @@ func TestNewParser(t *testing.T) {
 		},
 		{
 			name:        "should return error on missing network",
-			log:         zerolog.Nop(),
 			client:      mocks.BaselineClient(t, subscription),
 			network:     "",
 			chain:       "mainnet",
@@ -48,7 +46,6 @@ func TestNewParser(t *testing.T) {
 		},
 		{
 			name:        "should return error on missing network",
-			log:         zerolog.Nop(),
 			client:      mocks.BaselineClient(t, subscription),
 			network:     "ethereum",
 			chain:       "",
@@ -57,7 +54,6 @@ func TestNewParser(t *testing.T) {
 		},
 		{
 			name:        "should return parser correctly",
-			log:         zerolog.Nop(),
 			client:      mocks.BaselineClient(t, subscription),
 			network:     "ethereum",
 			chain:       "mainnet",
@@ -66,10 +62,12 @@ func TestNewParser(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			subs, err := ethereum.NewParser(test.log, test.client, test.network, test.chain)
+			subs, err := ethereum.NewParser(zerolog.Nop(), test.client, test.network, test.chain)
 			test.assertError(t, err)
 			test.assertValue(t, subs)
 		})
