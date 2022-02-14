@@ -21,7 +21,7 @@ func TestBlock_String(t *testing.T) {
 			expected: "",
 		},
 		{
-			name:     "should return the correct block string",
+			name:     "returns the correct block string",
 			input:    &b,
 			expected: "some_input_text",
 		},

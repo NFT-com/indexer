@@ -23,7 +23,7 @@ func TestNewLive(t *testing.T) {
 		client       = mocks.BaselineClient(t, subscription)
 	)
 
-	t.Run("return the live source correctly", func(t *testing.T) {
+	t.Run("returns the live source", func(t *testing.T) {
 		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
 			return subscription, nil
 		}
@@ -63,7 +63,7 @@ func TestLiveSource_Next(t *testing.T) {
 		headerChannel = make(chan *types.Header)
 	)
 
-	t.Run("should return live block successfully", func(t *testing.T) {
+	t.Run("returns live block", func(t *testing.T) {
 		client.SubscribeNewHeadFunc = func(ctx context.Context, ch chan<- *types.Header) (goethereum.Subscription, error) {
 			go func() {
 				for {
@@ -84,7 +84,7 @@ func TestLiveSource_Next(t *testing.T) {
 		assert.Equal(t, mocks.GenericEthereumBlockHeader.Hash().Hex(), b.String())
 	})
 
-	t.Run("should close successfully", func(t *testing.T) {
+	t.Run("handles call to Next() after being closed", func(t *testing.T) {
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
 
@@ -146,9 +146,10 @@ func TestLiveSource_Close(t *testing.T) {
 		client       = mocks.BaselineClient(t, subscription)
 	)
 
-	t.Run("return no error", func(t *testing.T) {
+	t.Run("returns no error", func(t *testing.T) {
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
+
 		assert.NoError(t, live.Close())
 	})
 }
