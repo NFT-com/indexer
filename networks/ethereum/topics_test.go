@@ -42,11 +42,13 @@ func TestTopicHash(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			hash := ethereum.TopicHash(tt.topic)
-			assert.Equal(t, tt.hash, hash.Hex())
+			hash := ethereum.TopicHash(test.topic)
+			assert.Equal(t, test.hash, hash.Hex())
 		})
 	}
 }

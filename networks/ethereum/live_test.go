@@ -29,7 +29,7 @@ func TestNewLive(t *testing.T) {
 		}
 
 		live, err := ethereum.NewLive(ctx, log, client)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, live)
 	})
 

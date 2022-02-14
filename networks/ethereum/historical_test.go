@@ -30,7 +30,7 @@ func TestNewHistorical(t *testing.T) {
 		}
 
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, historical)
 	})
 
