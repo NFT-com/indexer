@@ -54,6 +54,8 @@ func TestNewSubscriber(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -121,7 +123,8 @@ func TestSubscriber_Subscribe(t *testing.T) {
 		}()
 
 		err = subs.Subscribe(ctx, events)
-		assert.NoError(t, err)
+		require.NoError(t, err)
+
 		assert.Equal(t, 3, source1Count)
 		assert.Equal(t, 2, source2Count)
 		assert.Equal(t, 1, eventCount)
@@ -191,7 +194,8 @@ func TestSubscriber_Close(t *testing.T) {
 			return mocks.GenericError
 		}
 
-		assert.NoError(t, subs.Close())
+		require.NoError(t, subs.Close())
+		
 		assert.True(t, source1Closed)
 		assert.True(t, source2Closed)
 	})
