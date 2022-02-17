@@ -69,14 +69,6 @@ func TestClient_Dispatch(t *testing.T) {
 		client, err := dispatch.NewClient(mockedLambdaClient, mockedStore)
 		require.NoError(t, err)
 
-		mockedStore.GetContractTypeFunc = func(context.Context, string, string, string) (string, error) {
-			return mocks.GenericContractType, nil
-		}
-
-		mockedLambdaClient.InvokeFunc = func(*lambda.InvokeInput) (*lambda.InvokeOutput, error) {
-			return &mocks.GenericLambdaInvokeOutput, nil
-		}
-
 		assert.NoError(t, client.Dispatch(ctx, e))
 	})
 

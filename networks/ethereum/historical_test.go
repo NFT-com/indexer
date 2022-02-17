@@ -25,12 +25,9 @@ func TestNewHistorical(t *testing.T) {
 	)
 
 	t.Run("return correctly historical client", func(t *testing.T) {
-		client.HeaderByNumberFunc = func(context.Context, *big.Int) (*types.Header, error) {
-			return mocks.GenericEthereumBlockHeader, nil
-		}
-
 		historical, err := ethereum.NewHistorical(ctx, log, client, start, end)
 		require.NoError(t, err)
+
 		assert.NotNil(t, historical)
 	})
 

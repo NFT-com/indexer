@@ -22,12 +22,9 @@ func TestNewLive(t *testing.T) {
 	)
 
 	t.Run("returns the live source", func(t *testing.T) {
-		client.SubscribeNewHeadFunc = func(context.Context, chan<- *types.Header) (goethereum.Subscription, error) {
-			return subscription, nil
-		}
-
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
+
 		assert.NotNil(t, live)
 	})
 
