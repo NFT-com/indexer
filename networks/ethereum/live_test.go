@@ -2,14 +2,12 @@ package ethereum_test
 
 import (
 	"context"
-	"testing"
-	"time"
-
 	goethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/testing/mocks"
@@ -96,8 +94,8 @@ func TestLiveSource_Next(t *testing.T) {
 	})
 
 	t.Run("should cancel the context successfully", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(ctx, time.Second)
-		defer cancel()
+		ctx, cancel := context.WithCancel(ctx)
+		cancel()
 
 		live, err := ethereum.NewLive(ctx, log, client)
 		require.NoError(t, err)
