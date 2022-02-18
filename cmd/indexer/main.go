@@ -59,12 +59,10 @@ func run() error {
 
 	pflag.Parse()
 
-	if len(os.Args) < 4 {
-		return fmt.Errorf("required arguments: <node_url> <network> <chain>")
+	if len(os.Args) < 2 {
+		return fmt.Errorf("required arguments: <node_url>")
 	}
 	nodeURL := os.Args[1]
-	network := os.Args[2]
-	chain := os.Args[3]
 
 	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
@@ -102,7 +100,10 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser := ethereum.NewParser(log, client, network, chain)
+	parser, err := ethereum.NewParser(ctx, log, client)
+	if err != nil {
+		return err
+	}
 
 	subs, err := subscriber.NewSubscriber(log, parser, sources)
 	if err != nil {
