@@ -5,6 +5,6 @@ type chain struct {
 	Name        string `json:"name" bson:"name"`
 	Description string `json:"description" bson:"description"`
 	Symbol      string `json:"symbol" bson:"symbol"`
-	Network     string `json:"network" bson:"network"`
-	ChainID     uint64 `json:"chain_id" bson:"chain_id"`
+	NetworkID   string `json:"network_id" bson:"network_id"`
+	ChainID     string `json:"chain_id" bson:"chain_id"`
 }

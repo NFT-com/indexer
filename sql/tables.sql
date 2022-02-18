@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS chain (
     name VARCHAR(64) NOT NULL,
     description TEXT NOT NULL,
     symbol VARCHAR(16) NOT NULL,
-    network TEXT NOT NULL,
-    chain_id INT NOT NULL,
+    network_id TEXT NOT NULL,
+    chain_id TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
