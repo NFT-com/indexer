@@ -16,20 +16,32 @@ import (
 type Parser struct {
 	log zerolog.Logger
 
-	network string
-	chain   string
-	client  *ethclient.Client
+	network   string
+	networkID string
+	chainID   string
+	client    *ethclient.Client
 }
 
-func NewParser(log zerolog.Logger, client *ethclient.Client, network string, chain string) *Parser {
+func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client) (*Parser, error) {
 	p := Parser{
-		log:     log.With().Str("component", "parser").Logger(),
-		network: network,
-		chain:   chain,
-		client:  client,
+		log:    log.With().Str("component", "parser").Logger(),
+		client: client,
 	}
 
-	return &p
+	networkID, err := client.NetworkID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	chainID, err := client.ChainID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	p.networkID = networkID.String()
+	p.chainID = chainID.String()
+
+	return &p, nil
 }
 
 func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event, error) {
@@ -62,8 +74,8 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event,
 		hash := sha256.Sum256(eventJson)
 		e := event.Event{
 			ID:              common.Bytes2Hex(hash[:]),
-			Network:         p.network,
-			Chain:           p.chain,
+			Network:         p.networkID,
+			Chain:           p.chainID,
 			Block:           l.BlockNumber,
 			TransactionHash: l.TxHash,
 			Address:         l.Address,
