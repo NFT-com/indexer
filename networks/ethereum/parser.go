@@ -14,20 +14,15 @@ import (
 )
 
 type Parser struct {
-	log zerolog.Logger
+	log    zerolog.Logger
+	client *ethclient.Client
 
-	network   string
-	networkID string
-	chainID   string
-	client    *ethclient.Client
+	networkID       string
+	chainID         string
+	filterAddresses []common.Address
 }
 
-func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client) (*Parser, error) {
-	p := Parser{
-		log:    log.With().Str("component", "parser").Logger(),
-		client: client,
-	}
-
+func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client, stringAddresses []string) (*Parser, error) {
 	networkID, err := client.NetworkID(ctx)
 	if err != nil {
 		return nil, err
@@ -38,8 +33,18 @@ func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client
 		return nil, err
 	}
 
-	p.networkID = networkID.String()
-	p.chainID = chainID.String()
+	filterAddresses := make([]common.Address, 0, len(stringAddresses))
+	for _, address := range stringAddresses {
+		filterAddresses = append(filterAddresses, common.HexToAddress(address))
+	}
+
+	p := Parser{
+		log:             log.With().Str("component", "parser").Logger(),
+		client:          client,
+		networkID:       networkID.String(),
+		chainID:         chainID.String(),
+		filterAddresses: filterAddresses,
+	}
 
 	return &p, nil
 }
@@ -49,6 +54,7 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event,
 
 	query := ethereum.FilterQuery{
 		BlockHash: &blockHash,
+		Addresses: p.filterAddresses,
 		Topics: [][]common.Hash{
 			{
 				TopicHash(TopicTransfer),

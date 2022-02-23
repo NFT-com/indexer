@@ -48,6 +48,7 @@ func run() error {
 		flagTestMode    bool
 		flagLambdaURL   string
 		flagRegion      string
+		flagAddresses   []string
 	)
 
 	pflag.Int64VarP(&flagStartHeight, "start", "s", 0, "height at which to start indexing")
@@ -56,6 +57,7 @@ func run() error {
 	pflag.BoolVarP(&flagTestMode, "test", "t", false, "test mode")
 	pflag.StringVarP(&flagLambdaURL, "lambda-url", "u", "", "lambda url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
+	pflag.StringArrayVarP(&flagAddresses, "addresses", "a", nil, "filter addresses")
 
 	pflag.Parse()
 
@@ -100,7 +102,7 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser, err := ethereum.NewParser(ctx, log, client)
+	parser, err := ethereum.NewParser(ctx, log, client, flagAddresses)
 	if err != nil {
 		return err
 	}
@@ -141,7 +143,6 @@ func run() error {
 		for {
 			select {
 			case e := <-eventChannel:
-				log.Info().Interface("event", e).Msg("received")
 				if err := dispatcher.Dispatch(ctx, e); err != nil {
 					log.Error().Err(err).Str("event", e.ID).Msg("failed to dispatch event")
 				}
