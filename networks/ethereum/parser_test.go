@@ -3,6 +3,7 @@ package ethereum_test
 import (
 	"context"
 	"errors"
+	"math/big"
 	"testing"
 
 	goethereum "github.com/ethereum/go-ethereum"
@@ -17,61 +18,48 @@ import (
 )
 
 func TestNewParser(t *testing.T) {
-	subscription := mocks.BaselineSubscription(t)
+	var (
+		ctx    = context.Background()
+		subs   = mocks.BaselineSubscription(t)
+		client = mocks.BaselineClient(t, subs)
+	)
 
-	tests := []struct {
-		name        string
-		log         zerolog.Logger
-		client      ethereum.Client
-		network     string
-		chain       string
-		assertValue assert.ValueAssertionFunc
-		assertError assert.ErrorAssertionFunc
-	}{
-		{
-			name:        "should return error on missing client",
-			client:      nil,
-			network:     "ethereum",
-			chain:       "mainnet",
-			assertValue: assert.Nil,
-			assertError: assert.Error,
-		},
-		{
-			name:        "should return error on missing network",
-			client:      mocks.BaselineClient(t, subscription),
-			network:     "",
-			chain:       "mainnet",
-			assertValue: assert.Nil,
-			assertError: assert.Error,
-		},
-		{
-			name:        "should return error on missing network",
-			client:      mocks.BaselineClient(t, subscription),
-			network:     "ethereum",
-			chain:       "",
-			assertValue: assert.Nil,
-			assertError: assert.Error,
-		},
-		{
-			name:        "should return parser correctly",
-			client:      mocks.BaselineClient(t, subscription),
-			network:     "ethereum",
-			chain:       "mainnet",
-			assertValue: assert.NotNil,
-			assertError: assert.NoError,
-		},
-	}
-	for _, test := range tests {
-		test := test
+	t.Run("should return no error", func(t *testing.T) {
+		parser, err := ethereum.NewParser(ctx, zerolog.Nop(), client)
+		require.NoError(t, err)
 
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
+		assert.NotNil(t, parser)
+	})
 
-			subs, err := ethereum.NewParser(zerolog.Nop(), test.client, test.network, test.chain)
-			test.assertError(t, err)
-			test.assertValue(t, subs)
-		})
-	}
+	t.Run("should return error on missing client", func(t *testing.T) {
+		parser, err := ethereum.NewParser(ctx, zerolog.Nop(), nil)
+		assert.Error(t, err)
+		assert.Nil(t, parser)
+	})
+
+	t.Run("should return error on failed retrieval of network id", func(t *testing.T) {
+		client.NetworkIDFunc = func(ctx context.Context) (*big.Int, error) {
+			return nil, mocks.GenericError
+		}
+
+		parser, err := ethereum.NewParser(ctx, zerolog.Nop(), client)
+		assert.Error(t, err)
+		assert.Nil(t, parser)
+	})
+
+	t.Run("should return error on failed retrieval of chain id", func(t *testing.T) {
+		client.NetworkIDFunc = func(ctx context.Context) (*big.Int, error) {
+			return mocks.GenericNetworkID, nil
+		}
+
+		client.ChainIDFunc = func(ctx context.Context) (*big.Int, error) {
+			return nil, mocks.GenericError
+		}
+
+		parser, err := ethereum.NewParser(ctx, zerolog.Nop(), client)
+		assert.Error(t, err)
+		assert.Nil(t, parser)
+	})
 }
 
 func TestParser_Parse(t *testing.T) {
@@ -79,13 +67,11 @@ func TestParser_Parse(t *testing.T) {
 		ctx        = context.Background()
 		log        = zerolog.Nop()
 		mockClient = mocks.BaselineClient(t, nil)
-		network    = "ethereum"
-		chain      = "mainnet"
 		b          = block.Block("block_1")
 	)
 
 	t.Run("return error filtering log", func(t *testing.T) {
-		parser, err := ethereum.NewParser(log, mockClient, network, chain)
+		parser, err := ethereum.NewParser(ctx, log, mockClient)
 		require.NoError(t, err)
 
 		mockClient.FilterLogsFunc = func(context.Context, goethereum.FilterQuery) ([]types.Log, error) {
@@ -98,7 +84,7 @@ func TestParser_Parse(t *testing.T) {
 	})
 
 	t.Run("should parse event correctly", func(t *testing.T) {
-		parser, err := ethereum.NewParser(log, mockClient, network, chain)
+		parser, err := ethereum.NewParser(ctx, log, mockClient)
 		require.NoError(t, err)
 
 		mockClient.FilterLogsFunc = func(_ context.Context, q goethereum.FilterQuery) ([]types.Log, error) {

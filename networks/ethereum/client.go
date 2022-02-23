@@ -9,6 +9,8 @@ import (
 )
 
 type Client interface {
+	NetworkID(ctx context.Context) (*big.Int, error)
+	ChainID(ctx context.Context) (*big.Int, error)
 	SubscribeNewHead(ctx context.Context, ch chan<- *types.Header) (ethereum.Subscription, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 	FilterLogs(ctx context.Context, q ethereum.FilterQuery) ([]types.Log, error)

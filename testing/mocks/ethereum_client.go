@@ -10,6 +10,8 @@ import (
 )
 
 type Client struct {
+	NetworkIDFunc        func(ctx context.Context) (*big.Int, error)
+	ChainIDFunc          func(ctx context.Context) (*big.Int, error)
 	SubscribeNewHeadFunc func(ctx context.Context, ch chan<- *types.Header) (ethereum.Subscription, error)
 	HeaderByNumberFunc   func(ctx context.Context, number *big.Int) (*types.Header, error)
 	FilterLogsFunc       func(ctx context.Context, q ethereum.FilterQuery) ([]types.Log, error)
@@ -19,6 +21,12 @@ func BaselineClient(t *testing.T, subscription ethereum.Subscription) *Client {
 	t.Helper()
 
 	c := Client{
+		NetworkIDFunc: func(ctx context.Context) (*big.Int, error) {
+			return GenericNetworkID, nil
+		},
+		ChainIDFunc: func(ctx context.Context) (*big.Int, error) {
+			return GenericChainID, nil
+		},
 		SubscribeNewHeadFunc: func(context.Context, chan<- *types.Header) (ethereum.Subscription, error) {
 			return subscription, nil
 		},
@@ -31,6 +39,14 @@ func BaselineClient(t *testing.T, subscription ethereum.Subscription) *Client {
 	}
 
 	return &c
+}
+
+func (c *Client) NetworkID(ctx context.Context) (*big.Int, error) {
+	return c.NetworkIDFunc(ctx)
+}
+
+func (c *Client) ChainID(ctx context.Context) (*big.Int, error) {
+	return c.ChainIDFunc(ctx)
 }
 
 func (c *Client) SubscribeNewHead(ctx context.Context, ch chan<- *types.Header) (ethereum.Subscription, error) {

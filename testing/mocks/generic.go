@@ -14,6 +14,9 @@ import (
 )
 
 var (
+	GenericNetworkID = big.NewInt(1)
+	GenericChainID   = big.NewInt(1)
+
 	GenericError      = errors.New("failed")
 	GenericErrChannel = make(chan error)
 

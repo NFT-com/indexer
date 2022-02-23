@@ -4,10 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
@@ -20,10 +18,10 @@ type Parser struct {
 	network   string
 	networkID string
 	chainID   string
-	client    *ethclient.Client
+	client    Client
 }
 
-func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client) (*Parser, error) {
+func NewParser(ctx context.Context, log zerolog.Logger, client Client) (*Parser, error) {
 	if client == nil {
 		return nil, errors.New("invalid ethereum client")
 	}
