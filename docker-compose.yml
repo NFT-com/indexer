@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  watcher:
+    build: Dockerfile.watcher
+    entrypoint: /watcher wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 web3 -u "redis:6379"
+    depends_on:
+      - redis
+  redis:
+    image: "redis:alpine"
+    restart: always
+    ports:
+      - '6379:6379'

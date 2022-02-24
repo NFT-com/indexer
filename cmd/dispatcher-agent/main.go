@@ -6,8 +6,12 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
+
+	"github.com/NFT-com/indexer/consumer"
+	"github.com/NFT-com/indexer/dispatch/redismq"
 )
 
 func main() {
@@ -25,8 +29,24 @@ func run() error {
 	signal.Notify(sig, os.Interrupt)
 
 	// Command line parameter initialization.
-	var flagLogLevel string
+	var (
+		flagRMQTag               string
+		flagRedisNetwork         string
+		flagRedisURL             string
+		flagRedisDatabase        int
+		flagConsumerQueueName    string
+		flagConsumerPrefetch     int64
+		flagConsumerPollDuration time.Duration
+		flagLogLevel             string
+	)
 
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher redismq tag")
+	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
+	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
+	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")
+	pflag.StringVarP(&flagConsumerQueueName, "queue", "q", "discovery", "queue name")
+	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "consumer prefetch amount")
+	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second, "consumer poll duration")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -40,20 +60,41 @@ func run() error {
 	log = log.Level(level)
 
 	failed := make(chan error)
-	done := make(chan struct{})
+	connection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	if err != nil {
+		return err
+	}
 
-	go func() {
-		log.Info().Msg("Launching subscriber")
+	producer, err := redismq.NewProducer(connection)
+	if err != nil {
+		return err
+	}
 
-		log.Info().Msg("Stopped subscriber")
-		close(done)
-	}()
+	queue, err := connection.OpenQueue(flagConsumerQueueName)
+	if err != nil {
+		return err
+	}
+
+	discoveryConsumer, err := consumer.NewDiscoveryConsumer(producer)
+	if err != nil {
+		return err
+	}
+
+	err = queue.StartConsuming(flagConsumerPrefetch, flagConsumerPollDuration)
+	if err != nil {
+		return err
+	}
+
+	consumerName, err := queue.AddConsumer(flagRMQTag, discoveryConsumer)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Str("name", consumerName).Msg("started dispatcher agent")
 
 	select {
-	case <-done:
-		return nil
 	case <-sig:
-
+		connection.StopAllConsuming()
 	case err := <-failed:
 		return err
 	}
@@ -62,8 +103,6 @@ func run() error {
 		<-sig
 		log.Fatal().Msg("forced interruption")
 	}()
-
-	<-done
 
 	return nil
 }

@@ -40,21 +40,23 @@ func run() error {
 		flagRedisNetwork  string
 		flagRedisURL      string
 		flagRedisDatabase int
+		flagQueueName     string
 		flagLogLevel      string
 	)
 
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher redismq tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")
+	pflag.StringVarP(&flagQueueName, "queue", "q", "discovery", "queue name")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
-	if len(os.Args) < 2 {
-		return fmt.Errorf("required arguments: <node_url>")
+	if len(os.Args) < 3 {
+		return fmt.Errorf("required arguments: <node_url> <chain_type>")
 	}
 	nodeURL := os.Args[1]
+	chainType := os.Args[2]
 
 	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
@@ -98,11 +100,12 @@ func run() error {
 
 			job := dispatch.DiscoveryJob{
 				ChainURL:   nodeURL,
+				ChainType:  chainType,
 				StartIndex: block.Number,
 				EndIndex:   block.Number,
 			}
 
-			err := producer.PublishDiscoveryJob("ethereum-mainnet", job)
+			err := producer.PublishDiscoveryJob(flagQueueName, job)
 			if err != nil {
 				failed <- err
 				return
@@ -115,7 +118,6 @@ func run() error {
 	select {
 	case <-done:
 		client.Close()
-		connection.StopAllConsuming()
 		return nil
 	case <-sig:
 		if err := live.Close(); err != nil {
