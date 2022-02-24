@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/block"
-	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/source"
 )
 
@@ -20,7 +19,7 @@ type Subscriber struct {
 	done          chan struct{}
 }
 
-func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Source) (*Subscriber, error) {
+func NewSubscriber(log zerolog.Logger, sources ...source.Source) (*Subscriber, error) {
 	if len(sources) == 0 {
 		return nil, errors.New("invalid sources amount")
 	}
@@ -29,14 +28,13 @@ func NewSubscriber(log zerolog.Logger, parser block.Parser, sources []source.Sou
 		log:           log.With().Str("component", "subscriber").Logger(),
 		currentSource: 0,
 		sources:       sources,
-		parser:        parser,
 		done:          make(chan struct{}),
 	}
 
 	return &s, nil
 }
 
-func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) error {
+func (s *Subscriber) Subscribe(ctx context.Context, events chan *block.Block) error {
 	for {
 		select {
 		case <-s.done:
@@ -52,15 +50,7 @@ func (s *Subscriber) Subscribe(ctx context.Context, events chan *event.Event) er
 				continue
 			}
 
-			blockEvents, err := s.parser.Parse(ctx, nextBlock)
-			if err != nil {
-				s.log.Error().Str("block", nextBlock.String()).Err(err).Msg("could not parse header")
-				continue
-			}
-
-			for _, e := range blockEvents {
-				events <- e
-			}
+			events <- nextBlock
 		}
 	}
 }
@@ -74,5 +64,6 @@ func (s *Subscriber) Close() error {
 			s.log.Error().Err(err).Msg("could not close source")
 		}
 	}
+
 	return nil
 }

@@ -7,19 +7,13 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	dispatcher "github.com/NFT-com/indexer/dispatch/aws"
-	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/block"
 	"github.com/NFT-com/indexer/networks/ethereum"
 	"github.com/NFT-com/indexer/source"
-	"github.com/NFT-com/indexer/store/mock"
 	"github.com/NFT-com/indexer/subscriber"
 )
 
@@ -42,8 +36,8 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagEndHeight   int64
 		flagStartHeight int64
+		flagEndHeight   int64
 		flagLogLevel    string
 		flagTestMode    bool
 		flagLambdaURL   string
@@ -100,37 +94,18 @@ func run() error {
 		sources = append(sources, live)
 	}
 
-	parser, err := ethereum.NewParser(ctx, log, client)
+	subs, err := subscriber.NewSubscriber(log, sources)
 	if err != nil {
 		return err
 	}
-
-	subs, err := subscriber.NewSubscriber(log, parser, sources)
-	if err != nil {
-		return err
-	}
-
-	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
-	if flagTestMode {
-		sessionConfig.Credentials = credentials.AnonymousCredentials
-	}
-
-	lambdaConfig := &aws.Config{}
-	if flagLambdaURL != "" {
-		lambdaConfig.Endpoint = aws.String(flagLambdaURL)
-	}
-
-	sess := session.Must(session.NewSession(&sessionConfig))
-	lambdaClient := lambda.New(sess, lambdaConfig)
-
-	dispatcher := dispatcher.New(lambdaClient, mock.New(log))
 
 	failed := make(chan error)
 	done := make(chan struct{})
-	eventChannel := make(chan *event.Event)
+	blockChannel := make(chan *block.Block, 1000)
+
 	go func() {
 		log.Info().Msg("Launching subscriber")
-		if err := subs.Subscribe(ctx, eventChannel); err != nil {
+		if err := subs.Subscribe(ctx, blockChannel); err != nil {
 			failed <- err
 		}
 		log.Info().Msg("Stopped subscriber")
@@ -140,11 +115,8 @@ func run() error {
 	go func() {
 		for {
 			select {
-			case e := <-eventChannel:
-				log.Info().Interface("event", e).Msg("received")
-				if err := dispatcher.Dispatch(ctx, e); err != nil {
-					log.Error().Err(err).Str("event", e.ID).Msg("failed to dispatch event")
-				}
+			case b := <-blockChannel:
+				log.Info().Interface("block", b).Msg("received")
 			case <-done:
 				return
 			}

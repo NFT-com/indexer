@@ -3,13 +3,13 @@ package aws
 import (
 	"context"
 	"encoding/json"
+	"github.com/NFT-com/indexer/functions"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
+	"github.com/NFT-com/indexer/block"
 	"github.com/NFT-com/indexer/dispatch"
-	"github.com/NFT-com/indexer/event"
-	"github.com/NFT-com/indexer/functions"
 	"github.com/NFT-com/indexer/store"
 )
 
@@ -22,31 +22,21 @@ type Dispatcher struct {
 	store        store.Storer
 }
 
-func New(lambdaClient *lambda.Lambda, store store.Storer) dispatch.Dispatcher {
+func New(lambdaClient *lambda.Lambda) dispatch.Dispatcher {
 	d := Dispatcher{
 		lambdaClient: lambdaClient,
-		store:        store,
 	}
 
 	return &d
 }
 
-func (d *Dispatcher) Dispatch(ctx context.Context, e *event.Event) error {
-	contractType, err := d.store.GetContractType(ctx, e.Network, e.Chain, e.Address.Hex())
+func (d *Dispatcher) Dispatch(ctx context.Context, b *block.Block) error {
+	payload, err := json.Marshal(b)
 	if err != nil {
 		return err
 	}
 
-	functionName := functions.Name(e.Network, e.Chain, contractType)
-	if contractType == customContractType {
-		functionName = functions.Name(e.Network, e.Chain, e.Address.Hex())
-	}
-
-	payload, err := json.Marshal(e)
-	if err != nil {
-		return err
-	}
-
+	functionName := functions.Name(b.ChainID, b.NetworkID)
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,

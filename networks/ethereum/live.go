@@ -39,7 +39,9 @@ func NewLive(ctx context.Context, log zerolog.Logger, client *ethclient.Client) 
 func (s *LiveSource) Next(ctx context.Context) *block.Block {
 	select {
 	case header := <-s.headers:
-		b := block.Block(header.Hash().Hex())
+		b := block.Block{
+			Hash: header.Hash().Hex(),
+		}
 		return &b
 
 	case err := <-s.done:
@@ -48,6 +50,7 @@ func (s *LiveSource) Next(ctx context.Context) *block.Block {
 			break
 		}
 		s.log.Info().Msg("gracefully stopped")
+
 	case <-ctx.Done():
 		s.log.Info().Msg("interrupted")
 	}

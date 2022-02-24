@@ -14,49 +14,23 @@ import (
 )
 
 type Parser struct {
-	log zerolog.Logger
-
-	network   string
-	networkID string
-	chainID   string
-	client    *ethclient.Client
+	log    zerolog.Logger
+	client *ethclient.Client
 }
 
-func NewParser(ctx context.Context, log zerolog.Logger, client *ethclient.Client) (*Parser, error) {
+func NewParser(log zerolog.Logger, client *ethclient.Client) (*Parser, error) {
 	p := Parser{
 		log:    log.With().Str("component", "parser").Logger(),
 		client: client,
 	}
 
-	networkID, err := client.NetworkID(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	chainID, err := client.ChainID(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	p.networkID = networkID.String()
-	p.chainID = chainID.String()
-
 	return &p, nil
 }
 
 func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event, error) {
-	blockHash := common.HexToHash(block.String())
-
+	blockHash := common.HexToHash(block.Hash)
 	query := ethereum.FilterQuery{
 		BlockHash: &blockHash,
-		Topics: [][]common.Hash{
-			{
-				TopicHash(TopicTransfer),
-				TopicHash(TopicTransferSingle),
-				TopicHash(TopicTransferBatch),
-				TopicHash(TopicURI),
-			},
-		},
 	}
 	logs, err := p.client.FilterLogs(ctx, query)
 	if err != nil {
@@ -67,15 +41,15 @@ func (p *Parser) Parse(ctx context.Context, block *block.Block) ([]*event.Event,
 	for _, l := range logs {
 		eventJson, err := l.MarshalJSON()
 		if err != nil {
-			p.log.Error().Err(err).Str("block_hash", block.String()).Msg("failed to marshal event")
+			p.log.Error().Err(err).Str("block_hash", block.Hash).Msg("failed to marshal event")
 			continue
 		}
 
 		hash := sha256.Sum256(eventJson)
 		e := event.Event{
 			ID:              common.Bytes2Hex(hash[:]),
-			Network:         p.networkID,
-			Chain:           p.chainID,
+			Network:         block.NetworkID,
+			Chain:           block.ChainID,
 			Block:           l.BlockNumber,
 			TransactionHash: l.TxHash,
 			Address:         l.Address,

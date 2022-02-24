@@ -14,44 +14,47 @@ type HistoricalSource struct {
 	log zerolog.Logger
 
 	client    *ethclient.Client
-	nextIndex int64
-	endIndex  int64
+	nextIndex *big.Int
+	endIndex  *big.Int
 }
 
-func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Client, startIndex, endIndex int64) (*HistoricalSource, error) {
+func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Client, startIndex, endHeight int64) (*HistoricalSource, error) {
 	h := HistoricalSource{
 		log:       log.With().Str("component", "historical_source").Logger(),
 		client:    client,
-		nextIndex: startIndex,
-		endIndex:  endIndex,
+		nextIndex: big.NewInt(startIndex),
+		endIndex:  big.NewInt(endHeight),
 	}
 
 	latestHeader, err := client.HeaderByNumber(ctx, nil)
 	if err != nil {
-		h.log.Error().Err(err).Msg("could not get latest block header")
+		log.Error().Err(err).Msg("could not get latest block header")
 		return nil, err
 	}
 
-	if endIndex > latestHeader.Number.Int64() {
-		h.endIndex = latestHeader.Number.Int64()
+	if latestHeader.Number.CmpAbs(h.endIndex) == -1 {
+		h.endIndex = latestHeader.Number
 	}
 
 	return &h, nil
 }
 
 func (s *HistoricalSource) Next(ctx context.Context) *block.Block {
-	if s.nextIndex == s.endIndex {
+	if s.nextIndex.CmpAbs(s.endIndex) == 0 {
 		return nil
 	}
 
-	header, err := s.client.HeaderByNumber(ctx, big.NewInt(s.nextIndex))
+	header, err := s.client.HeaderByNumber(ctx, s.nextIndex)
 	if err != nil {
-		s.log.Error().Err(err).Int64("header", s.nextIndex).Msg("could not get block header")
+		s.log.Error().Err(err).Str("number", s.nextIndex.String()).Msg("could not get block header")
 		return nil
 	}
 
-	s.nextIndex++
-	b := block.Block(header.Hash().Hex())
+	s.nextIndex = s.nextIndex.Add(s.nextIndex, big.NewInt(1))
+	b := block.Block{
+		Hash: header.Hash().Hex(),
+	}
+
 	return &b
 }
 
