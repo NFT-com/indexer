@@ -3,8 +3,6 @@ module github.com/NFT-com/indexer
 go 1.17
 
 require (
-	github.com/aws/aws-lambda-go v1.28.0
-	github.com/aws/aws-sdk-go v1.42.40
 	github.com/ethereum/go-ethereum v1.10.15
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/rs/zerolog v1.26.1
@@ -20,7 +18,6 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

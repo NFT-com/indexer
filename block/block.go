@@ -1,7 +1,8 @@
 package block
 
 type Block struct {
-	NetworkID string
-	ChainID   string
-	Hash      string
+	ChainAPIURL string
+	StartIndex  string
+	EndIndex    string
+	Contracts   []string
 }

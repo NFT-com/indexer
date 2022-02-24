@@ -94,6 +94,7 @@ func run() error {
 
 	select {
 	case <-done:
+		client.Close()
 		return nil
 	case <-sig:
 		if err := subs.Close(); err != nil {
