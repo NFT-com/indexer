@@ -2,12 +2,11 @@ package ethereum
 
 import (
 	"context"
+	"github.com/NFT-com/indexer/block"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-
-	"github.com/NFT-com/indexer/block"
 )
 
 type HistoricalSource struct {
@@ -28,7 +27,7 @@ func NewHistorical(ctx context.Context, log zerolog.Logger, client *ethclient.Cl
 
 	latestHeader, err := client.HeaderByNumber(ctx, nil)
 	if err != nil {
-		log.Error().Err(err).Msg("could not get latest block header")
+		log.Error().Err(err).Msg("could not get latest dispatch header")
 		return nil, err
 	}
 
@@ -46,13 +45,14 @@ func (s *HistoricalSource) Next(ctx context.Context) *block.Block {
 
 	header, err := s.client.HeaderByNumber(ctx, s.nextIndex)
 	if err != nil {
-		s.log.Error().Err(err).Str("number", s.nextIndex.String()).Msg("could not get block header")
+		s.log.Error().Err(err).Str("number", s.nextIndex.String()).Msg("could not get dispatch header")
 		return nil
 	}
 
 	s.nextIndex = s.nextIndex.Add(s.nextIndex, big.NewInt(1))
 	b := block.Block{
-		Hash: header.Hash().Hex(),
+		Number: header.Number.String(),
+		Hash:   header.Hash().Hex(),
 	}
 
 	return &b

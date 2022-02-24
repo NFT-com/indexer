@@ -11,9 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/block"
 	"github.com/NFT-com/indexer/networks/ethereum"
-	"github.com/NFT-com/indexer/subscriber"
 )
 
 func main() {
@@ -63,33 +61,21 @@ func run() error {
 		return err
 	}
 
-	subs, err := subscriber.NewSubscriber(log, live)
-	if err != nil {
-		return err
-	}
-
 	failed := make(chan error)
 	done := make(chan struct{})
-	blockChannel := make(chan *block.Block, 1000)
 
 	go func() {
-		log.Info().Msg("Launching subscriber")
-		if err := subs.Subscribe(ctx, blockChannel); err != nil {
-			failed <- err
-		}
-		log.Info().Msg("Stopped subscriber")
-		close(done)
-	}()
-
-	go func() {
+		log.Info().Msg("watcher started")
 		for {
-			select {
-			case b := <-blockChannel:
-				log.Info().Interface("block", b).Msg("received")
-			case <-done:
-				return
+			block := live.Next(ctx)
+			if block == nil {
+				break
 			}
+
+			log.Info().Interface("block", block).Msg("got new block")
 		}
+		log.Info().Msg("watcher stopped")
+		close(done)
 	}()
 
 	select {
@@ -97,7 +83,7 @@ func run() error {
 		client.Close()
 		return nil
 	case <-sig:
-		if err := subs.Close(); err != nil {
+		if err := live.Close(); err != nil {
 			failed <- err
 		}
 	case err := <-failed:

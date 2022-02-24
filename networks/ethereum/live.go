@@ -3,11 +3,11 @@ package ethereum
 import (
 	"context"
 
+	"github.com/NFT-com/indexer/block"
+
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
-
-	"github.com/NFT-com/indexer/block"
 )
 
 type LiveSource struct {
@@ -40,7 +40,8 @@ func (s *LiveSource) Next(ctx context.Context) *block.Block {
 	select {
 	case header := <-s.headers:
 		b := block.Block{
-			Hash: header.Hash().Hex(),
+			Number: header.Number.String(),
+			Hash:   header.Hash().Hex(),
 		}
 		return &b
 
