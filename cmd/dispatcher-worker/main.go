@@ -1,7 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/NFT-com/indexer/dispatch"
+	"github.com/ethereum/go-ethereum/common"
+	"math/big"
 	"os"
 	"os/signal"
 	"time"
@@ -9,6 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
+)
+
+const (
+	IndexBase = 10
 )
 
 func main() {
@@ -45,37 +53,32 @@ func run() error {
 	}
 	log = log.Level(level)
 
+	// TODO: Check if this will use the dispatch url or will use this from the parameter
 	client, err := ethclient.Dial(nodeURL)
 	if err != nil {
 		return err
 	}
+	defer client.Close()
 
-	failed := make(chan error)
-	done := make(chan struct{})
+	var input dispatch.Dispatch // TODO RECEIVE THIS FROM QUEUE
 
-	go func() {
-		log.Info().Msg("Launching subscriber")
+	var (
+		startIndex *big.Int
+		endIndex   *big.Int
+		contracts  []common.Address
+	)
 
-		log.Info().Msg("Stopped subscriber")
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		client.Close()
-		return nil
-	case <-sig:
-
-	case err := <-failed:
-		return err
+	if _, ok := startIndex.SetString(input.StartIndex, IndexBase); !ok {
+		return errors.New("failed to parse start index")
 	}
 
-	go func() {
-		<-sig
-		log.Fatal().Msg("forced interruption")
-	}()
+	if _, ok := endIndex.SetString(input.EndIndex, IndexBase); !ok {
+		return errors.New("failed to parse end index")
+	}
 
-	<-done
+	for _, contract := range input.Contracts {
+		contracts = append(contracts, common.HexToAddress(contract))
+	}
 
 	return nil
 }
