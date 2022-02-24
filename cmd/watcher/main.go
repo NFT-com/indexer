@@ -7,10 +7,13 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/adjust/rmq/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/dispatch"
+	"github.com/NFT-com/indexer/dispatch/redismq"
 	"github.com/NFT-com/indexer/networks/ethereum"
 )
 
@@ -32,8 +35,19 @@ func run() error {
 	signal.Notify(sig, os.Interrupt)
 
 	// Command line parameter initialization.
-	var flagLogLevel string
+	var (
+		flagRMQTag        string
+		flagRedisNetwork  string
+		flagRedisURL      string
+		flagRedisDatabase int
+		flagLogLevel      string
+	)
 
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher redismq tag")
+	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
+	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
+	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
+	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -64,6 +78,16 @@ func run() error {
 	failed := make(chan error)
 	done := make(chan struct{})
 
+	connection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	if err != nil {
+		return err
+	}
+
+	producer, err := redismq.NewProducer(connection)
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		log.Info().Msg("watcher started")
 		for {
@@ -72,7 +96,17 @@ func run() error {
 				break
 			}
 
-			log.Info().Interface("block", block).Msg("got new block")
+			job := dispatch.DiscoveryJob{
+				ChainURL:   nodeURL,
+				StartIndex: block.Number,
+				EndIndex:   block.Number,
+			}
+
+			err := producer.PublishDiscoveryJob("ethereum-mainnet", job)
+			if err != nil {
+				failed <- err
+				return
+			}
 		}
 		log.Info().Msg("watcher stopped")
 		close(done)
@@ -81,6 +115,7 @@ func run() error {
 	select {
 	case <-done:
 		client.Close()
+		connection.StopAllConsuming()
 		return nil
 	case <-sig:
 		if err := live.Close(); err != nil {

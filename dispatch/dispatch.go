@@ -1,6 +1,6 @@
 package dispatch
 
-type Dispatch struct {
+type DiscoveryJob struct {
 	ChainURL   string
 	StartIndex string
 	EndIndex   string
