@@ -1,4 +1,4 @@
-package dispatch
+package queue
 
 type DiscoveryJob struct {
 	ChainURL   string
@@ -6,4 +6,7 @@ type DiscoveryJob struct {
 	StartIndex string
 	EndIndex   string
 	Contracts  []string
+}
+
+type ParseJob struct {
 }

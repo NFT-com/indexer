@@ -1,11 +1,11 @@
-package redismq
+package producer
 
 import (
 	"encoding/json"
 
 	"github.com/adjust/rmq/v4"
-	
-	"github.com/NFT-com/indexer/dispatch"
+
+	"github.com/NFT-com/indexer/queue"
 )
 
 type Producer struct {
@@ -20,8 +20,8 @@ func NewProducer(connection rmq.Connection) (*Producer, error) {
 	return &p, nil
 }
 
-func (p *Producer) PublishDiscoveryJob(queueName string, job dispatch.DiscoveryJob) error {
-	queue, err := p.connection.OpenQueue(queueName)
+func (p *Producer) PublishDiscoveryJob(queueName string, job queue.DiscoveryJob) error {
+	q, err := p.connection.OpenQueue(queueName)
 	if err != nil {
 		return err
 	}
@@ -31,10 +31,14 @@ func (p *Producer) PublishDiscoveryJob(queueName string, job dispatch.DiscoveryJ
 		return err
 	}
 
-	err = queue.PublishBytes(jobPayload)
+	err = q.PublishBytes(jobPayload)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (p *Producer) PublishParseJob(queueName string, job queue.ParseJob) error {
 	return nil
 }

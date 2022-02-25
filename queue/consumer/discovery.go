@@ -5,14 +5,14 @@ import (
 
 	"github.com/adjust/rmq/v4"
 
-	"github.com/NFT-com/indexer/dispatch/redismq"
+	"github.com/NFT-com/indexer/queue/producer"
 )
 
 type DiscoveryConsumer struct {
-	producer *redismq.Producer
+	producer *producer.Producer
 }
 
-func NewDiscoveryConsumer(producer *redismq.Producer) (*DiscoveryConsumer, error) {
+func NewDiscoveryConsumer(producer *producer.Producer) (*DiscoveryConsumer, error) {
 	c := DiscoveryConsumer{
 		producer: producer,
 	}

@@ -59,50 +59,27 @@ func run() error {
 	done := make(chan struct{})
 
 	go func() {
-		log.Info().Msg("Launching subscriber")
-
-		log.Info().Msg("Stopped subscriber")
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		return nil
-	case <-sig:
-
-	case err := <-failed:
-		return err
-	}
-
-	go func() {
-		<-sig
-		log.Fatal().Msg("forced interruption")
-	}()
-
-	<-done
-
-	go func() {
-		log.Info().Msg("Dispatcher Server starting")
+		log.Info().Msg("dispatcher server starting")
 
 		err := server.Start(fmt.Sprint(":", flagPort))
 
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Warn().Err(err).Msg("Dispatcher Server failed")
+			log.Warn().Err(err).Msg("dispatcher server failed")
 			failed <- err
 			return
 		}
 
-		log.Info().Msg("Dispatcher Server stopped")
+		log.Info().Msg("dispatcher server stopped")
 		close(done)
 	}()
 
 	select {
 	case <-sig:
-		log.Info().Msg("Dispatcher Server stopping")
+		log.Info().Msg("dispatcher server stopping")
 	case <-done:
-		log.Info().Msg("Dispatcher Server done")
+		log.Info().Msg("dispatcher server done")
 	case err := <-failed:
-		log.Warn().Msg("Dispatcher Server aborted")
+		log.Warn().Msg("dispatcher server aborted")
 		return err
 	}
 	go func() {

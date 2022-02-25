@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/consumer"
-	"github.com/NFT-com/indexer/dispatch/redismq"
+	"github.com/NFT-com/indexer/queue/consumer"
+	"github.com/NFT-com/indexer/queue/producer"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func run() error {
 		flagLogLevel             string
 	)
 
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher redismq tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")
@@ -65,7 +65,7 @@ func run() error {
 		return err
 	}
 
-	producer, err := redismq.NewProducer(connection)
+	prod, err := producer.NewProducer(connection)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func run() error {
 		return err
 	}
 
-	discoveryConsumer, err := consumer.NewDiscoveryConsumer(producer)
+	discoveryConsumer, err := consumer.NewDiscoveryConsumer(prod)
 	if err != nil {
 		return err
 	}

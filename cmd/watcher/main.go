@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/NFT-com/indexer/queue/producer"
 	"os"
 	"os/signal"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/NFT-com/indexer/dispatch"
-	"github.com/NFT-com/indexer/dispatch/redismq"
 	"github.com/NFT-com/indexer/networks/ethereum"
 )
 
@@ -44,7 +44,7 @@ func run() error {
 		flagLogLevel      string
 	)
 
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher redismq tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")
@@ -85,7 +85,7 @@ func run() error {
 		return err
 	}
 
-	producer, err := redismq.NewProducer(connection)
+	producer, err := producer.NewProducer(connection)
 	if err != nil {
 		return err
 	}
