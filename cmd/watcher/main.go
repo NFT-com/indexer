@@ -85,7 +85,7 @@ func run() error {
 		return err
 	}
 
-	producer, err := producer.NewProducer(connection)
+	prod, err := producer.NewProducer(connection)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func run() error {
 				EndIndex:   block.Number,
 			}
 
-			err := producer.PublishDiscoveryJob(flagQueueName, job)
+			err := prod.PublishDiscoveryJob(flagQueueName, job)
 			if err != nil {
 				failed <- err
 				return
