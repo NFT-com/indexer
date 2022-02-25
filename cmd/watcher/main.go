@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/NFT-com/indexer/queue/producer"
 	"os"
 	"os/signal"
 	"time"
@@ -13,8 +12,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/dispatch"
 	"github.com/NFT-com/indexer/networks/ethereum"
+	"github.com/NFT-com/indexer/queue"
+	"github.com/NFT-com/indexer/queue/producer"
 )
 
 func main() {
@@ -98,7 +98,7 @@ func run() error {
 				break
 			}
 
-			job := dispatch.DiscoveryJob{
+			job := queue.DiscoveryJob{
 				ChainURL:   nodeURL,
 				ChainType:  chainType,
 				StartIndex: block.Number,

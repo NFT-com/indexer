@@ -79,7 +79,7 @@ func run() error {
 	case <-done:
 		log.Info().Msg("dispatcher server done")
 	case err := <-failed:
-		log.Warn().Msg("dispatcher server aborted")
+		log.Error().Err(err).Msg("dispatcher server aborted")
 		return err
 	}
 	go func() {
@@ -88,10 +88,6 @@ func run() error {
 		os.Exit(1)
 	}()
 
-	// The following code starts a shutdown with a certain timeout and makes
-	// sure that the main executing components are shutting down within the
-	// allocated shutdown time. Otherwise, we will force the shutdown and log
-	// an error. We then wait for shutdown on each component to complete.
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
