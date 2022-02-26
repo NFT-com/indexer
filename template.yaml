@@ -13,3 +13,9 @@ Resources:
       Environment:
         Variables:
           REDIS_URL: redis:6379
+  default:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: cmd/parse-worker-default
+      Handler: default
+      Runtime: go1.x

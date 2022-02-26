@@ -3,7 +3,6 @@ package web3
 import (
 	"context"
 	"crypto/sha256"
-	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -35,24 +34,20 @@ func NewWeb3(log zerolog.Logger, parseQueueName string, prod *producer.Producer)
 }
 
 func (w *Web3) Handle(ctx context.Context, job queue.DiscoveryJob) error {
-	fmt.Println("a")
 	client, err := ethclient.Dial(job.ChainURL)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("b")
 	zero := big.NewInt(0)
 	startIndex, _ := zero.SetString(job.StartIndex, IndexBase)
 	endIndex, _ := zero.SetString(job.EndIndex, IndexBase)
-	fmt.Println("c")
 
 	addresses := make([]common.Address, 0, len(job.Contracts))
 	for _, contract := range job.Contracts {
 		addresses = append(addresses, common.HexToAddress(contract))
 	}
 
-	fmt.Println("d")
 	query := ethereum.FilterQuery{
 		FromBlock: startIndex,
 		ToBlock:   endIndex,
@@ -100,7 +95,6 @@ func (w *Web3) Handle(ctx context.Context, job queue.DiscoveryJob) error {
 			Data:            log.Data,
 		}
 
-		fmt.Println("send job", w.parseQueueName, parseJob)
 		err = w.prod.PublishParseJob(w.parseQueueName, parseJob)
 		if err != nil {
 			return err
