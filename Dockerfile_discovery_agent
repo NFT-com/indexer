@@ -8,13 +8,13 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /watcher ./cmd/watcher-web3
+RUN go build -o /agent ./cmd/discovery-agent
 
 FROM gcr.io/distroless/base-debian10
 
 WORKDIR /
 
-COPY --from=build /watcher /watcher
+COPY --from=build /agent /agent
 
 USER nonroot:nonroot
 

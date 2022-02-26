@@ -61,7 +61,9 @@ func (a *API) PublishParseJob(ctx echo.Context) error {
 		Block:           req.Block,
 		TransactionHash: req.TransactionHash,
 		Address:         req.Address,
-		Type:            req.Type,
+		AddressType:     req.AddressType,
+		Topic:           req.Topic,
+		IndexedData:     req.IndexedData,
 		Data:            req.Data,
 	}
 	if err := a.produce.PublishParseJob(a.parseJobQueueName, job); err != nil {

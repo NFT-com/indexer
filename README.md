@@ -37,7 +37,7 @@ indexer <node_url> <network> <chain> -n local -l http://127.0.0.1:3001
 Example for the Ethereum mainnet:
 
 ```bash
-indexer <node_url> ethereum mainnet -n local -l http://127.0.0.1:3001
+indexer <node_url> web3 mainnet -n local -l http://127.0.0.1:3001
 ```
 
 #### Historical Mode
@@ -49,5 +49,5 @@ indexer <node_url> <network> <chain> -n local -l http://127.0.0.1:3001
 Example for the Ethereum mainnet for a range from block 1234 to block 8910:
 
 ```bash
-indexer <node_url> ethereum mainnet -s 1234 -e 8910 -n local -l http://127.0.0.1:3001
+indexer <node_url> web3 mainnet -s 1234 -e 8910 -n local -l http://127.0.0.1:3001
 ```

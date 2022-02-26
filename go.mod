@@ -4,6 +4,8 @@ go 1.17
 
 require (
 	github.com/adjust/rmq/v4 v4.0.2
+	github.com/aws/aws-lambda-go v1.28.0
+	github.com/aws/aws-sdk-go v1.43.7
 	github.com/ethereum/go-ethereum v1.10.15
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/rs/zerolog v1.26.1
@@ -23,6 +25,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -35,8 +38,8 @@ require (
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	go.opentelemetry.io/otel v0.13.0 // indirect
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
-	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect

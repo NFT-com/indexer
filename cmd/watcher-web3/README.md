@@ -7,7 +7,7 @@ The `watcher` is responsible for watching live blocks and publishing into a queu
 ## Usage
 
 ```bash
-Usage: watcher [options] <node_url> 
+Usage: watcher-web3 [options] <node_url> 
 
 -l, --log sring  log level
 ```

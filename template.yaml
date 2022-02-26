@@ -4,12 +4,12 @@ Description: >
   NFT Analytics functions.
 
 Resources:
-  ethereummainneterc721: # FIXME: alphanumeric name... How do we do it?
+  web3:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/ethereum/mainnet/erc721/
-      Handler: erc721
+      CodeUri: cmd/discovery-worker-web3
+      Handler: web3
       Runtime: go1.x
       Environment:
         Variables:
-          NODE_URL: wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71
+          REDIS_URL: redis:6379

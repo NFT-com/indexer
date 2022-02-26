@@ -7,11 +7,15 @@ import (
 	"time"
 
 	"github.com/adjust/rmq/v4"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/queue/consumer"
-	"github.com/NFT-com/indexer/queue/producer"
 )
 
 func main() {
@@ -37,16 +41,22 @@ func run() error {
 		flagConsumerQueueName    string
 		flagConsumerPrefetch     int64
 		flagConsumerPollDuration time.Duration
+		flagTestMode             bool
+		flagLambdaURL            string
+		flagRegion               string
 		flagLogLevel             string
 	)
 
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "watcher", "watcher producer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "e", "parse-agent", "parse agent producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")
-	pflag.StringVarP(&flagConsumerQueueName, "queue", "q", "discovery", "queue name")
+	pflag.StringVarP(&flagConsumerQueueName, "queue", "q", "parse", "queue name")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "consumer prefetch amount")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second, "consumer poll duration")
+	pflag.BoolVarP(&flagTestMode, "test", "t", false, "test mode")
+	pflag.StringVarP(&flagLambdaURL, "function-url", "f", "", "lambda url")
+	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -59,13 +69,26 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	failed := make(chan error)
-	connection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	if flagTestMode {
+		sessionConfig.Credentials = credentials.AnonymousCredentials
+	}
+
+	lambdaConfig := &aws.Config{}
+	if flagLambdaURL != "" {
+		lambdaConfig.Endpoint = aws.String(flagLambdaURL)
+	}
+
+	sess := session.Must(session.NewSession(&sessionConfig))
+	lambdaClient := lambda.New(sess, lambdaConfig)
+
+	dispatcher, err := function.NewClient(lambdaClient)
 	if err != nil {
 		return err
 	}
 
-	prod, err := producer.NewProducer(connection)
+	failed := make(chan error)
+	connection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
 		return err
 	}
@@ -75,7 +98,7 @@ func run() error {
 		return err
 	}
 
-	discoveryConsumer, err := consumer.NewDiscoveryConsumer(prod)
+	parseConsumer, err := consumer.NewParseConsumer(dispatcher)
 	if err != nil {
 		return err
 	}
@@ -85,7 +108,7 @@ func run() error {
 		return err
 	}
 
-	consumerName, err := queue.AddConsumer(flagRMQTag, discoveryConsumer)
+	consumerName, err := queue.AddConsumer(flagRMQTag, parseConsumer)
 	if err != nil {
 		return err
 	}

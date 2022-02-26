@@ -46,7 +46,7 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagPort, "port", "p", "8081", "server port")
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", "watcher producer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", "watcher-web3 producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVarP(&flagRedisDatabase, "database", "d", 1, "redis database")

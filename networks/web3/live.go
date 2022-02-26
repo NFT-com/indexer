@@ -1,4 +1,4 @@
-package ethereum
+package web3
 
 import (
 	"context"
