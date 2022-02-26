@@ -1,5 +1,10 @@
 version: "3.9"
 services:
+  api:
+    build: Dockerfile_api
+    entrypoint: /api -u "redis:6379"
+    depends_on:
+      - redis
   watcher:
     build: Dockerfile_watcher
     entrypoint: /watcher wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 web3 -u "redis:6379"
