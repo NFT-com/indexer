@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"math/big"
@@ -39,20 +40,7 @@ func (w *Web3) Handle(ctx context.Context, job queue.DiscoveryJob) error {
 		return err
 	}
 
-	zero := big.NewInt(0)
-	startIndex, _ := zero.SetString(job.StartIndex, IndexBase)
-	endIndex, _ := zero.SetString(job.EndIndex, IndexBase)
-
-	addresses := make([]common.Address, 0, len(job.Contracts))
-	for _, contract := range job.Contracts {
-		addresses = append(addresses, common.HexToAddress(contract))
-	}
-
-	query := ethereum.FilterQuery{
-		FromBlock: startIndex,
-		ToBlock:   endIndex,
-		Addresses: addresses,
-	}
+	query := w.getFilterQuery(job)
 	logs, err := client.FilterLogs(ctx, query)
 	if err != nil {
 		return err
@@ -69,30 +57,11 @@ func (w *Web3) Handle(ctx context.Context, job queue.DiscoveryJob) error {
 	}
 
 	for _, log := range logs {
-		eventJson, err := log.MarshalJSON()
+		contractType := "erc721"
+
+		parseJob, err := w.parseLog(log, networkID.String(), chainID.String(), contractType)
 		if err != nil {
 			return err
-		}
-
-		hash := sha256.Sum256(eventJson)
-
-		indexedData := log.Topics[1:]
-		indexedDataString := make([]string, 0, len(indexedData))
-		for _, data := range indexedData {
-			indexedDataString = append(indexedDataString, data.String())
-		}
-
-		parseJob := queue.ParseJob{
-			ID:              common.Bytes2Hex(hash[:]),
-			NetworkID:       networkID.String(),
-			ChainID:         chainID.String(),
-			Block:           log.BlockNumber,
-			TransactionHash: log.TxHash.String(),
-			AddressType:     "erc721", // TODO: We code get from DB, if not present go get from network (code_at) and the publish in the DB
-			Address:         log.Address.String(),
-			Topic:           log.Topics[0].String(),
-			IndexedData:     indexedDataString,
-			Data:            log.Data,
 		}
 
 		err = w.prod.PublishParseJob(w.parseQueueName, parseJob)
@@ -102,4 +71,53 @@ func (w *Web3) Handle(ctx context.Context, job queue.DiscoveryJob) error {
 	}
 
 	return nil
+}
+
+func (w *Web3) getFilterQuery(job queue.DiscoveryJob) ethereum.FilterQuery {
+	zero := big.NewInt(0)
+	startIndex, _ := zero.SetString(job.StartIndex, IndexBase)
+	endIndex, _ := zero.SetString(job.EndIndex, IndexBase)
+
+	addresses := make([]common.Address, 0, len(job.Contracts))
+	for _, contract := range job.Contracts {
+		addresses = append(addresses, common.HexToAddress(contract))
+	}
+
+	query := ethereum.FilterQuery{
+		FromBlock: startIndex,
+		ToBlock:   endIndex,
+		Addresses: addresses,
+	}
+
+	return query
+}
+
+func (w *Web3) parseLog(log types.Log, networkID string, chainID string, contractType string) (queue.ParseJob, error) {
+	eventJson, err := log.MarshalJSON()
+	if err != nil {
+		return queue.ParseJob{}, err
+	}
+
+	hash := sha256.Sum256(eventJson)
+
+	indexedData := log.Topics[1:]
+	indexedDataString := make([]string, 0, len(indexedData))
+	for _, data := range indexedData {
+		indexedDataString = append(indexedDataString, data.String())
+	}
+
+	parseJob := queue.ParseJob{
+		ID:              common.Bytes2Hex(hash[:]),
+		NetworkID:       networkID,
+		ChainID:         chainID,
+		Block:           log.BlockNumber,
+		TransactionHash: log.TxHash.String(),
+		AddressType:     contractType,
+		Address:         log.Address.String(),
+		Topic:           log.Topics[0].String(),
+		IndexedData:     indexedDataString,
+		Data:            log.Data,
+	}
+
+	return parseJob, nil
 }
