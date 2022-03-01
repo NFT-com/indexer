@@ -26,12 +26,12 @@ There is two different job types `discovery` and `parsing` so there is a need fo
 package job
 
 type Discovery struct {
-	ChainURL      string
-	ChainType     string
-	StartBlock    string
-	EndBlock      string
-	Addresses     []string
-	InterfaceType string
+	ChainURL      string   // Chain URL to connect to.
+	ChainType     string   // Web3 compatible, Flow, etc...
+	StartBlock    string   // Block to start the discovery.
+	EndBlock      string   // Block to end the discovery.
+	Addresses     []string // Addressed to filter in the discovery, empty for no filter
+	InterfaceType string   // Interface type to filter for.
 }
 
 ```
@@ -42,15 +42,12 @@ type Discovery struct {
 package job
 
 type Parsing struct {
-	ChainURL        string
-	ChainType       string
-	InterfaceType   string
-	Block           string
-	TransactionHash string
-	Address         string
-	Topic           string
-	IndexedData     []string
-	Data            []byte
+	ChainURL      string // Chain URL to connect to.
+	ChainType     string // Web3 compatible, Flow, etc...
+	InterfaceType string // Interface type/id to filter for.
+	Block         string // Block to parse.
+	Address       string // Address of the contract to parse.
+	EventType     string // Event type to parse.
 }
 
 ```
