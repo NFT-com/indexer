@@ -11,7 +11,7 @@ There is two different job types `discovery` and `parsing` so there is a need fo
 
 ## Methods
 
-- `PUT`
+- `POST`
     - Allows creating new jobs.
 - `GET`
     - Lists all the jobs.
@@ -28,8 +28,7 @@ package job
 type Discovery struct {
 	ChainURL      string   // Chain URL to connect to.
 	ChainType     string   // Web3 compatible, Flow, etc...
-	StartBlock    string   // Block to start the discovery.
-	EndBlock      string   // Block to end the discovery.
+	Block         string   // Block to run discovery.
 	Addresses     []string // Addressed to filter in the discovery, empty for no filter
 	InterfaceType string   // Interface type to filter for.
 }
