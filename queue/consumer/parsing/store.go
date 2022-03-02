@@ -13,5 +13,4 @@ type Store interface {
 
 	Chain(chainID string) (*chain.Chain, error)
 	Collection(chainID, address, contractCollectionID string) (*chain.Collection, error)
-	Marketplace(chainID, address string) (*chain.Marketplace, error)
 }

@@ -1,8 +1,10 @@
-package api
+package jobs
 
 import (
 	"github.com/labstack/echo/v4"
 	"gopkg.in/olahol/melody.v1"
+
+	"github.com/NFT-com/indexer/service/api"
 )
 
 const (
@@ -21,11 +23,11 @@ const (
 type Handler struct {
 	wsHandler *melody.Melody
 	jobs      JobsHandler
-	validator Validator
+	validator api.Validator
 }
 
 // NewHandler returns a new API handler.
-func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator Validator) *Handler {
+func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator api.Validator) *Handler {
 	s := Handler{
 		wsHandler: wsHandler,
 		jobs:      jobs,
@@ -35,8 +37,8 @@ func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator Validator)
 	return &s
 }
 
-// ApplyRoutes applies the routes to the echo server.
-func (h *Handler) ApplyRoutes(server *echo.Echo) {
+// RegisterEndpoints applies the routes to the echo server.
+func (h *Handler) RegisterEndpoints(server *echo.Echo) {
 	websocket := server.Group("/ws")
 	websocket.GET("/discoveries", h.DiscoveryWebsocketConnection)
 	websocket.GET("/parsings", h.ParsingWebsocketConnection)

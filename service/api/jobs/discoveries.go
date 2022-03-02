@@ -1,4 +1,4 @@
-package api
+package jobs
 
 import (
 	"net/http"
@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/service/api"
 	"github.com/NFT-com/indexer/service/broadcaster"
 	"github.com/NFT-com/indexer/service/request"
 )
@@ -32,12 +33,12 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 	var req request.Discovery
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	job := jobs.Discovery{
@@ -51,7 +52,7 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 
 	newJob, err := h.jobs.CreateDiscoveryJob(job)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusCreated, *newJob)
@@ -62,12 +63,12 @@ func (h *Handler) CreateDiscoveryJobs(ctx echo.Context) error {
 	var req request.Discoveries
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	jobList := make([]jobs.Discovery, 0, len(req.Jobs))
@@ -86,7 +87,7 @@ func (h *Handler) CreateDiscoveryJobs(ctx echo.Context) error {
 
 	err = h.jobs.CreateDiscoveryJobs(jobList)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.NoContent(http.StatusCreated)
@@ -97,12 +98,12 @@ func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
 	rawStatus := ctx.QueryParam(statusQueryKey)
 	status, err := jobs.ParseStatus(rawStatus)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	jobs, err := h.jobs.ListDiscoveryJobs(status)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, jobs)
@@ -114,7 +115,7 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 
 	job, err := h.jobs.GetDiscoveryJob(id)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, *job)
@@ -130,7 +131,7 @@ func (h *Handler) GetHighestBlockNumberDiscoveryJob(ctx echo.Context) error {
 
 	job, err := h.jobs.GetHighestBlockNumberDiscoveryJob(chainURL, chainType, addresses, standardType, eventType)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, *job)
@@ -143,22 +144,22 @@ func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
 	var req request.Status
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	newState, err := jobs.ParseStatus(req.Status)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.jobs.UpdateDiscoveryJobStatus(id, newState)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.NoContent(http.StatusOK)

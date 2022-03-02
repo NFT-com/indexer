@@ -51,3 +51,29 @@ type Addition struct {
 type Status struct {
 	Status string `json:"status" validate:"required"`
 }
+
+type Chain struct {
+	ChainID     string `json:"chain_id" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Symbol      string `json:"symbol" validate:"required"`
+}
+
+type Marketplace struct {
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Website     string `json:"website" validate:"required"`
+}
+
+type Collection struct {
+	ChainID              string `json:"chain_id" validate:"required"`
+	ContractCollectionID string `json:"contract_collection_id"`
+	Address              string `json:"address" validate:"required"`
+	Name                 string `json:"name" validate:"required"`
+	Description          string `json:"description" validate:"required"`
+	Symbol               string `json:"symbol" validate:"required"`
+	Slug                 string `json:"slug" validate:"required"`
+	URI                  string `json:"uri" validate:"required"`
+	ImageURL             string `json:"image_url" validate:"required"`
+	Website              string `json:"website" validate:"required"`
+}

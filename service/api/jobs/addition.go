@@ -1,8 +1,9 @@
-package api
+package jobs
 
 import (
 	"net/http"
 
+	"github.com/NFT-com/indexer/service/api"
 	"github.com/labstack/echo/v4"
 
 	"github.com/NFT-com/indexer/jobs"
@@ -31,12 +32,12 @@ func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
 	var req request.Addition
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	job := jobs.Addition{
@@ -51,7 +52,7 @@ func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
 
 	newJob, err := h.jobs.CreateAdditionJob(job)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusCreated, *newJob)
@@ -62,12 +63,12 @@ func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
 	var req request.Additions
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	jobList := make([]jobs.Addition, 0, len(req.Jobs))
@@ -87,7 +88,7 @@ func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
 
 	err = h.jobs.CreateAdditionJobs(jobList)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.NoContent(http.StatusCreated)
@@ -98,12 +99,12 @@ func (h *Handler) ListAdditionJobs(ctx echo.Context) error {
 	rawStatus := ctx.QueryParam(statusQueryKey)
 	status, err := jobs.ParseStatus(rawStatus)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	jobs, err := h.jobs.ListAdditionJobs(status)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, jobs)
@@ -115,7 +116,7 @@ func (h *Handler) GetAdditionJob(ctx echo.Context) error {
 
 	job, err := h.jobs.GetAdditionJob(id)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, *job)
@@ -128,22 +129,22 @@ func (h *Handler) UpdateAdditionJobStatus(ctx echo.Context) error {
 	var req request.Status
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	newState, err := jobs.ParseStatus(req.Status)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.jobs.UpdateAdditionJobStatus(id, newState)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.NoContent(http.StatusOK)

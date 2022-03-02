@@ -1,4 +1,4 @@
-package api
+package jobs
 
 import (
 	"github.com/NFT-com/indexer/jobs"

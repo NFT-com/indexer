@@ -1,4 +1,4 @@
-package api
+package jobs
 
 import (
 	"net/http"
@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/service/api"
 	"github.com/NFT-com/indexer/service/broadcaster"
 	"github.com/NFT-com/indexer/service/request"
 )
@@ -31,12 +32,12 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 	var req request.Parsing
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	job := jobs.Parsing{
@@ -51,7 +52,7 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 
 	newJob, err := h.jobs.CreateParsingJob(job)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusCreated, *newJob)
@@ -62,12 +63,12 @@ func (h *Handler) CreateParsingJobs(ctx echo.Context) error {
 	var req request.Parsings
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	jobList := make([]jobs.Parsing, 0, len(req.Jobs))
@@ -87,7 +88,7 @@ func (h *Handler) CreateParsingJobs(ctx echo.Context) error {
 
 	err = h.jobs.CreateParsingJobs(jobList)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.NoContent(http.StatusCreated)
@@ -99,12 +100,12 @@ func (h *Handler) ListParsingJobs(ctx echo.Context) error {
 
 	status, err := jobs.ParseStatus(rawStatus)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	jobs, err := h.jobs.ListParsingJobs(status)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, jobs)
@@ -116,7 +117,7 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 
 	job, err := h.jobs.GetParsingJob(id)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, *job)
@@ -134,7 +135,7 @@ func (h *Handler) GetHighestBlockNumberParsingJob(ctx echo.Context) error {
 
 	job, err := h.jobs.GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.JSON(http.StatusOK, *job)
@@ -147,22 +148,22 @@ func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 	var req request.Status
 	err := ctx.Bind(&req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.validator.Request(req)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	newState, err := jobs.ParseStatus(req.Status)
 	if err != nil {
-		return badRequest(err)
+		return api.BadRequest(err)
 	}
 
 	err = h.jobs.UpdateParsingJobStatus(id, newState)
 	if err != nil {
-		return internalError(err)
+		return api.InternalError(err)
 	}
 
 	return ctx.NoContent(http.StatusOK)

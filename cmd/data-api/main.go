@@ -16,10 +16,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
-	"gopkg.in/olahol/melody.v1"
 
-	api "github.com/NFT-com/indexer/service/api/jobs"
-	handler "github.com/NFT-com/indexer/service/handler/jobs"
+	api "github.com/NFT-com/indexer/service/api/data"
+	handler "github.com/NFT-com/indexer/service/handler/data"
 	"github.com/NFT-com/indexer/service/postgres"
 	"github.com/NFT-com/indexer/service/validator"
 )
@@ -37,7 +36,6 @@ func main() {
 	}
 }
 
-// run has the server startup code.
 func run() error {
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
@@ -45,13 +43,13 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagBind             string
+		flagPort             string
 		flagDBConnectionInfo string
 		flagLogLevel         string
 	)
 
-	pflag.StringVarP(&flagBind, "bind", "b", "8081", "jobs api binding port")
-	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
+	pflag.StringVarP(&flagPort, "port", "p", "8081", "server port")
+	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -60,66 +58,54 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		log.Error().Err(err).Msg("could not parse log level")
-		return err
+		return fmt.Errorf("failed to parse log level: %w", err)
 	}
 	log = log.Level(level)
 	eLog := lecho.From(log)
 
-	// Initialize echo webserver.
 	server := echo.New()
 	server.HideBanner = true
 	server.HidePort = true
 	server.Logger = eLog
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
-	// Open database connection.
 	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
-		log.Error().Err(err).Msg("could not open SQL connection")
-		return err
+		return fmt.Errorf("could not open SQL connection: %w", err)
 	}
 
-	// Create the database store.
-	store, err := postgres.NewStore(db)
+	postgresStore, err := postgres.NewStore(db)
 	if err != nil {
-		log.Error().Err(err).Msg("could not create store")
-		return err
+		return fmt.Errorf("could not create store: %w", err)
 	}
 
-	// Create the broadcaster.
-	broadcaster := melody.New()
-
-	// Business logic handler.
-	handler := handler.New(store, broadcaster)
+	handler := handler.NewHandler(postgresStore)
 
 	// Request validator.
 	validator := validator.New()
 
-	// REST API Handler.
-	apiHandler := api.NewHandler(broadcaster, handler, validator)
+	apiHandler := api.NewHandler(handler, validator)
 	apiHandler.RegisterEndpoints(server)
 
 	failed := make(chan error)
 
 	go func() {
-		log.Info().Msg("jobs api server starting")
+		log.Info().Msg("data api server starting")
 
-		err = server.Start(fmt.Sprint(":", flagBind))
+		err = server.Start(fmt.Sprint(":", flagPort))
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Warn().Err(err).Msg("jobs api server failed")
 			failed <- err
 			return
 		}
 
-		log.Info().Msg("jobs api server done")
+		log.Info().Msg("data api server done")
 	}()
 
 	select {
 	case <-sig:
-		log.Info().Msg("jobs api server stopping")
+		log.Info().Msg("data api server stopping")
 	case err = <-failed:
-		log.Error().Err(err).Msg("jobs api server aborted")
+		log.Error().Err(err).Msg("data api server aborted")
 		return err
 	}
 	go func() {
@@ -131,10 +117,9 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Shutdown server.
 	err = server.Shutdown(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("could not shut down jobs api")
+		log.Error().Err(err).Msg("could not gracefully shutdown data api")
 		return err
 	}
 

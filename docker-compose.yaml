@@ -26,10 +26,20 @@ services:
     restart: always
     ports:
       - '6379:6379'
-  api:
+  jobs-api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: cmd/jobs-api/Dockerfile
+    restart: always
+    entrypoint: '/api -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
+    ports:
+      - '8081:8081'
+    depends_on:
+      - postgres
+  data-api:
+    build:
+      context: .
+      dockerfile: cmd/data-api/Dockerfile
     restart: always
     entrypoint: '/api -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
     ports:
@@ -39,18 +49,18 @@ services:
   jobs-watcher:
     build:
       context: .
-      dockerfile: Dockerfile.jobwatcher
+      dockerfile: cmd/jobs-watcher/Dockerfile
     restart: always
     entrypoint: '/watcher -a api:8081 -u redis:6379'
     depends_on:
-      - api
+      - jobs-api
       - redis
   chain-watcher:
     build:
       context: .
-      dockerfile: Dockerfile.chainwatcher
+      dockerfile: cmd/chain-watcher/Dockerfile
     restart: always
     entrypoint: '/watcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x4a537f61ef574153664c0dbc8c8f4b900cacbe5d -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721'
     depends_on:
-      - api
+      - jobs-api
       - jobs-watcher
