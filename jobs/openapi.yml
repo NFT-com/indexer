@@ -1,0 +1,389 @@
+swagger: "2.0"
+info:
+  description: "[Jobs API](https://github.com/NFT-com/indexer) is a REST API serving the data related to discovery and parsing blockchain data."
+  version: "0.0.1"
+  title: "Jobs API"
+host: "localhost:8082"
+tags:
+  - name: "discovery"
+    description: "Discovery jobs"
+  - name: "parse"
+    description: "Parsing jobs"
+schemes:
+  - "https"
+  - "http"
+paths:
+  /discoveries:
+    post:
+      tags:
+        - "discovery"
+      summary: "Create a new discovery job"
+      description: ""
+      operationId: "createDiscoveryJob"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Discovery job to run"
+          required: true
+          schema:
+            $ref: "#/definitions/Discovery"
+      responses:
+        "200":
+          description: "Discovery job created"
+          schema:
+            type: "object"
+        "400":
+          description: "Invalid job"
+    get:
+      tags:
+        - "discovery"
+      summary: "Find Discoveries jobs"
+      operationId: "listDiscoveries"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "status"
+          in: "query"
+          description: "Discovery Status"
+          required: false
+          type: "array"
+          items:
+            type: "string"
+            enum:
+              - "created"
+              - "queued"
+              - "failed"
+              - "done"
+              - "canceled"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Discovery"
+  /discoveries/{discovery_id}:
+    get:
+      tags:
+        - "discovery"
+      summary: "Find discovery job by ID"
+      description: "Returns a single discovery job"
+      operationId: "getDiscoveryJob"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "discovery_id"
+          in: "path"
+          description: "ID of the discovery job"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/Discovery"
+        "404":
+          description: "Discovery job not found"
+    patch:
+      tags:
+        - "discovery"
+      summary: "Updates a discovery job"
+      description: ""
+      operationId: "updateDiscoveryJobStatus"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "discovery_id"
+          in: "path"
+          description: "ID of the discovery job that needs to be updated"
+          required: true
+          type: "integer"
+          format: "int64"
+        - name: "discovery_status"
+          in: "body"
+          schema:
+            $ref: "#/definitions/StatusUpdate"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/Discovery"
+        "400":
+          description: "Invalid discovery job status"
+        "404":
+          description: "Discovery job not found"
+    delete:
+      tags:
+        - "discovery"
+      summary: "Cancels a discovery job"
+      description: ""
+      operationId: "cancelDiscoveryJob"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "discovery_id"
+          in: "path"
+          description: "Discovery job id to cancel"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Discovery job canceled"
+        "404":
+          description: "Discovery job not found"
+  /discoveries/{discovery_id}/requeue:
+    post:
+      tags:
+        - "discovery"
+      summary: "Recreates a discovery job"
+      description: ""
+      operationId: "requeueDiscoveryJob"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "discovery_id"
+          in: "path"
+          description: "ID of discovery job to requeue"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+        "404":
+          description: "Discovery job not found"
+  /parsings:
+    post:
+      tags:
+        - "parse"
+      summary: "Create a new parsing job"
+      description: ""
+      operationId: "createParsingJob"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Parsing job to run"
+          required: true
+          schema:
+            $ref: "#/definitions/Parsing"
+      responses:
+        "200":
+          description: "Parsing job created"
+          schema:
+            type: "object"
+        "400":
+          description: "Invalid parsing job"
+    get:
+      tags:
+        - "parse"
+      summary: "Find parsing jobs"
+      operationId: "listParsingJobs"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "status"
+          in: "query"
+          description: "Parsing job Status"
+          required: false
+          type: "array"
+          items:
+            type: "string"
+            enum:
+              - "created"
+              - "queued"
+              - "failed"
+              - "done"
+              - "canceled"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Parsing"
+  /parsings/{parsing_id}:
+    get:
+      tags:
+        - "parse"
+      summary: "Find parsing job by ID"
+      description: "Returns a single parsing job"
+      operationId: "getParsingJob"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "parsing_id"
+          in: "path"
+          description: "ID of the parsing job"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/Parsing"
+        "404":
+          description: "Parsing job not found"
+    patch:
+      tags:
+        - "parse"
+      summary: "Updates a parsing job"
+      description: ""
+      operationId: "updateParsingJobStatus"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "parsing_id"
+          in: "path"
+          description: "ID of the parsing job that needs to be updated"
+          required: true
+          type: "integer"
+          format: "int64"
+        - name: "parsing_status"
+          in: "body"
+          schema:
+            $ref: "#/definitions/StatusUpdate"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/Parsing"
+        "400":
+          description: "Invalid status"
+        "404":
+          description: "Parsing job not found"
+    delete:
+      tags:
+        - "parse"
+      summary: "Cancels a parsing job"
+      description: ""
+      operationId: "cancelParsingJob"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "parsing_id"
+          in: "path"
+          description: "Parsing job id to cancel"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "Parsing job canceled"
+        "404":
+          description: "Parsing job not found"
+  /parsings/{parsing_id}/requeue:
+    post:
+      tags:
+        - "parse"
+      summary: "Recreates a parsing job"
+      description: ""
+      operationId: "requeueParsingJob"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "parsing_id"
+          in: "path"
+          description: "ID of parsing job to requeue"
+          required: true
+          type: "string"
+          format: "uuid"
+      responses:
+        "200":
+          description: "successful operation"
+        "404":
+          description: "Parsing job not found"
+definitions:
+  Discovery:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      chain_url:
+        type: "string"
+        format: "url"
+      chain_type:
+        type: "string"
+        example: "web3"
+      block:
+        type: "string"
+        example: "12345"
+      addresses:
+        type: "array"
+        items:
+          type: "string"
+      interface_type:
+        type: "string"
+        example: "ERC721"
+      status:
+        type: "string"
+        description: "Discovery Status"
+        default: "created"
+        enum:
+          - "created"
+          - "queued"
+          - "failed"
+          - "done"
+          - "canceled"
+  Parsing:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      chain_url:
+        type: "string"
+        format: "url"
+      chain_type:
+        type: "string"
+        example: "web3"
+      block:
+        type: "string"
+        example: "12345"
+      addresses:
+        type: "string"
+        example: "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+      interface_type:
+        type: "string"
+        example: "ERC721"
+      event_type:
+        type: "string"
+        example: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+      status:
+        type: "string"
+        description: "Discovery Status"
+        default: "created"
+        enum:
+          - "created"
+          - "queued"
+          - "failed"
+          - "done"
+          - "canceled"
+  StatusUpdate:
+    type: "object"
+    properties:
+      status:
+        type: "string"
+        description: "Discovery Status"
+        default: "created"
+        enum:
+          - "created"
+          - "queued"
+          - "failed"
+          - "done"
+          - "canceled"
