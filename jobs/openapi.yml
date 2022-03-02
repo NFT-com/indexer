@@ -320,7 +320,7 @@ definitions:
       chain_type:
         type: "string"
         example: "web3"
-      block:
+      block_number:
         type: "string"
         example: "12345"
       addresses:
@@ -338,7 +338,7 @@ definitions:
           - "created"
           - "queued"
           - "failed"
-          - "done"
+          - "finished"
           - "canceled"
   Parsing:
     type: "object"
@@ -352,10 +352,10 @@ definitions:
       chain_type:
         type: "string"
         example: "web3"
-      block:
+      block_number:
         type: "string"
         example: "12345"
-      addresses:
+      address:
         type: "string"
         example: "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
       interface_type:
@@ -372,7 +372,7 @@ definitions:
           - "created"
           - "queued"
           - "failed"
-          - "done"
+          - "finished"
           - "canceled"
   StatusUpdate:
     type: "object"
@@ -385,5 +385,5 @@ definitions:
           - "created"
           - "queued"
           - "failed"
-          - "done"
+          - "finished"
           - "canceled"
