@@ -12,4 +12,8 @@ type DiscoveryJobsStore interface {
 }
 
 type ParsingJobsStore interface {
+	CreateParsingJob(job.Parsing) error
+	ListParsingJobs(job.Status) ([]job.Parsing, error)
+	GetParsingJob(job.ID) (job.Parsing, error)
+	CancelParsingJob(job.ID) error
 }
