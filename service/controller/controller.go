@@ -27,7 +27,7 @@ func NewController(jobsStore JobsStore, broadcaster *melody.Melody) *Controller 
 }
 
 func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (*job.Discovery, error) {
-	discovery.ID = uuid.New().String()
+	discovery.ID = job.ID(uuid.New().String())
 	discovery.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateDiscoveryJob(discovery); err != nil {
@@ -84,7 +84,7 @@ func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 		return nil, err
 	}
 
-	newJob.ID = uuid.New().String()
+	newJob.ID = job.ID(uuid.New().String())
 	newJob.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateDiscoveryJob(*newJob); err != nil {
@@ -99,7 +99,7 @@ func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 }
 
 func (c *Controller) CreateParsingJob(parsing job.Parsing) (*job.Parsing, error) {
-	parsing.ID = uuid.New().String()
+	parsing.ID = job.ID(uuid.New().String())
 	parsing.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateParsingJob(parsing); err != nil {
@@ -156,7 +156,7 @@ func (c *Controller) RequeueParsingJob(jobID job.ID) (*job.Parsing, error) {
 		return nil, err
 	}
 
-	newJob.ID = uuid.New().String()
+	newJob.ID = job.ID(uuid.New().String())
 	newJob.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateParsingJob(*newJob); err != nil {
