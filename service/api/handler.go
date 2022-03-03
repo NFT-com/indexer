@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/NFT-com/indexer/job"
 	"github.com/NFT-com/indexer/service/request"
-	"github.com/google/uuid"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,36 +16,36 @@ const (
 )
 
 type Handler struct {
-	discoveryJobsStore DiscoveryJobsStore
-	parsingJobsStore   ParsingJobsStore
+	discoveryController DiscoveryController
+	parsingController   ParsingController
 }
 
-func NewHandler(discoveryJobsStore DiscoveryJobsStore, parsingJobsStore ParsingJobsStore) (*Handler, error) {
+func NewHandler(discoveryController DiscoveryController, parsingController ParsingController) *Handler {
 	s := Handler{
-		discoveryJobsStore: discoveryJobsStore,
-		parsingJobsStore:   parsingJobsStore,
+		discoveryController: discoveryController,
+		parsingController:   parsingController,
 	}
 
-	return &s, nil
+	return &s
 }
 
 func (h *Handler) ApplyRoutes(server *echo.Echo) {
-	deliveryJobGroup := server.Group("/deliveries")
+	discoveriesJobGroup := server.Group("/discoveries")
 	{
-		deliveryJobGroup.POST("", h.CreateDiscoveryJob)
-		deliveryJobGroup.GET("", h.ListDiscoveryJobs)
-		deliveryJobGroup.GET("/"+DiscoveryJobIDParamKey, h.GetDiscoveryJob)
-		deliveryJobGroup.DELETE("/"+DiscoveryJobIDParamKey, h.GetDiscoveryJob)
-		deliveryJobGroup.POST("/"+DiscoveryJobIDParamKey+"/requeue", h.RequeueDiscoveryJob)
+		discoveriesJobGroup.POST("", h.CreateDiscoveryJob)
+		discoveriesJobGroup.GET("", h.ListDiscoveryJobs)
+		discoveriesJobGroup.GET("/:"+DiscoveryJobIDParamKey, h.GetDiscoveryJob)
+		discoveriesJobGroup.PATCH("/:"+DiscoveryJobIDParamKey, h.UpdateDiscoveryJobStatus)
+		discoveriesJobGroup.POST("/:"+DiscoveryJobIDParamKey+"/requeue", h.RequeueDiscoveryJob)
 	}
 
 	parsingsJobGroup := server.Group("/parsings")
 	{
 		parsingsJobGroup.POST("", h.CreateParsingJob)
 		parsingsJobGroup.GET("", h.ListParsingJobs)
-		parsingsJobGroup.GET("/"+ParsingJobIDParamKey, h.GetParsingJob)
-		parsingsJobGroup.DELETE("/"+ParsingJobIDParamKey, h.CancelParsingJob)
-		parsingsJobGroup.POST("/"+ParsingJobIDParamKey+"/requeue", h.Noop)
+		parsingsJobGroup.GET("/:"+ParsingJobIDParamKey, h.GetParsingJob)
+		parsingsJobGroup.PATCH("/:"+ParsingJobIDParamKey, h.UpdateParsingJobStatus)
+		parsingsJobGroup.POST("/:"+ParsingJobIDParamKey+"/requeue", h.RequeueParsingJob)
 	}
 }
 
@@ -57,20 +56,19 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 	}
 
 	discoveryJob := job.Discovery{
-		ID:            uuid.New().String(),
 		ChainURL:      req.ChainURL,
 		ChainType:     req.ChainType,
 		BlockNumber:   req.BlockNumber,
 		Addresses:     req.Addresses,
 		InterfaceType: req.InterfaceType,
-		Status:        job.StatusCreated,
 	}
 
-	if err := h.discoveryJobsStore.CreateDiscoveryJob(discoveryJob); err != nil {
+	newJob, err := h.discoveryController.CreateDiscoveryJob(discoveryJob)
+	if err != nil {
 		return apiError(err)
 	}
 
-	return ctx.JSON(http.StatusOK, discoveryJob)
+	return ctx.JSON(http.StatusOK, newJob)
 }
 
 func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
@@ -80,7 +78,7 @@ func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	jobs, err := h.discoveryJobsStore.ListDiscoveryJobs(status)
+	jobs, err := h.discoveryController.ListDiscoveryJobs(status)
 	if err != nil {
 		return apiError(err)
 	}
@@ -92,7 +90,7 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	discoveryJob, err := h.discoveryJobsStore.GetDiscoveryJob(jobID)
+	discoveryJob, err := h.discoveryController.GetDiscoveryJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
@@ -100,11 +98,22 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, discoveryJob)
 }
 
-func (h *Handler) CancelDiscoveryJob(ctx echo.Context) error {
+func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
 	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	if err := h.discoveryJobsStore.CancelDeliveryJob(jobID); err != nil {
+	var req request.Status
+	if err := ctx.Bind(&req); err != nil {
+		return unpackError(err)
+	}
+
+	newState, err := job.ParseStatus(req.Status)
+	if err != nil {
+		return parsingError(err)
+	}
+
+	err = h.discoveryController.UpdateDiscoveryJobState(jobID, newState)
+	if err != nil {
 		return apiError(err)
 	}
 
@@ -115,19 +124,12 @@ func (h *Handler) RequeueDiscoveryJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	discoveryJob, err := h.discoveryJobsStore.GetDiscoveryJob(jobID)
+	newJob, err := h.discoveryController.RequeueDiscoveryJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
 
-	discoveryJob.ID = uuid.New().String()
-	discoveryJob.Status = job.StatusCreated
-
-	if err := h.discoveryJobsStore.CreateDiscoveryJob(discoveryJob); err != nil {
-		return apiError(err)
-	}
-
-	return ctx.JSON(http.StatusOK, discoveryJob)
+	return ctx.JSON(http.StatusOK, newJob)
 }
 
 func (h *Handler) CreateParsingJob(ctx echo.Context) error {
@@ -137,21 +139,20 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 	}
 
 	parsingJob := job.Parsing{
-		ID:            uuid.New().String(),
 		ChainURL:      req.ChainURL,
 		ChainType:     req.ChainType,
 		BlockNumber:   req.BlockNumber,
 		Address:       req.Address,
 		InterfaceType: req.InterfaceType,
 		EventType:     req.EventType,
-		Status:        job.StatusCreated,
 	}
 
-	if err := h.parsingJobsStore.CreateParsingJob(parsingJob); err != nil {
+	newJob, err := h.parsingController.CreateParsingJob(parsingJob)
+	if err != nil {
 		return apiError(err)
 	}
 
-	return ctx.JSON(http.StatusOK, parsingJob)
+	return ctx.JSON(http.StatusOK, newJob)
 }
 
 func (h *Handler) ListParsingJobs(ctx echo.Context) error {
@@ -161,7 +162,7 @@ func (h *Handler) ListParsingJobs(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	jobs, err := h.parsingJobsStore.ListParsingJobs(status)
+	jobs, err := h.parsingController.ListParsingJobs(status)
 	if err != nil {
 		return apiError(err)
 	}
@@ -173,7 +174,7 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(ParsingJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	parsingJob, err := h.parsingJobsStore.GetParsingJob(jobID)
+	parsingJob, err := h.parsingController.GetParsingJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
@@ -181,11 +182,22 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, parsingJob)
 }
 
-func (h *Handler) CancelParsingJob(ctx echo.Context) error {
+func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 	rawJobID := ctx.Param(ParsingJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	if err := h.parsingJobsStore.CancelParsingJob(jobID); err != nil {
+	var req request.Status
+	if err := ctx.Bind(&req); err != nil {
+		return unpackError(err)
+	}
+
+	newState, err := job.ParseStatus(req.Status)
+	if err != nil {
+		return parsingError(err)
+	}
+
+	err = h.parsingController.UpdateParsingJobState(jobID, newState)
+	if err != nil {
 		return apiError(err)
 	}
 
@@ -196,21 +208,10 @@ func (h *Handler) RequeueParsingJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(ParsingJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	parsingJob, err := h.parsingJobsStore.GetParsingJob(jobID)
+	newJob, err := h.parsingController.RequeueParsingJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
 
-	parsingJob.ID = uuid.New().String()
-	parsingJob.Status = job.StatusCreated
-
-	if err := h.parsingJobsStore.CreateParsingJob(parsingJob); err != nil {
-		return apiError(err)
-	}
-
-	return ctx.JSON(http.StatusOK, parsingJob)
-}
-
-func (h *Handler) Noop(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, nil)
+	return ctx.JSON(http.StatusOK, newJob)
 }

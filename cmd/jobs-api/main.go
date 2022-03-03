@@ -2,19 +2,23 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/NFT-com/indexer/service/controller"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
 
 	"github.com/NFT-com/indexer/service/api"
+	"github.com/NFT-com/indexer/service/postgres"
 )
 
 func main() {
@@ -33,11 +37,15 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagPort     string
-		flagLogLevel string
+		flagPort             string
+		flagDBDriver         string
+		flagDBConnectionInfo string
+		flagLogLevel         string
 	)
 
 	pflag.StringVarP(&flagPort, "port", "p", "8081", "server port")
+	pflag.StringVar(&flagDBDriver, "driver", "postgres", "postgres connection info")
+	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "postgres connection info")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -60,10 +68,18 @@ func run() error {
 	server.Logger = eLog
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
-	apiHandler, err := api.NewHandler()
+	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
 	if err != nil {
 		return err
 	}
+
+	postgresStore, err := postgres.NewStore(db)
+	if err != nil {
+		return err
+	}
+
+	businessController := controller.NewController(postgresStore, postgresStore)
+	apiHandler := api.NewHandler(businessController, businessController)
 
 	apiHandler.ApplyRoutes(server)
 

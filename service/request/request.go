@@ -20,3 +20,7 @@ type Parsing struct {
 	EventType     string `json:"event_type"`
 	Status        string `json:"status"`
 }
+
+type Status struct {
+	Status string `json:"status"`
+}

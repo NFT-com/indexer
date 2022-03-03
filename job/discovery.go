@@ -7,5 +7,5 @@ type Discovery struct {
 	BlockNumber   string   `json:"block_number"`
 	Addresses     []string `json:"addresses"`
 	InterfaceType string   `json:"interface_type"`
-	Status        string   `json:"status"`
+	Status        Status   `json:"status"`
 }
