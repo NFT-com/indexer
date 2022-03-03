@@ -1,11 +1,12 @@
 package api
 
 import (
-	"github.com/NFT-com/indexer/job"
-	"github.com/NFT-com/indexer/service/request"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
+	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/service/request"
 )
 
 const (

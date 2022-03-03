@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/NFT-com/indexer/service/controller"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,6 +17,7 @@ import (
 	"github.com/ziflex/lecho/v2"
 
 	"github.com/NFT-com/indexer/service/api"
+	"github.com/NFT-com/indexer/service/controller"
 	"github.com/NFT-com/indexer/service/postgres"
 )
 
