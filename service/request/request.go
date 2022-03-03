@@ -20,3 +20,7 @@ type Parsing struct {
 type Status struct {
 	Status string `json:"status"  validate:"required"`
 }
+
+type Status struct {
+	Status string `json:"status"`
+}

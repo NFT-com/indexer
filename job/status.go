@@ -6,20 +6,22 @@ import (
 )
 
 const (
-	StatusCreated  = "created"
-	StatusQueued   = "queued"
-	StatusCanceled = "canceled"
-	StatusFailed   = "failed"
-	StatusFinished = "finished"
+	StatusCreated    = "created"
+	StatusQueued     = "queued"
+	StatusProcessing = "processing"
+	StatusCanceled   = "canceled"
+	StatusFailed     = "failed"
+	StatusFinished   = "finished"
 )
 
 var (
 	statusMap = map[string]struct{}{
-		StatusCreated:  struct{}{},
-		StatusQueued:   struct{}{},
-		StatusCanceled: struct{}{},
-		StatusFailed:   struct{}{},
-		StatusFinished: struct{}{},
+		StatusCreated:    struct{}{},
+		StatusQueued:     struct{}{},
+		StatusProcessing: struct{}{},
+		StatusCanceled:   struct{}{},
+		StatusFailed:     struct{}{},
+		StatusFinished:   struct{}{},
 	}
 
 	ErrStatusNotFound = errors.New("status not found")
