@@ -98,19 +98,19 @@ func (c *Controller) RequeueDiscoveryJob(jobID string) (*job.Discovery, error) {
 	return job, nil
 }
 
-func (c *Controller) CreateParsingJob(parsing jobs.Parsing) (*jobs.Parsing, error) {
-	parsing.ID = uuid.New().String()
-	parsing.Status = jobs.StatusCreated
+func (c *Controller) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
+	job.ID = uuid.New().String()
+	job.Status = jobs.StatusCreated
 
-	if err := c.jobsStore.CreateParsingJob(parsing); err != nil {
+	if err := c.jobsStore.CreateParsingJob(job); err != nil {
 		return nil, err
 	}
 
-	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, parsing); err != nil {
+	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, job); err != nil {
 		return nil, err
 	}
 
-	return &parsing, nil
+	return &job, nil
 }
 
 func (c *Controller) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
