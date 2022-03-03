@@ -84,7 +84,7 @@ func run() error {
 	apiHandler.ApplyRoutes(server)
 
 	go func() {
-		log.Info().Msg("dispatcher server starting")
+		log.Info().Msg("jobs api server starting")
 
 		err := server.Start(fmt.Sprint(":", flagPort))
 
@@ -94,17 +94,17 @@ func run() error {
 			return
 		}
 
-		log.Info().Msg("dispatcher server stopped")
+		log.Info().Msg("jobs api server stopped")
 		close(done)
 	}()
 
 	select {
 	case <-sig:
-		log.Info().Msg("dispatcher server stopping")
+		log.Info().Msg("jobs api server stopping")
 	case <-done:
-		log.Info().Msg("dispatcher server done")
+		log.Info().Msg("jobs api server done")
 	case err := <-failed:
-		log.Error().Err(err).Msg("dispatcher server aborted")
+		log.Error().Err(err).Msg("jobs api server aborted")
 		return err
 	}
 	go func() {
@@ -118,7 +118,7 @@ func run() error {
 
 	err = server.Shutdown(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("could not shut down dispatcher API")
+		log.Error().Err(err).Msg("could not shut down jobs api")
 		return err
 	}
 
