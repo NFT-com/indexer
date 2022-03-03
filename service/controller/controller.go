@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"github.com/NFT-com/indexer/job"
 	"github.com/google/uuid"
+
+	"github.com/NFT-com/indexer/job"
 )
 
 // FIXME: What should I call this package?
