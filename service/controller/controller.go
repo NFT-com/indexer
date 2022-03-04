@@ -2,11 +2,12 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/NFT-com/indexer/service/broadcaster"
+
 	"github.com/google/uuid"
 	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
 // FIXME: What should I call this package?
@@ -35,16 +36,7 @@ func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (job.Discovery,
 		return job.Discovery{}, err
 	}
 
-	rawMessage, err := json.Marshal(discovery)
-	if err != nil {
-		return job.Discovery{}, err
-	}
-
-	if err := c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
-		keys := broadcaster.NewKeys(session.Keys)
-
-		return keys.HasHandler(broadcaster.DiscoveryHandlerValue)
-	}); err != nil {
+	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, discovery); err != nil {
 		return job.Discovery{}, err
 	}
 
@@ -101,6 +93,10 @@ func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (job.Discovery, error) {
 		return job.Discovery{}, err
 	}
 
+	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, newJob); err != nil {
+		return job.Discovery{}, err
+	}
+
 	return newJob, nil
 }
 
@@ -112,16 +108,7 @@ func (c *Controller) CreateParsingJob(parsing job.Parsing) (job.Parsing, error) 
 		return job.Parsing{}, err
 	}
 
-	rawMessage, err := json.Marshal(parsing)
-	if err != nil {
-		return job.Parsing{}, err
-	}
-
-	if err := c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
-		keys := broadcaster.NewKeys(session.Keys)
-
-		return keys.HasHandler(broadcaster.ParsingHandlerValue)
-	}); err != nil {
+	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, parsing); err != nil {
 		return job.Parsing{}, err
 	}
 
@@ -178,7 +165,28 @@ func (c *Controller) RequeueParsingJob(jobID job.ID) (job.Parsing, error) {
 		return job.Parsing{}, err
 	}
 
+	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, newJob); err != nil {
+		return job.Parsing{}, err
+	}
+
 	return newJob, nil
+}
+
+func (c *Controller) BroadcastMessage(handler string, message interface{}) error {
+	rawMessage, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	if err := c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
+		keys := broadcaster.NewKeys(session.Keys)
+
+		return keys.HasHandler(handler)
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Controller) ValidateStatusSwitch(currentStatus, newStatus job.Status) error {
