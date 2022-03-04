@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"gopkg.in/olahol/melody.v1"
 	"net/http"
 	"os"
 	"os/signal"
@@ -59,9 +60,6 @@ func run() error {
 	log = log.Level(level)
 	eLog := lecho.From(log)
 
-	failed := make(chan error)
-	done := make(chan struct{})
-
 	server := echo.New()
 	server.HideBanner = true
 	server.HidePort = true
@@ -78,31 +76,30 @@ func run() error {
 		return err
 	}
 
-	businessController := controller.NewController(postgresStore, postgresStore)
-	apiHandler := api.NewHandler(businessController, businessController)
+	broadcaster := melody.New()
+	businessController := controller.NewController(postgresStore, postgresStore, broadcaster)
 
+	apiHandler := api.NewHandler(broadcaster, businessController, businessController)
 	apiHandler.ApplyRoutes(server)
+
+	failed := make(chan error)
 
 	go func() {
 		log.Info().Msg("jobs api server starting")
 
 		err := server.Start(fmt.Sprint(":", flagPort))
-
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Warn().Err(err).Msg("dispatcher server failed")
 			failed <- err
 			return
 		}
 
-		log.Info().Msg("jobs api server stopped")
-		close(done)
+		log.Info().Msg("jobs api server done")
 	}()
 
 	select {
 	case <-sig:
 		log.Info().Msg("jobs api server stopping")
-	case <-done:
-		log.Info().Msg("jobs api server done")
 	case err := <-failed:
 		log.Error().Err(err).Msg("jobs api server aborted")
 		return err

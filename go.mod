@@ -10,10 +10,12 @@ require (
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/pflag v1.0.5
 	github.com/ziflex/lecho/v2 v2.5.2
+	gopkg.in/olahol/melody.v1 v1.0.0-20170518105555-d52139073376
 )
 
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/job"
 	"github.com/NFT-com/indexer/service/request"
@@ -17,12 +18,14 @@ const (
 )
 
 type Handler struct {
+	wsHandler           *melody.Melody
 	discoveryController DiscoveryController
 	parsingController   ParsingController
 }
 
-func NewHandler(discoveryController DiscoveryController, parsingController ParsingController) *Handler {
+func NewHandler(wsHandler *melody.Melody, discoveryController DiscoveryController, parsingController ParsingController) *Handler {
 	s := Handler{
+		wsHandler:           wsHandler,
 		discoveryController: discoveryController,
 		parsingController:   parsingController,
 	}
@@ -31,6 +34,12 @@ func NewHandler(discoveryController DiscoveryController, parsingController Parsi
 }
 
 func (h *Handler) ApplyRoutes(server *echo.Echo) {
+	websocketGroup := server.Group("/ws")
+	{
+		websocketGroup.GET("/discoveries", h.NewDiscoveryWebsocketConnection)
+		websocketGroup.GET("/parsing", h.NewParsingWebsocketConnection)
+	}
+
 	discoveriesJobGroup := server.Group("/discoveries")
 	{
 		discoveriesJobGroup.POST("", h.CreateDiscoveryJob)
@@ -48,6 +57,18 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 		parsingsJobGroup.PATCH("/:"+ParsingJobIDParamKey, h.UpdateParsingJobStatus)
 		parsingsJobGroup.POST("/:"+ParsingJobIDParamKey+"/requeue", h.RequeueParsingJob)
 	}
+}
+
+func (h *Handler) NewDiscoveryWebsocketConnection(ctx echo.Context) error {
+	return h.wsHandler.HandleRequestWithKeys(ctx.Response(), ctx.Request(), map[string]interface{}{
+		"handler": "discovery",
+	})
+}
+
+func (h *Handler) NewParsingWebsocketConnection(ctx echo.Context) error {
+	return h.wsHandler.HandleRequestWithKeys(ctx.Response(), ctx.Request(), map[string]interface{}{
+		"handler": "parsing",
+	})
 }
 
 func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
