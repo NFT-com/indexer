@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"gopkg.in/olahol/melody.v1"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
+	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/service/api"
 	"github.com/NFT-com/indexer/service/controller"
