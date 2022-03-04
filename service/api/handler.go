@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/NFT-com/indexer/service/broadcaster"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -60,15 +61,21 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 }
 
 func (h *Handler) NewDiscoveryWebsocketConnection(ctx echo.Context) error {
-	return h.wsHandler.HandleRequestWithKeys(ctx.Response(), ctx.Request(), map[string]interface{}{
-		"handler": "discovery",
-	})
+	return h.wsHandler.HandleRequestWithKeys(
+		ctx.Response(),
+		ctx.Request(),
+		broadcaster.NewEmptyKeys().
+			WithHandler(broadcaster.DiscoveryHandlerValue),
+	)
 }
 
 func (h *Handler) NewParsingWebsocketConnection(ctx echo.Context) error {
-	return h.wsHandler.HandleRequestWithKeys(ctx.Response(), ctx.Request(), map[string]interface{}{
-		"handler": "parsing",
-	})
+	return h.wsHandler.HandleRequestWithKeys(
+		ctx.Response(),
+		ctx.Request(),
+		broadcaster.NewEmptyKeys().
+			WithHandler(broadcaster.ParsingHandlerValue),
+	)
 }
 
 func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
