@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"encoding/json"
+	"github.com/NFT-com/indexer/service/broadcaster"
 	"github.com/google/uuid"
+	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/job"
 )
@@ -11,12 +14,14 @@ import (
 type Controller struct {
 	discoveryJobsStore DiscoveryJobsStore
 	parsingJobsStore   ParsingJobsStore
+	broadcaster        *melody.Melody
 }
 
-func NewController(discoveryJobsStore DiscoveryJobsStore, parsingJobsStore ParsingJobsStore) *Controller {
+func NewController(discoveryJobsStore DiscoveryJobsStore, parsingJobsStore ParsingJobsStore, broadcaster *melody.Melody) *Controller {
 	c := Controller{
 		discoveryJobsStore: discoveryJobsStore,
 		parsingJobsStore:   parsingJobsStore,
+		broadcaster:        broadcaster,
 	}
 
 	return &c
@@ -27,6 +32,19 @@ func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (job.Discovery,
 	discovery.Status = job.StatusCreated
 
 	if err := c.discoveryJobsStore.CreateDiscoveryJob(discovery); err != nil {
+		return job.Discovery{}, err
+	}
+
+	rawMessage, err := json.Marshal(discovery)
+	if err != nil {
+		return job.Discovery{}, err
+	}
+
+	if err := c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
+		keys := broadcaster.NewKeys(session.Keys)
+
+		return keys.HasHandler(broadcaster.DiscoveryHandlerValue)
+	}); err != nil {
 		return job.Discovery{}, err
 	}
 
@@ -91,6 +109,19 @@ func (c *Controller) CreateParsingJob(parsing job.Parsing) (job.Parsing, error) 
 	parsing.Status = job.StatusCreated
 
 	if err := c.parsingJobsStore.CreateParsingJob(parsing); err != nil {
+		return job.Parsing{}, err
+	}
+
+	rawMessage, err := json.Marshal(parsing)
+	if err != nil {
+		return job.Parsing{}, err
+	}
+
+	if err := c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
+		keys := broadcaster.NewKeys(session.Keys)
+
+		return keys.HasHandler(broadcaster.ParsingHandlerValue)
+	}); err != nil {
 		return job.Parsing{}, err
 	}
 
