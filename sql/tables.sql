@@ -11,10 +11,21 @@ CREATE TABLE IF NOT EXISTS chain (
     deleted_at TIMESTAMP
 );
 
+-- Creation of marketplace table
+CREATE TABLE IF NOT EXISTS marketplace (
+    id UUID PRIMARY KEY,
+    name VARCHAR(64) NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
 -- Creation of collection table
 CREATE TABLE IF NOT EXISTS collection (
     id UUID PRIMARY KEY,
     chain_id UUID NOT NULL, -- FOREIGN
+    marketplace_id UUID NOT NULL, -- FOREIGN
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     symbol VARCHAR(16) NOT NULL,
@@ -49,7 +60,7 @@ CREATE TABLE IF NOT EXISTS nft (
     owner VARCHAR(64) NOT NULL,
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
-    rarity INT NOT NULL,
+    rarity DOUBLE PRECISION,
     data JSONB,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP,
