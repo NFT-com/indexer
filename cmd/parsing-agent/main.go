@@ -69,7 +69,7 @@ func run() error {
 		return err
 	}
 
-	parsingConsumer, err := consumer.NewParsingConsumer()
+	parsingConsumer, err := consumer.NewParsingConsumer(log, nil)
 	if err != nil {
 		return err
 	}
