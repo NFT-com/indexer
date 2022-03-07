@@ -38,7 +38,7 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	websocketGroup := server.Group("/ws")
 	{
 		websocketGroup.GET("/discoveries", h.NewDiscoveryWebsocketConnection)
-		websocketGroup.GET("/parsing", h.NewParsingWebsocketConnection)
+		websocketGroup.GET("/parsings", h.NewParsingWebsocketConnection)
 	}
 
 	discoveriesJobGroup := server.Group("/discoveries")
