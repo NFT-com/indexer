@@ -44,7 +44,7 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", "watcher-web3 producer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database")
