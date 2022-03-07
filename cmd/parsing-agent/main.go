@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+	"github.com/NFT-com/indexer/queue/consumer"
 	"os"
 	"os/signal"
 	"time"
@@ -10,11 +10,6 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
-
-	"github.com/NFT-com/indexer/job"
-	"github.com/NFT-com/indexer/queue/producer"
-	"github.com/NFT-com/indexer/service/client"
-	"github.com/NFT-com/indexer/watcher"
 )
 
 func main() {
@@ -33,22 +28,23 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagAPIEndpoint       string
-		flagRMQTag            string
-		flagRedisNetwork      string
-		flagRedisURL          string
-		flagRedisDatabase     int
-		flagDeliveryQueueName string
-		flagParsingQueueName  string
-		flagLogLevel          string
+		flagRMQTag               string
+		flagRedisNetwork         string
+		flagRedisURL             string
+		flagRedisDatabase        int
+		flagConsumerPrefetch     int64
+		flagConsumerPollDuration time.Duration
+		flagParsingQueueName     string
+		flagLogLevel             string
 	)
 
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", " producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database")
-	pflag.StringVarP(&flagDeliveryQueueName, "delivery-queue", "q", "discovery", "queue name")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "w", "parsing", "queue name")
+	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", "parsing", "queue name")
+	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "consumer prefetch amount")
+	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second, "consumer poll duration")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -63,62 +59,43 @@ func run() error {
 
 	failed := make(chan error)
 
-	httpClient := http.DefaultClient
-	httpClient.Timeout = time.Second * 30
-
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
 		return err
 	}
 
-	apiClient := client.NewClient(log, client.NewOptions(
-		client.WithHTTPClient(httpClient),
-		client.WithHost(flagAPIEndpoint),
-	))
-	messageProducer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName)
+	queue, err := redisConnection.OpenQueue(flagParsingQueueName)
 	if err != nil {
 		return err
 	}
 
-	jobWatcher := watcher.NewJobWatcher(log, apiClient, messageProducer)
-
-	discoveryJobs := make(chan job.Discovery)
-	err = apiClient.SubscribeNewDiscoveryJob(discoveryJobs)
+	parsingConsumer, err := consumer.NewParsingConsumer()
 	if err != nil {
 		return err
 	}
 
-	parsingJobs := make(chan job.Parsing)
-	err = apiClient.SubscribeNewParsingJob(parsingJobs)
+	err = queue.StartConsuming(flagConsumerPrefetch, flagConsumerPollDuration)
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		log.Info().Msg("job watcher starting")
+	consumerName, err := queue.AddConsumer(flagRMQTag, parsingConsumer)
+	if err != nil {
+		return err
+	}
 
-		err := jobWatcher.Watch(discoveryJobs, parsingJobs)
-		if err != nil {
-			failed <- err
-		}
-
-		log.Info().Msg("job watcher done")
-	}()
+	log.Info().Str("name", consumerName).Msg("started parsing agent")
 
 	select {
 	case <-sig:
-		log.Info().Msg("job watcher stopping")
-		jobWatcher.Close()
-		apiClient.Close()
+		redisConnection.StopAllConsuming()
 	case err := <-failed:
-		log.Error().Err(err).Msg("job watcher aborted")
 		return err
 	}
 
 	go func() {
 		<-sig
-		log.Warn().Msg("forcing exit")
-		os.Exit(1)
+		log.Fatal().Msg("forced interruption")
 	}()
 
 	return nil
