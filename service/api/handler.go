@@ -19,16 +19,16 @@ const (
 )
 
 type Handler struct {
-	wsHandler           *melody.Melody
-	discoveryController DiscoveryController
-	parsingController   ParsingController
+	wsHandler *melody.Melody
+	discovery DiscoveryController
+	parsing   ParsingController
 }
 
 func NewHandler(wsHandler *melody.Melody, discoveryController DiscoveryController, parsingController ParsingController) *Handler {
 	s := Handler{
-		wsHandler:           wsHandler,
-		discoveryController: discoveryController,
-		parsingController:   parsingController,
+		wsHandler: wsHandler,
+		discovery: discoveryController,
+		parsing:   parsingController,
 	}
 
 	return &s
@@ -92,7 +92,7 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 		InterfaceType: req.InterfaceType,
 	}
 
-	newJob, err := h.discoveryController.CreateDiscoveryJob(discoveryJob)
+	newJob, err := h.discovery.CreateDiscoveryJob(discoveryJob)
 	if err != nil {
 		return apiError(err)
 	}
@@ -107,7 +107,7 @@ func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	jobs, err := h.discoveryController.ListDiscoveryJobs(status)
+	jobs, err := h.discovery.ListDiscoveryJobs(status)
 	if err != nil {
 		return apiError(err)
 	}
@@ -119,7 +119,7 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	discoveryJob, err := h.discoveryController.GetDiscoveryJob(jobID)
+	discoveryJob, err := h.discovery.GetDiscoveryJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
@@ -141,7 +141,7 @@ func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	err = h.discoveryController.UpdateDiscoveryJobState(jobID, newState)
+	err = h.discovery.UpdateDiscoveryJobState(jobID, newState)
 	if err != nil {
 		return apiError(err)
 	}
@@ -153,7 +153,7 @@ func (h *Handler) RequeueDiscoveryJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	newJob, err := h.discoveryController.RequeueDiscoveryJob(jobID)
+	newJob, err := h.discovery.RequeueDiscoveryJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
@@ -176,7 +176,7 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 		EventType:     req.EventType,
 	}
 
-	newJob, err := h.parsingController.CreateParsingJob(parsingJob)
+	newJob, err := h.parsing.CreateParsingJob(parsingJob)
 	if err != nil {
 		return apiError(err)
 	}
@@ -191,7 +191,7 @@ func (h *Handler) ListParsingJobs(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	jobs, err := h.parsingController.ListParsingJobs(status)
+	jobs, err := h.parsing.ListParsingJobs(status)
 	if err != nil {
 		return apiError(err)
 	}
@@ -203,7 +203,7 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(ParsingJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	parsingJob, err := h.parsingController.GetParsingJob(jobID)
+	parsingJob, err := h.parsing.GetParsingJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
@@ -225,7 +225,7 @@ func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	err = h.parsingController.UpdateParsingJobState(jobID, newState)
+	err = h.parsing.UpdateParsingJobState(jobID, newState)
 	if err != nil {
 		return apiError(err)
 	}
@@ -237,7 +237,7 @@ func (h *Handler) RequeueParsingJob(ctx echo.Context) error {
 	rawJobID := ctx.Param(ParsingJobIDParamKey)
 	jobID := job.ID(rawJobID)
 
-	newJob, err := h.parsingController.RequeueParsingJob(jobID)
+	newJob, err := h.parsing.RequeueParsingJob(jobID)
 	if err != nil {
 		return apiError(err)
 	}
