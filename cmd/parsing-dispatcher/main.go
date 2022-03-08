@@ -47,13 +47,13 @@ func run() error {
 		flagLogLevel             string
 	)
 
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", "consumer producer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "consumer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", "parsing", "queue name")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "consumer prefetch amount")
-	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second, "consumer poll duration")
+	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second*20, "consumer poll duration")
 	pflag.BoolVarP(&flagTestMode, "test", "t", false, "test mode")
 	pflag.StringVarP(&flagLambdaURL, "function-url", "f", "", "lambda url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
@@ -114,7 +114,7 @@ func run() error {
 		return err
 	}
 
-	log.Info().Str("name", consumerName).Msg("started parsing agent")
+	log.Info().Str("name", consumerName).Msg("started parsing dispatcher")
 
 	select {
 	case <-sig:

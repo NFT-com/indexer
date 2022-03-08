@@ -28,13 +28,24 @@ func NewClient(lambdaClient Lambda) (*Client, error) {
 }
 
 func (d *Client) Dispatch(functionName string, payload []byte) error {
+	return nil
+
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,
 	}
-	_, err := d.lambdaClient.Invoke(input)
+
+	output, err := d.lambdaClient.Invoke(input)
 	if err != nil {
 		return err
+	}
+
+	if output.StatusCode != nil && *output.StatusCode > 299 {
+		if output.FunctionError != nil {
+			return errors.New(*output.FunctionError)
+		}
+
+		return errors.New("unexpected error running worker")
 	}
 
 	return nil
