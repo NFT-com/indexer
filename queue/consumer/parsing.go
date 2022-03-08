@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
@@ -25,6 +26,8 @@ func NewParsingConsumer(log zerolog.Logger, dispatcher function.Dispatcher) (*Pa
 }
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
+	log.Println(string(delivery.Payload()))
+
 	payload := []byte(delivery.Payload())
 	parsingJob := job.Parsing{}
 
