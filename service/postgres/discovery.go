@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NFT-com/indexer/jobs"
 	"github.com/lib/pq"
+
+	"github.com/NFT-com/indexer/jobs"
 )
 
 func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
