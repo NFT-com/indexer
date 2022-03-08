@@ -21,6 +21,11 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - '5050:80'
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - '6379:6379'
   api:
     build:
       context: .
@@ -39,8 +44,12 @@ services:
     entrypoint: '/watcher -a api:8081 -u redis:6379'
     depends_on:
       - api
-  redis:
-    image: redis:alpine
+      - redis
+  parsing-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile_parsing_dispatcher
     restart: always
-    ports:
-      - '6379:6379'
+    entrypoint: '/agent -u redis:6379'
+    depends_on:
+      - redis
