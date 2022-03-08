@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/NFT-com/indexer/service/client"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -112,6 +110,11 @@ func run() error {
 	}
 
 	queue, err := redisConnection.OpenQueue(flagParsingQueueName)
+	if err != nil {
+		return err
+	}
+
+	parsingConsumer, err := consumer.NewParsingConsumer(log, dispatcher)
 	if err != nil {
 		return err
 	}

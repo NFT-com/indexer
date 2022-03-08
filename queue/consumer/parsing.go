@@ -2,12 +2,12 @@ package consumer
 
 import (
 	"encoding/json"
-	"github.com/NFT-com/indexer/service/client"
+
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 )
 
 type Parsing struct {
@@ -52,7 +52,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	if retrievedParsingJob.Status == job.StatusCanceled {
+	if retrievedParsingJob.Status == jobs.StatusCanceled {
 		err = delivery.Ack()
 		if err != nil {
 			d.log.Error().Err(err).Msg("failed to acknowledge message")
@@ -60,7 +60,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
-	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, job.StatusProcessing)
+	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, jobs.StatusProcessing)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
@@ -71,10 +71,10 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	status := job.StatusFinished
+	status := jobs.StatusFinished
 	err = d.dispatcher.Dispatch("parsing-85cd71d", payload)
 	if err != nil {
-		status = job.StatusFailed
+		status = jobs.StatusFailed
 		d.log.Error().Err(err).Msg("failed to dispatch message")
 	}
 
