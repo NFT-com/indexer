@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS marketplace (
 CREATE TABLE IF NOT EXISTS collection (
     id UUID PRIMARY KEY,
     chain_id UUID NOT NULL, -- FOREIGN
-    marketplace_id UUID NOT NULL, -- FOREIGN
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     symbol VARCHAR(16) NOT NULL,
@@ -35,6 +34,12 @@ CREATE TABLE IF NOT EXISTS collection (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
+);
+
+-- Creation of the junction table for marketplaces and collections
+CREATE TABLE IF NOT EXISTS marketplace_collections (
+    marketplace_id UUID NOT NULL, -- FOREIGN
+    collection_id UUID NOT NULL -- FOREIGN
 );
 
 -- Creation of event table
