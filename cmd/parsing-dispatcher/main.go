@@ -2,14 +2,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/NFT-com/indexer/queue/consumer"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/adjust/rmq/v4"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
+
+	"github.com/NFT-com/indexer/function"
+	"github.com/NFT-com/indexer/queue/consumer"
 )
 
 func main() {
@@ -35,16 +41,22 @@ func run() error {
 		flagConsumerPrefetch     int64
 		flagConsumerPollDuration time.Duration
 		flagParsingQueueName     string
+		flagTestMode             bool
+		flagLambdaURL            string
+		flagRegion               string
 		flagLogLevel             string
 	)
 
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", " producer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "api", "consumer producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", "parsing", "queue name")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "consumer prefetch amount")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second, "consumer poll duration")
+	pflag.BoolVarP(&flagTestMode, "test", "t", false, "test mode")
+	pflag.StringVarP(&flagLambdaURL, "function-url", "f", "", "lambda url")
+	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws region")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -56,6 +68,24 @@ func run() error {
 		return err
 	}
 	log = log.Level(level)
+
+	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	if flagTestMode {
+		sessionConfig.Credentials = credentials.AnonymousCredentials
+	}
+
+	lambdaConfig := &aws.Config{}
+	if flagLambdaURL != "" {
+		lambdaConfig.Endpoint = aws.String(flagLambdaURL)
+	}
+
+	sess := session.Must(session.NewSession(&sessionConfig))
+	lambdaClient := lambda.New(sess, lambdaConfig)
+
+	dispatcher, err := function.NewClient(lambdaClient)
+	if err != nil {
+		return err
+	}
 
 	failed := make(chan error)
 
@@ -69,7 +99,7 @@ func run() error {
 		return err
 	}
 
-	parsingConsumer, err := consumer.NewParsingConsumer(log, nil)
+	parsingConsumer, err := consumer.NewParsingConsumer(log, dispatcher)
 	if err != nil {
 		return err
 	}

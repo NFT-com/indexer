@@ -2,12 +2,12 @@ package consumer
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/NFT-com/indexer/function"
+
+	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
+	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/job"
-	"github.com/adjust/rmq/v4"
 )
 
 type Parsing struct {
@@ -25,12 +25,8 @@ func NewParsingConsumer(log zerolog.Logger, dispatcher function.Dispatcher) (*Pa
 }
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
-	fmt.Println(delivery.Payload())
-
 	payload := []byte(delivery.Payload())
 	parsingJob := job.Parsing{}
-
-	return
 
 	err := json.Unmarshal(payload, &parsingJob)
 	if err != nil {
