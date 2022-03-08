@@ -9,10 +9,10 @@
 
 ### Testing Locally
 
-In order to run a local jobs api a postgres connection is required.
-The `docker-compose.yaml` contains a docker configuration for a postgres database.
+In order to run the jobs API locally, a PostgreSQL connection is required.
+The `docker-compose.yaml` contains the configuration to deploy a PostgreSQL database.
 
-#### Running the Postgres Database
+#### Running the PostgreSQL Database
 
 ```shell
 
@@ -20,7 +20,7 @@ docker-compose up postgres -d
 
 ```
 
-#### Connection from the Jobs API to the Postgres Database
+#### Connection from the Jobs API to the PostgreSQL Database
 
-Running the api and the postgres database locally the flag `-d "host=<host> port=<port> user=<user> password=<pass> dbname=jobs sslmode=disable"` must be set.
+In order to run the api and its database locally, the flag `-d "host=<host> port=<port> user=<user> password=<pass> dbname=jobs sslmode=disable"` must be set.
 Replace the placeholders with the correct information.

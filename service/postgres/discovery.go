@@ -18,7 +18,6 @@ func (s *Store) CreateDiscoveryJob(job job.Discovery) error {
 		Columns(DiscoveryJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, rawAddresses, job.InterfaceType, job.Status).
 		Exec()
-
 	if err != nil {
 		return err
 	}
@@ -30,7 +29,6 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	query := s.sqlBuilder.
 		Select(DiscoveryJobsTableColumns...).
 		From(DiscoveryJobsDBName)
-
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
@@ -54,7 +52,6 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 			&discoveryJob.InterfaceType,
 			&discoveryJob.Status,
 		)
-
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +113,6 @@ func (s *Store) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) erro
 		Set("status", jobStatus).
 		Set("updated_at", time.Now()).
 		Exec()
-
 	if err != nil {
 		return err
 	}

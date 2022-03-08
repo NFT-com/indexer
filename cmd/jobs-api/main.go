@@ -45,8 +45,8 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagPort, "port", "p", "8081", "server port")
-	pflag.StringVar(&flagDBDriver, "driver", "postgres", "postgres connection info")
-	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "postgres connection info")
+	pflag.StringVar(&flagDBDriver, "driver", "postgres", "name of driver to use for database connection")
+	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
