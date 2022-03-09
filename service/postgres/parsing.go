@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/NFT-com/indexer/job"
@@ -14,7 +15,7 @@ func (s *Store) CreateParsingJob(job job.Parsing) error {
 		Exec()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create parsing job: %v", err)
 	}
 
 	return nil
@@ -31,14 +32,14 @@ func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 
 	result, err := query.Query()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve parsing jobs list: %v", err)
 	}
 
 	jobList := make([]job.Parsing, 0)
 	for result.Next() && result.Err() == nil {
 		parsingJob := job.Parsing{}
 
-		err := result.Scan(
+		err = result.Scan(
 			&parsingJob.ID,
 			&parsingJob.ChainURL,
 			&parsingJob.ChainType,
@@ -50,7 +51,7 @@ func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to retrieve parsing jobs list: %v", err)
 		}
 
 		jobList = append(jobList, parsingJob)
@@ -66,11 +67,11 @@ func (s *Store) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 		Where("id = ?", jobID).
 		Query()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve parsing job: %v", err)
 	}
 
 	if !result.Next() || result.Err() != nil {
-		return nil, ErrResourceNotFound
+		return nil, fmt.Errorf("failed to retrieve parsing job: %v", ErrResourceNotFound)
 	}
 
 	parsingJob := job.Parsing{}
@@ -87,7 +88,7 @@ func (s *Store) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve parsing job: %v", err)
 	}
 
 	return &parsingJob, nil
@@ -102,7 +103,7 @@ func (s *Store) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error 
 		Exec()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update parsing job state: %v", err)
 	}
 
 	return nil

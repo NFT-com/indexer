@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/NFT-com/indexer/job"
@@ -19,7 +20,7 @@ func (s *Store) CreateDiscoveryJob(job job.Discovery) error {
 		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, rawAddresses, job.StandardType, job.Status).
 		Exec()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create discovery job: %v", err)
 	}
 
 	return nil
@@ -35,7 +36,7 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 
 	result, err := query.Query()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve discovery job list: %v", err)
 	}
 
 	jobList := make([]job.Discovery, 0)
@@ -43,7 +44,7 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 		discoveryJob := job.Discovery{}
 		rawAddresses := make([]byte, 0)
 
-		err := result.Scan(
+		err = result.Scan(
 			&discoveryJob.ID,
 			&discoveryJob.ChainURL,
 			&discoveryJob.ChainType,
@@ -53,12 +54,12 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 			&discoveryJob.Status,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to retrieve discovery job list: %v", err)
 		}
 
 		err = json.Unmarshal(rawAddresses, &discoveryJob.Addresses)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to retrieve discovery job list: %v", err)
 		}
 
 		jobList = append(jobList, discoveryJob)
@@ -78,7 +79,7 @@ func (s *Store) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 	}
 
 	if !result.Next() || result.Err() != nil {
-		return nil, ErrResourceNotFound
+		return nil, fmt.Errorf("failed to retrieve discovery job: %v", ErrResourceNotFound)
 	}
 
 	discoveryJob := job.Discovery{}
@@ -95,12 +96,12 @@ func (s *Store) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve discovery job: %v", err)
 	}
 
 	err = json.Unmarshal(rawAddresses, &discoveryJob.Addresses)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve discovery job: %v", err)
 	}
 
 	return &discoveryJob, nil
@@ -114,7 +115,7 @@ func (s *Store) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) erro
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update discovery job state: %v", err)
 	}
 
 	return nil
