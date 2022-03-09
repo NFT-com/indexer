@@ -45,11 +45,11 @@ func run() error {
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
-	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database")
-	pflag.StringVarP(&flagDeliveryQueueName, "delivery-queue", "q", "discovery", "queue name")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "w", "parsing", "queue name")
+	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "name of the network for redis connection")
+	pflag.StringVarP(&flagRedisURL, "url", "u", "", "url of the network for redis connection")
+	pflag.IntVar(&flagRedisDatabase, "database", 1, "database of the network for redis connection")
+	pflag.StringVarP(&flagDeliveryQueueName, "delivery-queue", "q", "discovery", "name of the queue for delivery queue")
+	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "w", "parsing", "name of the queue for delivery queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
