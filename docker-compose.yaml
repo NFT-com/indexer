@@ -48,7 +48,7 @@ services:
   parsing-agent:
     build:
       context: .
-      dockerfile: Dockerfile_parsing_dispatcher
+      dockerfile: Dockerfile.parsingdispatcher
     restart: always
     entrypoint: '/agent -u redis:6379'
     depends_on:
