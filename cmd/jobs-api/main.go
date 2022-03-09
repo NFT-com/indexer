@@ -55,7 +55,7 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse log level: %v", err)
 	}
 	log = log.Level(level)
 	eLog := lecho.From(log)
@@ -68,12 +68,12 @@ func run() error {
 
 	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open slq connection: %v", err)
 	}
 
 	postgresStore, err := postgres.NewStore(db)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create store: %v", err)
 	}
 
 	broadcaster := melody.New()
@@ -87,7 +87,7 @@ func run() error {
 	go func() {
 		log.Info().Msg("jobs api server starting")
 
-		err := server.Start(fmt.Sprint(":", flagPort))
+		err = server.Start(fmt.Sprint(":", flagPort))
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Warn().Err(err).Msg("dispatcher server failed")
 			failed <- err
@@ -100,7 +100,7 @@ func run() error {
 	select {
 	case <-sig:
 		log.Info().Msg("jobs api server stopping")
-	case err := <-failed:
+	case err = <-failed:
 		log.Error().Err(err).Msg("jobs api server aborted")
 		return err
 	}
