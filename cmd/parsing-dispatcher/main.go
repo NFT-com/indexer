@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/NFT-com/indexer/service/client"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -34,6 +36,7 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
+		flagAPIEndpoint          string
 		flagRMQTag               string
 		flagRedisNetwork         string
 		flagRedisURL             string
@@ -47,6 +50,7 @@ func run() error {
 		flagLogLevel             string
 	)
 
+	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "consumer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "network")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis url")
@@ -87,6 +91,19 @@ func run() error {
 		return err
 	}
 
+	httpClient := http.DefaultClient
+	httpClient.Timeout = time.Second * 30
+
+	apiClient := client.NewClient(log, client.NewOptions(
+		client.WithHTTPClient(httpClient),
+		client.WithHost(flagAPIEndpoint),
+	))
+
+	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher)
+	if err != nil {
+		return err
+	}
+
 	failed := make(chan error)
 
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
@@ -95,11 +112,6 @@ func run() error {
 	}
 
 	queue, err := redisConnection.OpenQueue(flagParsingQueueName)
-	if err != nil {
-		return err
-	}
-
-	parsingConsumer, err := consumer.NewParsingConsumer(log, dispatcher)
 	if err != nil {
 		return err
 	}
