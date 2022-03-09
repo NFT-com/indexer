@@ -77,9 +77,9 @@ func run() error {
 	}
 
 	broadcaster := melody.New()
-	businessController := controller.NewController(postgresStore, postgresStore, broadcaster)
+	businessController := controller.NewController(postgresStore, broadcaster)
 
-	apiHandler := api.NewHandler(broadcaster, businessController, businessController)
+	apiHandler := api.NewHandler(broadcaster, businessController)
 	apiHandler.ApplyRoutes(server)
 
 	failed := make(chan error)

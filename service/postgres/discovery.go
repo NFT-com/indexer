@@ -67,18 +67,18 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	return jobList, nil
 }
 
-func (s *Store) GetDiscoveryJob(jobID job.ID) (job.Discovery, error) {
+func (s *Store) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 	result, err := s.sqlBuilder.
 		Select(DiscoveryJobsTableColumns...).
 		From(DiscoveryJobsDBName).
 		Where("id = ?", jobID).
 		Query()
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	if !result.Next() || result.Err() != nil {
-		return job.Discovery{}, ErrResourceNotFound
+		return nil, ErrResourceNotFound
 	}
 
 	discoveryJob := job.Discovery{}
@@ -95,15 +95,15 @@ func (s *Store) GetDiscoveryJob(jobID job.ID) (job.Discovery, error) {
 	)
 
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	err = json.Unmarshal(rawAddresses, &discoveryJob.Addresses)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	return discoveryJob, nil
+	return &discoveryJob, nil
 }
 
 func (s *Store) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {

@@ -59,18 +59,18 @@ func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 	return jobList, nil
 }
 
-func (s *Store) GetParsingJob(jobID job.ID) (job.Parsing, error) {
+func (s *Store) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 	result, err := s.sqlBuilder.
 		Select(ParsingJobsTableColumns...).
 		From(ParsingJobsDBName).
 		Where("id = ?", jobID).
 		Query()
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	if !result.Next() || result.Err() != nil {
-		return job.Parsing{}, ErrResourceNotFound
+		return nil, ErrResourceNotFound
 	}
 
 	parsingJob := job.Parsing{}
@@ -87,10 +87,10 @@ func (s *Store) GetParsingJob(jobID job.ID) (job.Parsing, error) {
 	)
 
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	return parsingJob, nil
+	return &parsingJob, nil
 }
 
 func (s *Store) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
