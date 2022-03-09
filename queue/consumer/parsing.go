@@ -64,6 +64,17 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
+	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, job.StatusProcessing)
+	if err != nil {
+		if rejectErr := delivery.Reject(); rejectErr != nil {
+			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
+			return
+		}
+
+		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
+		return
+	}
+
 	err = d.dispatcher.Dispatch("test", payload)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
