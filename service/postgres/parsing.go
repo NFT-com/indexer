@@ -10,7 +10,7 @@ func (s *Store) CreateParsingJob(job job.Parsing) error {
 	_, err := s.sqlBuilder.
 		Insert(ParsingJobsDBName).
 		Columns(ParsingJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.InterfaceType, job.EventType, job.Status).
+		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
 		Exec()
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 			&parsingJob.ChainType,
 			&parsingJob.BlockNumber,
 			&parsingJob.Address,
-			&parsingJob.InterfaceType,
+			&parsingJob.StandardType,
 			&parsingJob.EventType,
 			&parsingJob.Status,
 		)
@@ -81,7 +81,7 @@ func (s *Store) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 		&parsingJob.ChainType,
 		&parsingJob.BlockNumber,
 		&parsingJob.Address,
-		&parsingJob.InterfaceType,
+		&parsingJob.StandardType,
 		&parsingJob.EventType,
 		&parsingJob.Status,
 	)

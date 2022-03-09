@@ -62,7 +62,7 @@ func (h *Handler) NewDiscoveryWebsocketConnection(ctx echo.Context) error {
 	return h.wsHandler.HandleRequestWithKeys(
 		ctx.Response(),
 		ctx.Request(),
-		broadcaster.NewEmptyKeys().
+		broadcaster.NewKeys().
 			WithHandler(broadcaster.DiscoveryHandlerValue),
 	)
 }
@@ -71,7 +71,7 @@ func (h *Handler) NewParsingWebsocketConnection(ctx echo.Context) error {
 	return h.wsHandler.HandleRequestWithKeys(
 		ctx.Response(),
 		ctx.Request(),
-		broadcaster.NewEmptyKeys().
+		broadcaster.NewKeys().
 			WithHandler(broadcaster.ParsingHandlerValue),
 	)
 }
@@ -83,11 +83,11 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 	}
 
 	discoveryJob := job.Discovery{
-		ChainURL:      req.ChainURL,
-		ChainType:     req.ChainType,
-		BlockNumber:   req.BlockNumber,
-		Addresses:     req.Addresses,
-		InterfaceType: req.InterfaceType,
+		ChainURL:     req.ChainURL,
+		ChainType:    req.ChainType,
+		BlockNumber:  req.BlockNumber,
+		Addresses:    req.Addresses,
+		StandardType: req.InterfaceType,
 	}
 
 	newJob, err := h.jobController.CreateDiscoveryJob(discoveryJob)
@@ -166,12 +166,12 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 	}
 
 	parsingJob := job.Parsing{
-		ChainURL:      req.ChainURL,
-		ChainType:     req.ChainType,
-		BlockNumber:   req.BlockNumber,
-		Address:       req.Address,
-		InterfaceType: req.InterfaceType,
-		EventType:     req.EventType,
+		ChainURL:     req.ChainURL,
+		ChainType:    req.ChainType,
+		BlockNumber:  req.BlockNumber,
+		Address:      req.Address,
+		StandardType: req.InterfaceType,
+		EventType:    req.EventType,
 	}
 
 	newJob, err := h.jobController.CreateParsingJob(parsingJob)

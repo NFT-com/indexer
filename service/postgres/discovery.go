@@ -16,7 +16,7 @@ func (s *Store) CreateDiscoveryJob(job job.Discovery) error {
 	_, err = s.sqlBuilder.
 		Insert(DiscoveryJobsDBName).
 		Columns(DiscoveryJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, rawAddresses, job.InterfaceType, job.Status).
+		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, rawAddresses, job.StandardType, job.Status).
 		Exec()
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 			&discoveryJob.ChainType,
 			&discoveryJob.BlockNumber,
 			&rawAddresses,
-			&discoveryJob.InterfaceType,
+			&discoveryJob.StandardType,
 			&discoveryJob.Status,
 		)
 		if err != nil {
@@ -90,7 +90,7 @@ func (s *Store) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 		&discoveryJob.ChainType,
 		&discoveryJob.BlockNumber,
 		&rawAddresses,
-		&discoveryJob.InterfaceType,
+		&discoveryJob.StandardType,
 		&discoveryJob.Status,
 	)
 

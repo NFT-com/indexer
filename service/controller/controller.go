@@ -177,7 +177,7 @@ func (c *Controller) BroadcastMessage(handler string, message interface{}) error
 	}
 
 	if err := c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
-		keys := broadcaster.NewKeys(session.Keys)
+		keys := broadcaster.Keys(session.Keys)
 
 		return keys.HasHandler(handler)
 	}); err != nil {

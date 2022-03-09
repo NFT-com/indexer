@@ -9,11 +9,7 @@ const (
 
 type Keys map[string]interface{}
 
-func NewKeys(keys map[string]interface{}) Keys {
-	return keys
-}
-
-func NewEmptyKeys() Keys {
+func NewKeys() Keys {
 	return map[string]interface{}{}
 }
 
