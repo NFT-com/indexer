@@ -13,38 +13,36 @@ import (
 // FIXME: What should I call this package?
 
 type Controller struct {
-	discoveryJobsStore DiscoveryJobsStore
-	parsingJobsStore   ParsingJobsStore
-	broadcaster        *melody.Melody
+	jobsStore   JobsStore
+	broadcaster *melody.Melody
 }
 
-func NewController(discoveryJobsStore DiscoveryJobsStore, parsingJobsStore ParsingJobsStore, broadcaster *melody.Melody) *Controller {
+func NewController(jobsStore JobsStore, broadcaster *melody.Melody) *Controller {
 	c := Controller{
-		discoveryJobsStore: discoveryJobsStore,
-		parsingJobsStore:   parsingJobsStore,
-		broadcaster:        broadcaster,
+		jobsStore:   jobsStore,
+		broadcaster: broadcaster,
 	}
 
 	return &c
 }
 
-func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (job.Discovery, error) {
+func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (*job.Discovery, error) {
 	discovery.ID = uuid.New().String()
 	discovery.Status = job.StatusCreated
 
-	if err := c.discoveryJobsStore.CreateDiscoveryJob(discovery); err != nil {
-		return job.Discovery{}, err
+	if err := c.jobsStore.CreateDiscoveryJob(discovery); err != nil {
+		return nil, err
 	}
 
 	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, discovery); err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	return discovery, nil
+	return &discovery, nil
 }
 
 func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
-	jobs, err := c.discoveryJobsStore.ListDiscoveryJobs(status)
+	jobs, err := c.jobsStore.ListDiscoveryJobs(status)
 	if err != nil {
 		return nil, err
 	}
@@ -52,17 +50,17 @@ func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, erro
 	return jobs, nil
 }
 
-func (c *Controller) GetDiscoveryJob(jobID job.ID) (job.Discovery, error) {
-	discovery, err := c.discoveryJobsStore.GetDiscoveryJob(jobID)
+func (c *Controller) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
+	discovery, err := c.jobsStore.GetDiscoveryJob(jobID)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	return discovery, nil
 }
 
 func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {
-	discoveryJob, err := c.discoveryJobsStore.GetDiscoveryJob(jobID)
+	discoveryJob, err := c.jobsStore.GetDiscoveryJob(jobID)
 	if err != nil {
 		return err
 	}
@@ -72,7 +70,7 @@ func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status)
 		return err
 	}
 
-	err = c.discoveryJobsStore.UpdateDiscoveryJobState(jobID, jobStatus)
+	err = c.jobsStore.UpdateDiscoveryJobState(jobID, jobStatus)
 	if err != nil {
 		return err
 	}
@@ -80,43 +78,43 @@ func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status)
 	return nil
 }
 
-func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (job.Discovery, error) {
-	newJob, err := c.discoveryJobsStore.GetDiscoveryJob(jobID)
+func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
+	newJob, err := c.jobsStore.GetDiscoveryJob(jobID)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	newJob.ID = uuid.New().String()
 	newJob.Status = job.StatusCreated
 
-	if err := c.discoveryJobsStore.CreateDiscoveryJob(newJob); err != nil {
-		return job.Discovery{}, err
+	if err := c.jobsStore.CreateDiscoveryJob(*newJob); err != nil {
+		return nil, err
 	}
 
 	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, newJob); err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	return newJob, nil
 }
 
-func (c *Controller) CreateParsingJob(parsing job.Parsing) (job.Parsing, error) {
+func (c *Controller) CreateParsingJob(parsing job.Parsing) (*job.Parsing, error) {
 	parsing.ID = uuid.New().String()
 	parsing.Status = job.StatusCreated
 
-	if err := c.parsingJobsStore.CreateParsingJob(parsing); err != nil {
-		return job.Parsing{}, err
+	if err := c.jobsStore.CreateParsingJob(parsing); err != nil {
+		return nil, err
 	}
 
 	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, parsing); err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	return parsing, nil
+	return &parsing, nil
 }
 
 func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
-	jobs, err := c.parsingJobsStore.ListParsingJobs(status)
+	jobs, err := c.jobsStore.ListParsingJobs(status)
 	if err != nil {
 		return nil, err
 	}
@@ -124,17 +122,17 @@ func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 	return jobs, nil
 }
 
-func (c *Controller) GetParsingJob(jobID job.ID) (job.Parsing, error) {
-	parsing, err := c.parsingJobsStore.GetParsingJob(jobID)
+func (c *Controller) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
+	parsing, err := c.jobsStore.GetParsingJob(jobID)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	return parsing, nil
 }
 
 func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
-	parsingJob, err := c.parsingJobsStore.GetParsingJob(jobID)
+	parsingJob, err := c.jobsStore.GetParsingJob(jobID)
 	if err != nil {
 		return err
 	}
@@ -144,7 +142,7 @@ func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) e
 		return err
 	}
 
-	err = c.parsingJobsStore.UpdateParsingJobState(jobID, jobStatus)
+	err = c.jobsStore.UpdateParsingJobState(jobID, jobStatus)
 	if err != nil {
 		return err
 	}
@@ -152,21 +150,21 @@ func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) e
 	return nil
 }
 
-func (c *Controller) RequeueParsingJob(jobID job.ID) (job.Parsing, error) {
-	newJob, err := c.parsingJobsStore.GetParsingJob(jobID)
+func (c *Controller) RequeueParsingJob(jobID job.ID) (*job.Parsing, error) {
+	newJob, err := c.jobsStore.GetParsingJob(jobID)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	newJob.ID = uuid.New().String()
 	newJob.Status = job.StatusCreated
 
-	if err := c.parsingJobsStore.CreateParsingJob(newJob); err != nil {
-		return job.Parsing{}, err
+	if err := c.jobsStore.CreateParsingJob(*newJob); err != nil {
+		return nil, err
 	}
 
 	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, newJob); err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	return newJob, nil
