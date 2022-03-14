@@ -1,6 +1,8 @@
 package postgres
 
 const (
+	UniqueViolation = "23505"
+
 	DiscoveryJobsDBName = "discovery_jobs"
 	ParsingJobsDBName   = "parsing_jobs"
 

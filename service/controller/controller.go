@@ -10,8 +10,6 @@ import (
 	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
-// FIXME: What should I call this package?
-
 type Controller struct {
 	jobsStore   JobsStore
 	broadcaster *melody.Melody

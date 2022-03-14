@@ -3,8 +3,6 @@ package consumer
 import (
 	"encoding/json"
 	"github.com/NFT-com/indexer/service/client"
-	"log"
-
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
@@ -29,8 +27,6 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher
 }
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
-	log.Println(string(delivery.Payload()))
-
 	payload := []byte(delivery.Payload())
 	parsingJob := job.Parsing{}
 
@@ -75,14 +71,21 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	err = d.dispatcher.Dispatch("test", payload)
+	status := job.StatusFinished
+	err = d.dispatcher.Dispatch("parsing-85cd71d", payload)
+	if err != nil {
+		status = job.StatusFailed
+		d.log.Error().Err(err).Msg("failed to dispatch message")
+	}
+
+	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, job.Status(status))
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to dispatch message")
+			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
 			return
 		}
 
-		d.log.Error().Err(err).Msg("failed to dispatch message")
+		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
 		return
 	}
 

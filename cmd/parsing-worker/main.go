@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -12,7 +11,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/job"
 	"github.com/NFT-com/indexer/service/postgres"
 	"github.com/NFT-com/indexer/workers/parsing"
 )
@@ -68,12 +66,6 @@ func run() error {
 	}
 
 	handler := parsing.NewHandler(log, store)
-	fmt.Println(handler.Handle(context.Background(), job.Parsing{
-		ChainURL:    "wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71",
-		BlockNumber: "14360112",
-		Address:     "0x4a537f61ef574153664c0dbc8c8f4b900cacbe5d",
-		EventType:   "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-	}))
 	lambda.Start(handler.Handle)
 
 	return nil

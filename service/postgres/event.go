@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/lib/pq"
+
 	"github.com/NFT-com/indexer/events"
 )
 
@@ -42,6 +44,11 @@ func (s *Store) InsertRawEvent(event events.RawEvent) error {
 		Values(values...).
 		Exec()
 	if err != nil {
+		pqErr, ok := err.(*pq.Error)
+		if ok && pqErr.Code == UniqueViolation {
+			return ErrAlreadyExists
+		}
+
 		return fmt.Errorf("failed to insert events: %v", err)
 	}
 
