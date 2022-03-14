@@ -79,7 +79,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		d.log.Error().Err(err).Msg("failed to dispatch message")
 	}
 
-	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, job.Status(status))
+	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, jobs.Status(status))
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")

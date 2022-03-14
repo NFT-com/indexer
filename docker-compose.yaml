@@ -50,6 +50,10 @@ services:
       context: .
       dockerfile: Dockerfile_parsingdispatcher
     restart: always
-    entrypoint: '/agent -u redis:6379'
+    entrypoint: '/agent -u redis:6379 -a api:8081'
+    environment:
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_DEFAULT_REGION: eu-west-1
     depends_on:
       - redis
