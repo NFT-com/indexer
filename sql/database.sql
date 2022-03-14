@@ -1,0 +1,2 @@
+CREATE DATABASE jobs;
+CREATE DATABASE chains;
