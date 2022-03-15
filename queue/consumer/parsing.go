@@ -31,7 +31,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	payload := []byte(delivery.Payload())
 	var parsingJob jobs.Parsing
 
-	err := json.Unmarshal(payload, &parsingJob)
+	err := json.Unmarshal(payload, &job)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to unmarshal message")
@@ -42,7 +42,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	retrievedParsingJob, err := d.apiClient.GetParsingJob(parsingJob.ID)
+	retrievedParsingJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
