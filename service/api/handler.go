@@ -62,7 +62,7 @@ func (h *Handler) NewDiscoveryWebsocketConnection(ctx echo.Context) error {
 	return h.wsHandler.HandleRequestWithKeys(
 		ctx.Response(),
 		ctx.Request(),
-		broadcaster.NewKeys().
+		broadcaster.Keys{}.
 			WithHandler(broadcaster.DiscoveryHandlerValue),
 	)
 }
@@ -71,7 +71,7 @@ func (h *Handler) NewParsingWebsocketConnection(ctx echo.Context) error {
 	return h.wsHandler.HandleRequestWithKeys(
 		ctx.Response(),
 		ctx.Request(),
-		broadcaster.NewKeys().
+		broadcaster.Keys{}.
 			WithHandler(broadcaster.ParsingHandlerValue),
 	)
 }
