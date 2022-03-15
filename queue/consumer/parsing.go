@@ -8,6 +8,7 @@ import (
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/service/client"
 )
 
 type Parsing struct {
@@ -28,7 +29,7 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
 	payload := []byte(delivery.Payload())
-	parsingJob := job.Parsing{}
+	var parsingJob jobs.Parsing
 
 	err := json.Unmarshal(payload, &parsingJob)
 	if err != nil {
