@@ -23,7 +23,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
-func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
+func (s *Store) DiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	query := s.sqlBuilder.
 		Select(discoveryJobsTableColumns...).
 		From(discoveryJobsTableName)
