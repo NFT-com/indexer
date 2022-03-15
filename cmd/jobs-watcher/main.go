@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/queue/producer"
 	"github.com/NFT-com/indexer/service/client"
 	"github.com/NFT-com/indexer/watcher"
@@ -83,13 +83,13 @@ func run() error {
 
 	jobWatcher := watcher.NewJobWatcher(log, apiClient, messageProducer)
 
-	discoveryJobs := make(chan job.Discovery)
+	discoveryJobs := make(chan jobs.Discovery)
 	err = apiClient.SubscribeNewDiscoveryJob(discoveryJobs)
 	if err != nil {
 		return fmt.Errorf("failed to subscriber to new discovery jobs: %w", err)
 	}
 
-	parsingJobs := make(chan job.Parsing)
+	parsingJobs := make(chan jobs.Parsing)
 	err = apiClient.SubscribeNewParsingJob(parsingJobs)
 	if err != nil {
 		return fmt.Errorf("failed to subscriber to new parsing jobs: %w", err)

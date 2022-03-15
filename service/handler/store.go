@@ -10,15 +10,15 @@ type JobsStore interface {
 }
 
 type DiscoveryStore interface {
-	CreateDiscoveryJob(jobs.Discovery) error
-	DiscoveryJobs(jobs.Status) ([]jobs.Discovery, error)
-	DiscoveryJob(jobs.ID) (*jobs.Discovery, error)
-	UpdateDiscoveryJobState(jobs.ID, jobs.Status) error
+	CreateDiscoveryJob(job jobs.Discovery) error
+	DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
+	DiscoveryJob(id string) (*jobs.Discovery, error)
+	UpdateDiscoveryJobState(id string, status jobs.Status) error
 }
 
 type ParsingStore interface {
-	CreateParsingJob(jobs.Parsing) error
-	ParsingJobs(jobs.Status) ([]jobs.Parsing, error)
-	ParsingJob(jobs.ID) (*jobs.Parsing, error)
-	UpdateParsingJobState(jobs.ID, jobs.Status) error
+	CreateParsingJob(job jobs.Parsing) error
+	ParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
+	ParsingJob(id string) (*jobs.Parsing, error)
+	UpdateParsingJobState(id string, status jobs.Status) error
 }
