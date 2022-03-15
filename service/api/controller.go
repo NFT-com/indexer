@@ -10,17 +10,17 @@ type JobsHandler interface {
 }
 
 type DiscoveryJobHandler interface {
-	CreateDiscoveryJob(jobs.Discovery) (*jobs.Discovery, error)
-	ListDiscoveryJobs(jobs.Status) ([]jobs.Discovery, error)
-	GetDiscoveryJob(jobs.ID) (*jobs.Discovery, error)
-	UpdateDiscoveryJobState(jobs.ID, jobs.Status) error
-	RequeueDiscoveryJob(jobs.ID) (*jobs.Discovery, error)
+	CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
+	ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
+	GetDiscoveryJob(id string) (*jobs.Discovery, error)
+	UpdateDiscoveryJobState(id string, status jobs.Status) error
+	RequeueDiscoveryJob(id string) (*jobs.Discovery, error)
 }
 
 type ParsingJobHandler interface {
-	CreateParsingJob(jobs.Parsing) (*jobs.Parsing, error)
-	ListParsingJobs(jobs.Status) ([]jobs.Parsing, error)
-	GetParsingJob(jobs.ID) (*jobs.Parsing, error)
-	UpdateParsingJobState(jobs.ID, jobs.Status) error
-	RequeueParsingJob(jobs.ID) (*jobs.Parsing, error)
+	CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error)
+	ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
+	GetParsingJob(id string) (*jobs.Parsing, error)
+	UpdateParsingJobState(id string, status jobs.Status) error
+	RequeueParsingJob(id string) (*jobs.Parsing, error)
 }
