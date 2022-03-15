@@ -103,16 +103,16 @@ func (s *Store) UpdateParsingJobState(jobID jobs.ID, jobStatus jobs.Status) erro
 		Exec()
 
 	if err != nil {
-		return fmt.Errorf("could not update parsing jobs state: %w", err)
+		return fmt.Errorf("could not update parsing job state: %w", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("could not update parsing jobs state: %w", err)
+		return fmt.Errorf("could not update parsing job state: %w", err)
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update parsing jobs state: %w", ErrResourceNotFound)
+		return fmt.Errorf("could not update parsing job state: %w", ErrResourceNotFound)
 	}
 
 	return nil
