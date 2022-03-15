@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 )
 
 type JobsStore interface {
@@ -10,15 +10,15 @@ type JobsStore interface {
 }
 
 type DiscoveryStore interface {
-	CreateDiscoveryJob(job.Discovery) error
-	DiscoveryJobs(job.Status) ([]job.Discovery, error)
-	DiscoveryJob(job.ID) (*job.Discovery, error)
-	UpdateDiscoveryJobState(job.ID, job.Status) error
+	CreateDiscoveryJob(jobs.Discovery) error
+	DiscoveryJobs(jobs.Status) ([]jobs.Discovery, error)
+	DiscoveryJob(jobs.ID) (*jobs.Discovery, error)
+	UpdateDiscoveryJobState(jobs.ID, jobs.Status) error
 }
 
 type ParsingStore interface {
-	CreateParsingJob(job.Parsing) error
-	ParsingJobs(job.Status) ([]job.Parsing, error)
-	ParsingJob(job.ID) (*job.Parsing, error)
-	UpdateParsingJobState(job.ID, job.Status) error
+	CreateParsingJob(jobs.Parsing) error
+	ParsingJobs(jobs.Status) ([]jobs.Parsing, error)
+	ParsingJob(jobs.ID) (*jobs.Parsing, error)
+	UpdateParsingJobState(jobs.ID, jobs.Status) error
 }
