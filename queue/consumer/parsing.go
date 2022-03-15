@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"
 )
 
@@ -29,9 +29,9 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
 	payload := []byte(delivery.Payload())
-	var parsingJob job.Parsing
+	var job jobs.Parsing
 
-	err := json.Unmarshal(payload, &parsingJob)
+	err := json.Unmarshal(payload, &job)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to unmarshal message")
@@ -42,7 +42,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	retrievedParsingJob, err := d.apiClient.GetParsingJob(parsingJob.ID)
+	retrievedParsingJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
@@ -53,7 +53,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	if retrievedParsingJob.Status == job.StatusCanceled {
+	if retrievedParsingJob.Status == jobs.StatusCanceled {
 		err = delivery.Ack()
 		if err != nil {
 			d.log.Error().Err(err).Msg("failed to acknowledge message")
@@ -61,7 +61,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
-	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, job.StatusProcessing)
+	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
