@@ -37,17 +37,16 @@ func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 
 	jobList := make([]job.Parsing, 0)
 	for result.Next() && result.Err() == nil {
-		parsingJob := job.Parsing{}
-
+		var job job.Parsing
 		err = result.Scan(
-			&parsingJob.ID,
-			&parsingJob.ChainURL,
-			&parsingJob.ChainType,
-			&parsingJob.BlockNumber,
-			&parsingJob.Address,
-			&parsingJob.StandardType,
-			&parsingJob.EventType,
-			&parsingJob.Status,
+			&job.ID,
+			&job.ChainURL,
+			&job.ChainType,
+			&job.BlockNumber,
+			&job.Address,
+			&job.StandardType,
+			&job.EventType,
+			&job.Status,
 		)
 
 		if err != nil {

@@ -55,7 +55,7 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level: %v", err)
+		return fmt.Errorf("failed to parse log level: %w", err)
 	}
 	log = log.Level(level)
 	eLog := lecho.From(log)
@@ -68,7 +68,7 @@ func run() error {
 
 	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
 	if err != nil {
-		return fmt.Errorf("failed to open slq connection: %v", err)
+		return fmt.Errorf("failed to open SQL connection: %w", err)
 	}
 
 	postgresStore, err := postgres.NewStore(db)
