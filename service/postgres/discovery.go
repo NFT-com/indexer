@@ -20,7 +20,7 @@ func (s *Store) CreateDiscoveryJob(job job.Discovery) error {
 		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, rawAddresses, job.StandardType, job.Status).
 		Exec()
 	if err != nil {
-		return fmt.Errorf("failed to create discovery job: %v", err)
+		return fmt.Errorf("could not create discovery job: %w", err)
 	}
 
 	return nil
