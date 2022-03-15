@@ -25,7 +25,7 @@ func NewController(jobsStore JobsStore, broadcaster *melody.Melody) *Controller 
 }
 
 func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (*job.Discovery, error) {
-	discovery.ID = job.ID(uuid.New().String())
+	discovery.ID = uuid.New().String()
 	discovery.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateDiscoveryJob(discovery); err != nil {
@@ -48,7 +48,7 @@ func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, erro
 	return jobs, nil
 }
 
-func (c *Controller) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
+func (c *Controller) GetDiscoveryJob(jobID string) (*job.Discovery, error) {
 	discovery, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (c *Controller) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 	return discovery, nil
 }
 
-func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {
+func (c *Controller) UpdateDiscoveryJobState(jobID string, jobStatus job.Status) error {
 	discoveryJob, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return err
@@ -76,13 +76,13 @@ func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status)
 	return nil
 }
 
-func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
+func (c *Controller) RequeueDiscoveryJob(jobID string) (*job.Discovery, error) {
 	newJob, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	newJob.ID = job.ID(uuid.New().String())
+	newJob.ID = uuid.New().String()
 	newJob.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateDiscoveryJob(*newJob); err != nil {
@@ -97,7 +97,7 @@ func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 }
 
 func (c *Controller) CreateParsingJob(parsing job.Parsing) (*job.Parsing, error) {
-	parsing.ID = job.ID(uuid.New().String())
+	parsing.ID = uuid.New().String()
 	parsing.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateParsingJob(parsing); err != nil {
@@ -120,7 +120,7 @@ func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 	return jobs, nil
 }
 
-func (c *Controller) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
+func (c *Controller) GetParsingJob(jobID string) (*job.Parsing, error) {
 	parsing, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (c *Controller) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 	return parsing, nil
 }
 
-func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
+func (c *Controller) UpdateParsingJobState(jobID string, jobStatus job.Status) error {
 	parsingJob, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return err
@@ -148,13 +148,13 @@ func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) e
 	return nil
 }
 
-func (c *Controller) RequeueParsingJob(jobID job.ID) (*job.Parsing, error) {
+func (c *Controller) RequeueParsingJob(jobID string) (*job.Parsing, error) {
 	newJob, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	newJob.ID = job.ID(uuid.New().String())
+	newJob.ID = uuid.New().String()
 	newJob.Status = job.StatusCreated
 
 	if err := c.jobsStore.CreateParsingJob(*newJob); err != nil {
