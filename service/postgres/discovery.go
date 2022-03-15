@@ -68,7 +68,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	return jobList, nil
 }
 
-func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
+func (s *Store) DiscoveryJob(jobID string) (*jobs.Discovery, error) {
 	result, err := s.sqlBuilder.
 		Select(DiscoveryJobsTableColumns...).
 		From(DiscoveryJobsDBName).
@@ -107,7 +107,7 @@ func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
-func (s *Store) UpdateDiscoveryJobState(jobID jobs.ID, jobStatus jobs.Status) error {
+func (s *Store) UpdateDiscoveryJobState(jobID string, jobStatus jobs.Status) error {
 	res, err := s.sqlBuilder.
 		Update(DiscoveryJobsDBName).
 		Where("id = ?", jobID).

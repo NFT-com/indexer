@@ -59,7 +59,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	return jobList, nil
 }
 
-func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
+func (s *Store) ParsingJob(jobID string) (*jobs.Parsing, error) {
 	result, err := s.sqlBuilder.
 		Select(ParsingJobsTableColumns...).
 		From(ParsingJobsDBName).
@@ -92,7 +92,7 @@ func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-func (s *Store) UpdateParsingJobState(jobID jobs.ID, jobStatus jobs.Status) error {
+func (s *Store) UpdateParsingJobState(jobID string, jobStatus jobs.Status) error {
 	res, err := s.sqlBuilder.
 		Update(ParsingJobsDBName).
 		Where("id = ?", jobID).
