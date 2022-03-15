@@ -16,12 +16,12 @@ const (
 
 var (
 	statusMap = map[string]struct{}{
-		StatusCreated:    struct{}{},
-		StatusQueued:     struct{}{},
-		StatusProcessing: struct{}{},
-		StatusCanceled:   struct{}{},
-		StatusFailed:     struct{}{},
-		StatusFinished:   struct{}{},
+		StatusCreated:    {},
+		StatusQueued:     {},
+		StatusProcessing: {},
+		StatusCanceled:   {},
+		StatusFailed:     {},
+		StatusFinished:   {},
 	}
 
 	ErrStatusNotFound = errors.New("status not found")

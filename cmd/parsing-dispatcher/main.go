@@ -116,11 +116,6 @@ func run() error {
 		return fmt.Errorf("failed to open redis queue: %w", err)
 	}
 
-	parsingConsumer, err := consumer.NewParsingConsumer(log, dispatcher)
-	if err != nil {
-		return err
-	}
-
 	err = queue.StartConsuming(flagConsumerPrefetch, flagConsumerPollDuration)
 	if err != nil {
 		return fmt.Errorf("failed to start consuming process: %w", err)

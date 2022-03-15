@@ -1,7 +1,9 @@
 package function
 
 import (
+	"encoding/json"
 	"errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 )
@@ -26,7 +28,7 @@ func NewClient(lambdaClient Lambda) (*Client, error) {
 	return &d, nil
 }
 
-func (d *Client) Dispatch(functionName string, payload []byte) error {
+func (d *Client) Dispatch(functionName string, payload []byte) (interface{}, error) {
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,
@@ -34,16 +36,22 @@ func (d *Client) Dispatch(functionName string, payload []byte) error {
 
 	output, err := d.lambdaClient.Invoke(input)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if output.StatusCode != nil && *output.StatusCode > 299 {
 		if output.FunctionError != nil {
-			return errors.New(*output.FunctionError)
+			return nil, errors.New(*output.FunctionError)
 		}
 
-		return errors.New("unexpected error running worker")
+		return nil, errors.New("unexpected error running worker")
 	}
 
-	return nil
+	var lambdaOutput interface{}
+	err = json.Unmarshal(output.Payload, &lambdaOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	return lambdaOutput, nil
 }

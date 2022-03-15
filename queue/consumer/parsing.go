@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
@@ -29,7 +30,7 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
 	payload := []byte(delivery.Payload())
-	var parsingJob jobs.Parsing
+	var job jobs.Parsing
 
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
@@ -61,7 +62,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
-	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, jobs.StatusProcessing)
+	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
@@ -73,13 +74,14 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 
 	status := jobs.StatusFinished
-	err = d.dispatcher.Dispatch("parsing-85cd71d", payload)
+	lambdaOutput, err := d.dispatcher.Dispatch("parsing-85cd71d", payload)
 	if err != nil {
 		status = jobs.StatusFailed
 		d.log.Error().Err(err).Msg("failed to dispatch message")
 	}
+	log.Println(lambdaOutput)
 
-	err = d.apiClient.UpdateParsingJobState(parsingJob.ID, jobs.Status(status))
+	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.Status(status))
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")

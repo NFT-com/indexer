@@ -29,7 +29,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile_api
+      dockerfile: Dockerfile.api
     restart: always
     entrypoint: '/api -d "host=75.119.158.206 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
     ports:
@@ -39,7 +39,7 @@ services:
   watcher:
     build:
       context: .
-      dockerfile: Dockerfile_watcher
+      dockerfile: Dockerfile.watcher
     restart: always
     entrypoint: '/watcher -a http://api:8081 -u redis:6379'
     depends_on:
@@ -51,9 +51,5 @@ services:
       dockerfile: Dockerfile_parsingdispatcher
     restart: always
     entrypoint: '/agent -u redis:6379 -a api:8081'
-    environment:
-      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
-      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-      AWS_DEFAULT_REGION: eu-west-1
     depends_on:
       - redis
