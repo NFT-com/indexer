@@ -157,7 +157,7 @@ func (c *Client) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	return jobList, nil
 }
 
-func (c *Client) GetDiscoveryJob(jobID job.ID) (job.Discovery, error) {
+func (c *Client) GetDiscoveryJob(jobID string) (job.Discovery, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, jobID))
 	if err != nil {
 		return job.Discovery{}, err
@@ -182,7 +182,7 @@ func (c *Client) GetDiscoveryJob(jobID job.ID) (job.Discovery, error) {
 	return discoveryJob, nil
 }
 
-func (c *Client) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {
+func (c *Client) UpdateDiscoveryJobState(jobID string, jobStatus job.Status) error {
 	requestBody := request.Status{Status: string(jobStatus)}
 	body, err := json.Marshal(requestBody)
 	if err != nil {
@@ -205,7 +205,7 @@ func (c *Client) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) err
 	return nil
 }
 
-func (c *Client) RequeueDiscoveryJob(jobID job.ID) (job.Discovery, error) {
+func (c *Client) RequeueDiscoveryJob(jobID string) (job.Discovery, error) {
 	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), DiscoveryBasePath, jobID), JsonContentType, nil)
 	if err != nil {
 		return job.Discovery{}, err
@@ -286,7 +286,7 @@ func (c *Client) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 	return jobList, nil
 }
 
-func (c *Client) GetParsingJob(jobID job.ID) (job.Parsing, error) {
+func (c *Client) GetParsingJob(jobID string) (job.Parsing, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, jobID))
 	if err != nil {
 		return job.Parsing{}, err
@@ -311,7 +311,7 @@ func (c *Client) GetParsingJob(jobID job.ID) (job.Parsing, error) {
 	return parsingJob, nil
 }
 
-func (c *Client) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
+func (c *Client) UpdateParsingJobState(jobID string, jobStatus job.Status) error {
 	requestBody := request.Status{Status: string(jobStatus)}
 	body, err := json.Marshal(requestBody)
 	if err != nil {
@@ -334,7 +334,7 @@ func (c *Client) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error
 	return nil
 }
 
-func (c *Client) RequeueParsingJob(jobID job.ID) (job.Parsing, error) {
+func (c *Client) RequeueParsingJob(jobID string) (job.Parsing, error) {
 	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), ParsingBasePath, jobID), JsonContentType, nil)
 	if err != nil {
 		return job.Parsing{}, err
