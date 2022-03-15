@@ -9,10 +9,6 @@ const (
 
 type Keys map[string]interface{}
 
-func NewKeys() Keys {
-	return map[string]interface{}{}
-}
-
 func (k Keys) WithHandler(value string) Keys {
 	k[HandlerKey] = value
 

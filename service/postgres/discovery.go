@@ -26,7 +26,7 @@ func (s *Store) CreateDiscoveryJob(job job.Discovery) error {
 	return nil
 }
 
-func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
+func (s *Store) DiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	query := s.sqlBuilder.
 		Select(DiscoveryJobsTableColumns...).
 		From(DiscoveryJobsDBName)
@@ -41,34 +41,34 @@ func (s *Store) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 
 	jobList := make([]job.Discovery, 0)
 	for result.Next() && result.Err() == nil {
-		discoveryJob := job.Discovery{}
-		rawAddresses := make([]byte, 0)
+		var job job.Discovery
 
+		rawAddresses := make([]byte, 0)
 		err = result.Scan(
-			&discoveryJob.ID,
-			&discoveryJob.ChainURL,
-			&discoveryJob.ChainType,
-			&discoveryJob.BlockNumber,
+			&job.ID,
+			&job.ChainURL,
+			&job.ChainType,
+			&job.BlockNumber,
 			&rawAddresses,
-			&discoveryJob.StandardType,
-			&discoveryJob.Status,
+			&job.StandardType,
+			&job.Status,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve discovery job list: %v", err)
 		}
 
-		err = json.Unmarshal(rawAddresses, &discoveryJob.Addresses)
+		err = json.Unmarshal(rawAddresses, &job.Addresses)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve discovery job list: %v", err)
 		}
 
-		jobList = append(jobList, discoveryJob)
+		jobList = append(jobList, job)
 	}
 
 	return jobList, nil
 }
 
-func (s *Store) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
+func (s *Store) DiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 	result, err := s.sqlBuilder.
 		Select(DiscoveryJobsTableColumns...).
 		From(DiscoveryJobsDBName).
@@ -82,33 +82,33 @@ func (s *Store) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 		return nil, fmt.Errorf("failed to retrieve discovery job: %v", ErrResourceNotFound)
 	}
 
-	discoveryJob := job.Discovery{}
+	var job job.Discovery
 	rawAddresses := make([]byte, 0)
 
 	err = result.Scan(
-		&discoveryJob.ID,
-		&discoveryJob.ChainURL,
-		&discoveryJob.ChainType,
-		&discoveryJob.BlockNumber,
+		&job.ID,
+		&job.ChainURL,
+		&job.ChainType,
+		&job.BlockNumber,
 		&rawAddresses,
-		&discoveryJob.StandardType,
-		&discoveryJob.Status,
+		&job.StandardType,
+		&job.Status,
 	)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve discovery job: %v", err)
 	}
 
-	err = json.Unmarshal(rawAddresses, &discoveryJob.Addresses)
+	err = json.Unmarshal(rawAddresses, &job.Addresses)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve discovery job: %v", err)
 	}
 
-	return &discoveryJob, nil
+	return &job, nil
 }
 
 func (s *Store) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {
-	_, err := s.sqlBuilder.
+	res, err := s.sqlBuilder.
 		Update(DiscoveryJobsDBName).
 		Where("id = ?", jobID).
 		Set("status", jobStatus).
@@ -116,6 +116,15 @@ func (s *Store) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) erro
 		Exec()
 	if err != nil {
 		return fmt.Errorf("failed to update discovery job state: %v", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to update discovery job state: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("failed to update discovery job state: %v", ErrResourceNotFound)
 	}
 
 	return nil

@@ -21,7 +21,7 @@ func (s *Store) CreateParsingJob(job job.Parsing) error {
 	return nil
 }
 
-func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
+func (s *Store) ParsingJobs(status job.Status) ([]job.Parsing, error) {
 	query := s.sqlBuilder.
 		Select(ParsingJobsTableColumns...).
 		From(ParsingJobsDBName)
@@ -53,13 +53,13 @@ func (s *Store) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 			return nil, fmt.Errorf("failed to retrieve parsing jobs list: %v", err)
 		}
 
-		jobList = append(jobList, parsingJob)
+		jobList = append(jobList, job)
 	}
 
 	return jobList, nil
 }
 
-func (s *Store) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
+func (s *Store) ParsingJob(jobID job.ID) (*job.Parsing, error) {
 	result, err := s.sqlBuilder.
 		Select(ParsingJobsTableColumns...).
 		From(ParsingJobsDBName).
@@ -73,28 +73,27 @@ func (s *Store) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 		return nil, fmt.Errorf("failed to retrieve parsing job: %v", ErrResourceNotFound)
 	}
 
-	parsingJob := job.Parsing{}
-
+	var job job.Parsing
 	err = result.Scan(
-		&parsingJob.ID,
-		&parsingJob.ChainURL,
-		&parsingJob.ChainType,
-		&parsingJob.BlockNumber,
-		&parsingJob.Address,
-		&parsingJob.StandardType,
-		&parsingJob.EventType,
-		&parsingJob.Status,
+		&job.ID,
+		&job.ChainURL,
+		&job.ChainType,
+		&job.BlockNumber,
+		&job.Address,
+		&job.StandardType,
+		&job.EventType,
+		&job.Status,
 	)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve parsing job: %v", err)
 	}
 
-	return &parsingJob, nil
+	return &job, nil
 }
 
 func (s *Store) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
-	_, err := s.sqlBuilder.
+	res, err := s.sqlBuilder.
 		Update(ParsingJobsDBName).
 		Where("id = ?", jobID).
 		Set("status", jobStatus).
@@ -103,6 +102,15 @@ func (s *Store) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error 
 
 	if err != nil {
 		return fmt.Errorf("failed to update parsing job state: %v", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to update parsing job state: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("failed to update parsing job state: %v", ErrResourceNotFound)
 	}
 
 	return nil
