@@ -42,7 +42,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	retrievedParsingJob, err := d.apiClient.GetParsingJob(job.ID)
+	storedJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
@@ -53,7 +53,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	if retrievedParsingJob.Status == jobs.StatusCanceled {
+	if storedJob.Status == jobs.StatusCanceled {
 		err = delivery.Ack()
 		if err != nil {
 			d.log.Error().Err(err).Msg("failed to acknowledge message")
