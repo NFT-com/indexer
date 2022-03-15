@@ -42,7 +42,7 @@ func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (*job.Discovery
 }
 
 func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
-	jobs, err := c.jobsStore.ListDiscoveryJobs(status)
+	jobs, err := c.jobsStore.DiscoveryJobs(status)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, erro
 }
 
 func (c *Controller) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
-	discovery, err := c.jobsStore.GetDiscoveryJob(jobID)
+	discovery, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *Controller) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
 }
 
 func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {
-	discoveryJob, err := c.jobsStore.GetDiscoveryJob(jobID)
+	discoveryJob, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status)
 }
 
 func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
-	newJob, err := c.jobsStore.GetDiscoveryJob(jobID)
+	newJob, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (c *Controller) CreateParsingJob(parsing job.Parsing) (*job.Parsing, error)
 }
 
 func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
-	jobs, err := c.jobsStore.ListParsingJobs(status)
+	jobs, err := c.jobsStore.ParsingJobs(status)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 }
 
 func (c *Controller) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
-	parsing, err := c.jobsStore.GetParsingJob(jobID)
+	parsing, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (c *Controller) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
 }
 
 func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
-	parsingJob, err := c.jobsStore.GetParsingJob(jobID)
+	parsingJob, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) e
 }
 
 func (c *Controller) RequeueParsingJob(jobID job.ID) (*job.Parsing, error) {
-	newJob, err := c.jobsStore.GetParsingJob(jobID)
+	newJob, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return nil, err
 	}
