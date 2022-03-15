@@ -10,8 +10,6 @@ import (
 	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
-// FIXME: What should I call this package?
-
 type Controller struct {
 	jobsStore   JobsStore
 	broadcaster *melody.Melody
@@ -50,8 +48,8 @@ func (c *Controller) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, er
 	return jobs, nil
 }
 
-func (c *Controller) GetDiscoveryJob(jobID string) (*job.Discovery, error) {
-	discovery, err := c.jobsStore.DiscoveryJob(jobID)
+func (c *Controller) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
+	job, err := c.jobsStore.DiscoveryJob(id)
 	if err != nil {
 		return nil, err
 	}
@@ -59,18 +57,18 @@ func (c *Controller) GetDiscoveryJob(jobID string) (*job.Discovery, error) {
 	return job, nil
 }
 
-func (c *Controller) UpdateDiscoveryJobState(jobID string, jobStatus job.Status) error {
-	discoveryJob, err := c.jobsStore.DiscoveryJob(jobID)
+func (c *Controller) UpdateDiscoveryJobState(id string, status jobs.Status) error {
+	job, err := c.jobsStore.DiscoveryJob(id)
 	if err != nil {
 		return err
 	}
 
-	err = c.ValidateStatusSwitch(job.Status, jobStatus)
+	err = c.ValidateStatusSwitch(job.Status, status)
 	if err != nil {
 		return err
 	}
 
-	err = c.jobsStore.UpdateDiscoveryJobState(jobID, jobStatus)
+	err = c.jobsStore.UpdateDiscoveryJobState(id, status)
 	if err != nil {
 		return err
 	}
@@ -78,8 +76,8 @@ func (c *Controller) UpdateDiscoveryJobState(jobID string, jobStatus job.Status)
 	return nil
 }
 
-func (c *Controller) RequeueDiscoveryJob(jobID string) (*job.Discovery, error) {
-	newJob, err := c.jobsStore.DiscoveryJob(jobID)
+func (c *Controller) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
+	job, err := c.jobsStore.DiscoveryJob(id)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +120,8 @@ func (c *Controller) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
 	return jobs, nil
 }
 
-func (c *Controller) GetParsingJob(jobID string) (*job.Parsing, error) {
-	parsing, err := c.jobsStore.ParsingJob(jobID)
+func (c *Controller) GetParsingJob(id string) (*jobs.Parsing, error) {
+	job, err := c.jobsStore.ParsingJob(id)
 	if err != nil {
 		return nil, err
 	}
@@ -131,18 +129,18 @@ func (c *Controller) GetParsingJob(jobID string) (*job.Parsing, error) {
 	return job, nil
 }
 
-func (c *Controller) UpdateParsingJobState(jobID string, jobStatus job.Status) error {
-	parsingJob, err := c.jobsStore.ParsingJob(jobID)
+func (c *Controller) UpdateParsingJobState(id string, status jobs.Status) error {
+	job, err := c.jobsStore.ParsingJob(id)
 	if err != nil {
 		return err
 	}
 
-	err = c.ValidateStatusSwitch(job.Status, jobStatus)
+	err = c.ValidateStatusSwitch(job.Status, status)
 	if err != nil {
 		return err
 	}
 
-	err = c.jobsStore.UpdateParsingJobState(jobID, jobStatus)
+	err = c.jobsStore.UpdateParsingJobState(id, status)
 	if err != nil {
 		return err
 	}
@@ -150,8 +148,8 @@ func (c *Controller) UpdateParsingJobState(jobID string, jobStatus job.Status) e
 	return nil
 }
 
-func (c *Controller) RequeueParsingJob(jobID string) (*job.Parsing, error) {
-	newJob, err := c.jobsStore.ParsingJob(jobID)
+func (c *Controller) RequeueParsingJob(id string) (*jobs.Parsing, error) {
+	job, err := c.jobsStore.ParsingJob(id)
 	if err != nil {
 		return nil, err
 	}
