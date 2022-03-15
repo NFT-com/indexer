@@ -1,4 +1,4 @@
-package job
+package jobs
 
 type Parsing struct {
 	ID           string `json:"id"`

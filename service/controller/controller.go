@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gopkg.in/olahol/melody.v1"
 
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
@@ -26,22 +26,22 @@ func NewController(jobsStore JobsStore, broadcaster *melody.Melody) *Controller 
 	return &c
 }
 
-func (c *Controller) CreateDiscoveryJob(discovery job.Discovery) (*job.Discovery, error) {
-	discovery.ID = uuid.New().String()
-	discovery.Status = job.StatusCreated
+func (c *Controller) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
+	job.ID = uuid.New().String()
+	job.Status = jobs.StatusCreated
 
-	if err := c.jobsStore.CreateDiscoveryJob(discovery); err != nil {
+	if err := c.jobsStore.CreateDiscoveryJob(job); err != nil {
 		return nil, err
 	}
 
-	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, discovery); err != nil {
+	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, job); err != nil {
 		return nil, err
 	}
 
-	return &discovery, nil
+	return &job, nil
 }
 
-func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
+func (c *Controller) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	jobs, err := c.jobsStore.DiscoveryJobs(status)
 	if err != nil {
 		return nil, err
@@ -50,22 +50,22 @@ func (c *Controller) ListDiscoveryJobs(status job.Status) ([]job.Discovery, erro
 	return jobs, nil
 }
 
-func (c *Controller) GetDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
-	discovery, err := c.jobsStore.DiscoveryJob(jobID)
+func (c *Controller) GetDiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
+	job, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	return discovery, nil
+	return job, nil
 }
 
-func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status) error {
-	discoveryJob, err := c.jobsStore.DiscoveryJob(jobID)
+func (c *Controller) UpdateDiscoveryJobState(jobID jobs.ID, jobStatus jobs.Status) error {
+	job, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return err
 	}
 
-	err = c.ValidateStatusSwitch(discoveryJob.Status, jobStatus)
+	err = c.ValidateStatusSwitch(job.Status, jobStatus)
 	if err != nil {
 		return err
 	}
@@ -78,29 +78,29 @@ func (c *Controller) UpdateDiscoveryJobState(jobID job.ID, jobStatus job.Status)
 	return nil
 }
 
-func (c *Controller) RequeueDiscoveryJob(jobID job.ID) (*job.Discovery, error) {
-	newJob, err := c.jobsStore.DiscoveryJob(jobID)
+func (c *Controller) RequeueDiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
+	job, err := c.jobsStore.DiscoveryJob(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	newJob.ID = uuid.New().String()
-	newJob.Status = job.StatusCreated
+	job.ID = uuid.New().String()
+	job.Status = jobs.StatusCreated
 
-	if err := c.jobsStore.CreateDiscoveryJob(*newJob); err != nil {
+	if err := c.jobsStore.CreateDiscoveryJob(*job); err != nil {
 		return nil, err
 	}
 
-	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, newJob); err != nil {
+	if err := c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, job); err != nil {
 		return nil, err
 	}
 
-	return newJob, nil
+	return job, nil
 }
 
-func (c *Controller) CreateParsingJob(parsing job.Parsing) (*job.Parsing, error) {
+func (c *Controller) CreateParsingJob(parsing jobs.Parsing) (*jobs.Parsing, error) {
 	parsing.ID = uuid.New().String()
-	parsing.Status = job.StatusCreated
+	parsing.Status = jobs.StatusCreated
 
 	if err := c.jobsStore.CreateParsingJob(parsing); err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (c *Controller) CreateParsingJob(parsing job.Parsing) (*job.Parsing, error)
 	return &parsing, nil
 }
 
-func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
+func (c *Controller) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	jobs, err := c.jobsStore.ParsingJobs(status)
 	if err != nil {
 		return nil, err
@@ -122,22 +122,22 @@ func (c *Controller) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 	return jobs, nil
 }
 
-func (c *Controller) GetParsingJob(jobID job.ID) (*job.Parsing, error) {
-	parsing, err := c.jobsStore.ParsingJob(jobID)
+func (c *Controller) GetParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
+	job, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	return parsing, nil
+	return job, nil
 }
 
-func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) error {
-	parsingJob, err := c.jobsStore.ParsingJob(jobID)
+func (c *Controller) UpdateParsingJobState(jobID jobs.ID, jobStatus jobs.Status) error {
+	job, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return err
 	}
 
-	err = c.ValidateStatusSwitch(parsingJob.Status, jobStatus)
+	err = c.ValidateStatusSwitch(job.Status, jobStatus)
 	if err != nil {
 		return err
 	}
@@ -150,24 +150,24 @@ func (c *Controller) UpdateParsingJobState(jobID job.ID, jobStatus job.Status) e
 	return nil
 }
 
-func (c *Controller) RequeueParsingJob(jobID job.ID) (*job.Parsing, error) {
-	newJob, err := c.jobsStore.ParsingJob(jobID)
+func (c *Controller) RequeueParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
+	job, err := c.jobsStore.ParsingJob(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	newJob.ID = uuid.New().String()
-	newJob.Status = job.StatusCreated
+	job.ID = uuid.New().String()
+	job.Status = jobs.StatusCreated
 
-	if err := c.jobsStore.CreateParsingJob(*newJob); err != nil {
+	if err := c.jobsStore.CreateParsingJob(*job); err != nil {
 		return nil, err
 	}
 
-	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, newJob); err != nil {
+	if err := c.BroadcastMessage(broadcaster.ParsingHandlerValue, job); err != nil {
 		return nil, err
 	}
 
-	return newJob, nil
+	return job, nil
 }
 
 func (c *Controller) BroadcastMessage(handler string, message interface{}) error {
@@ -187,21 +187,21 @@ func (c *Controller) BroadcastMessage(handler string, message interface{}) error
 	return nil
 }
 
-func (c *Controller) ValidateStatusSwitch(currentStatus, newStatus job.Status) error {
+func (c *Controller) ValidateStatusSwitch(currentStatus, newStatus jobs.Status) error {
 	switch currentStatus {
-	case job.StatusCreated:
-		if newStatus != job.StatusCanceled && newStatus != job.StatusQueued {
+	case jobs.StatusCreated:
+		if newStatus != jobs.StatusCanceled && newStatus != jobs.StatusQueued {
 			return ErrJobStateCannotBeChanged
 		}
-	case job.StatusQueued:
-		if newStatus != job.StatusCanceled && newStatus != job.StatusProcessing {
+	case jobs.StatusQueued:
+		if newStatus != jobs.StatusCanceled && newStatus != jobs.StatusProcessing {
 			return ErrJobStateCannotBeChanged
 		}
-	case job.StatusProcessing:
-		if newStatus != job.StatusFinished && newStatus != job.StatusFailed {
+	case jobs.StatusProcessing:
+		if newStatus != jobs.StatusFinished && newStatus != jobs.StatusFailed {
 			return ErrJobStateCannotBeChanged
 		}
-	case job.StatusCanceled, job.StatusFinished, job.StatusFailed:
+	case jobs.StatusCanceled, jobs.StatusFinished, jobs.StatusFailed:
 		return ErrJobStateCannotBeChanged
 	}
 

@@ -1,3 +1,3 @@
-package job
+package jobs
 
 type ID string
