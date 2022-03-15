@@ -1,4 +1,4 @@
-package job
+package jobs
 
 type Discovery struct {
 	ID           string   `json:"id"`

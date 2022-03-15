@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 )
 
 type JobController interface {
@@ -10,17 +10,17 @@ type JobController interface {
 }
 
 type DiscoveryController interface {
-	CreateDiscoveryJob(job job.Discovery) (*job.Discovery, error)
-	ListDiscoveryJobs(status job.Status) ([]job.Discovery, error)
-	GetDiscoveryJob(id string) (*job.Discovery, error)
-	UpdateDiscoveryJobState(id string, status job.Status) error
-	RequeueDiscoveryJob(id string) (*job.Discovery, error)
+	CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
+	ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
+	GetDiscoveryJob(id string) (*jobs.Discovery, error)
+	UpdateDiscoveryJobState(id string, status jobs.Status) error
+	RequeueDiscoveryJob(id string) (*jobs.Discovery, error)
 }
 
 type ParsingController interface {
-	CreateParsingJob(job job.Parsing) (*job.Parsing, error)
-	ListParsingJobs(status job.Status) ([]job.Parsing, error)
-	GetParsingJob(id string) (*job.Parsing, error)
-	UpdateParsingJobState(id string, status job.Status) error
-	RequeueParsingJob(id string) (*job.Parsing, error)
+	CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error)
+	ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
+	GetParsingJob(id string) (*jobs.Parsing, error)
+	UpdateParsingJobState(id string, status jobs.Status) error
+	RequeueParsingJob(id string) (*jobs.Parsing, error)
 }
