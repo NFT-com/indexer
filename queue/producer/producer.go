@@ -5,7 +5,7 @@ import (
 
 	"github.com/adjust/rmq/v4"
 
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 )
 
 type Producer struct {
@@ -24,7 +24,7 @@ func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue 
 	return &p, nil
 }
 
-func (p *Producer) PublishDiscoveryJob(discoveryJob job.Discovery) error {
+func (p *Producer) PublishDiscoveryJob(discoveryJob jobs.Discovery) error {
 	q, err := p.connection.OpenQueue(p.discoveryQueue)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (p *Producer) PublishDiscoveryJob(discoveryJob job.Discovery) error {
 	return nil
 }
 
-func (p *Producer) PublishParsingJob(parsingJob job.Parsing) error {
+func (p *Producer) PublishParsingJob(parsingJob jobs.Parsing) error {
 	q, err := p.connection.OpenQueue(p.parsingQueue)
 	if err != nil {
 		return err

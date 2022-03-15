@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/job"
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/request"
 )
 
@@ -45,7 +45,7 @@ func NewClient(log zerolog.Logger, optionList OptionsList) *Client {
 	return &c
 }
 
-func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan job.Discovery) error {
+func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
 	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), DiscoveryBasePath)
 	connection, _, err := c.wsClient.Dial(requestURL, nil)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan job.Discovery) erro
 			case <-c.close:
 				return
 			default:
-				newDiscoveryJob := job.Discovery{}
+				newDiscoveryJob := jobs.Discovery{}
 				err := connection.ReadJSON(&newDiscoveryJob)
 				if err != nil {
 					c.log.Error().Err(err).Msg("failed to read message socket")
@@ -73,7 +73,7 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan job.Discovery) erro
 	return nil
 }
 
-func (c *Client) SubscribeNewParsingJob(parsingJobs chan job.Parsing) error {
+func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), ParsingBasePath)
 	connection, _, err := c.wsClient.Dial(requestURL, nil)
 	if err != nil {
@@ -86,7 +86,7 @@ func (c *Client) SubscribeNewParsingJob(parsingJobs chan job.Parsing) error {
 			case <-c.close:
 				return
 			default:
-				newParsingJob := job.Parsing{}
+				newParsingJob := jobs.Parsing{}
 				err := connection.ReadJSON(&newParsingJob)
 				if err != nil {
 					c.log.Error().Err(err).Msg("failed to read message socket")
@@ -101,38 +101,38 @@ func (c *Client) SubscribeNewParsingJob(parsingJobs chan job.Parsing) error {
 	return nil
 }
 
-func (c *Client) CreateDiscoveryJob(discoveryJob job.Discovery) (job.Discovery, error) {
-	body, err := json.Marshal(discoveryJob)
+func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
+	body, err := json.Marshal(job)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), DiscoveryBasePath)
 	resp, err := c.httpClient.Post(requestURL, JsonContentType, bytes.NewReader(body))
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	newJob := job.Discovery{}
+	newJob := jobs.Discovery{}
 	err = json.Unmarshal(responseBody, &newJob)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	return newJob, nil
+	return &newJob, nil
 }
 
-func (c *Client) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
+func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), DiscoveryBasePath, status))
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (c *Client) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 		return nil, err
 	}
 
-	jobList := make([]job.Discovery, 0)
+	jobList := make([]jobs.Discovery, 0)
 	err = json.Unmarshal(body, &jobList)
 	if err != nil {
 		return nil, err
@@ -157,39 +157,39 @@ func (c *Client) ListDiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	return jobList, nil
 }
 
-func (c *Client) GetDiscoveryJob(jobID string) (job.Discovery, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, jobID))
+func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, id))
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	discoveryJob := job.Discovery{}
-	err = json.Unmarshal(body, &discoveryJob)
+	job := jobs.Discovery{}
+	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	return discoveryJob, nil
+	return &job, nil
 }
 
-func (c *Client) UpdateDiscoveryJobState(jobID string, jobStatus job.Status) error {
-	requestBody := request.Status{Status: string(jobStatus)}
+func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
+	requestBody := request.Status{Status: string(status)}
 	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return err
 	}
 
-	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, jobID)
+	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, id)
 	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -205,63 +205,63 @@ func (c *Client) UpdateDiscoveryJobState(jobID string, jobStatus job.Status) err
 	return nil
 }
 
-func (c *Client) RequeueDiscoveryJob(jobID string) (job.Discovery, error) {
-	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), DiscoveryBasePath, jobID), JsonContentType, nil)
+func (c *Client) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
+	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), DiscoveryBasePath, id), JsonContentType, nil)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	discoveryJob := job.Discovery{}
-	err = json.Unmarshal(body, &discoveryJob)
+	job := jobs.Discovery{}
+	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return job.Discovery{}, err
+		return nil, err
 	}
 
-	return discoveryJob, nil
+	return &job, nil
 }
 
-func (c *Client) CreateParsingJob(parsingJob job.Parsing) (job.Parsing, error) {
-	body, err := json.Marshal(parsingJob)
+func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
+	body, err := json.Marshal(job)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), ParsingBasePath)
 	resp, err := c.httpClient.Post(requestURL, JsonContentType, bytes.NewReader(body))
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	newJob := job.Parsing{}
+	newJob := jobs.Parsing{}
 	err = json.Unmarshal(responseBody, &newJob)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	return newJob, nil
+	return &newJob, nil
 }
 
-func (c *Client) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
+func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), ParsingBasePath, status))
 	if err != nil {
 		return nil, err
@@ -277,7 +277,7 @@ func (c *Client) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 		return nil, err
 	}
 
-	jobList := make([]job.Parsing, 0)
+	jobList := make([]jobs.Parsing, 0)
 	err = json.Unmarshal(body, &jobList)
 	if err != nil {
 		return nil, err
@@ -286,39 +286,39 @@ func (c *Client) ListParsingJobs(status job.Status) ([]job.Parsing, error) {
 	return jobList, nil
 }
 
-func (c *Client) GetParsingJob(jobID string) (job.Parsing, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, jobID))
+func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, id))
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	parsingJob := job.Parsing{}
-	err = json.Unmarshal(body, &parsingJob)
+	job := jobs.Parsing{}
+	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	return parsingJob, nil
+	return &job, nil
 }
 
-func (c *Client) UpdateParsingJobState(jobID string, jobStatus job.Status) error {
-	requestBody := request.Status{Status: string(jobStatus)}
+func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
+	requestBody := request.Status{Status: string(status)}
 	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return err
 	}
 
-	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, jobID)
+	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, id)
 	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -334,29 +334,29 @@ func (c *Client) UpdateParsingJobState(jobID string, jobStatus job.Status) error
 	return nil
 }
 
-func (c *Client) RequeueParsingJob(jobID string) (job.Parsing, error) {
-	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), ParsingBasePath, jobID), JsonContentType, nil)
+func (c *Client) RequeueParsingJob(id string) (*jobs.Parsing, error) {
+	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), ParsingBasePath, id), JsonContentType, nil)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	parsingJob := job.Parsing{}
-	err = json.Unmarshal(body, &parsingJob)
+	job := jobs.Parsing{}
+	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return job.Parsing{}, err
+		return nil, err
 	}
 
-	return parsingJob, nil
+	return &job, nil
 }
 
 func (c *Client) Close() {
