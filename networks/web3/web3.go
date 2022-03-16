@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/events"
@@ -20,6 +21,7 @@ type Web3 struct {
 	ethClient *ethclient.Client
 	chainID   string
 	networkID string
+	close     chan struct{}
 }
 
 func NewWeb3(ctx context.Context, url string) (*Web3, error) {
@@ -42,9 +44,49 @@ func NewWeb3(ctx context.Context, url string) (*Web3, error) {
 		ethClient: ethClient,
 		chainID:   chainID.String(),
 		networkID: networkID.String(),
+		close:     make(chan struct{}),
 	}
 
 	return &w, nil
+}
+
+func (w *Web3) ChainID(ctx context.Context) (string, error) {
+	chainID, err := w.ethClient.ChainID(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return chainID.String(), nil
+}
+
+func (w *Web3) SubscribeToBlocks(ctx context.Context, blocks chan *big.Int) error {
+	headerChannel := make(chan *types.Header)
+	subscription, err := w.ethClient.SubscribeNewHead(ctx, headerChannel)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case header := <-headerChannel:
+				blocks <- header.Number
+			case <-w.close:
+				subscription.Unsubscribe()
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (w *Web3) GetLatestBlockHeight(ctx context.Context) (*big.Int, error) {
+	header, err := w.ethClient.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return header.Number, nil
 }
 
 func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]events.RawEvent, error) {
@@ -102,5 +144,6 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 }
 
 func (w *Web3) Close() {
+	close(w.close)
 	w.ethClient.Close()
 }

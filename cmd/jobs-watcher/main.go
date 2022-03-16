@@ -14,7 +14,7 @@ import (
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/queue/producer"
 	"github.com/NFT-com/indexer/service/client"
-	"github.com/NFT-com/indexer/watcher"
+	watcher "github.com/NFT-com/indexer/watcher/jobs"
 )
 
 func main() {
@@ -81,7 +81,7 @@ func run() error {
 		return fmt.Errorf("failed to create message producer: %w", err)
 	}
 
-	jobWatcher := watcher.NewJobWatcher(log, apiClient, messageProducer)
+	jobWatcher := watcher.NewWatcher(log, apiClient, messageProducer)
 
 	discoveryJobs := make(chan jobs.Discovery)
 	err = apiClient.SubscribeNewDiscoveryJob(discoveryJobs)

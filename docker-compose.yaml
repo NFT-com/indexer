@@ -36,12 +36,20 @@ services:
       - '8081:8081'
     depends_on:
       - postgres
-  watcher:
+  job-watcher:
     build:
       context: .
-      dockerfile: Dockerfile.watcher
+      dockerfile: Dockerfile.jobwatcher
     restart: always
     entrypoint: '/watcher -a api:8081 -u redis:6379'
     depends_on:
       - api
       - redis
+  chain-watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.chainwatcher
+    restart: always
+    entrypoint: '/watcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x4a537f61ef574153664c0dbc8c8f4b900cacbe5d -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type erc721'
+    depends_on:
+      - api

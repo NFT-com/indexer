@@ -1,4 +1,4 @@
-package watcher
+package jobs
 
 import (
 	"github.com/rs/zerolog"
@@ -8,15 +8,15 @@ import (
 	"github.com/NFT-com/indexer/service/client"
 )
 
-type Job struct {
+type Watcher struct {
 	log             zerolog.Logger
 	apiClient       *client.Client
 	messageProducer *producer.Producer
 	close           chan struct{}
 }
 
-func NewJobWatcher(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer) *Job {
-	j := Job{
+func NewWatcher(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer) *Watcher {
+	j := Watcher{
 		log:             log.With().Str("component", "watcher").Logger(),
 		apiClient:       apiClient,
 		messageProducer: messageProducer,
@@ -26,7 +26,7 @@ func NewJobWatcher(log zerolog.Logger, apiClient *client.Client, messageProducer
 	return &j
 }
 
-func (j *Job) Watch(discoveryJobs chan jobs.Discovery, parsingJobs chan jobs.Parsing) error {
+func (j *Watcher) Watch(discoveryJobs chan jobs.Discovery, parsingJobs chan jobs.Parsing) error {
 	for {
 		select {
 		case newJob := <-discoveryJobs:
@@ -45,11 +45,11 @@ func (j *Job) Watch(discoveryJobs chan jobs.Discovery, parsingJobs chan jobs.Par
 	}
 }
 
-func (j *Job) Close() {
+func (j *Watcher) Close() {
 	close(j.close)
 }
 
-func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
+func (j *Watcher) publishDiscoveryJob(newJob jobs.Discovery) error {
 	err := j.messageProducer.PublishDiscoveryJob(newJob)
 	if err != nil {
 		j.log.Error().Err(err).Msg("could not get publish discovery job")
@@ -65,7 +65,7 @@ func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
 	return nil
 }
 
-func (j *Job) publishParsingJob(newJob jobs.Parsing) error {
+func (j *Watcher) publishParsingJob(newJob jobs.Parsing) error {
 	err := j.messageProducer.PublishParsingJob(newJob)
 	if err != nil {
 		j.log.Error().Err(err).Msg("could not get publish parsing job")
