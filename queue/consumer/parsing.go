@@ -2,8 +2,8 @@ package consumer
 
 import (
 	"encoding/json"
-	"log"
 
+	"github.com/NFT-com/indexer/events"
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
@@ -16,13 +16,15 @@ type Parsing struct {
 	log        zerolog.Logger
 	dispatcher function.Dispatcher
 	apiClient  *client.Client
+	store      Store
 }
 
-func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher) (*Parsing, error) {
+func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher, store Store) (*Parsing, error) {
 	c := Parsing{
 		log:        log,
 		dispatcher: dispatcher,
 		apiClient:  apiClient,
+		store:      store,
 	}
 
 	return &c, nil
@@ -34,23 +36,13 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
-		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to unmarshal message")
-			return
-		}
-
-		d.log.Error().Err(err).Msg("failed to unmarshal message")
+		d.HandleError(delivery, err, "failed to unmarshal message")
 		return
 	}
 
 	storedJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
-		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
-			return
-		}
-
-		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
+		d.HandleError(delivery, err, "failed to retrieve parsing job")
 		return
 	}
 
@@ -64,31 +56,40 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
 	if err != nil {
-		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
-			return
-		}
-
-		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
+		d.HandleError(delivery, err, "failed to retrieve parsing job")
 		return
 	}
 
-	status := jobs.StatusFinished
 	lambdaOutput, err := d.dispatcher.Dispatch("parsing-85cd71d", payload)
 	if err != nil {
-		status = jobs.StatusFailed
-		d.log.Error().Err(err).Msg("failed to dispatch message")
-	}
-	log.Println(lambdaOutput)
-
-	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.Status(status))
-	if err != nil {
-		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
-			return
+		d.HandleError(delivery, err, "failed to dispatch message")
+		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		if err != nil {
+			d.HandleError(delivery, err, "failed to updating job state")
 		}
+		return
+	}
 
-		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
+	var jobResult jobs.ParsingResult
+	err = json.Unmarshal(lambdaOutput, &jobResult)
+	if err != nil {
+		d.HandleError(delivery, err, "failed unmarshal job result")
+		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		if err != nil {
+			d.HandleError(delivery, err, "failed to updating job state")
+		}
+		return
+	}
+
+	err = d.HandlerJobResult(jobResult)
+	if err != nil {
+		d.HandleError(delivery, err, "failed to handle job result")
+		return
+	}
+
+	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFinished)
+	if err != nil {
+		d.HandleError(delivery, err, "failed to updating job state")
 		return
 	}
 
@@ -96,5 +97,48 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	if err != nil {
 		d.log.Error().Err(err).Msg("failed to acknowledge message")
 		return
+	}
+}
+
+func (d *Parsing) HandlerJobResult(result jobs.ParsingResult) error {
+	for _, event := range result.RawEvents {
+		err := d.store.InsertRawEvent(event)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, event := range result.ParsedEvents {
+		switch event.Type {
+		case events.EventTypeMint:
+			err := d.store.InsertNewNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
+			if err != nil {
+				return err
+			}
+		case events.EventTypeUpdate, events.EventTypeBurn:
+			err := d.store.UpdateNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (d *Parsing) HandleError(delivery rmq.Delivery, err error, message string) {
+	if rejectErr := delivery.Reject(); rejectErr != nil {
+		log := d.log.Error()
+
+		if err != nil {
+			log = log.Err(err)
+		}
+
+		log.AnErr("reject_error", rejectErr).Msg(message)
+		return
+	}
+
+	if err != nil {
+		d.log.Error().Err(err).Msg(message)
 	}
 }

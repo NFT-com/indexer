@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,12 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/queue/consumer"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/service/postgres"
 )
 
 func main() {
@@ -39,6 +42,8 @@ func run() error {
 		flagAPIEndpoint          string
 		flagConsumerPrefetch     int64
 		flagConsumerPollDuration time.Duration
+		flagDBDriver             string
+		flagDBConnectionInfo     string
 		flagParsingQueueName     string
 		flagLambdaURL            string
 		flagLogLevel             string
@@ -53,6 +58,8 @@ func run() error {
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "amount of message to prefetch in the consumer")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second*20, "time for each consumer poll")
+	pflag.StringVar(&flagDBDriver, "driver", "postgres", "name of driver to use for database connection")
+	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", "parsing", "name of the queue for parsing")
 	pflag.StringVarP(&flagLambdaURL, "function-url", "f", "", "url for the custom lambda server on local testing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
@@ -99,7 +106,17 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	))
 
-	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher)
+	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
+	if err != nil {
+		return fmt.Errorf("failed to open SQL connection: %w", err)
+	}
+
+	postgresStore, err := postgres.NewStore(db)
+	if err != nil {
+		return fmt.Errorf("failed to create store: %v", err)
+	}
+
+	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher, postgresStore)
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
 	}

@@ -114,8 +114,7 @@ func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
 }
 
 func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(DiscoveryJobIDParamKey)
 
 	discoveryJob, err := h.jobController.GetDiscoveryJob(jobID)
 	if err != nil {
@@ -126,8 +125,7 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 }
 
 func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
-	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(DiscoveryJobIDParamKey)
 
 	var req request.Status
 	if err := ctx.Bind(&req); err != nil {
@@ -148,8 +146,7 @@ func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
 }
 
 func (h *Handler) RequeueDiscoveryJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(DiscoveryJobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(DiscoveryJobIDParamKey)
 
 	newJob, err := h.jobController.RequeueDiscoveryJob(jobID)
 	if err != nil {
@@ -198,8 +195,7 @@ func (h *Handler) ListParsingJobs(ctx echo.Context) error {
 }
 
 func (h *Handler) GetParsingJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(ParsingJobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(ParsingJobIDParamKey)
 
 	job, err := h.jobController.GetParsingJob(jobID)
 	if err != nil {
@@ -210,8 +206,7 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 }
 
 func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
-	rawJobID := ctx.Param(ParsingJobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(ParsingJobIDParamKey)
 
 	var req request.Status
 	if err := ctx.Bind(&req); err != nil {
@@ -232,8 +227,7 @@ func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 }
 
 func (h *Handler) RequeueParsingJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(ParsingJobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(ParsingJobIDParamKey)
 
 	job, err := h.jobController.RequeueParsingJob(jobID)
 	if err != nil {

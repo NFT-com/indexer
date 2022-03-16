@@ -6,8 +6,14 @@ const (
 	EventTypeBurn   = "burn"
 )
 
-type Event interface {
-	Type() string
+type Event struct {
+	Type        string `json:"type"`
+	ChainID     string `json:"chain_id"`
+	NetworkID   string `json:"network_id"`
+	NftID       string `json:"nft_id"`
+	Contract    string `json:"contract"`
+	FromAddress string `json:"from_address"`
+	ToAddress   string `json:"to_address"`
 }
 
 type RawEvent struct {

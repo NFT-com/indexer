@@ -1,5 +1,5 @@
 package function
 
 type Dispatcher interface {
-	Dispatch(name string, payload []byte) (interface{}, error)
+	Dispatch(name string, payload []byte) ([]byte, error)
 }

@@ -1,7 +1,6 @@
 package function
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -28,7 +27,7 @@ func NewClient(lambdaClient Lambda) (*Client, error) {
 	return &d, nil
 }
 
-func (d *Client) Dispatch(functionName string, payload []byte) (interface{}, error) {
+func (d *Client) Dispatch(functionName string, payload []byte) ([]byte, error) {
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,
@@ -47,11 +46,5 @@ func (d *Client) Dispatch(functionName string, payload []byte) (interface{}, err
 		return nil, errors.New("unexpected error running worker")
 	}
 
-	var lambdaOutput interface{}
-	err = json.Unmarshal(output.Payload, &lambdaOutput)
-	if err != nil {
-		return nil, err
-	}
-
-	return lambdaOutput, nil
+	return output.Payload, nil
 }

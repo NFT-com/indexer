@@ -4,8 +4,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/NFT-com/indexer/events"
-	"github.com/NFT-com/indexer/events/mint"
-	"github.com/NFT-com/indexer/events/update"
 )
 
 const (
@@ -27,7 +25,8 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		nftID := rawEvent.IndexData[2]
 		owner := rawEvent.IndexData[1]
 
-		m := mint.Mint{
+		m := events.Event{
+			Type:      events.EventTypeMint,
 			ChainID:   rawEvent.ChainID,
 			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,
@@ -39,7 +38,8 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 	case rawEvent.IndexData[1] == ZeroValueHash:
 		nftID := rawEvent.IndexData[2]
 
-		m := update.Update{
+		m := events.Event{
+			Type:      events.EventTypeBurn,
 			ChainID:   rawEvent.ChainID,
 			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,
@@ -52,7 +52,8 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		nftID := common.HexToHash(rawEvent.IndexData[2]).Big().String()
 		owner := common.HexToAddress(rawEvent.IndexData[1]).String()
 
-		m := update.Update{
+		m := events.Event{
+			Type:      events.EventTypeUpdate,
 			ChainID:   rawEvent.ChainID,
 			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,

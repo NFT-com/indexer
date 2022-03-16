@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/workers/parsing"
