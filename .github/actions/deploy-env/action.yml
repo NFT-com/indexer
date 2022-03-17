@@ -1,0 +1,68 @@
+name: Deploy Indexer Env
+description: Deploys the indexer infrastrcuture and apps to an environment
+inputs:
+  stage:
+    description: Indexer Environment to deploy on
+    required: true
+    default: dev
+  secrets:
+    description: Secrets
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 16.x
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ fromJSON(inputs.secrets).AWS_ACCESS_KEY_ID }}
+        aws-region: ${{ fromJSON(inputs.secrets).AWS_REGION }}
+        aws-secret-access-key: ${{ fromJSON(inputs.secrets).AWS_SECRET_ACCESS_KEY }}
+    - name: Login to AWS ECR
+      id: login_ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Install Pulumi CLI
+      uses: pulumi/setup-pulumi@v2
+    - name: Login to Pulumi backend
+      shell: bash
+      run: pulumi login s3://nftcom-pulumi-state
+    - name: Install Indexer Infra Deps
+      working-directory: infra
+      shell: bash
+      run: npm install
+    - name: Deploy Indexer Shared Infra
+      working-directory: infra
+      shell: bash
+      env:
+        STAGE: ${{ inputs.stage }}
+        PULUMI_CONFIG_PASSPHRASE: ""
+        AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
+        DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+      run: npm run deploy:shared
+    - name: Build Indexer Env File
+      shell: bash
+      working-directory: infra
+      env:
+        STAGE: ${{ inputs.stage }}
+        DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+      run: npm run build:indexer:env
+    - name: Build and Push Indexer Image(s)
+      shell: bash
+      env:
+        REPO: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.stage }}-indexer
+      run: |
+        export DOCKER_BUILDKIT=1
+        docker build . -f indexer.Dockerfile --build-arg BUILDKIT_INLINE_CACHE=1 --target release --cache-from ${{ env.REPO }}:deps --cache-from ${{ env.REPO }}:build -t ${{ env.REPO }}:latest -t ${{ env.REPO }}:${{ github.sha }}
+        docker push ${{ env.REPO }}:latest
+        docker push ${{ env.REPO }}:${{ github.sha }}
+    - name: Deploy Indexer Infra
+      shell: bash
+      working-directory: infra
+      env:
+        STAGE: ${{ inputs.stage }}
+        PULUMI_CONFIG_PASSPHRASE: ""
+        AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
+        ECR_REGISTRY: ${{ steps.login_ecr.outputs.registry }}
+      run: npm run deploy:indexer

@@ -1,0 +1,7 @@
+encryptionsalt: v1:qUKBgn2WrZA=:v1:YfEGaGspwCE6EEbu:0xEhgLkVbuWM7FjHbi8TyghdvNyLLQ==
+config:
+  nftcom:availabilityZones: us-east-1a,us-east-1b,us-east-1c
+  nftcom:ebInstance: t3.small
+  nftcom:ebAutoScaleMax: 2
+  nftcom:nodeEnv: staging
+  nftcom:logLevel: INFO
