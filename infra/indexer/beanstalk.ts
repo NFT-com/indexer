@@ -100,7 +100,7 @@ const createApplicationVersion = (
 ): aws.elasticbeanstalk.ApplicationVersion => {
   return new aws.elasticbeanstalk.ApplicationVersion('app_version_indexer', {
     application,
-    bucket: infraOutput.deployAppBucket,
+    bucket: infraOutput.deployIndexerAppBucket,
     key: appFilName,
   })
 }

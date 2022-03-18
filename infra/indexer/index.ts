@@ -41,7 +41,7 @@ const createAndUploadEBDeployFile = async (
   await archive.finalize()
 
   new aws.s3.BucketObject('default', {
-    bucket: infraOutput.deployAppBucket,
+    bucket: infraOutput.deployIndexerAppBucket,
     key: fileName,
     source: new pulumi.asset.FileAsset(file),
   })

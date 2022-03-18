@@ -23,7 +23,7 @@ const pulumiProgram = async (): Promise<Record<string, any> | void> => {
     assetBucket: asset.bucket,
     assetBucketRole: assetRole.arn,
     dbHost: dbMain.endpoint,
-    deployAppBucket: deployApp.bucket,
+    deployIndexerAppBucket: deployApp.bucket,
     indexerECRRepo: indexer.name,
     redisHost: cacheMain.cacheNodes[0].address,
     publicSubnetIds: vpc.publicSubnetIds,

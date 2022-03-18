@@ -4,7 +4,7 @@ export type SharedInfraOutput = {
   assetBucket: string
   assetBucketRole: string
   dbHost: string
-  deployAppBucket: string
+  deployIndexerAppBucket: string
   publicSubnets: string[]
   redisHost: string
   vpcId: string
