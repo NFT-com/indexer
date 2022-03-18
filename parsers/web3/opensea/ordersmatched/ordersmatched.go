@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks"
 )
 

@@ -3,9 +3,9 @@ package parsing
 import (
 	"context"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/rs/zerolog"
 
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"

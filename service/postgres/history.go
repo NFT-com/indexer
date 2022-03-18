@@ -3,8 +3,9 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/lib/pq"
+
+	"github.com/NFT-com/indexer/event"
 )
 
 func (s *Store) InsertHistory(event event.Event) error {
