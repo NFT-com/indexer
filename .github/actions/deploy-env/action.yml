@@ -56,7 +56,7 @@ runs:
         export DOCKER_BUILDKIT=1
         docker pull ${{ env.REPO }}:build || true
         docker build . -f indexer.Dockerfile --build-arg BUILDKIT_INLINE_CACHE=1 --target build --cache-from ${{ env.REPO }}:build -t ${{ env.REPO }}:build
-        docker build . -f indexer.Dockerfile --build-arg BUILDKIT_INLINE_CACHE=1 -target release -t ${{ env.REPO }}:latest -t ${{ env.REPO }}:${{ github.sha }} 
+        docker build . -f indexer.Dockerfile --build-arg BUILDKIT_INLINE_CACHE=1 --target release -t ${{ env.REPO }}:latest -t ${{ env.REPO }}:${{ github.sha }} 
         docker push ${{ env.REPO }}:build
         docker push ${{ env.REPO }}:latest
         docker push ${{ env.REPO }}:${{ github.sha }}
