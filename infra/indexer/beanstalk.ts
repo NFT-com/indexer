@@ -156,12 +156,12 @@ export const createEBInstance = (
         namespace: 'aws:autoscaling:launchconfiguration',
         name: 'RootVolumeType',
         value: 'gp2',
-      },
+      },/*   // disable custom health check endpoint until it is defined within app
       {
         namespace: 'aws:elasticbeanstalk:environment:process:default',
         name: 'HealthCheckPath',
         value: '/.well-known/apollo/server-health',
-      },
+      },*/
       {
         namespace: 'aws:elbv2:loadbalancer',
         name: 'SecurityGroups',

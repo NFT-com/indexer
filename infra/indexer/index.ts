@@ -19,7 +19,7 @@ const createAndUploadEBDeployFile = async (
   await pulumi.log.info('Create Elasticbeanstalk archive file with Dockerrun.aws.json...')
 
   const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:latest`
-  const dockerFile = {
+  /*const dockerFile = {
     AWSEBDockerrunVersion: '1',
     Image: {
       Name: ecrImage,
@@ -29,7 +29,30 @@ const createAndUploadEBDeployFile = async (
       ContainerPort: '8080',
       HostPort: '80',
     }],
+  }*/
+
+  const dockerFile = {
+    version: '3.7',
+    services: {
+      indexer: {
+        restart: 'always',
+        container_name: infraOutput.indexerECRRepo,
+        image: ecrImage,
+        depends_on: [
+          'nginx'
+      ]
+      },
+      nginx: {
+        restart: 'always',
+        container_name: 'nginx-indexer',
+        image: 'public.ecr.aws/nginx/nginx:latest',
+        ports: [
+          '80:80'
+        ],
+      }
+    }
   }
+
   const fileName = `${getResourceName('indexer')}-${new Date().toISOString()}.zip`
   const file = upath.joinSafe(__dirname, fileName)
   const output = fs.createWriteStream(file)
@@ -37,7 +60,7 @@ const createAndUploadEBDeployFile = async (
     zlib: { level: 9 },
   })
   archive.pipe(output)
-  archive.append(JSON.stringify(dockerFile), { name: 'Dockerrun.aws.json' })
+  archive.append(JSON.stringify(dockerFile), { name: 'docker-compose.yml' })
   await archive.finalize()
 
   new aws.s3.BucketObject('default', {
