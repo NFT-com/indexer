@@ -36,7 +36,7 @@ const createAssetRole = (bucketName: string): aws.iam.Role => {
     },
     inlinePolicies: [
       {
-        name: 'access-asset-bucket',
+        name: 'indexer-access-asset-bucket',
         policy: JSON.stringify(inlinePolicy),
       },
     ],
