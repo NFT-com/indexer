@@ -1,11 +1,9 @@
 package consumer
 
 import (
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 )
 
 type Store interface {
-	InsertRawEvent(event events.RawEvent) error
-	InsertNewNFT(network, chain, contract, id, owner string) error
-	UpdateNFT(network, chain, contract, id, owner string) error
+	InsertHistory(event event.Event) error
 }

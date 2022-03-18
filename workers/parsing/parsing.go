@@ -3,21 +3,26 @@ package parsing
 import (
 	"context"
 
+	"github.com/NFT-com/indexer/event"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"
-	"github.com/NFT-com/indexer/parsers/erc721/transfer"
+	"github.com/NFT-com/indexer/parsers"
 )
 
+type Initializer func(client networks.Network) (parsers.Parser, error)
+
 type Handler struct {
-	log zerolog.Logger
+	log         zerolog.Logger
+	initializer Initializer
 }
 
-func NewHandler(log zerolog.Logger) *Handler {
+func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 	h := Handler{
-		log: log.With().Str("component", "parsing_handler").Logger(),
+		log:         log.With().Str("component", "parsing_handler").Logger(),
+		initializer: initializer,
 	}
 
 	return &h
@@ -36,28 +41,26 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	}
 	defer network.Close()
 
-	parser := transfer.NewParser()
+	parser, err := h.initializer(network)
+	if err != nil {
+		return nil, err
+	}
 
 	rawEvents, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	parsedEvents := make([]events.Event, 0)
+	parsedEvents := make([]event.Event, 0)
 	for _, rawEvent := range rawEvents {
 		parsedEvent, err := parser.ParseRawEvent(rawEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to parse raw events")
+			log.Error().Err(err).Msg("failed to parse raw event")
 			return nil, err
 		}
 
 		parsedEvents = append(parsedEvents, parsedEvent)
 	}
 
-	jobResult := jobs.ParsingResult{
-		RawEvents:    rawEvents,
-		ParsedEvents: parsedEvents,
-	}
-
-	return jobResult, nil
+	return parsedEvents, nil
 }

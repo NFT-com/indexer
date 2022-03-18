@@ -1,9 +1,11 @@
 package consumer
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
@@ -60,7 +62,11 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	lambdaOutput, err := d.dispatcher.Dispatch("parsing-85cd71d", payload)
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%s-%s-%s", job.ChainType, job.StandardType, job.EventType)))
+	functionName := fmt.Sprintf("%x", h.Sum(nil))
+
+	lambdaOutput, err := d.dispatcher.Dispatch(functionName, payload)
 	if err != nil {
 		d.HandleError(delivery, err, "failed to dispatch message")
 		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
@@ -70,7 +76,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	var jobResult jobs.ParsingResult
+	var jobResult []event.Event
 	err = json.Unmarshal(lambdaOutput, &jobResult)
 	if err != nil {
 		d.HandleError(delivery, err, "failed unmarshal job result")
@@ -100,26 +106,11 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (d *Parsing) HandlerJobResult(result jobs.ParsingResult) error {
-	for _, event := range result.RawEvents {
-		err := d.store.InsertRawEvent(event)
+func (d *Parsing) HandlerJobResult(result []event.Event) error {
+	for _, e := range result {
+		err := d.store.InsertHistory(e)
 		if err != nil {
 			return err
-		}
-	}
-
-	for _, event := range result.ParsedEvents {
-		switch event.Type {
-		case events.EventTypeMint:
-			err := d.store.InsertNewNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
-			if err != nil {
-				return err
-			}
-		case events.EventTypeUpdate, events.EventTypeBurn:
-			err := d.store.UpdateNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
