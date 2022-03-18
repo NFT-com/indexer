@@ -11,9 +11,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/bootstrapper"
 	"github.com/NFT-com/indexer/networks/web3"
 	"github.com/NFT-com/indexer/service/client"
-	"github.com/NFT-com/indexer/watchers/chain"
 )
 
 func main() {
@@ -40,8 +40,10 @@ func run() error {
 		flagChainType    string
 		flagContract     string
 		flagEventType    string
+		flagEndIndex     int64
 		flagLogLevel     string
 		flagStandardType string
+		flagStartIndex   int64
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
@@ -49,9 +51,11 @@ func run() error {
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
 	pflag.StringVarP(&flagContract, "contract", "c", "", "contract to watch")
-	pflag.StringVarP(&flagEventType, "event", "e", "", "event type to watch")
+	pflag.StringVar(&flagEventType, "event", "", "event type to watch")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVar(&flagStandardType, "standard-type", "", "standard type")
+	pflag.Int64VarP(&flagStartIndex, "start-index", "s", 0, "start index")
+	pflag.Int64VarP(&flagEndIndex, "end-index", "e", 0, "end index")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -87,9 +91,8 @@ func run() error {
 		return fmt.Errorf("failed to start watchers: chain-url and chain-id are from different chains")
 	}
 
-	watcher, err := chain.NewWatcher(
+	bootstrapper := bootstrapper.NewBootstrapper(
 		log,
-		ctx,
 		apiClient,
 		network,
 		flagChainURL,
@@ -97,29 +100,36 @@ func run() error {
 		flagStandardType,
 		flagContract,
 		flagEventType,
+		flagStartIndex,
+		flagEndIndex,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create warcher: %w", err)
+		return fmt.Errorf("failed to create bootstrapper: %w", err)
 	}
 
+	done := make(chan struct{})
 	go func() {
-		log.Info().Msg("chain watcher starting")
+		log.Info().Msg("chain bootstrapper starting")
 
-		err = watcher.Watch(ctx)
+		err = bootstrapper.Bootstrap(ctx)
 		if err != nil {
 			failed <- err
 		}
 
-		log.Info().Msg("chain watcher done")
+		close(done)
 	}()
 
 	select {
-	case <-sig:
-		log.Info().Msg("chain watcher stopping")
+	case <-done:
+		log.Info().Msg("chain bootstrapper done")
 		network.Close()
-		watcher.Close()
+		bootstrapper.Close()
+	case <-sig:
+		log.Info().Msg("chain bootstrapper stopping")
+		network.Close()
+		bootstrapper.Close()
 	case err = <-failed:
-		log.Error().Err(err).Msg("chain watcher aborted")
+		log.Error().Err(err).Msg("chain bootstrapper aborted")
 		return err
 	}
 

@@ -44,7 +44,7 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watchers", "jobs watchers producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "name of the network for redis connection")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "url of the network for redis connection")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "database of the network for redis connection")
@@ -96,23 +96,23 @@ func run() error {
 	}
 
 	go func() {
-		log.Info().Msg("job watcher starting")
+		log.Info().Msg("job watchers starting")
 
 		err = jobWatcher.Watch(discoveryJobs, parsingJobs)
 		if err != nil {
 			failed <- fmt.Errorf("failed to watch jobs: %w", err)
 		}
 
-		log.Info().Msg("job watcher done")
+		log.Info().Msg("job watchers done")
 	}()
 
 	select {
 	case <-sig:
-		log.Info().Msg("job watcher stopping")
+		log.Info().Msg("job watchers stopping")
 		jobWatcher.Close()
 		apiClient.Close()
 	case err = <-failed:
-		log.Error().Err(err).Msg("job watcher aborted")
+		log.Error().Err(err).Msg("job watchers aborted")
 		return err
 	}
 

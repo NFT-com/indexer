@@ -17,7 +17,7 @@ type Watcher struct {
 
 func NewWatcher(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer) *Watcher {
 	j := Watcher{
-		log:             log.With().Str("component", "watcher").Logger(),
+		log:             log.With().Str("component", "watchers").Logger(),
 		apiClient:       apiClient,
 		messageProducer: messageProducer,
 		close:           make(chan struct{}),

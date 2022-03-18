@@ -33,7 +33,7 @@ func NewWatcher(
 	chainURL, chainType, standardType, contract, eventType string,
 ) (*Watcher, error) {
 	w := Watcher{
-		log:          log.With().Str("component", "watcher").Logger(),
+		log:          log.With().Str("component", "watchers").Logger(),
 		apiClient:    apiClient,
 		network:      network,
 		chainURL:     chainURL,
