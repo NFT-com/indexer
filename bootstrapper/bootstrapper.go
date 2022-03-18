@@ -3,18 +3,17 @@ package bootstrapper
 import (
 	"context"
 	"math/big"
-
-	"github.com/rs/zerolog"
+	"time"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/networks"
+	"github.com/rs/zerolog"
+
 	"github.com/NFT-com/indexer/service/client"
 )
 
 type Bootstrapper struct {
 	log          zerolog.Logger
 	apiClient    *client.Client
-	network      networks.Network
 	chainURL     string
 	chainType    string
 	standardType string
@@ -28,14 +27,12 @@ type Bootstrapper struct {
 func NewBootstrapper(
 	log zerolog.Logger,
 	apiClient *client.Client,
-	network networks.Network,
 	chainURL, chainType, standardType, contract, eventType string,
 	startIndex, endIndex int64,
 ) *Bootstrapper {
 	b := Bootstrapper{
 		log:          log.With().Str("component", "bootstrapper").Logger(),
 		apiClient:    apiClient,
-		network:      network,
 		chainURL:     chainURL,
 		chainType:    chainType,
 		standardType: standardType,
@@ -60,10 +57,26 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 				return nil
 			}
 
-			err := b.publishParsingJob(ctx, big.NewInt(index))
+			if index%1000 == 0 {
+				b.log.Info().Int64("index", index).Msg("new blocks")
+			}
+
+			job := jobs.Parsing{
+				ChainURL:     b.chainURL,
+				ChainType:    b.chainType,
+				BlockNumber:  big.NewInt(index).String(),
+				Address:      b.contract,
+				StandardType: b.standardType,
+				EventType:    b.eventType,
+			}
+
+			start := time.Now()
+			_, err := b.apiClient.CreateParsingJob(job)
 			if err != nil {
+				b.log.Error().Err(err).Str("block", job.BlockNumber).Msg("failed create parsing job")
 				return err
 			}
+			b.log.Info().Str("request", time.Now().Sub(start).String()).Msg("time")
 
 			index++
 		}
@@ -71,30 +84,6 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 }
 
 func (b *Bootstrapper) publishParsingJob(ctx context.Context, block *big.Int) error {
-	events, err := b.network.BlockEvents(ctx, block.String(), b.eventType, b.contract)
-	if err != nil {
-		b.log.Error().Err(err).Str("block", block.String()).Msg("failed to get block events")
-		return err
-	}
-
-	if len(events) == 0 {
-		return nil
-	}
-
-	job := jobs.Parsing{
-		ChainURL:     b.chainURL,
-		ChainType:    b.chainType,
-		BlockNumber:  block.String(),
-		Address:      b.contract,
-		StandardType: b.standardType,
-		EventType:    b.eventType,
-	}
-
-	_, err = b.apiClient.CreateParsingJob(job)
-	if err != nil {
-		b.log.Error().Err(err).Str("block", block.String()).Msg("failed create parsing job")
-		return err
-	}
 
 	return nil
 }

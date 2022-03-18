@@ -94,7 +94,6 @@ func run() error {
 	bootstrapper := bootstrapper.NewBootstrapper(
 		log,
 		apiClient,
-		network,
 		flagChainURL,
 		flagChainType,
 		flagStandardType,
