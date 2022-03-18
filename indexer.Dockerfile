@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN go build -o /indexer ./cmd/indexer
 
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base-debian10 as release
 WORKDIR /
 COPY --from=build /indexer /indexer
 USER nonroot:nonroot

@@ -35,8 +35,8 @@ export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void =
 const main = async (): Promise<any> => {
   const args = process.argv.slice(2)
   const deployShared = args?.[0] === 'deploy:shared' || false
-  const deployIndexer = args?.[0] === 'deploy:indexer' || false
   const buildIndexerEnv = args?.[0] === 'indexer:env' || false
+  const deployIndexer = args?.[0] === 'deploy:indexer' || false
 
   if (deployShared) {
     return createSharedInfra()
