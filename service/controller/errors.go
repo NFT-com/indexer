@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	ErrJobStateCannotBeChanged = errors.New("jobs state cannot be changed")
+	ErrJobStateCannotBeChanged = errors.New("job state cannot be changed")
 )
