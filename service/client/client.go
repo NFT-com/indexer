@@ -61,7 +61,7 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) err
 				newDiscoveryJob := jobs.Discovery{}
 				err := connection.ReadJSON(&newDiscoveryJob)
 				if err != nil {
-					c.log.Error().Err(err).Msg("failed to read message socket")
+					c.log.Error().Err(err).Msg("could not read message socket")
 					return
 				}
 
@@ -89,7 +89,7 @@ func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 				newParsingJob := jobs.Parsing{}
 				err := connection.ReadJSON(&newParsingJob)
 				if err != nil {
-					c.log.Error().Err(err).Msg("failed to read message socket")
+					c.log.Error().Err(err).Msg("could not read message socket")
 					return
 				}
 
