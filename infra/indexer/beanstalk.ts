@@ -82,7 +82,7 @@ const createInstanceProfileRole = (): aws.iam.Role => {
 const createInstanceProfile = (): aws.iam.InstanceProfile => {
   const role = createInstanceProfileRole()
   return new aws.iam.InstanceProfile('profile_indexer_ebec2', {
-    name: getResourceName('indexer-eb-ec2'),
+    name: getResourceName('indexer-eb-ec2-profile-role'),
     role: role.name,
   })
 }
