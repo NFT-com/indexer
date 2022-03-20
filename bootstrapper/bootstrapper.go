@@ -3,7 +3,6 @@ package bootstrapper
 import (
 	"context"
 	"math/big"
-	"time"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/rs/zerolog"
@@ -57,10 +56,6 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 				return nil
 			}
 
-			if index%1000 == 0 {
-				b.log.Info().Int64("index", index).Msg("new blocks")
-			}
-
 			job := jobs.Parsing{
 				ChainURL:     b.chainURL,
 				ChainType:    b.chainType,
@@ -70,13 +65,11 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 				EventType:    b.eventType,
 			}
 
-			start := time.Now()
 			_, err := b.apiClient.CreateParsingJob(job)
 			if err != nil {
 				b.log.Error().Err(err).Str("block", job.BlockNumber).Msg("failed create parsing job")
 				return err
 			}
-			b.log.Info().Str("request", time.Now().Sub(start).String()).Msg("time")
 
 			index++
 		}
