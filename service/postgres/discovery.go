@@ -23,7 +23,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
-func (s *Store) DiscoveryJobs(status job.Status) ([]job.Discovery, error) {
+func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	query := s.sqlBuilder.
 		Select(discoveryJobsTableColumns...).
 		From(discoveryJobsTableName)
@@ -41,6 +41,7 @@ func (s *Store) DiscoveryJobs(status job.Status) ([]job.Discovery, error) {
 	for result.Next() && result.Err() == nil {
 		var job jobs.Discovery
 
+		rawAddresses := make([]byte, 0)
 		err = result.Scan(
 			&job.ID,
 			&job.ChainURL,
