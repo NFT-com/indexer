@@ -34,8 +34,10 @@ func ParseStatus(rawStatus string) (Status, error) {
 		return Status(rawStatus), nil
 	}
 
-	_, hasStatus := statusMap[strings.ToLower(rawStatus)]
-	if !hasStatus {
+	rawStatus = strings.ToLower(rawStatus)
+
+	_, exists := statusMap[rawStatus]
+	if !exists {
 		return "", ErrStatusNotFound
 	}
 

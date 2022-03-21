@@ -18,13 +18,16 @@ import (
 	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/service/api"
-	"github.com/NFT-com/indexer/service/controller"
+	"github.com/NFT-com/indexer/service/handler"
 	"github.com/NFT-com/indexer/service/postgres"
+)
+
+const (
+	DatabaseDriver = "postgres"
 )
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Printf("failure: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -39,13 +42,11 @@ func run() error {
 	// Command line parameter initialization.
 	var (
 		flagPort             string
-		flagDBDriver         string
 		flagDBConnectionInfo string
 		flagLogLevel         string
 	)
 
 	pflag.StringVarP(&flagPort, "port", "p", "8081", "server port")
-	pflag.StringVar(&flagDBDriver, "driver", "postgres", "name of driver to use for database connection")
 	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
@@ -55,7 +56,8 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Error().Err(err).Msg("could not parse log level")
+		return err
 	}
 	log = log.Level(level)
 	eLog := lecho.From(log)
@@ -66,18 +68,20 @@ func run() error {
 	server.Logger = eLog
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
-	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
+	db, err := sql.Open(DatabaseDriver, flagDBConnectionInfo)
 	if err != nil {
-		return fmt.Errorf("could not open SQL connection: %w", err)
+		log.Error().Err(err).Msg("could not open SQL connection")
+		return err
 	}
 
-	postgresStore, err := postgres.NewStore(db)
+	store, err := postgres.NewStore(db)
 	if err != nil {
-		return fmt.Errorf("could not create store: %v", err)
+		log.Error().Err(err).Msg("could not create store")
+		return err
 	}
 
 	broadcaster := melody.New()
-	businessController := controller.NewController(postgresStore, broadcaster)
+	businessController := handler.New(store, broadcaster)
 
 	apiHandler := api.NewHandler(broadcaster, businessController)
 	apiHandler.ApplyRoutes(server)
@@ -89,7 +93,7 @@ func run() error {
 
 		err = server.Start(fmt.Sprint(":", flagPort))
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Warn().Err(err).Msg("dispatcher server failed")
+			log.Warn().Err(err).Msg("jobs api server failed")
 			failed <- err
 			return
 		}

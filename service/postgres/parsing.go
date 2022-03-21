@@ -9,8 +9,8 @@ import (
 
 func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	_, err := s.sqlBuilder.
-		Insert(ParsingJobsDBName).
-		Columns(ParsingJobsTableColumns...).
+		Insert(parsingJobsTableName).
+		Columns(parsingJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
 		Exec()
 
@@ -23,8 +23,8 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 
 func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	query := s.sqlBuilder.
-		Select(ParsingJobsTableColumns...).
-		From(ParsingJobsDBName)
+		Select(parsingJobsTableColumns...).
+		From(parsingJobsTableName)
 
 	if status != "" {
 		query = query.Where("status = ?", status)
@@ -61,8 +61,8 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 
 func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	result, err := s.sqlBuilder.
-		Select(ParsingJobsTableColumns...).
-		From(ParsingJobsDBName).
+		Select(parsingJobsTableColumns...).
+		From(parsingJobsTableName).
 		Where("id = ?", jobID).
 		Query()
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 
 func (s *Store) UpdateParsingJobState(jobID jobs.ID, jobStatus jobs.Status) error {
 	res, err := s.sqlBuilder.
-		Update(ParsingJobsDBName).
+		Update(parsingJobsTableName).
 		Where("id = ?", jobID).
 		Set("status", jobStatus).
 		Set("updated_at", time.Now()).

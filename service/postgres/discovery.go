@@ -6,21 +6,17 @@ import (
 	"time"
 
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/lib/pq"
 )
 
 func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
-	rawAddresses, err := json.Marshal(job.Addresses)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.sqlBuilder.
-		Insert(DiscoveryJobsDBName).
-		Columns(DiscoveryJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, rawAddresses, job.StandardType, job.Status).
+	_, err := s.sqlBuilder.
+		Insert(discoveryJobsTableName).
+		Columns(discoveryJobsTableColumns...).
+		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status).
 		Exec()
 	if err != nil {
-		return fmt.Errorf("could not create discovery job: %w", err)
+		return fmt.Errorf("could not create discovery job: %v", err)
 	}
 
 	return nil
@@ -28,8 +24,8 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 
 func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	query := s.sqlBuilder.
-		Select(DiscoveryJobsTableColumns...).
-		From(DiscoveryJobsDBName)
+		Select(discoveryJobsTableColumns...).
+		From(discoveryJobsTableName)
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
@@ -43,21 +39,15 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	for result.Next() && result.Err() == nil {
 		var job jobs.Discovery
 
-		rawAddresses := make([]byte, 0)
 		err = result.Scan(
 			&job.ID,
 			&job.ChainURL,
 			&job.ChainType,
 			&job.BlockNumber,
-			&rawAddresses,
+			pq.Array(&job.Addresses),
 			&job.StandardType,
 			&job.Status,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("could not retrieve discovery job list: %v", err)
-		}
-
-		err = json.Unmarshal(rawAddresses, &job.Addresses)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve discovery job list: %v", err)
 		}
@@ -70,8 +60,8 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 
 func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	result, err := s.sqlBuilder.
-		Select(DiscoveryJobsTableColumns...).
-		From(DiscoveryJobsDBName).
+		Select(discoveryJobsTableColumns...).
+		From(discoveryJobsTableName).
 		Where("id = ?", jobID).
 		Query()
 	if err != nil {
@@ -109,7 +99,7 @@ func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 
 func (s *Store) UpdateDiscoveryJobState(jobID jobs.ID, jobStatus jobs.Status) error {
 	res, err := s.sqlBuilder.
-		Update(DiscoveryJobsDBName).
+		Update(discoveryJobsTableName).
 		Where("id = ?", jobID).
 		Set("status", jobStatus).
 		Set("updated_at", time.Now()).
