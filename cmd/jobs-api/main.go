@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/NFT-com/indexer/service/validator"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
