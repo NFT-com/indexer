@@ -102,7 +102,15 @@ func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 }
 
 func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
-	body, err := json.Marshal(job)
+	req := request.Discovery{
+		ChainURL:     job.ChainURL,
+		ChainType:    job.ChainType,
+		BlockNumber:  job.BlockNumber,
+		Addresses:    job.Addresses,
+		StandardType: job.StandardType,
+	}
+
+	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +239,16 @@ func (c *Client) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
 }
 
 func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
-	body, err := json.Marshal(job)
+	req := request.Parsing{
+		ChainURL:     job.ChainURL,
+		ChainType:    job.ChainType,
+		BlockNumber:  job.BlockNumber,
+		Address:      job.Address,
+		StandardType: job.StandardType,
+		EventType:    job.EventType,
+	}
+
+	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
