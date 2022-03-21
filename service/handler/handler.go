@@ -27,7 +27,7 @@ func New(store JobsStore, broadcaster *melody.Melody) *Handler {
 func (c *Handler) BroadcastMessage(handler string, message interface{}) error {
 	rawMessage, err := json.Marshal(message)
 	if err != nil {
-		return fmt.Errorf("could not marshal message: %v", err)
+		return fmt.Errorf("could not marshal message: %w", err)
 	}
 
 	err = c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
@@ -36,13 +36,13 @@ func (c *Handler) BroadcastMessage(handler string, message interface{}) error {
 		return keys.HasHandler(handler)
 	})
 	if err != nil {
-		return fmt.Errorf("could not broadcast message: %v", err)
+		return fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return nil
 }
 
-func (c *Handler) ValidateStatusSwitch(currentStatus, newStatus jobs.Status) error {
+func (c *Handler) validateStatusSwitch(currentStatus, newStatus jobs.Status) error {
 	switch currentStatus {
 	case jobs.StatusCreated:
 		if newStatus != jobs.StatusCanceled && newStatus != jobs.StatusQueued {

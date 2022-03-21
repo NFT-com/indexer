@@ -8,18 +8,20 @@ import (
 const (
 	jobIDParamKey = "id"
 
-	StatusQueryKey = "status"
+	statusQueryKey = "status"
 )
 
 type Handler struct {
 	wsHandler *melody.Melody
 	jobs      JobsHandler
+	validator Validator
 }
 
-func NewHandler(wsHandler *melody.Melody, jobs JobsHandler) *Handler {
+func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator Validator) *Handler {
 	s := Handler{
 		wsHandler: wsHandler,
 		jobs:      jobs,
+		validator: validator,
 	}
 
 	return &s

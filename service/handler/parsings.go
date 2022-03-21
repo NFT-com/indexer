@@ -15,12 +15,12 @@ func (c *Handler) CreateParsingJob(parsing jobs.Parsing) (*jobs.Parsing, error) 
 
 	err := c.store.CreateParsingJob(parsing)
 	if err != nil {
-		return nil, fmt.Errorf("could not create parsing job: %v", err)
+		return nil, fmt.Errorf("could not create parsing job: %w", err)
 	}
 
 	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, parsing)
 	if err != nil {
-		return nil, fmt.Errorf("could not broadcast message: %v", err)
+		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return &parsing, nil
@@ -29,7 +29,7 @@ func (c *Handler) CreateParsingJob(parsing jobs.Parsing) (*jobs.Parsing, error) 
 func (c *Handler) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	jobs, err := c.store.ParsingJobs(status)
 	if err != nil {
-		return nil, fmt.Errorf("could not get parsing jobs: %v", err)
+		return nil, fmt.Errorf("could not get parsing jobs: %w", err)
 	}
 
 	return jobs, nil
@@ -38,7 +38,7 @@ func (c *Handler) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 func (c *Handler) GetParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	job, err := c.store.ParsingJob(jobID)
 	if err != nil {
-		return nil, fmt.Errorf("could not get parsing job: %v", err)
+		return nil, fmt.Errorf("could not get parsing job: %w", err)
 	}
 
 	return job, nil
@@ -47,17 +47,17 @@ func (c *Handler) GetParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 func (c *Handler) UpdateParsingJobState(jobID jobs.ID, newStatus jobs.Status) error {
 	job, err := c.store.ParsingJob(jobID)
 	if err != nil {
-		return fmt.Errorf("could not get parsing job: %v", err)
+		return fmt.Errorf("could not get parsing job: %w", err)
 	}
 
-	err = c.ValidateStatusSwitch(job.Status, newStatus)
+	err = c.validateStatusSwitch(job.Status, newStatus)
 	if err != nil {
-		return fmt.Errorf("could not create parsing job: %v", err)
+		return fmt.Errorf("could not create parsing job: %w", err)
 	}
 
 	err = c.store.UpdateParsingJobState(jobID, newStatus)
 	if err != nil {
-		return fmt.Errorf("could not update job state: %v", err)
+		return fmt.Errorf("could not update job state: %w", err)
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (c *Handler) UpdateParsingJobState(jobID jobs.ID, newStatus jobs.Status) er
 func (c *Handler) RequeueParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	job, err := c.store.ParsingJob(jobID)
 	if err != nil {
-		return nil, fmt.Errorf("could not get parsing job: %v", err)
+		return nil, fmt.Errorf("could not get parsing job: %w", err)
 	}
 
 	job.ID = uuid.New().String()
@@ -74,12 +74,12 @@ func (c *Handler) RequeueParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 
 	err = c.store.CreateParsingJob(*job)
 	if err != nil {
-		return nil, fmt.Errorf("could not create parsing job: %v", err)
+		return nil, fmt.Errorf("could not create parsing job: %w", err)
 	}
 
 	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, job)
 	if err != nil {
-		return nil, fmt.Errorf("could not broadcast message: %v", err)
+		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return job, nil

@@ -1,26 +1,22 @@
 package request
 
 type Discovery struct {
-	ID            string   `json:"id"`
-	ChainURL      string   `json:"chain_url"`
-	ChainType     string   `json:"chain_type"`
-	BlockNumber   string   `json:"block_number"`
-	Addresses     []string `json:"addresses"`
-	InterfaceType string   `json:"interface_type"`
-	Status        string   `json:"status"`
+	ChainURL      string   `json:"chain_url" validate:"required"`
+	ChainType     string   `json:"chain_type" validate:"required"`
+	BlockNumber   string   `json:"block_number" validate:"required,numeric"`
+	Addresses     []string `json:"addresses" validate:"required,dive,eth_addr"`
+	InterfaceType string   `json:"interface_type" validate:"required"`
 }
 
 type Parsing struct {
-	ID            string `json:"id"`
-	ChainURL      string `json:"chain_url"`
-	ChainType     string `json:"chain_type"`
-	BlockNumber   string `json:"block_number"`
-	Address       string `json:"address"`
-	InterfaceType string `json:"interface_type"`
-	EventType     string `json:"event_type"`
-	Status        string `json:"status"`
+	ChainURL      string `json:"chain_url" validate:"required"`
+	ChainType     string `json:"chain_type" validate:"required"`
+	BlockNumber   string `json:"block_number" validate:"required,numeric"`
+	Address       string `json:"address" validate:"required,eth_addr"`
+	InterfaceType string `json:"interface_type" validate:"required"`
+	EventType     string `json:"event_type" validate:"required"`
 }
 
 type Status struct {
-	Status string `json:"status"`
+	Status string `json:"status"  validate:"required"`
 }

@@ -26,6 +26,11 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 		return unpackError(err)
 	}
 
+	err = h.validator.Request(req)
+	if err != nil {
+		return validateError(err)
+	}
+
 	job := jobs.Discovery{
 		ChainURL:     req.ChainURL,
 		ChainType:    req.ChainType,
@@ -43,7 +48,7 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 }
 
 func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
-	rawStatus := ctx.QueryParam(StatusQueryKey)
+	rawStatus := ctx.QueryParam(statusQueryKey)
 	status, err := jobs.ParseStatus(rawStatus)
 	if err != nil {
 		return parsingError(err)
@@ -77,6 +82,11 @@ func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
 	err := ctx.Bind(&req)
 	if err != nil {
 		return unpackError(err)
+	}
+
+	err = h.validator.Request(req)
+	if err != nil {
+		return validateError(err)
 	}
 
 	newState, err := jobs.ParseStatus(req.Status)

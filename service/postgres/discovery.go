@@ -16,7 +16,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status).
 		Exec()
 	if err != nil {
-		return fmt.Errorf("could not create discovery job: %v", err)
+		return fmt.Errorf("could not create discovery job: %w", err)
 	}
 
 	return nil
@@ -32,7 +32,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 
 	result, err := query.Query()
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve discovery job list: %v", err)
+		return nil, fmt.Errorf("could not retrieve discovery job list: %w", err)
 	}
 
 	jobList := make([]jobs.Discovery, 0)
@@ -49,7 +49,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 			&job.Status,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("could not retrieve discovery job list: %v", err)
+			return nil, fmt.Errorf("could not retrieve discovery job list: %w", err)
 		}
 
 		jobList = append(jobList, job)
@@ -69,7 +69,7 @@ func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	}
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve discovery job: %v", ErrResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve discovery job: %w", ErrResourceNotFound)
 	}
 
 	var job jobs.Discovery
@@ -86,12 +86,12 @@ func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve discovery job: %v", err)
+		return nil, fmt.Errorf("could not retrieve discovery job: %w", err)
 	}
 
 	err = json.Unmarshal(rawAddresses, &job.Addresses)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve discovery job: %v", err)
+		return nil, fmt.Errorf("could not retrieve discovery job: %w", err)
 	}
 
 	return &job, nil
@@ -105,16 +105,16 @@ func (s *Store) UpdateDiscoveryJobState(jobID jobs.ID, jobStatus jobs.Status) er
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {
-		return fmt.Errorf("could not update discovery job state: %v", err)
+		return fmt.Errorf("could not update discovery job state: %w", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("could not update discovery job state: %v", err)
+		return fmt.Errorf("could not update discovery job state: %w", err)
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update discovery job state: %v", ErrResourceNotFound)
+		return fmt.Errorf("could not update discovery job state: %w", ErrResourceNotFound)
 	}
 
 	return nil

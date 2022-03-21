@@ -15,7 +15,7 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 		Exec()
 
 	if err != nil {
-		return fmt.Errorf("could not create parsing job: %v", err)
+		return fmt.Errorf("could not create parsing job: %w", err)
 	}
 
 	return nil
@@ -32,7 +32,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 
 	result, err := query.Query()
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve parsing job list: %v", err)
+		return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)
 	}
 
 	jobList := make([]jobs.Parsing, 0)
@@ -50,7 +50,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 		)
 
 		if err != nil {
-			return nil, fmt.Errorf("could not retrieve parsing job list: %v", err)
+			return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)
 		}
 
 		jobList = append(jobList, job)
@@ -66,11 +66,11 @@ func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 		Where("id = ?", jobID).
 		Query()
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve parsing job: %v", err)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
 	}
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve parsing job: %v", ErrResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", ErrResourceNotFound)
 	}
 
 	var job jobs.Parsing
@@ -86,7 +86,7 @@ func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve parsing job: %v", err)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
 	}
 
 	return &job, nil
@@ -101,16 +101,16 @@ func (s *Store) UpdateParsingJobState(jobID jobs.ID, jobStatus jobs.Status) erro
 		Exec()
 
 	if err != nil {
-		return fmt.Errorf("could not update parsing jobs state: %v", err)
+		return fmt.Errorf("could not update parsing jobs state: %w", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("could not update parsing jobs state: %v", err)
+		return fmt.Errorf("could not update parsing jobs state: %w", err)
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update parsing jobs state: %v", ErrResourceNotFound)
+		return fmt.Errorf("could not update parsing jobs state: %w", ErrResourceNotFound)
 	}
 
 	return nil
