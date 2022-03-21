@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/NFT-com/indexer/service/validator"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
@@ -23,11 +24,12 @@ import (
 )
 
 const (
-	DatabaseDriver = "postgres"
+	databaseDriver = "postgres"
 )
 
 func main() {
-	if err := run(); err != nil {
+	err := run()
+	if err != nil {
 		os.Exit(1)
 	}
 
@@ -68,7 +70,7 @@ func run() error {
 	server.Logger = eLog
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
-	db, err := sql.Open(DatabaseDriver, flagDBConnectionInfo)
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
@@ -83,7 +85,9 @@ func run() error {
 	broadcaster := melody.New()
 	businessController := handler.New(store, broadcaster)
 
-	apiHandler := api.NewHandler(broadcaster, businessController)
+	validator := validator.New()
+
+	apiHandler := api.NewHandler(broadcaster, businessController, validator)
 	apiHandler.ApplyRoutes(server)
 
 	failed := make(chan error)
