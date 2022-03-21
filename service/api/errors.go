@@ -14,6 +14,10 @@ func validateError(err error) *echo.HTTPError {
 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 }
 
+func validateError(err error) *echo.HTTPError {
+	return echo.NewHTTPError(http.StatusBadRequest, err)
+}
+
 func parsingError(err error) *echo.HTTPError {
 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 }
