@@ -35,6 +35,149 @@ const createEBRole = (): aws.iam.Role => {
 }
 
 const createInstanceProfileRole = (): aws.iam.Role => {
+  
+  const policy = new aws.iam.Policy('policy_indexer_sam', {
+    description: 'SAM Policy for Indexer',
+    policy: {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Sid: 'CloudFormationTemplate',
+          Effect: 'Allow',
+          Action: [
+              'cloudformation:CreateChangeSet'
+          ],
+          Resource: [
+              'arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31'
+          ]
+        },
+        {
+          Sid: 'CloudFormationStack',
+          Effect: 'Allow',
+          Action: [
+              'cloudformation:CreateChangeSet',
+              'cloudformation:CreateStack',
+              'cloudformation:DeleteStack',
+              'cloudformation:DescribeChangeSet',
+              'cloudformation:DescribeStackEvents',
+              'cloudformation:DescribeStacks',
+              'cloudformation:ExecuteChangeSet',
+              'cloudformation:GetTemplateSummary',
+              'cloudformation:ListStackResources',
+              'cloudformation:UpdateStack'
+          ],
+          Resource: [
+              'arn:aws:cloudformation:*:016437323894:stack/*'
+          ]
+      },
+      {
+          Sid: 'S3',
+          Effect: 'Allow',
+          Action: [
+              's3:CreateBucket',
+              's3:GetObject',
+              's3:PutObject'
+          ],
+          Resource: [
+              'arn:aws:s3:::*/*'
+          ]
+      },
+      {
+          Sid: 'ECRRepository',
+          Effect: 'Allow',
+          Action: [
+              'ecr:BatchCheckLayerAvailability',
+              'ecr:BatchGetImage',
+              'ecr:CompleteLayerUpload',
+              'ecr:CreateRepository',
+              'ecr:DeleteRepository',
+              'ecr:DescribeImages',
+              'ecr:DescribeRepositories',
+              'ecr:GetDownloadUrlForLayer',
+              'ecr:GetRepositoryPolicy',
+              'ecr:InitiateLayerUpload',
+              'ecr:ListImages',
+              'ecr:PutImage',
+              'ecr:SetRepositoryPolicy',
+              'ecr:UploadLayerPart'
+          ],
+          Resource: [
+              `arn:aws:ecr:*:${process.env.AWS_ACCOUNT_ID}:repository/*`
+          ]
+      },
+      {
+          Sid: 'ECRAuthToken',
+          Effect: 'Allow',
+          Action: [
+              'ecr:GetAuthorizationToken'
+          ],
+          Resource: [
+              '*'
+          ]
+      },
+      {
+          Sid: 'Lambda',
+          Effect: 'Allow',
+          Action: [
+              'lambda:AddPermission',
+              'lambda:CreateFunction',
+              'lambda:DeleteFunction',
+              'lambda:GetFunction',
+              'lambda:GetFunctionConfiguration',
+              'lambda:ListTags',
+              'lambda:RemovePermission',
+              'lambda:TagResource',
+              'lambda:UntagResource',
+              'lambda:UpdateFunctionCode',
+              'lambda:UpdateFunctionConfiguration'
+          ],
+          Resource: [
+              `arn:aws:lambda:*:${process.env.AWS_ACCOUNT_ID}:function:*`
+          ]
+      },
+      {
+          Sid: 'IAM',
+          Effect: 'Allow',
+          Action: [
+              'iam:AttachRolePolicy',
+              'iam:DeleteRole',
+              'iam:DetachRolePolicy',
+              'iam:GetRole',
+              'iam:TagRole'
+          ],
+          Resource: [
+              `'arn:aws:iam::${process.env.AWS_ACCOUNT_ID}:role/*`
+          ]
+      },
+      {
+          Sid: 'IAMPassRole',
+          Effect: 'Allow',
+          Action: 'iam:PassRole',
+          Resource: '*',
+          Condition: {
+              StringEquals: {
+                  'iam:PassedToService': 'lambda.amazonaws.com'
+              }
+          }
+      },
+      {
+          Sid: 'APIGateway',
+          Effect: 'Allow',
+          Action: [
+              'apigateway:DELETE',
+              'apigateway:GET',
+              'apigateway:PATCH',
+              'apigateway:POST',
+              'apigateway:PUT'
+          ],
+          Resource: [
+              'arn:aws:apigateway:*::*'
+          ]
+      }
+      ]
+    }
+  })
+  
   const role = new aws.iam.Role('role_indexer_ec2eb', {
     name: getResourceName('indexer-eb-ec2.us-east-1'),
     description: 'Role for Indexer EC2 instance managed by EB',
@@ -74,6 +217,10 @@ const createInstanceProfileRole = (): aws.iam.Role => {
   new aws.iam.RolePolicyAttachment('policy_indexer_ec2eb_ssmauto', {
     role: role.name,
     policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole',
+  })
+  new aws.iam.RolePolicyAttachment('policy_indexer_ec2eb_sam', {
+    role: role.name,
+    policyArn: policy.arn,
   })
 
   return role
