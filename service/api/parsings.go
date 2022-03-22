@@ -65,8 +65,7 @@ func (h *Handler) ListParsingJobs(ctx echo.Context) error {
 }
 
 func (h *Handler) GetParsingJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(jobIDParamKey)
 
 	job, err := h.jobs.GetParsingJob(jobID)
 	if err != nil {
@@ -77,8 +76,7 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 }
 
 func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(jobIDParamKey)
 
 	var req request.Status
 	err := ctx.Bind(&req)
@@ -105,8 +103,7 @@ func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 }
 
 func (h *Handler) RequeueParsingJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(jobIDParamKey)
 
 	job, err := h.jobs.RequeueParsingJob(jobID)
 	if err != nil {

@@ -35,8 +35,8 @@ func (c *Handler) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	return jobs, nil
 }
 
-func (c *Handler) GetParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
-	job, err := c.store.ParsingJob(jobID)
+func (c *Handler) GetParsingJob(id string) (*jobs.Parsing, error) {
+	job, err := c.store.ParsingJob(id)
 	if err != nil {
 		return nil, fmt.Errorf("could not get parsing job: %w", err)
 	}
@@ -44,8 +44,8 @@ func (c *Handler) GetParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	return job, nil
 }
 
-func (c *Handler) UpdateParsingJobState(jobID jobs.ID, newStatus jobs.Status) error {
-	job, err := c.store.ParsingJob(jobID)
+func (c *Handler) UpdateParsingJobState(id string, newStatus jobs.Status) error {
+	job, err := c.store.ParsingJob(id)
 	if err != nil {
 		return fmt.Errorf("could not get parsing job: %w", err)
 	}
@@ -55,7 +55,7 @@ func (c *Handler) UpdateParsingJobState(jobID jobs.ID, newStatus jobs.Status) er
 		return fmt.Errorf("could not create parsing job: %w", err)
 	}
 
-	err = c.store.UpdateParsingJobState(jobID, newStatus)
+	err = c.store.UpdateParsingJobState(id, newStatus)
 	if err != nil {
 		return fmt.Errorf("could not update job state: %w", err)
 	}
@@ -63,8 +63,8 @@ func (c *Handler) UpdateParsingJobState(jobID jobs.ID, newStatus jobs.Status) er
 	return nil
 }
 
-func (c *Handler) RequeueParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
-	job, err := c.store.ParsingJob(jobID)
+func (c *Handler) RequeueParsingJob(id string) (*jobs.Parsing, error) {
+	job, err := c.store.ParsingJob(id)
 	if err != nil {
 		return nil, fmt.Errorf("could not get parsing job: %w", err)
 	}
