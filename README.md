@@ -5,49 +5,22 @@
 ### Requirements
 
 * [Docker](https://docs.docker.com/get-docker/)
-* [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+* [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Testing Locally
 
-In order to run a local test of the indexer, access to an Ethereum node is required.
-The output will show in the logs of the lambdas function sam CLI command.
+In order to run the jobs API locally, a PostgreSQL connection is required.
+The `docker-compose.yaml` contains the configuration to deploy a PostgreSQL database.
 
-#### Starting the Lambdas
+#### Running the PostgreSQL Database
 
-```bash
-sam local start-lambdas
+```shell
+
+docker-compose up postgres -d
+
 ```
 
-### Building the Indexer
+#### Connection from the Jobs API to the PostgreSQL Database
 
-```bash
-go build -o indexer ./cmd/indexer/main.go
-```
-
-### Starting the Indexer
-
-There are two ways to run the indexer.
-
-#### Live Mode
-
-```bash
-indexer <node_url> <network> <chain> -n local -l http://127.0.0.1:3001
-```
-
-Example for the Ethereum mainnet:
-
-```bash
-indexer <node_url> ethereum mainnet -n local -l http://127.0.0.1:3001
-```
-
-#### Historical Mode
-
-```bash
-indexer <node_url> <network> <chain> -n local -l http://127.0.0.1:3001
-```
-
-Example for the Ethereum mainnet for a range from block 1234 to block 8910:
-
-```bash
-indexer <node_url> ethereum mainnet -s 1234 -e 8910 -n local -l http://127.0.0.1:3001
-```
+In order to run the api and its database locally, the flag `-d "host=<host> port=<port> user=<user> password=<pass> dbname=jobs sslmode=disable"` must be set.
+Replace the placeholders with the correct information.
