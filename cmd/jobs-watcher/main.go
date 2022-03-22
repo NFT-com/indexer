@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,11 +20,8 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Printf("failure: %v\n", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-
-	os.Exit(0)
 }
 
 func run() error {

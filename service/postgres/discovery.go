@@ -41,7 +41,6 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	for result.Next() && result.Err() == nil {
 		var job jobs.Discovery
 
-		rawAddresses := make([]byte, 0)
 		err = result.Scan(
 			&job.ID,
 			&job.ChainURL,
