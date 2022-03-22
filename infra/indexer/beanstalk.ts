@@ -36,6 +36,32 @@ const createEBRole = (): aws.iam.Role => {
 
 const createInstanceProfileRole = (): aws.iam.Role => {
   
+  
+  
+  const role = new aws.iam.Role('role_indexer_ec2eb', {
+    name: getResourceName('indexer-eb-ec2.us-east-1'),
+    description: 'Role for Indexer EC2 instance managed by EB',
+    assumeRolePolicy: {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Action: 'sts:AssumeRole',
+          Effect: 'Allow',
+          Principal: {
+            Service: 'ec2.amazonaws.com',
+          },
+        },
+        {
+          Action: 'sts:AssumeRole',
+          Effect: 'Allow',
+          Principal: {
+            Service: 'ssm.amazonaws.com',
+          },
+        },
+      ],
+    },
+  })
+
   const policy = new aws.iam.Policy('policy_indexer_sam', {
     name: getResourceName('policy_indexer_sam'),
     description: 'SAM Policy for Indexer',
@@ -177,30 +203,6 @@ const createInstanceProfileRole = (): aws.iam.Role => {
       }
       ]
     }
-  })
-  
-  const role = new aws.iam.Role('role_indexer_ec2eb', {
-    name: getResourceName('indexer-eb-ec2.us-east-1'),
-    description: 'Role for Indexer EC2 instance managed by EB',
-    assumeRolePolicy: {
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Action: 'sts:AssumeRole',
-          Effect: 'Allow',
-          Principal: {
-            Service: 'ec2.amazonaws.com',
-          },
-        },
-        {
-          Action: 'sts:AssumeRole',
-          Effect: 'Allow',
-          Principal: {
-            Service: 'ssm.amazonaws.com',
-          },
-        },
-      ],
-    },
   })
 
   new aws.iam.RolePolicyAttachment('policy_indexer_ec2eb_ecr', {
