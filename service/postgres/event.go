@@ -49,7 +49,7 @@ func (s *Store) InsertRawEvent(event events.RawEvent) error {
 			return ErrAlreadyExists
 		}
 
-		return fmt.Errorf("failed to insert events: %v", err)
+		return fmt.Errorf("could not insert events: %w", err)
 	}
 
 	return nil

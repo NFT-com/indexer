@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ZeroValueHash = "0x0000000000000000000000000000000000000000"
+	zeroValueHash = "0x0000000000000000000000000000000000000000"
 )
 
 type Parser struct {
@@ -21,7 +21,7 @@ func NewParser() *Parser {
 
 func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 	switch {
-	case rawEvent.IndexData[0] == ZeroValueHash:
+	case rawEvent.IndexData[0] == zeroValueHash:
 		nftID := rawEvent.IndexData[2]
 		owner := rawEvent.IndexData[1]
 
@@ -35,7 +35,7 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		}
 
 		return m, nil
-	case rawEvent.IndexData[1] == ZeroValueHash:
+	case rawEvent.IndexData[1] == zeroValueHash:
 		nftID := rawEvent.IndexData[2]
 
 		m := events.Event{
@@ -44,7 +44,7 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,
 			Contract:  rawEvent.Address,
-			ToAddress: ZeroValueHash,
+			ToAddress: zeroValueHash,
 		}
 
 		return m, nil

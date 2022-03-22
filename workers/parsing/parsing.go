@@ -47,7 +47,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	for _, rawEvent := range rawEvents {
 		parsedEvent, err := parser.ParseRawEvent(rawEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to parse raw events")
+			log.Error().Err(err).Msg("could not parse raw events")
 			return nil, err
 		}
 

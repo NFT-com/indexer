@@ -36,36 +36,36 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
-		d.HandleError(delivery, err, "failed to unmarshal message")
+		d.HandleError(delivery, err, "could not unmarshal message")
 		return
 	}
 
 	storedJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
-		d.HandleError(delivery, err, "failed to retrieve parsing job")
+		d.HandleError(delivery, err, "could not retrieve parsing job")
 		return
 	}
 
 	if storedJob.Status == jobs.StatusCanceled {
 		err = delivery.Ack()
 		if err != nil {
-			d.log.Error().Err(err).Msg("failed to acknowledge message")
+			d.log.Error().Err(err).Msg("could not acknowledge message")
 			return
 		}
 	}
 
 	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
 	if err != nil {
-		d.HandleError(delivery, err, "failed to retrieve parsing job")
+		d.HandleError(delivery, err, "could not retrieve parsing job")
 		return
 	}
 
 	lambdaOutput, err := d.dispatcher.Dispatch("parsing-85cd71d", payload)
 	if err != nil {
-		d.HandleError(delivery, err, "failed to dispatch message")
+		d.HandleError(delivery, err, "could not dispatch message")
 		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "failed to updating job state")
+			d.HandleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
@@ -76,26 +76,26 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		d.HandleError(delivery, err, "failed unmarshal job result")
 		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "failed to updating job state")
+			d.HandleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
 
 	err = d.HandlerJobResult(jobResult)
 	if err != nil {
-		d.HandleError(delivery, err, "failed to handle job result")
+		d.HandleError(delivery, err, "could not handle job result")
 		return
 	}
 
 	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFinished)
 	if err != nil {
-		d.HandleError(delivery, err, "failed to updating job state")
+		d.HandleError(delivery, err, "could not updating job state")
 		return
 	}
 
 	err = delivery.Ack()
 	if err != nil {
-		d.log.Error().Err(err).Msg("failed to acknowledge message")
+		d.log.Error().Err(err).Msg("could not acknowledge message")
 		return
 	}
 }

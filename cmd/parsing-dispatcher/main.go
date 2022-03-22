@@ -24,6 +24,10 @@ import (
 	"github.com/NFT-com/indexer/service/postgres"
 )
 
+const (
+	databaseDriver = "postgres"
+)
+
 func main() {
 	err := run()
 	if err != nil {
@@ -103,14 +107,14 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	))
 
-	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
-		return fmt.Errorf("failed to open SQL connection: %w", err)
+		return fmt.Errorf("could not open SQL connection: %w", err)
 	}
 
 	postgresStore, err := postgres.NewStore(db)
 	if err != nil {
-		return fmt.Errorf("failed to create store: %v", err)
+		return fmt.Errorf("could not create store: %w", err)
 	}
 
 	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher, postgresStore)

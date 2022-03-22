@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	IndexBase = 10
+	indexBase = 10
 )
 
 type Web3 struct {
@@ -49,8 +49,8 @@ func NewWeb3(ctx context.Context, url string) (*Web3, error) {
 
 func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]events.RawEvent, error) {
 	zero := big.NewInt(0)
-	startIndex, _ := zero.SetString(blockNumber, IndexBase)
-	endIndex, _ := zero.SetString(blockNumber, IndexBase)
+	startIndex, _ := zero.SetString(blockNumber, indexBase)
+	endIndex, _ := zero.SetString(blockNumber, indexBase)
 
 	query := ethereum.FilterQuery{
 		FromBlock: startIndex,
