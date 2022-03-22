@@ -41,10 +41,10 @@ func (d *Client) Dispatch(functionName string, payload []byte) ([]byte, error) {
 
 	if output.StatusCode != nil && *output.StatusCode > 299 {
 		if output.FunctionError != nil {
-			return nil, fmt.Errorf("lambda finsihed with error: %s", *output.FunctionError)
+			return nil, fmt.Errorf("error during lambda runtime: %s", *output.FunctionError)
 		}
 
-		return nil, fmt.Errorf("unexpected error during lambda invokation")
+		return nil, fmt.Errorf("unexpected error during lambda runtime")
 	}
 
 	return output.Payload, nil
