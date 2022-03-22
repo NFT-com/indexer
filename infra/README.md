@@ -1,4 +1,7 @@
-# NFT.com Indexder Infra 
+# NFT.com Indexer Infra 
+
+![image](https://user-images.githubusercontent.com/5006941/159491381-a056fb1e-11c9-4fa7-9365-5adf560b252c.png)
+
 
 Our indexer infrastructure is deployed using Pulumi
 
