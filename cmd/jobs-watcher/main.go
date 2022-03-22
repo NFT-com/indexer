@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,12 +19,10 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Printf("failure: %v\n", err)
-		os.Exit(1)
+	err := run()
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	os.Exit(0)
 }
 
 func run() error {
@@ -58,7 +57,7 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level: %w", err)
+		return fmt.Errorf("could not parse log level: %w", err)
 	}
 	log = log.Level(level)
 
@@ -69,7 +68,7 @@ func run() error {
 
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
-		return fmt.Errorf("failed to open connection with redis: %w", err)
+		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
 	apiClient := client.NewClient(log, client.NewOptions(
@@ -78,7 +77,7 @@ func run() error {
 	))
 	messageProducer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName)
 	if err != nil {
-		return fmt.Errorf("failed to create message producer: %w", err)
+		return fmt.Errorf("could not create message producer: %w", err)
 	}
 
 	jobWatcher := watcher.NewJobWatcher(log, apiClient, messageProducer)
@@ -86,13 +85,13 @@ func run() error {
 	discoveryJobs := make(chan jobs.Discovery)
 	err = apiClient.SubscribeNewDiscoveryJob(discoveryJobs)
 	if err != nil {
-		return fmt.Errorf("failed to subscriber to new discovery jobs: %w", err)
+		return fmt.Errorf("could not subscriber to new discovery jobs: %w", err)
 	}
 
 	parsingJobs := make(chan jobs.Parsing)
 	err = apiClient.SubscribeNewParsingJob(parsingJobs)
 	if err != nil {
-		return fmt.Errorf("failed to subscriber to new parsing jobs: %w", err)
+		return fmt.Errorf("could not subscriber to new parsing jobs: %w", err)
 	}
 
 	go func() {
@@ -100,7 +99,7 @@ func run() error {
 
 		err = jobWatcher.Watch(discoveryJobs, parsingJobs)
 		if err != nil {
-			failed <- fmt.Errorf("failed to watch jobs: %w", err)
+			failed <- fmt.Errorf("could not watch jobs: %w", err)
 		}
 
 		log.Info().Msg("job watcher done")
