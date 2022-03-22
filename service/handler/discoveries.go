@@ -35,8 +35,8 @@ func (c *Handler) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error
 	return jobs, nil
 }
 
-func (c *Handler) GetDiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
-	job, err := c.store.DiscoveryJob(jobID)
+func (c *Handler) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
+	job, err := c.store.DiscoveryJob(id)
 	if err != nil {
 		return nil, fmt.Errorf("could not get discovery job: %w", err)
 	}
@@ -44,8 +44,8 @@ func (c *Handler) GetDiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	return job, nil
 }
 
-func (c *Handler) UpdateDiscoveryJobState(jobID jobs.ID, newStatus jobs.Status) error {
-	job, err := c.store.DiscoveryJob(jobID)
+func (c *Handler) UpdateDiscoveryJobState(id string, newStatus jobs.Status) error {
+	job, err := c.store.DiscoveryJob(id)
 	if err != nil {
 		return fmt.Errorf("could not get discovery job: %w", err)
 	}
@@ -55,7 +55,7 @@ func (c *Handler) UpdateDiscoveryJobState(jobID jobs.ID, newStatus jobs.Status) 
 		return fmt.Errorf("could not validate new job status: %w", err)
 	}
 
-	err = c.store.UpdateDiscoveryJobState(jobID, newStatus)
+	err = c.store.UpdateDiscoveryJobState(id, newStatus)
 	if err != nil {
 		return fmt.Errorf("could not update job state: %w", err)
 	}
@@ -63,8 +63,8 @@ func (c *Handler) UpdateDiscoveryJobState(jobID jobs.ID, newStatus jobs.Status) 
 	return nil
 }
 
-func (c *Handler) RequeueDiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
-	job, err := c.store.DiscoveryJob(jobID)
+func (c *Handler) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
+	job, err := c.store.DiscoveryJob(id)
 	if err != nil {
 		return nil, fmt.Errorf("could not get discovery job: %w", err)
 	}

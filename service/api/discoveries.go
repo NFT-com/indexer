@@ -63,8 +63,7 @@ func (h *Handler) ListDiscoveryJobs(ctx echo.Context) error {
 }
 
 func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(jobIDParamKey)
 
 	job, err := h.jobs.GetDiscoveryJob(jobID)
 	if err != nil {
@@ -75,8 +74,7 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 }
 
 func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(jobIDParamKey)
 
 	var req request.Status
 	err := ctx.Bind(&req)
@@ -103,8 +101,7 @@ func (h *Handler) UpdateDiscoveryJobStatus(ctx echo.Context) error {
 }
 
 func (h *Handler) RequeueDiscoveryJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	jobID := ctx.Param(jobIDParamKey)
 
 	newJob, err := h.jobs.RequeueDiscoveryJob(jobID)
 	if err != nil {
