@@ -23,7 +23,7 @@ type Web3 struct {
 	networkID string
 }
 
-func NewWeb3(ctx context.Context, url string) (*Web3, error) {
+func New(ctx context.Context, url string) (*Web3, error) {
 	ethClient, err := ethclient.DialContext(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("could not dial to web3 client: %w", err)

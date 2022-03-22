@@ -10,8 +10,8 @@ import (
 )
 
 func (s *Store) InsertRawEvent(event events.RawEvent) error {
-	columns := make([]string, len(EventsTableColumns))
-	copy(columns, EventsTableColumns)
+	columns := make([]string, 0, len(eventsTableColumns))
+	copy(columns, eventsTableColumns)
 	values := []interface{}{
 		event.ID,
 		event.ChainID,
@@ -29,24 +29,24 @@ func (s *Store) InsertRawEvent(event events.RawEvent) error {
 			return err
 		}
 
-		columns = append(columns, EventsTableIndexedDataColumn)
+		columns = append(columns, eventsTableIndexedDataColumn)
 		values = append(values, indexData)
 	}
 
 	if len(event.Data) > 0 {
-		columns = append(columns, EventsTableDataColumn)
+		columns = append(columns, eventsTableDataColumn)
 		values = append(values, event.Data)
 	}
 
 	_, err := s.sqlBuilder.
-		Insert(EventsDBName).
+		Insert(eventsTableName).
 		Columns(columns...).
 		Values(values...).
 		Exec()
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
-		if ok && pqErr.Code == UniqueViolation {
-			return ErrAlreadyExists
+		if ok && pqErr.Code == uniqueViolation {
+			return errAlreadyExists
 		}
 
 		return fmt.Errorf("could not insert events: %w", err)

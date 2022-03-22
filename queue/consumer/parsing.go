@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
@@ -104,7 +105,7 @@ func (d *Parsing) HandlerJobResult(result jobs.ParsingResult) error {
 	for _, event := range result.RawEvents {
 		err := d.store.InsertRawEvent(event)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not insert raw events into store: %w", err)
 		}
 	}
 
@@ -113,12 +114,12 @@ func (d *Parsing) HandlerJobResult(result jobs.ParsingResult) error {
 		case events.EventTypeMint:
 			err := d.store.InsertNewNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not insert new nft into store: %w", err)
 			}
 		case events.EventTypeUpdate, events.EventTypeBurn:
 			err := d.store.UpdateNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not update nft data: %w", err)
 			}
 		}
 	}

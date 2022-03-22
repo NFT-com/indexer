@@ -72,7 +72,7 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve discovery job: %w", ErrResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve discovery job: %w", errResourceNotFound)
 	}
 
 	var job jobs.Discovery
@@ -117,7 +117,7 @@ func (s *Store) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update discovery job state: %w", ErrResourceNotFound)
+		return fmt.Errorf("could not update discovery job state: %w", errResourceNotFound)
 	}
 
 	return nil
