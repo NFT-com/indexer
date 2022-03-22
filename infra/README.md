@@ -40,3 +40,11 @@ Our indexer infrastructure is deployed using Pulumi
 - AWS_ACCESS_KEY & AWS_SECRET_ACCESS_KEY = <hidden, used for CICD deployment>
 
 ### ETH Node Details 
+2x m6.xlarge instances setup - can be upgraded if necessary 
+
+Instances setup to connect on web3 via ports 6342 (http) and 6343 (ws)
+
+1. 44.202.45.109
+2. 44.201.249.143
+
+ETH Nodes are currently firewalled - inform when ready to launch and can open up 
