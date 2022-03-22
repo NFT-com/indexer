@@ -24,14 +24,14 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) err
 			case <-c.close:
 				return
 			default:
-				newDiscoveryJob := jobs.Discovery{}
-				err := connection.ReadJSON(&newDiscoveryJob)
+				job := jobs.Discovery{}
+				err := connection.ReadJSON(&job)
 				if err != nil {
 					c.log.Error().Err(err).Msg("could not read message socket")
 					return
 				}
 
-				discoveryJobs <- newDiscoveryJob
+				discoveryJobs <- job
 			}
 		}
 	}()
