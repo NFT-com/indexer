@@ -34,6 +34,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve discovery job list: %w", err)
 	}
+	defer result.Close()
 
 	jobList := make([]jobs.Discovery, 0)
 	for result.Next() && result.Err() == nil {
@@ -67,6 +68,7 @@ func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
 		return nil, fmt.Errorf("could not retrieve discovery job: %w", ErrResourceNotFound)

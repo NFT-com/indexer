@@ -34,6 +34,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)
 	}
+	defer result.Close()
 
 	jobList := make([]jobs.Parsing, 0)
 	for result.Next() && result.Err() == nil {
@@ -68,6 +69,7 @@ func (s *Store) ParsingJob(jobID jobs.ID) (*jobs.Parsing, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
 	}
+	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", ErrResourceNotFound)
