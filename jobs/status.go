@@ -16,12 +16,12 @@ const (
 
 var (
 	statusMap = map[string]struct{}{
-		StatusCreated:    struct{}{},
-		StatusQueued:     struct{}{},
-		StatusProcessing: struct{}{},
-		StatusCanceled:   struct{}{},
-		StatusFailed:     struct{}{},
-		StatusFinished:   struct{}{},
+		StatusCreated:    {},
+		StatusQueued:     {},
+		StatusProcessing: {},
+		StatusCanceled:   {},
+		StatusFailed:     {},
+		StatusFinished:   {},
 	}
 
 	ErrStatusNotFound = errors.New("status not found")
@@ -34,8 +34,10 @@ func ParseStatus(rawStatus string) (Status, error) {
 		return Status(rawStatus), nil
 	}
 
-	_, hasStatus := statusMap[strings.ToLower(rawStatus)]
-	if !hasStatus {
+	rawStatus = strings.ToLower(rawStatus)
+
+	_, exists := statusMap[rawStatus]
+	if !exists {
 		return "", ErrStatusNotFound
 	}
 
