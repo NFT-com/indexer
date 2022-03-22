@@ -19,7 +19,8 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	err := run()
+	if err != nil {
 		log.Fatal(err)
 	}
 }
