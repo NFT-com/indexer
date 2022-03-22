@@ -60,11 +60,11 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	return jobList, nil
 }
 
-func (s *Store) ParsingJob(jobID string) (*jobs.Parsing, error) {
+func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	result, err := s.sqlBuilder.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName).
-		Where("id = ?", jobID).
+		Where("id = ?", id).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
@@ -94,11 +94,11 @@ func (s *Store) ParsingJob(jobID string) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-func (s *Store) UpdateParsingJobState(jobID string, jobStatus jobs.Status) error {
+func (s *Store) UpdateParsingJobState(id string, status jobs.Status) error {
 	res, err := s.sqlBuilder.
 		Update(parsingJobsTableName).
-		Where("id = ?", jobID).
-		Set("status", jobStatus).
+		Where("id = ?", id).
+		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 
