@@ -65,7 +65,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	evnts := make([]events.RawEvent, 0)
+	evts := make([]events.RawEvent, 0)
 	for _, log := range logs {
 		if log.Removed {
 			continue
@@ -73,12 +73,12 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 
 		eventJson, err := log.MarshalJSON()
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("could not marshal event to json: %w", err)
 		}
 
 		hash := sha256.Sum256(eventJson)
 
-		indexData := make([]string, 0)
+		indexData := make([]string, 0, len(log.Topics)-1)
 		for _, topic := range log.Topics[1:] {
 			indexData = append(indexData, topic.String())
 		}
@@ -96,10 +96,10 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 			Data:            log.Data,
 		}
 
-		evnts = append(evnts, e)
+		evts = append(evts, e)
 	}
 
-	return evnts, nil
+	return evts, nil
 }
 
 func (w *Web3) Close() {
