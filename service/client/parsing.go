@@ -11,6 +11,34 @@ import (
 	"github.com/NFT-com/indexer/service/request"
 )
 
+func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
+	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), DiscoveryBasePath)
+	connection, _, err := c.wsClient.Dial(requestURL, nil)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-c.close:
+				return
+			default:
+				job := jobs.Parsing{}
+				err := connection.ReadJSON(&job)
+				if err != nil {
+					c.log.Error().Err(err).Msg("could not read message socket")
+					return
+				}
+
+				parsingJobs <- job
+			}
+		}
+	}()
+
+	return nil
+}
+
 func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 	req := request.Parsing{
 		ChainURL:     job.ChainURL,

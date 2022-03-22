@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,12 +22,10 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Printf("failure: %v\n", err)
-		os.Exit(1)
+	err := run()
+	if err != nil {
+		log.Fatalln(err)
 	}
-
-	os.Exit(0)
 }
 
 func run() error {
@@ -69,7 +68,7 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level: %w", err)
+		return fmt.Errorf("could not parse log level: %w", err)
 	}
 	log = log.Level(level)
 
@@ -88,7 +87,7 @@ func run() error {
 
 	dispatcher, err := function.NewClient(lambdaClient)
 	if err != nil {
-		return fmt.Errorf("failed to create function client dispatcher: %w", err)
+		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
 	httpClient := http.DefaultClient
@@ -101,29 +100,29 @@ func run() error {
 
 	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher)
 	if err != nil {
-		return fmt.Errorf("failed to create consumer: %w", err)
+		return fmt.Errorf("could not create consumer: %w", err)
 	}
 
 	failed := make(chan error)
 
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
-		return fmt.Errorf("failed to open redis connection: %w", err)
+		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
 	queue, err := redisConnection.OpenQueue(flagParsingQueueName)
 	if err != nil {
-		return fmt.Errorf("failed to open redis queue: %w", err)
+		return fmt.Errorf("could not open redis queue: %w", err)
 	}
 
 	err = queue.StartConsuming(flagConsumerPrefetch, flagConsumerPollDuration)
 	if err != nil {
-		return fmt.Errorf("failed to start consuming process: %w", err)
+		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
 	consumerName, err := queue.AddConsumer(flagRMQTag, parsingConsumer)
 	if err != nil {
-		return fmt.Errorf("failed to add parsing consumer: %w", err)
+		return fmt.Errorf("could not add parsing consumer: %w", err)
 	}
 
 	log.Info().Str("name", consumerName).Msg("started parsing dispatcher")

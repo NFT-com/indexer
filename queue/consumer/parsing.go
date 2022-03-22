@@ -34,29 +34,29 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to unmarshal message")
+			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("could not unmarshal message")
 			return
 		}
 
-		d.log.Error().Err(err).Msg("failed to unmarshal message")
+		d.log.Error().Err(err).Msg("could not unmarshal message")
 		return
 	}
 
 	storedJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
+			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("could not retrieve parsing job")
 			return
 		}
 
-		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
+		d.log.Error().Err(err).Msg("could not retrieve parsing job")
 		return
 	}
 
 	if storedJob.Status == jobs.StatusCanceled {
 		err = delivery.Ack()
 		if err != nil {
-			d.log.Error().Err(err).Msg("failed to acknowledge message")
+			d.log.Error().Err(err).Msg("could not acknowledge message")
 			return
 		}
 	}
@@ -64,28 +64,28 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to retrieve parsing job")
+			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("could not retrieve parsing job")
 			return
 		}
 
-		d.log.Error().Err(err).Msg("failed to retrieve parsing job")
+		d.log.Error().Err(err).Msg("could not retrieve parsing job")
 		return
 	}
 
 	err = d.dispatcher.Dispatch("test", payload)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("failed to dispatch message")
+			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("could not dispatch message")
 			return
 		}
 
-		d.log.Error().Err(err).Msg("failed to dispatch message")
+		d.log.Error().Err(err).Msg("could not dispatch message")
 		return
 	}
 
 	err = delivery.Ack()
 	if err != nil {
-		d.log.Error().Err(err).Msg("failed to acknowledge message")
+		d.log.Error().Err(err).Msg("could not acknowledge message")
 		return
 	}
 }
