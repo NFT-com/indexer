@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -14,24 +15,22 @@ import (
 )
 
 const (
-	EnvVarLogLevel = "LOG_LEVEL"
+	envVarLogLevel = "LOG_LEVEL"
 
-	DefaultLogLevel = "info"
+	defaultLogLevel = "info"
 )
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Printf("failure: %v\n", err)
-		os.Exit(1)
+	err := run()
+	if err != nil {
+		log.Fatalln(err)
 	}
-
-	os.Exit(0)
 }
 
 func run() error {
-	logLevel, ok := os.LookupEnv(EnvVarLogLevel)
+	logLevel, ok := os.LookupEnv(envVarLogLevel)
 	if !ok {
-		logLevel = DefaultLogLevel
+		logLevel = defaultLogLevel
 	}
 
 	// Logger initialization.
@@ -39,14 +38,14 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(logLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level: %v", err)
+		return fmt.Errorf("could not parse log level: %w", err)
 	}
 	log = log.Level(level)
 
 	handler := parsing.NewHandler(log, func(client networks.Network) (parsers.Parser, error) {
 		parser, err := NewParser(client)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not create parser client: %w", err)
 		}
 
 		return parser, nil

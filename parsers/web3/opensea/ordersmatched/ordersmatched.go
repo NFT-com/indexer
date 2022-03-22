@@ -18,9 +18,13 @@ type Parser struct {
 }
 
 func NewParser(client networks.Network) (*Parser, error) {
+	if client == nil {
+		return nil, fmt.Errorf("invalid argment: network client")
+	}
+
 	parsedAbi, err := abi.JSON(bytes.NewBufferString(ABI))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse abi: %w", err)
+		return nil, fmt.Errorf("could not parse abi: %w", err)
 	}
 
 	p := Parser{
@@ -38,12 +42,12 @@ func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (event.Event, error) {
 	order := make(map[string]interface{})
 	err := p.abi.UnpackIntoMap(order, EventName, rawEvent.Data)
 	if err != nil {
-		return event.Event{}, fmt.Errorf("failed to unpack event: %w", err)
+		return event.Event{}, fmt.Errorf("could not unpack event: %w", err)
 	}
 
 	price, ok := order[PriceFieldName].(*big.Int)
 	if !ok {
-		return event.Event{}, fmt.Errorf("failed to parse price: price is not a big.Int pointer")
+		return event.Event{}, fmt.Errorf("could not parse price: price is not a big.Int pointer")
 	}
 
 	m := event.Event{
