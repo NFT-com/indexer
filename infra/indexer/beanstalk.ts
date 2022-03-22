@@ -37,6 +37,7 @@ const createEBRole = (): aws.iam.Role => {
 const createInstanceProfileRole = (): aws.iam.Role => {
   
   const policy = new aws.iam.Policy('policy_indexer_sam', {
+    name: getResourceName('policy_indexer_sam'),
     description: 'SAM Policy for Indexer',
     policy: {
       Version: '2012-10-17',
@@ -67,7 +68,7 @@ const createInstanceProfileRole = (): aws.iam.Role => {
               'cloudformation:UpdateStack'
           ],
           Resource: [
-              'arn:aws:cloudformation:*:016437323894:stack/*'
+              `arn:aws:cloudformation:*:${process.env.AWS_ACCOUNT_ID}:stack/*`
           ]
       },
       {
