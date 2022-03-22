@@ -94,7 +94,7 @@ const createInstanceProfileRole = (): aws.iam.Role => {
               'cloudformation:UpdateStack'
           ],
           Resource: [
-              `arn:aws:cloudformation:*:${process.env.AWS_ACCOUNT_ID}:stack/*`
+              `arn:aws:cloudformation:*:016437323894:stack/*`
           ]
       },
       {
@@ -129,7 +129,7 @@ const createInstanceProfileRole = (): aws.iam.Role => {
               'ecr:UploadLayerPart'
           ],
           Resource: [
-              `arn:aws:ecr:*:${process.env.AWS_ACCOUNT_ID}:repository/*`
+              'arn:aws:ecr:*:016437323894:repository/*'
           ]
       },
       {
@@ -159,7 +159,7 @@ const createInstanceProfileRole = (): aws.iam.Role => {
               'lambda:UpdateFunctionConfiguration'
           ],
           Resource: [
-              `arn:aws:lambda:*:${process.env.AWS_ACCOUNT_ID}:function:*`
+              'arn:aws:lambda:*:016437323894:function:*'
           ]
       },
       {
@@ -173,7 +173,7 @@ const createInstanceProfileRole = (): aws.iam.Role => {
               'iam:TagRole'
           ],
           Resource: [
-              `'arn:aws:iam::${process.env.AWS_ACCOUNT_ID}:role/*`
+              'arn:aws:iam::016437323894:role/*'
           ]
       },
       {
