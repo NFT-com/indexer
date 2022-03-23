@@ -9,13 +9,13 @@ import (
 
 func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	_, err := s.sqlBuilder.
-		Insert(ParsingJobsDBName).
-		Columns(ParsingJobsTableColumns...).
+		Insert(parsingJobsTableName).
+		Columns(parsingJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
 		Exec()
 
 	if err != nil {
-		return fmt.Errorf("failed to create parsing jobs: %v", err)
+		return fmt.Errorf("could not create parsing job: %w", err)
 	}
 
 	return nil
@@ -23,8 +23,8 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 
 func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	query := s.sqlBuilder.
-		Select(ParsingJobsTableColumns...).
-		From(ParsingJobsDBName)
+		Select(parsingJobsTableColumns...).
+		From(parsingJobsTableName)
 
 	if status != "" {
 		query = query.Where("status = ?", status)
@@ -32,8 +32,9 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 
 	result, err := query.Query()
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve parsing jobs list: %v", err)
+		return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)
 	}
+	defer result.Close()
 
 	jobList := make([]jobs.Parsing, 0)
 	for result.Next() && result.Err() == nil {
@@ -50,7 +51,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 		)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve parsing jobs list: %v", err)
+			return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)
 		}
 
 		jobList = append(jobList, job)
@@ -59,18 +60,19 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	return jobList, nil
 }
 
-func (s *Store) ParsingJob(jobID string) (*jobs.Parsing, error) {
+func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	result, err := s.sqlBuilder.
-		Select(ParsingJobsTableColumns...).
-		From(ParsingJobsDBName).
-		Where("id = ?", jobID).
+		Select(parsingJobsTableColumns...).
+		From(parsingJobsTableName).
+		Where("id = ?", id).
 		Query()
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve parsing jobs: %v", err)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
 	}
+	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("failed to retrieve parsing jobs: %v", ErrResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", errResourceNotFound)
 	}
 
 	var job jobs.Parsing
@@ -86,31 +88,31 @@ func (s *Store) ParsingJob(jobID string) (*jobs.Parsing, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve parsing jobs: %v", err)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
 	}
 
 	return &job, nil
 }
 
-func (s *Store) UpdateParsingJobState(jobID string, jobStatus jobs.Status) error {
+func (s *Store) UpdateParsingJobState(id string, status jobs.Status) error {
 	res, err := s.sqlBuilder.
-		Update(ParsingJobsDBName).
-		Where("id = ?", jobID).
-		Set("status", jobStatus).
+		Update(parsingJobsTableName).
+		Where("id = ?", id).
+		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 
 	if err != nil {
-		return fmt.Errorf("failed to update parsing jobs state: %v", err)
+		return fmt.Errorf("could not update parsing job state: %w", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to update parsing jobs state: %v", err)
+		return fmt.Errorf("could not update parsing job state: %w", err)
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("failed to update parsing jobs state: %v", ErrResourceNotFound)
+		return fmt.Errorf("could not update parsing job state: %w", errResourceNotFound)
 	}
 
 	return nil

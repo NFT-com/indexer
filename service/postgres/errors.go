@@ -3,6 +3,6 @@ package postgres
 import "errors"
 
 var (
-	ErrAlreadyExists    = errors.New("already exists")
-	ErrResourceNotFound = errors.New("resource not found")
+	errAlreadyExists    = errors.New("already exists")
+	errResourceNotFound = errors.New("resource not found")
 )

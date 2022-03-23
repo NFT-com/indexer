@@ -2,6 +2,7 @@ package parsing
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog"
 
@@ -35,9 +36,9 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 		Str("contract", job.Address).
 		Logger()
 
-	network, err := web3.NewWeb3(ctx, job.ChainURL)
+	network, err := web3.New(ctx, job.ChainURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could create web3 client: %w", err)
 	}
 	defer network.Close()
 
@@ -48,15 +49,15 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 
 	rawEvents, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get block events: %w", err)
 	}
 
 	parsedEvents := make([]event.Event, 0)
 	for _, rawEvent := range rawEvents {
 		parsedEvent, err := parser.ParseRawEvent(rawEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to parse raw event")
-			return nil, err
+			log.Error().Err(err).Msg("could not parse raw events")
+			return nil, fmt.Errorf("could not parse raw events: %w", err)
 		}
 
 		parsedEvents = append(parsedEvents, parsedEvent)

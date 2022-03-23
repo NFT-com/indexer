@@ -2,13 +2,8 @@ package networks
 
 import (
 	"context"
-	"github.com/NFT-com/indexer/events"
-)
 
-const (
-	EventTypeMint   = "mint"
-	EventTypeUpdate = "update"
-	EventTypeBurn   = "burn"
+	"github.com/NFT-com/indexer/events"
 )
 
 type Network interface {

@@ -4,10 +4,11 @@ go 1.17
 
 require (
 	github.com/Masterminds/squirrel v1.5.2
-	github.com/adjust/rmq/v4 v4.0.2
+	github.com/adjust/rmq/v4 v4.0.4
 	github.com/aws/aws-lambda-go v1.28.0
-	github.com/aws/aws-sdk-go v1.43.12
+	github.com/aws/aws-sdk-go v1.43.22
 	github.com/ethereum/go-ethereum v1.10.16
+	github.com/go-playground/validator/v10 v10.10.1
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.6.1
@@ -32,6 +33,8 @@ require (
 	github.com/djherbis/times v1.2.0 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-redis/redis/v8 v8.3.2 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
@@ -49,6 +52,7 @@ require (
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect

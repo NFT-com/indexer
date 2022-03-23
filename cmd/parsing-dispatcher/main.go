@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,13 +24,15 @@ import (
 	"github.com/NFT-com/indexer/service/postgres"
 )
 
-func main() {
-	if err := run(); err != nil {
-		fmt.Printf("failure: %v\n", err)
-		os.Exit(1)
-	}
+const (
+	databaseDriver = "postgres"
+)
 
-	os.Exit(0)
+func main() {
+	err := run()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func run() error {
@@ -42,7 +45,6 @@ func run() error {
 		flagAPIEndpoint          string
 		flagConsumerPrefetch     int64
 		flagConsumerPollDuration time.Duration
-		flagDBDriver             string
 		flagDBConnectionInfo     string
 		flagParsingQueueName     string
 		flagLambdaURL            string
@@ -58,7 +60,6 @@ func run() error {
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "amount of message to prefetch in the consumer")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second*20, "time for each consumer poll")
-	pflag.StringVar(&flagDBDriver, "driver", "postgres", "name of driver to use for database connection")
 	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", "parsing", "name of the queue for parsing")
 	pflag.StringVarP(&flagLambdaURL, "function-url", "f", "", "url for the custom lambda server on local testing")
@@ -76,7 +77,7 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level: %w", err)
+		return fmt.Errorf("could not parse log level: %w", err)
 	}
 	log = log.Level(level)
 
@@ -95,7 +96,7 @@ func run() error {
 
 	dispatcher, err := function.NewClient(lambdaClient)
 	if err != nil {
-		return fmt.Errorf("failed to create function client dispatcher: %w", err)
+		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
 	httpClient := http.DefaultClient
@@ -106,41 +107,41 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	))
 
-	db, err := sql.Open(flagDBDriver, flagDBConnectionInfo)
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
-		return fmt.Errorf("failed to open SQL connection: %w", err)
+		return fmt.Errorf("could not open SQL connection: %w", err)
 	}
 
 	postgresStore, err := postgres.NewStore(db)
 	if err != nil {
-		return fmt.Errorf("failed to create store: %v", err)
+		return fmt.Errorf("could not create store: %w", err)
 	}
 
 	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher, postgresStore)
 	if err != nil {
-		return fmt.Errorf("failed to create consumer: %w", err)
+		return fmt.Errorf("could not create consumer: %w", err)
 	}
 
 	failed := make(chan error)
 
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
-		return fmt.Errorf("failed to open redis connection: %w", err)
+		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
 	queue, err := redisConnection.OpenQueue(flagParsingQueueName)
 	if err != nil {
-		return fmt.Errorf("failed to open redis queue: %w", err)
+		return fmt.Errorf("could not open redis queue: %w", err)
 	}
 
 	err = queue.StartConsuming(flagConsumerPrefetch, flagConsumerPollDuration)
 	if err != nil {
-		return fmt.Errorf("failed to start consuming process: %w", err)
+		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
 	consumerName, err := queue.AddConsumer(flagRMQTag, parsingConsumer)
 	if err != nil {
-		return fmt.Errorf("failed to add parsing consumer: %w", err)
+		return fmt.Errorf("could not add parsing consumer: %w", err)
 	}
 
 	log.Info().Str("name", consumerName).Msg("started parsing dispatcher")

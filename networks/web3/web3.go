@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 	"crypto/sha256"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	IndexBase = 10
+	indexBase = 10
 )
 
 type Web3 struct {
@@ -22,20 +23,20 @@ type Web3 struct {
 	networkID string
 }
 
-func NewWeb3(ctx context.Context, url string) (*Web3, error) {
+func New(ctx context.Context, url string) (*Web3, error) {
 	ethClient, err := ethclient.DialContext(ctx, url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not dial to web3 client: %w", err)
 	}
 
 	chainID, err := ethClient.ChainID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get chain id: %w", err)
 	}
 
 	networkID, err := ethClient.NetworkID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get network id: %w", err)
 	}
 
 	w := Web3{
@@ -49,8 +50,8 @@ func NewWeb3(ctx context.Context, url string) (*Web3, error) {
 
 func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]events.RawEvent, error) {
 	zero := big.NewInt(0)
-	startIndex, _ := zero.SetString(blockNumber, IndexBase)
-	endIndex, _ := zero.SetString(blockNumber, IndexBase)
+	startIndex, _ := zero.SetString(blockNumber, indexBase)
+	endIndex, _ := zero.SetString(blockNumber, indexBase)
 
 	query := ethereum.FilterQuery{
 		FromBlock: startIndex,
@@ -61,10 +62,10 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 
 	logs, err := w.ethClient.FilterLogs(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	evnts := make([]events.RawEvent, 0)
+	evts := make([]events.RawEvent, 0)
 	for _, log := range logs {
 		if log.Removed {
 			continue
@@ -72,12 +73,12 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 
 		eventJson, err := log.MarshalJSON()
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("could not marshal event to json: %w", err)
 		}
 
 		hash := sha256.Sum256(eventJson)
 
-		indexData := make([]string, 0)
+		indexData := make([]string, 0, len(log.Topics)-1)
 		for _, topic := range log.Topics[1:] {
 			indexData = append(indexData, topic.String())
 		}
@@ -95,10 +96,10 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 			Data:            log.Data,
 		}
 
-		evnts = append(evnts, e)
+		evts = append(evts, e)
 	}
 
-	return evnts, nil
+	return evts, nil
 }
 
 func (w *Web3) Close() {

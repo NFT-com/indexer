@@ -2,6 +2,7 @@ package function
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -35,15 +36,15 @@ func (d *Client) Dispatch(functionName string, payload []byte) ([]byte, error) {
 
 	output, err := d.lambdaClient.Invoke(input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not invoke lambda: %w", err)
 	}
 
 	if output.StatusCode != nil && *output.StatusCode > 299 {
 		if output.FunctionError != nil {
-			return nil, errors.New(*output.FunctionError)
+			return nil, fmt.Errorf("error during lambda runtime: %s", *output.FunctionError)
 		}
 
-		return nil, errors.New("unexpected error running worker")
+		return nil, fmt.Errorf("unexpected error during lambda runtime")
 	}
 
 	return output.Payload, nil
