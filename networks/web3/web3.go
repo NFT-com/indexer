@@ -9,6 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/NFT-com/indexer/event"
 )
 
 const (
@@ -63,7 +65,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	evts := make([]event.RawEvent, 0)
+	evts := make([]event.RawEvent, 0, len(logs))
 	for _, log := range logs {
 		if log.Removed {
 			continue

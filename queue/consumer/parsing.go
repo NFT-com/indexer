@@ -85,7 +85,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	err = d.handlerJobResult(jobResult)
+	err = d.processEvents(jobResult)
 	if err != nil {
 		d.handleError(delivery, err, "could not handle job result")
 		return
@@ -104,7 +104,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (d *Parsing) handlerJobResult(result []event.Event) error {
+func (d *Parsing) processEvents(result []event.Event) error {
 	for _, e := range result {
 		err := d.store.InsertHistory(e)
 		if err != nil {
@@ -116,20 +116,19 @@ func (d *Parsing) handlerJobResult(result []event.Event) error {
 }
 
 func (d *Parsing) handleError(delivery rmq.Delivery, err error, message string) {
-	if rejectErr := delivery.Reject(); rejectErr != nil {
-		log := d.log.Error()
-
-		if err != nil {
-			log = log.Err(err)
-		}
-
-		log.AnErr("reject_error", rejectErr).Msg(message)
-		return
-	}
+	log := d.log.Error()
 
 	if err != nil {
-		d.log.Error().Err(err).Msg(message)
+		log = log.Err(err)
 	}
+
+	// rejects the message from the consumer
+	rejectErr := delivery.Reject()
+	if rejectErr != nil {
+		log = log.AnErr("reject_error", rejectErr)
+	}
+
+	log.Msg(message)
 }
 
 func functionName(job jobs.Parsing) string {

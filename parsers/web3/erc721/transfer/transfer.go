@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/NFT-com/indexer/event"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	ZeroValueHash = "0x0000000000000000000000000000000000000000"
+	zeroValueHash = "0x0000000000000000000000000000000000000000"
 )
 
 type Parser struct {
@@ -17,14 +20,18 @@ func NewParser() *Parser {
 	return &p
 }
 
-func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
+func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
+	if len(rawEvent.IndexData) < 2 {
+		return nil, fmt.Errorf("could not parse raw event: index data lenght is less than 3")
+	}
+
 	var (
 		fromAddress = common.HexToAddress(rawEvent.IndexData[0]).String()
 		toAddress   = common.HexToAddress(rawEvent.IndexData[1]).String()
 		nftID       = common.HexToHash(rawEvent.IndexData[2]).Big().String()
 	)
 
-	m := events.Event{
+	m := event.Event{
 		ID:          rawEvent.ID,
 		ChainID:     rawEvent.ChainID,
 		NetworkID:   rawEvent.NetworkID,
@@ -36,13 +43,13 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 	}
 
 	switch {
-	case rawEvent.IndexData[0] == ZeroValueHash:
-		m.Type = events.TypeMint
-	case rawEvent.IndexData[1] == ZeroValueHash:
-		m.Type = events.TypeBurn
+	case rawEvent.IndexData[0] == zeroValueHash:
+		m.Type = event.TypeMint
+	case rawEvent.IndexData[1] == zeroValueHash:
+		m.Type = event.TypeBurn
 	default:
-		m.Type = events.TypeTransfer
+		m.Type = event.TypeTransfer
 	}
 
-	return m, nil
+	return &m, nil
 }

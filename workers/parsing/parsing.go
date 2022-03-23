@@ -52,7 +52,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 		return nil, fmt.Errorf("could not get block event: %w", err)
 	}
 
-	parsedEvents := make([]event.Event, 0)
+	parsedEvents := make([]event.Event, 0, len(rawEvents))
 	for _, rawEvent := range rawEvents {
 		parsedEvent, err := parser.ParseRawEvent(rawEvent)
 		if err != nil {
@@ -60,7 +60,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 			return nil, fmt.Errorf("could not parse raw event: %w", err)
 		}
 
-		parsedEvents = append(parsedEvents, parsedEvent)
+		parsedEvents = append(parsedEvents, *parsedEvent)
 	}
 
 	return parsedEvents, nil

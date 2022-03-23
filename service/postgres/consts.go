@@ -6,9 +6,8 @@ const (
 	discoveryJobsTableName = "discovery_jobs"
 	parsingJobsTableName   = "parsing_jobs"
 
-	nftsTableName = "nfts"
-
-	historyDBName = "history"
+	nftsTableName    = "nfts"
+	historyTableName = "history"
 )
 
 var (

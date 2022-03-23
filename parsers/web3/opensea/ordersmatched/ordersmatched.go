@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks"
 )
 
@@ -21,37 +22,43 @@ func NewParser(client networks.Network) (*Parser, error) {
 		return nil, fmt.Errorf("invalid argment: network client")
 	}
 
-	parsedAbi, err := abi.JSON(bytes.NewBufferString(ABI))
+	parsedABI, err := abi.JSON(bytes.NewBufferString(eventABI))
 	if err != nil {
 		return nil, fmt.Errorf("could not parse abi: %w", err)
 	}
 
 	p := Parser{
 		client: client,
-		abi:    parsedAbi,
+		abi:    parsedABI,
 	}
 
 	return &p, nil
 }
 
-func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
-	seller := rawEvent.IndexData[1]
-	buyer := rawEvent.IndexData[2]
+func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
+	if len(rawEvent.IndexData) < 2 {
+		return nil, fmt.Errorf("could not parse raw event: index data lenght is less than 2")
+	}
+
+	var (
+		seller = rawEvent.IndexData[0]
+		buyer  = rawEvent.IndexData[1]
+	)
 
 	order := make(map[string]interface{})
-	err := p.abi.UnpackIntoMap(order, EventName, rawEvent.Data)
+	err := p.abi.UnpackIntoMap(order, eventName, rawEvent.Data)
 	if err != nil {
-		return events.Event{}, fmt.Errorf("could not unpack event: %w", err)
+		return nil, fmt.Errorf("could not unpack event: %w", err)
 	}
 
-	price, ok := order[PriceFieldName].(*big.Int)
+	price, ok := order[priceFieldName].(*big.Int)
 	if !ok {
-		return events.Event{}, fmt.Errorf("could not parse price: price is not a big.Int pointer")
+		return nil, fmt.Errorf("could not parse price: price is empty or not a big.Int pointer")
 	}
 
-	m := events.Event{
+	m := event.Event{
 		ID:          rawEvent.ID,
-		Type:        events.TypeSell,
+		Type:        event.TypeSell,
 		ChainID:     rawEvent.ChainID,
 		NetworkID:   rawEvent.NetworkID,
 		Contract:    rawEvent.Address,
@@ -61,5 +68,5 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		EmittedAt:   rawEvent.EmittedAt,
 	}
 
-	return m, nil
+	return &m, nil
 }

@@ -8,7 +8,7 @@ import (
 
 func (s *Store) InsertHistory(event events.Event) error {
 	_, err := s.sqlBuilder.
-		Insert(historyDBName).
+		Insert(historyTableName).
 		Columns(historyTableColumns...).
 		Values(
 			event.ID,
