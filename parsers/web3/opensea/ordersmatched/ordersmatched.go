@@ -41,7 +41,7 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 	order := make(map[string]interface{})
 	err := p.abi.UnpackIntoMap(order, EventName, rawEvent.Data)
 	if err != nil {
-		return events.Event{}, fmt.Errorf("could not unpack events: %w", err)
+		return events.Event{}, fmt.Errorf("could not unpack event: %w", err)
 	}
 
 	price, ok := order[PriceFieldName].(*big.Int)
