@@ -8,7 +8,7 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"

@@ -10,8 +10,8 @@ import (
 
 func (s *Store) InsertHistory(event event.Event) error {
 	_, err := s.sqlBuilder.
-		Insert(HistoryDBName).
-		Columns(HistoryTableColumns...).
+		Insert(historyDBName).
+		Columns(historyTableColumns...).
 		Values(
 			event.ID,
 			event.ChainID,
@@ -27,8 +27,8 @@ func (s *Store) InsertHistory(event event.Event) error {
 		Exec()
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
-		if ok && pqErr.Code == UniqueViolation {
-			return ErrAlreadyExists
+		if ok && pqErr.Code == uniqueViolation {
+			return errAlreadyExists
 		}
 
 		return fmt.Errorf("failed to insert history: %v", err)
