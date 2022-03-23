@@ -4,21 +4,24 @@ import (
 	"github.com/NFT-com/indexer/jobs"
 )
 
+// JobsStore represents the job store interface.
 type JobsStore interface {
 	DiscoveryStore
 	ParsingStore
 }
 
+// DiscoveryStore represents the discovery job store interface.
 type DiscoveryStore interface {
 	CreateDiscoveryJob(job jobs.Discovery) error
 	DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 	DiscoveryJob(id string) (*jobs.Discovery, error)
-	UpdateDiscoveryJobState(id string, status jobs.Status) error
+	UpdateDiscoveryJobStatus(id string, status jobs.Status) error
 }
 
+// ParsingStore represents the parsing job store interface.
 type ParsingStore interface {
 	CreateParsingJob(job jobs.Parsing) error
 	ParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
 	ParsingJob(id string) (*jobs.Parsing, error)
-	UpdateParsingJobState(id string, status jobs.Status) error
+	UpdateParsingJobStatus(id string, status jobs.Status) error
 }

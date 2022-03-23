@@ -1,5 +1,6 @@
 package jobs
 
+// Discovery is a job that discovers new NFTs on a blockchain.
 type Discovery struct {
 	ID           string   `json:"id"`
 	ChainURL     string   `json:"chain_url"`

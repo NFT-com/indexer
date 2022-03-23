@@ -9,6 +9,7 @@ import (
 	"github.com/NFT-com/indexer/jobs"
 )
 
+// CreateDiscoveryJob creates a new discovery job.
 func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	_, err := s.sqlBuilder.
 		Insert(discoveryJobsTableName).
@@ -22,6 +23,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
+// DiscoveryJobs returns a list of discovery jobs filtered by status. Empty string status returns every job.
 func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	query := s.sqlBuilder.
 		Select(discoveryJobsTableColumns...).
@@ -59,6 +61,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	return jobList, nil
 }
 
+// DiscoveryJob returns a discovery job.
 func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	result, err := s.sqlBuilder.
 		Select(discoveryJobsTableColumns...).
@@ -92,7 +95,8 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
-func (s *Store) UpdateDiscoveryJobState(id string, status jobs.Status) error {
+// UpdateDiscoveryJobStatus updates a discovery job status.
+func (s *Store) UpdateDiscoveryJobStatus(id string, status jobs.Status) error {
 	res, err := s.sqlBuilder.
 		Update(discoveryJobsTableName).
 		Where("id = ?", id).

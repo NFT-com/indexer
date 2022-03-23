@@ -1,22 +1,24 @@
 package broadcaster
 
 const (
-	HandlerKey = "handler"
+	handlerKey = "handler"
 
+	// DiscoveryHandlerValue represents the discovery handler value.
 	DiscoveryHandlerValue = "discovery"
-	ParsingHandlerValue   = "parsing"
+	// ParsingHandlerValue represents the parsing handler value.
+	ParsingHandlerValue = "parsing"
 )
 
-type Keys map[string]interface{}
+// WithHandler returns new keys with the handler key
+func WithHandler(keys map[string]interface{}, value string) map[string]interface{} {
+	keys[handlerKey] = value
 
-func (k Keys) WithHandler(value string) Keys {
-	k[HandlerKey] = value
-
-	return k
+	return keys
 }
 
-func (k Keys) HasHandler(value string) bool {
-	rawHandler, ok := k[HandlerKey]
+// HasHandler returns if the keys have the handler key value set.
+func HasHandler(keys map[string]interface{}, value string) bool {
+	rawHandler, ok := keys[handlerKey]
 	if !ok {
 		return false
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
+// CreateDiscoveryJob creates a new discovery job and returns it.
 func (c *Handler) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
 	job.ID = uuid.New().String()
 	job.Status = jobs.StatusCreated
@@ -26,6 +27,7 @@ func (c *Handler) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error
 	return &job, nil
 }
 
+// ListDiscoveryJobs returns a list of discovery jobs given the status. Empty string status returns all jobs.
 func (c *Handler) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	jobs, err := c.store.DiscoveryJobs(status)
 	if err != nil {
@@ -44,7 +46,8 @@ func (c *Handler) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	return job, nil
 }
 
-func (c *Handler) UpdateDiscoveryJobState(id string, newStatus jobs.Status) error {
+// UpdateDiscoveryJobStatus updates the discovery job status.
+func (c *Handler) UpdateDiscoveryJobStatus(id string, newStatus jobs.Status) error {
 	job, err := c.store.DiscoveryJob(id)
 	if err != nil {
 		return fmt.Errorf("could not get discovery job: %w", err)
@@ -55,32 +58,15 @@ func (c *Handler) UpdateDiscoveryJobState(id string, newStatus jobs.Status) erro
 		return fmt.Errorf("could not validate new job status: %w", err)
 	}
 
-	err = c.store.UpdateDiscoveryJobState(id, newStatus)
+	err = c.store.UpdateDiscoveryJobStatus(id, newStatus)
 	if err != nil {
 		return fmt.Errorf("could not update job state: %w", err)
 	}
 
-	return nil
-}
-
-func (c *Handler) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
-	job, err := c.store.DiscoveryJob(id)
-	if err != nil {
-		return nil, fmt.Errorf("could not get discovery job: %w", err)
-	}
-
-	job.ID = uuid.New().String()
-	job.Status = jobs.StatusCreated
-
-	err = c.store.CreateDiscoveryJob(*job)
-	if err != nil {
-		return nil, fmt.Errorf("could not create discovery job: %w", err)
-	}
-
 	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, job)
 	if err != nil {
-		return nil, fmt.Errorf("could not broadcast message: %w", err)
+		return fmt.Errorf("could not broadcast message: %w", err)
 	}
 
-	return job, nil
+	return nil
 }

@@ -37,6 +37,7 @@ func main() {
 	}
 }
 
+// run has the server startup code.
 func run() error {
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
@@ -44,13 +45,13 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagPort             string
+		flagBind             string
 		flagDBConnectionInfo string
 		flagLogLevel         string
 	)
 
-	pflag.StringVarP(&flagPort, "port", "p", "8081", "server port")
-	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
+	pflag.StringVarP(&flagBind, "bind", "b", "8081", "jobs api binding port")
+	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -65,30 +66,38 @@ func run() error {
 	log = log.Level(level)
 	eLog := lecho.From(log)
 
+	// Initialize echo webserver.
 	server := echo.New()
 	server.HideBanner = true
 	server.HidePort = true
 	server.Logger = eLog
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
+	// Open database connection.
 	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
 	}
 
+	// Create the database store.
 	store, err := postgres.NewStore(db)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create store")
 		return err
 	}
 
+	// Create the broadcaster.
 	broadcaster := melody.New()
-	businessController := handler.New(store, broadcaster)
 
+	// Business logic handler.
+	handler := handler.New(store, broadcaster)
+
+	// Request validator.
 	validator := validator.New()
 
-	apiHandler := api.NewHandler(broadcaster, businessController, validator)
+	// REST API Handler.
+	apiHandler := api.NewHandler(broadcaster, handler, validator)
 	apiHandler.ApplyRoutes(server)
 
 	failed := make(chan error)
@@ -96,7 +105,7 @@ func run() error {
 	go func() {
 		log.Info().Msg("jobs api server starting")
 
-		err = server.Start(fmt.Sprint(":", flagPort))
+		err = server.Start(fmt.Sprint(":", flagBind))
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Warn().Err(err).Msg("jobs api server failed")
 			failed <- err
@@ -122,6 +131,7 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	// Shutdown server.
 	err = server.Shutdown(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("could not shut down jobs api")
