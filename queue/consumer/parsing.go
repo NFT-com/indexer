@@ -8,7 +8,7 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"
@@ -76,7 +76,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	var jobResult []event.Event
+	var jobResult []events.Event
 	err = json.Unmarshal(lambdaOutput, &jobResult)
 	if err != nil {
 		d.HandleError(delivery, err, "failed unmarshal job result")
@@ -106,7 +106,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (d *Parsing) HandlerJobResult(result []event.Event) error {
+func (d *Parsing) HandlerJobResult(result []events.Event) error {
 	for _, e := range result {
 		err := d.store.InsertHistory(e)
 		if err != nil {

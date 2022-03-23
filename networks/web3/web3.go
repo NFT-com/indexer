@@ -73,7 +73,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 
 		eventJson, err := log.MarshalJSON()
 		if err != nil {
-			return nil, fmt.Errorf("could not marshal event to json: %w", err)
+			return nil, fmt.Errorf("could not marshal events to json: %w", err)
 		}
 
 		hash := sha256.Sum256(eventJson)

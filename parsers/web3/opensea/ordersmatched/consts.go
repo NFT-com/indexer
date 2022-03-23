@@ -3,5 +3,5 @@ package main
 const (
 	EventName      = "OrdersMatched"
 	PriceFieldName = "price"
-	ABI            = `[{"anonymous": false,"inputs": [{"indexed": false,"name": "buyHash","type": "bytes32"},{"indexed": false,"name": "sellHash","type": "bytes32"},{"indexed": true,"name": "maker","type": "address"},{"indexed": true,"name": "taker","type": "address"},{"indexed": false,"name": "price","type": "uint256"},{"indexed": true,"name": "metadata","type": "bytes32"}],"name": "OrdersMatched","type": "event"}]`
+	ABI            = `[{"anonymous": false,"inputs": [{"indexed": false,"name": "buyHash","type": "bytes32"},{"indexed": false,"name": "sellHash","type": "bytes32"},{"indexed": true,"name": "maker","type": "address"},{"indexed": true,"name": "taker","type": "address"},{"indexed": false,"name": "price","type": "uint256"},{"indexed": true,"name": "metadata","type": "bytes32"}],"name": "OrdersMatched","type": "events"}]`
 )

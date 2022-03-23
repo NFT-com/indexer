@@ -4,11 +4,9 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
-
-	"github.com/NFT-com/indexer/event"
 )
 
-func (s *Store) InsertHistory(event event.Event) error {
+func (s *Store) InsertHistory(event events.Event) error {
 	_, err := s.sqlBuilder.
 		Insert(historyDBName).
 		Columns(historyTableColumns...).

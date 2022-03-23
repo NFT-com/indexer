@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/networks"
 )
 
@@ -35,24 +34,24 @@ func NewParser(client networks.Network) (*Parser, error) {
 	return &p, nil
 }
 
-func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (event.Event, error) {
+func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 	seller := rawEvent.IndexData[1]
 	buyer := rawEvent.IndexData[2]
 
 	order := make(map[string]interface{})
 	err := p.abi.UnpackIntoMap(order, EventName, rawEvent.Data)
 	if err != nil {
-		return event.Event{}, fmt.Errorf("could not unpack event: %w", err)
+		return events.Event{}, fmt.Errorf("could not unpack events: %w", err)
 	}
 
 	price, ok := order[PriceFieldName].(*big.Int)
 	if !ok {
-		return event.Event{}, fmt.Errorf("could not parse price: price is not a big.Int pointer")
+		return events.Event{}, fmt.Errorf("could not parse price: price is not a big.Int pointer")
 	}
 
-	m := event.Event{
+	m := events.Event{
 		ID:          rawEvent.ID,
-		Type:        event.TypeSell,
+		Type:        events.TypeSell,
 		ChainID:     rawEvent.ChainID,
 		NetworkID:   rawEvent.NetworkID,
 		Contract:    rawEvent.Address,

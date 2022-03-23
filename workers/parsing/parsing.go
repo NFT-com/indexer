@@ -6,7 +6,6 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"
@@ -32,7 +31,7 @@ func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, error) {
 	log := h.log.With().
 		Str("block", job.BlockNumber).
-		Str("event", job.EventType).
+		Str("events", job.EventType).
 		Str("contract", job.Address).
 		Logger()
 
@@ -52,7 +51,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 		return nil, fmt.Errorf("could not get block events: %w", err)
 	}
 
-	parsedEvents := make([]event.Event, 0)
+	parsedEvents := make([]events.Event, 0)
 	for _, rawEvent := range rawEvents {
 		parsedEvent, err := parser.ParseRawEvent(rawEvent)
 		if err != nil {

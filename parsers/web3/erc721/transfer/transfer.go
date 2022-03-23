@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/NFT-com/indexer/event"
 )
 
 const (
@@ -19,14 +17,14 @@ func NewParser() *Parser {
 	return &p
 }
 
-func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (event.Event, error) {
+func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 	var (
 		fromAddress = common.HexToAddress(rawEvent.IndexData[0]).String()
 		toAddress   = common.HexToAddress(rawEvent.IndexData[1]).String()
 		nftID       = common.HexToHash(rawEvent.IndexData[2]).Big().String()
 	)
 
-	m := event.Event{
+	m := events.Event{
 		ID:          rawEvent.ID,
 		ChainID:     rawEvent.ChainID,
 		NetworkID:   rawEvent.NetworkID,
@@ -39,11 +37,11 @@ func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (event.Event, error) {
 
 	switch {
 	case rawEvent.IndexData[0] == ZeroValueHash:
-		m.Type = event.TypeMint
+		m.Type = events.TypeMint
 	case rawEvent.IndexData[1] == ZeroValueHash:
-		m.Type = event.TypeBurn
+		m.Type = events.TypeBurn
 	default:
-		m.Type = event.TypeTransfer
+		m.Type = events.TypeTransfer
 	}
 
 	return m, nil
