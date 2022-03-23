@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	DiscoveryBasePath = "discoveries"
-	ParsingBasePath   = "parsings"
+	discoveryBasePath = "discoveries"
+	parsingBasePath   = "parsings"
 
-	ContentTypeHeaderName = "content-type"
-	JsonContentType       = "application/json"
+	contentTypeHeaderName = "content-type"
+	jsonContentType       = "application/json"
 )
 
 type Client struct {

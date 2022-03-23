@@ -12,7 +12,7 @@ import (
 )
 
 func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
-	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), DiscoveryBasePath)
+	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), discoveryBasePath)
 	connection, _, err := c.wsClient.Dial(requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("could not dial to websocket: %w", err)
@@ -54,8 +54,8 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 		return nil, fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), DiscoveryBasePath)
-	resp, err := c.httpClient.Post(requestURL, JsonContentType, bytes.NewReader(body))
+	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), discoveryBasePath)
+	resp, err := c.httpClient.Post(requestURL, jsonContentType, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -80,7 +80,7 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 }
 
 func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), DiscoveryBasePath, status))
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), discoveryBasePath, status))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -105,7 +105,7 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 }
 
 func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, id))
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), discoveryBasePath, id))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -139,13 +139,13 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 		return fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, id)
+	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), discoveryBasePath, id)
 	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("could not create request: %w", err)
 	}
 
-	req.Header.Add(ContentTypeHeaderName, JsonContentType)
+	req.Header.Add(contentTypeHeaderName, jsonContentType)
 
 	_, err = c.httpClient.Do(req)
 	if err != nil {
@@ -156,7 +156,7 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 }
 
 func (c *Client) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
-	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), DiscoveryBasePath, id), JsonContentType, nil)
+	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), discoveryBasePath, id), jsonContentType, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
