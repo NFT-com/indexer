@@ -1,1143 +1,22 @@
 FORMAT: 1A
 
-# Swagger Petstore
+# Jobs API
 
-This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.
+[Jobs API](https://github.com/NFT-com/indexer) is a REST API serving the data related to discovery and parsing blockchain data.
 
-## Group pet
+## Group discovery
 
-Everything about your Pets
+Discovery jobs
 
-### /v2/pet/{petId}/uploadImage
+### /discoveries
 
-#### uploads an image [POST]
-
-+ Parameters
-
-  + petId (required) - ID of pet to update
-
-+ Request (application/x-www-form-urlencoded)
-
-  + Headers
-
-          Accept: application/json
-
-  + Attributes - Additional data to pass to server
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-          {
-            "type": "consequat nostrud cillum incidid",
-            "message": "et Duis adipisicing",
-            "code": 3586027
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "type": {
-                "type": "string"
-              },
-              "message": {
-                "type": "string"
-              }
-            }
-          }
-
-### /v2/pet
-
-#### Add a new pet to the store [POST]
+#### Create a new discovery job [POST]
 
 + Request (application/json)
 
   + Headers
 
           Accept: application/json
-
-  + Body
-
-          {
-            "name": "nostrud consequat sint est velit",
-            "photoUrls": [
-              "qui mollit veniam",
-              "quis pariatur",
-              "laborum pariatur do tempor commodo",
-              "est laboris aliqua veniam"
-            ]
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "photoUrls"
-            ],
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "category": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "format": "int64"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "xml": {
-                  "name": "Category"
-                }
-              },
-              "name": {
-                "type": "string",
-                "example": "doggie"
-              },
-              "photoUrls": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "type": "string",
-                  "xml": {
-                    "name": "photoUrl"
-                  }
-                }
-              },
-              "tags": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "xml": {
-                    "name": "tag"
-                  },
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "status": {
-                "type": "string",
-                "description": "pet status in the store",
-                "enum": [
-                  "available",
-                  "pending",
-                  "sold"
-                ]
-              }
-            }
-          }
-
-+ Response 405 (application/json)
-
-  Invalid input
-
-  + Body
-
-#### Update an existing pet [PUT]
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {
-            "name": "laborum nisi adipisicing eu",
-            "photoUrls": [
-              "pariatur amet dolore deserunt occaecat",
-              "ex in amet",
-              "dolore id mollit proident aliqua"
-            ]
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "photoUrls"
-            ],
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "category": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "format": "int64"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "xml": {
-                  "name": "Category"
-                }
-              },
-              "name": {
-                "type": "string",
-                "example": "doggie"
-              },
-              "photoUrls": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "type": "string",
-                  "xml": {
-                    "name": "photoUrl"
-                  }
-                }
-              },
-              "tags": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "xml": {
-                    "name": "tag"
-                  },
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "status": {
-                "type": "string",
-                "description": "pet status in the store",
-                "enum": [
-                  "available",
-                  "pending",
-                  "sold"
-                ]
-              }
-            }
-          }
-
-+ Response 400 (application/json)
-
-  Invalid ID supplied
-
-  + Body
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {
-            "name": "ad sunt irure non dolor",
-            "photoUrls": [
-              "occaecat ea nostrud dolo",
-              "minim et dolore pariatur"
-            ]
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "photoUrls"
-            ],
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "category": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "format": "int64"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "xml": {
-                  "name": "Category"
-                }
-              },
-              "name": {
-                "type": "string",
-                "example": "doggie"
-              },
-              "photoUrls": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "type": "string",
-                  "xml": {
-                    "name": "photoUrl"
-                  }
-                }
-              },
-              "tags": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "xml": {
-                    "name": "tag"
-                  },
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "status": {
-                "type": "string",
-                "description": "pet status in the store",
-                "enum": [
-                  "available",
-                  "pending",
-                  "sold"
-                ]
-              }
-            }
-          }
-
-+ Response 404 (application/json)
-
-  Pet not found
-
-  + Body
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {
-            "name": "culpa Duis",
-            "photoUrls": [
-              "ad irure commodo voluptate enim",
-              "qui id"
-            ],
-            "status": "available"
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "photoUrls"
-            ],
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "category": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "format": "int64"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "xml": {
-                  "name": "Category"
-                }
-              },
-              "name": {
-                "type": "string",
-                "example": "doggie"
-              },
-              "photoUrls": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "type": "string",
-                  "xml": {
-                    "name": "photoUrl"
-                  }
-                }
-              },
-              "tags": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "xml": {
-                    "name": "tag"
-                  },
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "status": {
-                "type": "string",
-                "description": "pet status in the store",
-                "enum": [
-                  "available",
-                  "pending",
-                  "sold"
-                ]
-              }
-            }
-          }
-
-+ Response 405 (application/json)
-
-  Validation exception
-
-  + Body
-
-#### Finds Pets by status [GET /v2/pet/findByStatus]
-
-Multiple status values can be provided with comma separated strings
-
-+ Parameters
-
-  + status: available,pending,sold (required) - Status values that need to be considered for filter
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-          [
-            {
-              "name": "pariatur et fugiat mollit sit",
-              "photoUrls": [
-                "dolor v",
-                "ut",
-                "ea"
-              ]
-            },
-            {
-              "name": "amet dolore laboris",
-              "photoUrls": [
-                "anim velit irure ea",
-                "fugiat",
-                "ut"
-              ],
-              "tags": [
-                {
-                  "id": 85444612,
-                  "name": "enim labore dolor dolor"
-                },
-                {
-                  "id": -72117236
-                },
-                {
-                  "id": 28975743,
-                  "name": "f"
-                }
-              ]
-            },
-            {
-              "name": "proident",
-              "photoUrls": [
-                "cupidatat do pariatur tempor elit"
-              ]
-            },
-            {
-              "name": "eu",
-              "photoUrls": [
-                "sunt mollit pariatur sed aute"
-              ]
-            }
-          ]
-
-  + Schema
-
-          {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "name",
-                "photoUrls"
-              ],
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "category": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  },
-                  "xml": {
-                    "name": "Category"
-                  }
-                },
-                "name": {
-                  "type": "string",
-                  "example": "doggie"
-                },
-                "photoUrls": {
-                  "type": "array",
-                  "xml": {
-                    "wrapped": true
-                  },
-                  "items": {
-                    "type": "string",
-                    "xml": {
-                      "name": "photoUrl"
-                    }
-                  }
-                },
-                "tags": {
-                  "type": "array",
-                  "xml": {
-                    "wrapped": true
-                  },
-                  "items": {
-                    "xml": {
-                      "name": "tag"
-                    },
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "integer",
-                        "format": "int64"
-                      },
-                      "name": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                },
-                "status": {
-                  "type": "string",
-                  "description": "pet status in the store",
-                  "enum": [
-                    "available",
-                    "pending",
-                    "sold"
-                  ]
-                }
-              },
-              "xml": {
-                "name": "Pet"
-              }
-            }
-          }
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid status value
-
-  + Body
-
-#### Finds Pets by tags [GET /v2/pet/findByTags]
-
-Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
-
-+ Parameters
-
-  + tags:  (required) - Tags to filter by
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-          [
-            {
-              "name": "exercitation",
-              "photoUrls": [
-                "est dol",
-                "magna aute eu"
-              ]
-            },
-            {
-              "name": "veniam ipsum anim",
-              "photoUrls": [
-                "ex qui et minim"
-              ]
-            }
-          ]
-
-  + Schema
-
-          {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "name",
-                "photoUrls"
-              ],
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "category": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  },
-                  "xml": {
-                    "name": "Category"
-                  }
-                },
-                "name": {
-                  "type": "string",
-                  "example": "doggie"
-                },
-                "photoUrls": {
-                  "type": "array",
-                  "xml": {
-                    "wrapped": true
-                  },
-                  "items": {
-                    "type": "string",
-                    "xml": {
-                      "name": "photoUrl"
-                    }
-                  }
-                },
-                "tags": {
-                  "type": "array",
-                  "xml": {
-                    "wrapped": true
-                  },
-                  "items": {
-                    "xml": {
-                      "name": "tag"
-                    },
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "integer",
-                        "format": "int64"
-                      },
-                      "name": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                },
-                "status": {
-                  "type": "string",
-                  "description": "pet status in the store",
-                  "enum": [
-                    "available",
-                    "pending",
-                    "sold"
-                  ]
-                }
-              },
-              "xml": {
-                "name": "Pet"
-              }
-            }
-          }
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid tag value
-
-  + Body
-
-### /v2/pet/{petId}
-
-#### Find pet by ID [GET]
-
-Returns a single pet
-
-+ Parameters
-
-  + petId (required) - ID of pet to return
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-          {
-            "name": "deserunt fugiat Duis ea",
-            "photoUrls": [
-              "elit minim ut consequat",
-              "exercitation laborum mollit"
-            ],
-            "status": "sold",
-            "category": {
-              "name": "do tempor magna",
-              "id": -29166945
-            }
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "required": [
-              "name",
-              "photoUrls"
-            ],
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "category": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "format": "int64"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "xml": {
-                  "name": "Category"
-                }
-              },
-              "name": {
-                "type": "string",
-                "example": "doggie"
-              },
-              "photoUrls": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "type": "string",
-                  "xml": {
-                    "name": "photoUrl"
-                  }
-                }
-              },
-              "tags": {
-                "type": "array",
-                "xml": {
-                  "wrapped": true
-                },
-                "items": {
-                  "xml": {
-                    "name": "tag"
-                  },
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "format": "int64"
-                    },
-                    "name": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "status": {
-                "type": "string",
-                "description": "pet status in the store",
-                "enum": [
-                  "available",
-                  "pending",
-                  "sold"
-                ]
-              }
-            }
-          }
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid ID supplied
-
-  + Body
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 404 (application/json)
-
-  Pet not found
-
-  + Body
-
-#### Updates a pet in the store with form data [POST]
-
-+ Parameters
-
-  + petId (required) - ID of pet that needs to be updated
-
-+ Request (application/x-www-form-urlencoded)
-
-  + Headers
-
-          Accept: application/json
-
-  + Attributes - Updated name of the pet
-
-  + Body
-
-+ Response 405 (application/json)
-
-  Invalid input
-
-  + Body
-
-#### Deletes a pet [DELETE]
-
-+ Parameters
-
-  + petId (required) - Pet id to delete
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-          api_key: 
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid ID supplied
-
-  + Body
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-          api_key: 
-
-  + Body
-
-+ Response 404 (application/json)
-
-  Pet not found
-
-  + Body
-
-## Group store
-
-Access to Petstore orders
-
-### /v2/store/order
-
-#### Place an order for a pet [POST]
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {
-            "shipDate": "3005-09-11T01:00:30.700Z"
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "petId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "quantity": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "shipDate": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "status": {
-                "type": "string",
-                "description": "Order Status",
-                "enum": [
-                  "placed",
-                  "approved",
-                  "delivered"
-                ]
-              },
-              "complete": {
-                "type": "boolean"
-              }
-            }
-          }
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-          {
-            "complete": false,
-            "petId": 26815841
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "petId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "quantity": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "shipDate": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "status": {
-                "type": "string",
-                "description": "Order Status",
-                "enum": [
-                  "placed",
-                  "approved",
-                  "delivered"
-                ]
-              },
-              "complete": {
-                "type": "boolean"
-              }
-            }
-          }
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {
-            "shipDate": "3255-05-06T18:01:43.313Z"
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "petId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "quantity": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "shipDate": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "status": {
-                "type": "string",
-                "description": "Order Status",
-                "enum": [
-                  "placed",
-                  "approved",
-                  "delivered"
-                ]
-              },
-              "complete": {
-                "type": "boolean"
-              }
-            }
-          }
-
-+ Response 400 (application/json)
-
-  Invalid Order
-
-  + Body
-
-### /v2/store/order/{orderId}
-
-#### Find purchase order by ID [GET]
-
-For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions
-
-+ Parameters
-
-  + orderId (required) - ID of pet that needs to be fetched
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
 
   + Body
 
@@ -1149,105 +28,127 @@ For valid response try integer IDs with value >= 1 and <= 10. Other values will 
             "type": "object",
             "properties": {
               "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "petId": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "quantity": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "shipDate": {
                 "type": "string",
-                "format": "date-time"
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
               },
               "status": {
                 "type": "string",
-                "description": "Order Status",
+                "description": "Discovery Status",
+                "default": "created",
                 "enum": [
-                  "placed",
-                  "approved",
-                  "delivered"
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
                 ]
-              },
-              "complete": {
-                "type": "boolean"
               }
             }
           }
 
-+ Request
++ Response 200 (application/json)
+
+  Discovery job created
+
+  + Body
+
+          {}
+
+  + Schema
+
+          {
+            "type": "object"
+          }
+
++ Request (application/json)
 
   + Headers
 
           Accept: application/json
 
   + Body
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
 
 + Response 400 (application/json)
 
-  Invalid ID supplied
+  Invalid job
 
   + Body
 
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 404 (application/json)
-
-  Order not found
-
-  + Body
-
-#### Delete purchase order by ID [DELETE]
-
-For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors
+#### Find Discoveries jobs [GET /discoveries{?status}]
 
 + Parameters
 
-  + orderId (required) - ID of the order that needs to be deleted
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid ID supplied
-
-  + Body
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 404 (application/json)
-
-  Order not found
-
-  + Body
-
-### /v2/store/inventory
-
-#### Returns pet inventories by status [GET]
-
-Returns a map of status codes to quantities
+  + status: ,created,queued,processing,failed,finished,canceled - Job Status, empty for all status
 
 + Request
 
@@ -1263,49 +164,14 @@ Returns a map of status codes to quantities
 
   + Body
 
-          {}
-
-  + Schema
-
-          {
-            "type": "object",
-            "additionalProperties": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-
-## Group user
-
-Operations about user
-
-### /v2/user/createWithArray
-
-#### Creates list of users with given input array [POST]
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
           [
-            {
-              "password": "in Excepteur",
-              "lastName": "cillum ut cupidatat"
-            },
-            {
-              "password": "tempor",
-              "email": "sunt",
-              "userStatus": 7504521
-            },
             {},
             {
-              "email": "adipisicing",
-              "firstName": "elit",
-              "password": "cillum esse reprehenderit magna do"
+              "addresses": [
+                "ullamco",
+                "pariatur in laborum",
+                "ipsum magna adipisicing exercitation commodo"
+              ]
             },
             {}
           ]
@@ -1318,42 +184,140 @@ Operations about user
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "integer",
-                  "format": "int64"
+                  "type": "string",
+                  "format": "uuid"
                 },
-                "username": {
-                  "type": "string"
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
                 },
-                "firstName": {
-                  "type": "string"
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
                 },
-                "lastName": {
-                  "type": "string"
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
                 },
-                "email": {
-                  "type": "string"
+                "addresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 },
-                "password": {
-                  "type": "string"
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
                 },
-                "phone": {
-                  "type": "string"
-                },
-                "userStatus": {
-                  "type": "integer",
-                  "format": "int32",
-                  "description": "User Status"
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
                 }
-              },
-              "xml": {
-                "name": "User"
               }
             }
           }
 
-### /v2/user/createWithList
+### /discoveries/{id}
 
-#### Creates list of users with given input array [POST]
+#### Find discovery job by ID [GET]
+
+Returns a single discovery job
+
++ Parameters
+
+  + id (required) - ID of the discovery job
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
+          {}
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 404 (application/json)
+
+  Discovery job not found
+
+  + Body
+
+#### Updates a discovery job [PATCH]
+
++ Parameters
+
+  + id (required) - ID of the discovery job that needs to be updated
 
 + Request (application/json)
 
@@ -1363,11 +327,389 @@ Operations about user
 
   + Body
 
+          {
+            "status": "created"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Job Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
+          {
+            "chain_type": "consectetur eiusmod incididunt",
+            "block_number": "dolore incididunt"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+          {
+            "status": "processing"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Job Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 400 (application/json)
+
+  Invalid discovery job status
+
+  + Body
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+          {
+            "status": "canceled"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Job Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 404 (application/json)
+
+  Discovery job not found
+
+  + Body
+
+### /discoveries/{id}/requeue
+
+#### Recreates a discovery job [POST]
+
++ Parameters
+
+  + id (required) - ID of discovery job to requeue
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 404 (application/json)
+
+  Discovery job not found
+
+  + Body
+
+## Group parse
+
+Parsing jobs
+
+### /parsings
+
+#### Create a new parsing job [POST]
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+          {
+            "block_number": "ex",
+            "event_type": "sint",
+            "chain_type": "proident Lorem quis dolore"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "address": {
+                "type": "string",
+                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "event_type": {
+                "type": "string",
+                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 200 (application/json)
+
+  Parsing job created
+
+  + Body
+
+          {}
+
+  + Schema
+
+          {
+            "type": "object"
+          }
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "address": {
+                "type": "string",
+                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "event_type": {
+                "type": "string",
+                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 400 (application/json)
+
+  Invalid parsing job
+
+  + Body
+
+#### Find parsing jobs [GET /parsings{?status}]
+
++ Parameters
+
+  + status: ,created,queued,processing,failed,finished,canceled - Job Status, empty for all status
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
           [
-            {},
-            {},
-            {},
-            {}
+            {
+              "status": "failed"
+            },
+            {
+              "status": "finished"
+            },
+            {
+              "status": "created"
+            },
+            {
+              "status": "failed",
+              "address": "ut dolore anim in"
+            },
+            {
+              "standard_type": "ex dolore",
+              "address": "proident exercitation aliqua ipsum in"
+            }
           ]
 
   + Schema
@@ -1378,46 +720,319 @@ Operations about user
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "integer",
-                  "format": "int64"
+                  "type": "string",
+                  "format": "uuid"
                 },
-                "username": {
-                  "type": "string"
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
                 },
-                "firstName": {
-                  "type": "string"
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
                 },
-                "lastName": {
-                  "type": "string"
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
                 },
-                "email": {
-                  "type": "string"
+                "address": {
+                  "type": "string",
+                  "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
                 },
-                "password": {
-                  "type": "string"
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
                 },
-                "phone": {
-                  "type": "string"
+                "event_type": {
+                  "type": "string",
+                  "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
                 },
-                "userStatus": {
-                  "type": "integer",
-                  "format": "int32",
-                  "description": "User Status"
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
                 }
-              },
-              "xml": {
-                "name": "User"
               }
             }
           }
 
-### /v2/user/{username}
+### /parsings/{id}
 
-#### Get user by user name [GET]
+#### Find parsing job by ID [GET]
+
+Returns a single parsing job
 
 + Parameters
 
-  + username (required) - The name that needs to be fetched. Use user1 for testing.
+  + id (required) - ID of the parsing job
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
+          {}
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "address": {
+                "type": "string",
+                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "event_type": {
+                "type": "string",
+                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Request
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
++ Response 404 (application/json)
+
+  Parsing job not found
+
+  + Body
+
+#### Updates a parsing job [PATCH]
+
++ Parameters
+
+  + id (required) - ID of the parsing job that needs to be updated
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+          {}
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Job Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
+          {
+            "standard_type": "anim culpa consequat ut minim",
+            "address": "commodo ex cillum"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "chain_url": {
+                "type": "string",
+                "format": "url"
+              },
+              "chain_type": {
+                "type": "string",
+                "example": "web3"
+              },
+              "block_number": {
+                "type": "string",
+                "example": "12345"
+              },
+              "address": {
+                "type": "string",
+                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+              },
+              "standard_type": {
+                "type": "string",
+                "example": "ERC721"
+              },
+              "event_type": {
+                "type": "string",
+                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+              },
+              "status": {
+                "type": "string",
+                "description": "Discovery Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+          {
+            "status": "failed"
+          }
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Job Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 400 (application/json)
+
+  Invalid status
+
+  + Body
+
++ Request (application/json)
+
+  + Headers
+
+          Accept: application/json
+
+  + Body
+
+          {}
+
+  + Schema
+
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Job Status",
+                "default": "created",
+                "enum": [
+                  "created",
+                  "queued",
+                  "processing",
+                  "failed",
+                  "finished",
+                  "canceled"
+                ]
+              }
+            }
+          }
+
++ Response 404 (application/json)
+
+  Parsing job not found
+
+  + Body
+
+### /parsings/{id}/requeue
+
+#### Recreates a parsing job [POST]
+
++ Parameters
+
+  + id (required) - ID of parsing job to requeue
 
 + Request
 
@@ -1433,60 +1048,6 @@ Operations about user
 
   + Body
 
-          {
-            "userStatus": -92133763,
-            "id": -31525395
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "username": {
-                "type": "string"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "email": {
-                "type": "string"
-              },
-              "password": {
-                "type": "string"
-              },
-              "phone": {
-                "type": "string"
-              },
-              "userStatus": {
-                "type": "integer",
-                "format": "int32",
-                "description": "User Status"
-              }
-            }
-          }
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid username supplied
-
-  + Body
-
 + Request
 
   + Headers
@@ -1497,257 +1058,7 @@ Operations about user
 
 + Response 404 (application/json)
 
-  User not found
+  Parsing job not found
 
   + Body
-
-#### Updated user [PUT]
-
-This can only be done by the logged in user.
-
-+ Parameters
-
-  + username (required) - name that need to be updated
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {}
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "username": {
-                "type": "string"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "email": {
-                "type": "string"
-              },
-              "password": {
-                "type": "string"
-              },
-              "phone": {
-                "type": "string"
-              },
-              "userStatus": {
-                "type": "integer",
-                "format": "int32",
-                "description": "User Status"
-              }
-            }
-          }
-
-+ Response 400 (application/json)
-
-  Invalid user supplied
-
-  + Body
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {}
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "username": {
-                "type": "string"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "email": {
-                "type": "string"
-              },
-              "password": {
-                "type": "string"
-              },
-              "phone": {
-                "type": "string"
-              },
-              "userStatus": {
-                "type": "integer",
-                "format": "int32",
-                "description": "User Status"
-              }
-            }
-          }
-
-+ Response 404 (application/json)
-
-  User not found
-
-  + Body
-
-#### Delete user [DELETE]
-
-This can only be done by the logged in user.
-
-+ Parameters
-
-  + username (required) - The name that needs to be deleted
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid username supplied
-
-  + Body
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 404 (application/json)
-
-  User not found
-
-  + Body
-
-#### Logs user into the system [GET /v2/user/login]
-
-+ Parameters
-
-  + username (required) - The user name for login
-
-  + password (required) - The password for login in clear text
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Headers
-
-          X-Expires-After: 
-          X-Rate-Limit: 
-
-  + Body
-
-          qui ut reprehenderit
-
-  + Schema
-
-          {
-            "type": "string"
-          }
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 400 (application/json)
-
-  Invalid username/password supplied
-
-  + Body
-
-### /v2/user/logout
-
-#### Logs out current logged in user session [GET]
-
-### /v2/user
-
-#### Create user [POST]
-
-This can only be done by the logged in user.
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-          {}
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "username": {
-                "type": "string"
-              },
-              "firstName": {
-                "type": "string"
-              },
-              "lastName": {
-                "type": "string"
-              },
-              "email": {
-                "type": "string"
-              },
-              "password": {
-                "type": "string"
-              },
-              "phone": {
-                "type": "string"
-              },
-              "userStatus": {
-                "type": "integer",
-                "format": "int32",
-                "description": "User Status"
-              }
-            }
-          }
 
