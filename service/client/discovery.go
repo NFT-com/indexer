@@ -15,7 +15,7 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) err
 	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), DiscoveryBasePath)
 	connection, _, err := c.wsClient.Dial(requestURL, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not dial to websocket: %w", err)
 	}
 
 	go func() {
@@ -24,15 +24,16 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) err
 			case <-c.close:
 				return
 			default:
-				newDiscoveryJob := jobs.Discovery{}
-				err := connection.ReadJSON(&newDiscoveryJob)
-				if err != nil {
-					c.log.Error().Err(err).Msg("could not read message socket")
-					return
-				}
-
-				discoveryJobs <- newDiscoveryJob
 			}
+
+			newDiscoveryJob := jobs.Discovery{}
+			err := connection.ReadJSON(&newDiscoveryJob)
+			if err != nil {
+				c.log.Error().Err(err).Msg("could not read message socket")
+				continue
+			}
+
+			discoveryJobs <- newDiscoveryJob
 		}
 	}()
 
@@ -50,29 +51,29 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 
 	body, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not marshal request: %w", err)
 	}
 
 	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), DiscoveryBasePath)
 	resp, err := c.httpClient.Post(requestURL, JsonContentType, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	newJob := jobs.Discovery{}
 	err = json.Unmarshal(responseBody, &newJob)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return &newJob, nil
@@ -81,23 +82,23 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), DiscoveryBasePath, status))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	jobList := make([]jobs.Discovery, 0)
 	err = json.Unmarshal(body, &jobList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return jobList, nil
@@ -106,46 +107,49 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, id))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	job := jobs.Discovery{}
 	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return &job, nil
 }
 
 func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
-	requestBody := request.Status{Status: string(status)}
+	requestBody := request.Status{
+		Status: string(status),
+	}
+
 	body, err := json.Marshal(requestBody)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not marshal request: %w", err)
 	}
 
 	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), DiscoveryBasePath, id)
 	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create request: %w", err)
 	}
 
 	req.Header.Add(ContentTypeHeaderName, JsonContentType)
 
 	_, err = c.httpClient.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not perform request: %w", err)
 	}
 
 	return nil
@@ -154,23 +158,23 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 func (c *Client) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
 	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), DiscoveryBasePath, id), JsonContentType, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	job := jobs.Discovery{}
 	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return &job, nil

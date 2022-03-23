@@ -1,6 +1,8 @@
 package watcher
 
 import (
+	"fmt"
+
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/jobs"
@@ -32,12 +34,14 @@ func (j *Job) Watch(discoveryJobs chan jobs.Discovery, parsingJobs chan jobs.Par
 		case newJob := <-discoveryJobs:
 			err := j.publishDiscoveryJob(newJob)
 			if err != nil {
-				return err
+				j.log.Error().Err(err).Msg("could not publish discovery job")
+				continue
 			}
 		case newJob := <-parsingJobs:
 			err := j.publishParsingJob(newJob)
 			if err != nil {
-				return err
+				j.log.Error().Err(err).Msg("could not publish parsing job")
+				continue
 			}
 		case <-j.close:
 			return nil
@@ -52,14 +56,12 @@ func (j *Job) Close() {
 func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
 	err := j.messageProducer.PublishDiscoveryJob(newJob)
 	if err != nil {
-		j.log.Error().Err(err).Msg("could not get publish discovery job")
-		return err
+		return fmt.Errorf("could not get publish discovery job: %w", err)
 	}
 
 	err = j.apiClient.UpdateDiscoveryJobState(newJob.ID, jobs.StatusQueued)
 	if err != nil {
-		j.log.Error().Err(err).Msg("could not get update discovery job status")
-		return err
+		return fmt.Errorf("could not update discovery job status: %w", err)
 	}
 
 	return nil
@@ -68,15 +70,13 @@ func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
 func (j *Job) publishParsingJob(newJob jobs.Parsing) error {
 	err := j.messageProducer.PublishParsingJob(newJob)
 	if err != nil {
-		j.log.Error().Err(err).Msg("could not get publish parsing job")
-		return err
+		return fmt.Errorf("could not get publish parsing job: %w", err)
 	}
 
 	err = j.apiClient.UpdateParsingJobState(newJob.ID, jobs.StatusQueued)
 	if err != nil {
-		j.log.Error().Err(err).Msg("could not get update parsing job status")
-		return err
+		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
 
-	return err
+	return nil
 }
