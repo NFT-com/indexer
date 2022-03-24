@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS chains
 (
-    id          VARCHAR(128) NOT NULL PRIMARY KEY,
+    id          UUID         NOT NULL PRIMARY KEY,
+    chain_id    VARCHAR(128) NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
     symbol      VARCHAR(16)  NOT NULL,
@@ -10,18 +11,19 @@ CREATE TABLE IF NOT EXISTS chains
 
 CREATE TABLE IF NOT EXISTS marketplaces
 (
-    chain_id    VARCHAR(128) NOT NULL,
+    id          UUID         NOT NULL PRIMARY KEY,
+    chain_id    UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
     address     VARCHAR(128) NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
-    updated_at  TIMESTAMP,
-    PRIMARY KEY (chain_id, address)
+    updated_at  TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS collections
 (
-    chain_id    VARCHAR(128) NOT NULL,
+    id          UUID         NOT NULL PRIMARY KEY,
+    chain_id    UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
     address     VARCHAR(128) NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
@@ -31,15 +33,14 @@ CREATE TABLE IF NOT EXISTS collections
     website     TEXT         NOT NULL,
     image_url   TEXT         NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
-    updated_at  TIMESTAMP,
-    PRIMARY KEY (chain_id, address, slug)
+    updated_at  TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS nfts
 (
     id         VARCHAR(128) PRIMARY KEY,
-    chain_id   VARCHAR(128) NOT NULL,
-    collection VARCHAR(128) NOT NULL,
+    chain_id   UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    collection UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
     owner      VARCHAR(128) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
