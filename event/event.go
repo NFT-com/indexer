@@ -4,12 +4,29 @@ import (
 	"time"
 )
 
+type Type int
+
 const (
-	TypeMint     = "mint"
-	TypeTransfer = "transfer"
-	TypeBurn     = "burn"
-	TypeSell     = "sell"
+	Mint Type = iota + 1
+	Transfer
+	Burn
+	Sale
 )
+
+func (e Type) String() string {
+	switch e {
+	case Mint:
+		return "mint"
+	case Transfer:
+		return "transfer"
+	case Burn:
+		return "burn"
+	case Sale:
+		return "sale"
+	default:
+		return ""
+	}
+}
 
 type Event struct {
 	ID          string    `json:"id"`

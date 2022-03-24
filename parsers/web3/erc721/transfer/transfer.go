@@ -21,7 +21,7 @@ func NewParser() *Parser {
 }
 
 func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
-	if len(rawEvent.IndexData) < 2 {
+	if len(rawEvent.IndexData) < 3 {
 		return nil, fmt.Errorf("could not parse raw event: index data lenght is less than 3")
 	}
 
@@ -44,11 +44,11 @@ func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
 
 	switch {
 	case rawEvent.IndexData[0] == zeroValueHash:
-		m.Type = event.TypeMint
+		m.Type = event.Mint
 	case rawEvent.IndexData[1] == zeroValueHash:
-		m.Type = event.TypeBurn
+		m.Type = event.Burn
 	default:
-		m.Type = event.TypeTransfer
+		m.Type = event.Transfer
 	}
 
 	return &m, nil

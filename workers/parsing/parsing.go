@@ -13,13 +13,16 @@ import (
 	"github.com/NFT-com/indexer/parsers"
 )
 
+// Initializer initializes the parser to use with the network client.
 type Initializer func(client networks.Network) (parsers.Parser, error)
 
+// Handler handles the parsing message from queue.
 type Handler struct {
 	log         zerolog.Logger
 	initializer Initializer
 }
 
+// NewHandler creates a new parsing handler consumer.
 func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 	h := Handler{
 		log:         log.With().Str("component", "parsing_handler").Logger(),

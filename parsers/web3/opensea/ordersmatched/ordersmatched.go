@@ -58,7 +58,7 @@ func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
 
 	m := event.Event{
 		ID:          rawEvent.ID,
-		Type:        event.TypeSell,
+		Type:        event.Sale,
 		ChainID:     rawEvent.ChainID,
 		NetworkID:   rawEvent.NetworkID,
 		Contract:    rawEvent.Address,
