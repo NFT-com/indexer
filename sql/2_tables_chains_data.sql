@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS collections
 (
     id          UUID         NOT NULL PRIMARY KEY,
     chain_id    UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    -- Missing the inner collection id for erc1155
     address     VARCHAR(128) NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
