@@ -88,12 +88,20 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	err = d.processEvents(jobResult)
 	if err != nil {
 		d.handleError(delivery, err, "could not handle job result")
+		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		if err != nil {
+			d.handleError(delivery, err, "could not updating job state")
+		}
 		return
 	}
 
 	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFinished)
 	if err != nil {
 		d.handleError(delivery, err, "could not updating job state")
+		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		if err != nil {
+			d.handleError(delivery, err, "could not updating job state")
+		}
 		return
 	}
 
