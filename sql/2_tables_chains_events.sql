@@ -4,11 +4,11 @@
 CREATE TABLE mints
 (
     id               VARCHAR(128) PRIMARY KEY,
-    chain_id         NUMERIC      NOT NULL,
+    chain_id         INT          NOT NULL,
     collection       VARCHAR(128) NOT NULL,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
-    minter           VARCHAR(128),
+    owner            VARCHAR(128),
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
 );
@@ -17,7 +17,7 @@ CREATE TABLE mints
 CREATE TABLE transfers
 (
     id               VARCHAR(128) PRIMARY KEY,
-    chain_id         NUMERIC      NOT NULL,
+    chain_id         INT          NOT NULL,
     collection       VARCHAR(128) NOT NULL,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE transfers
 CREATE TABLE sales
 (
     id               VARCHAR(128) PRIMARY KEY,
-    chain_id         NUMERIC      NOT NULL,
+    chain_id         INT          NOT NULL,
     collection       VARCHAR(128) NOT NULL,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
@@ -47,11 +47,11 @@ CREATE TABLE sales
 CREATE TABLE burns
 (
     id               VARCHAR(128) PRIMARY KEY,
-    chain_id         NUMERIC      NOT NULL,
+    chain_id         INT          NOT NULL,
     collection       VARCHAR(128) NOT NULL,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
-    burner           VARCHAR(128) NOT NULL,
+    burner           VARCHAR(128),
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
 );

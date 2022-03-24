@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS chain
+CREATE TABLE IF NOT EXISTS chains
 (
     id          VARCHAR(128) NOT NULL PRIMARY KEY,
     name        TEXT         NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS chain
     updated_at  TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS marketplace
+CREATE TABLE IF NOT EXISTS marketplaces
 (
     chain_id    VARCHAR(128) NOT NULL,
     address     VARCHAR(128) NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS marketplace
     PRIMARY KEY (chain_id, address)
 );
 
-CREATE TABLE IF NOT EXISTS collection
+CREATE TABLE IF NOT EXISTS collections
 (
     chain_id    VARCHAR(128) NOT NULL,
     address     VARCHAR(128) NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS collection
     PRIMARY KEY (chain_id, address, slug)
 );
 
-CREATE TABLE IF NOT EXISTS nft
+CREATE TABLE IF NOT EXISTS nfts
 (
     id         VARCHAR(128) PRIMARY KEY,
     chain_id   VARCHAR(128) NOT NULL,
