@@ -1,6 +1,8 @@
+\connect chains
+
 CREATE TABLE IF NOT EXISTS chains
 (
-    id          UUID         NOT NULL PRIMARY KEY,
+    id          UUID PRIMARY KEY,
     chain_id    VARCHAR(128) NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
@@ -11,26 +13,36 @@ CREATE TABLE IF NOT EXISTS chains
 
 CREATE TABLE IF NOT EXISTS marketplaces
 (
-    id          UUID         NOT NULL PRIMARY KEY,
-    chain_id    UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
-    address     VARCHAR(128) NOT NULL,
-    name        TEXT         NOT NULL,
-    description TEXT         NOT NULL,
+    id          UUID PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL,
+    website     TEXT NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
     updated_at  TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS chains_marketplaces
+(
+    marketplace_id UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
+    chain_id       UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    address        VARCHAR(128) NOT NULL,
+    created_at     TIMESTAMP DEFAULT NOW(),
+    updated_at     TIMESTAMP,
+    PRIMARY KEY (marketplace_id, chain_id)
+);
+
 CREATE TABLE IF NOT EXISTS collections
 (
-    id          UUID         NOT NULL PRIMARY KEY,
+    id          UUID PRIMARY KEY,
     chain_id    UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
-    -- Missing the inner collection id for erc1155
+    token_id    VARCHAR(128) NOT NULL,
     address     VARCHAR(128) NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
     symbol      VARCHAR(16)  NOT NULL,
     slug        VARCHAR(256) NOT NULL,
     standard    VARCHAR(128) NOT NULL,
+    uri         TEXT         NOT NULL,
     website     TEXT         NOT NULL,
     image_url   TEXT         NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
@@ -39,10 +51,12 @@ CREATE TABLE IF NOT EXISTS collections
 
 CREATE TABLE IF NOT EXISTS nfts
 (
-    id         VARCHAR(128) PRIMARY KEY,
-    chain_id   UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
-    collection UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    id         UUID PRIMARY KEY,
+    collection UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
+    token_id   VARCHAR(128) NOT NULL,
     owner      VARCHAR(128) NOT NULL,
+    rarity     DECIMAL   DEFAULT 0.0,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    UNIQUE (collection, token_id)
 );
