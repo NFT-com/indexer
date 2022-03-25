@@ -110,7 +110,7 @@ func run() error {
 
 		err = watcher.Watch(ctx)
 		if err != nil {
-			failed <- err
+			failed <- fmt.Errorf("could not watch chain: %w", err)
 		}
 
 		log.Info().Msg("chain watcher done")
