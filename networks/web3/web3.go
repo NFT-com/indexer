@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// represents the decimal base (10) to parse the string numbers into *big.Int
 	indexBase = 10
 )
 
@@ -34,15 +35,9 @@ func New(ctx context.Context, url string) (*Web3, error) {
 		return nil, fmt.Errorf("could not get chain id: %w", err)
 	}
 
-	networkID, err := ethClient.NetworkID(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not get network id: %w", err)
-	}
-
 	w := Web3{
 		ethClient: ethClient,
 		chainID:   chainID.String(),
-		networkID: networkID.String(),
 	}
 
 	return &w, nil
@@ -86,7 +81,6 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		e := events.RawEvent{
 			ID:              common.Bytes2Hex(hash[:]),
 			ChainID:         w.chainID,
-			NetworkID:       w.networkID,
 			BlockNumber:     blockNumber,
 			BlockHash:       log.BlockHash.String(),
 			Address:         contract,

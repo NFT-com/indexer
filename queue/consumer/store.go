@@ -6,6 +6,6 @@ import (
 
 type Store interface {
 	InsertRawEvent(event events.RawEvent) error
-	InsertNewNFT(network, chain, contract, id, owner string) error
-	UpdateNFT(network, chain, contract, id, owner string) error
+	InsertNewNFT(chain, contract, id, owner string) error
+	UpdateNFT(chain, contract, id, owner string) error
 }

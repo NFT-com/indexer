@@ -28,7 +28,6 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		m := events.Event{
 			Type:      events.EventTypeMint,
 			ChainID:   rawEvent.ChainID,
-			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,
 			Contract:  rawEvent.Address,
 			ToAddress: owner,
@@ -41,7 +40,6 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		m := events.Event{
 			Type:      events.EventTypeBurn,
 			ChainID:   rawEvent.ChainID,
-			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,
 			Contract:  rawEvent.Address,
 			ToAddress: zeroValueHash,
@@ -55,7 +53,6 @@ func (p *Parser) ParseRawEvent(rawEvent events.RawEvent) (events.Event, error) {
 		m := events.Event{
 			Type:      events.EventTypeUpdate,
 			ChainID:   rawEvent.ChainID,
-			NetworkID: rawEvent.NetworkID,
 			NftID:     nftID,
 			Contract:  rawEvent.Address,
 			ToAddress: owner,

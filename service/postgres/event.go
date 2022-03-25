@@ -15,7 +15,6 @@ func (s *Store) InsertRawEvent(event events.RawEvent) error {
 	values := []interface{}{
 		event.ID,
 		event.ChainID,
-		event.NetworkID,
 		event.BlockNumber,
 		event.BlockHash,
 		event.Address,

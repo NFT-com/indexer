@@ -1,6 +1,7 @@
 package postgres
 
 const (
+	// this represents the unique violation error code from postgres
 	uniqueViolation = "23505"
 
 	discoveryJobsTableName = "discovery_jobs"
@@ -16,6 +17,6 @@ const (
 var (
 	discoveryJobsTableColumns = []string{"id", "chain_url", "chain_type", "block_number", "addresses", "interface_type", "status"}
 	parsingJobsTableColumns   = []string{"id", "chain_url", "chain_type", "block_number", "address", "interface_type", "event_type", "status"}
-	eventsTableColumns        = []string{"id", "chain_id", "network_id", "block_number", "block_hash", "address", "transaction_hash", "event_type"}
-	nftsTableColumns          = []string{"id", "chain_id", "network_id", "contract", "owner"}
+	eventsTableColumns        = []string{"id", "chain_id", "block_number", "block_hash", "address", "transaction_hash", "event_type"}
+	nftsTableColumns          = []string{"id", "chain_id", "contract", "owner"}
 )
