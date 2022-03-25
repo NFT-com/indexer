@@ -18,7 +18,7 @@ type Client struct {
 	close   chan struct{}
 }
 
-func NewClient(log zerolog.Logger, optionList OptionsList) *Client {
+func New(log zerolog.Logger, optionList OptionsList) *Client {
 	opts := defaultOptions()
 	optionList.Apply(opts)
 

@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/request"
 )
 
 func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
-	url := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), discoveryBasePath)
-	connection, _, err := c.options.wsDialer.Dial(url, nil)
+	url, err := url.Parse(fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), discoveryBasePath))
+	connection, _, err := c.options.wsDialer.Dial(url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("could not dial to websocket: %w", err)
+		return fmt.Errorf("could not dial websocket: %w", err)
 	}
 
 	go func() {
@@ -60,7 +61,7 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
@@ -85,7 +86,7 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
@@ -110,7 +111,7 @@ func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
@@ -161,7 +162,7 @@ func (c *Client) RequeueDiscoveryJob(id string) (*jobs.Discovery, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}

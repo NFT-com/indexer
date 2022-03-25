@@ -36,7 +36,7 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 		ChainType:    req.ChainType,
 		BlockNumber:  req.BlockNumber,
 		Address:      req.Address,
-		StandardType: req.InterfaceType,
+		StandardType: req.StandardType,
 		EventType:    req.EventType,
 	}
 

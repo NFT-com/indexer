@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/NFT-com/indexer/jobs"
@@ -15,7 +15,7 @@ func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), parsingBasePath)
 	connection, _, err := c.options.wsDialer.Dial(requestURL, nil)
 	if err != nil {
-		return fmt.Errorf("could not dial to websocket: %w", err)
+		return fmt.Errorf("could not dial websocket: %w", err)
 	}
 
 	go func() {
@@ -61,7 +61,7 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
@@ -86,7 +86,7 @@ func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
@@ -111,7 +111,7 @@ func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
@@ -162,7 +162,7 @@ func (c *Client) RequeueParsingJob(id string) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}

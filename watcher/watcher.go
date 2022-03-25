@@ -17,7 +17,7 @@ type Job struct {
 	close           chan struct{}
 }
 
-func NewJobWatcher(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer) *Job {
+func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer) *Job {
 	j := Job{
 		log:             log.With().Str("component", "watcher").Logger(),
 		apiClient:       apiClient,

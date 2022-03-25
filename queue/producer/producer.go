@@ -26,14 +26,14 @@ func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue 
 }
 
 func (p *Producer) PublishDiscoveryJob(job jobs.Discovery) error {
-	q, err := p.connection.OpenQueue(p.discoveryQueue)
-	if err != nil {
-		return fmt.Errorf("could not open connection with queue: %w", err)
-	}
-
 	payload, err := json.Marshal(job)
 	if err != nil {
 		return fmt.Errorf("could not marshal payload: %w", err)
+	}
+
+	q, err := p.connection.OpenQueue(p.discoveryQueue)
+	if err != nil {
+		return fmt.Errorf("could not open connection with queue: %w", err)
 	}
 
 	err = q.PublishBytes(payload)
@@ -45,14 +45,14 @@ func (p *Producer) PublishDiscoveryJob(job jobs.Discovery) error {
 }
 
 func (p *Producer) PublishParsingJob(job jobs.Parsing) error {
-	q, err := p.connection.OpenQueue(p.parsingQueue)
-	if err != nil {
-		return fmt.Errorf("could not open connection with queue: %w", err)
-	}
-
 	payload, err := json.Marshal(job)
 	if err != nil {
 		return fmt.Errorf("could not marshal payload: %w", err)
+	}
+
+	q, err := p.connection.OpenQueue(p.parsingQueue)
+	if err != nil {
+		return fmt.Errorf("could not open connection with queue: %w", err)
 	}
 
 	err = q.PublishBytes(payload)
