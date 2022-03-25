@@ -3,12 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/ethereum/go-ethereum/common"
-)
 
-const (
-	zeroValueHash = "0x0000000000000000000000000000000000000000"
+	"github.com/NFT-com/indexer/log"
 )
 
 type Parser struct {
@@ -20,35 +17,37 @@ func NewParser() *Parser {
 	return &p
 }
 
-func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
-	if len(rawEvent.IndexData) < 3 {
-		return nil, fmt.Errorf("could not parse raw event: index data lenght is less than 3")
+func (p *Parser) ParseRawEvent(rawLog log.RawLog) (*log.Log, error) {
+	if len(rawLog.IndexData) < 3 {
+		return nil, fmt.Errorf("could not parse raw log: index data lenght is less than 3")
 	}
 
 	var (
-		fromAddress = common.HexToAddress(rawEvent.IndexData[0]).String()
-		toAddress   = common.HexToAddress(rawEvent.IndexData[1]).String()
-		nftID       = common.HexToHash(rawEvent.IndexData[2]).Big().String()
+		fromAddress = common.HexToAddress(rawLog.IndexData[0]).String()
+		toAddress   = common.HexToAddress(rawLog.IndexData[1]).String()
+		nftID       = common.HexToHash(rawLog.IndexData[2]).Big().String()
 	)
 
-	m := event.Event{
-		ID:          rawEvent.ID,
-		ChainID:     rawEvent.ChainID,
-		NftID:       nftID,
-		Contract:    rawEvent.Address,
-		FromAddress: fromAddress,
-		ToAddress:   toAddress,
-		EmittedAt:   rawEvent.EmittedAt,
+	l := log.Log{
+		ID:              rawLog.ID,
+		ChainID:         rawLog.ChainID,
+		Contract:        rawLog.Address,
+		Block:           rawLog.BlockNumber,
+		TransactionHash: rawLog.TransactionHash,
+		NftID:           nftID,
+		FromAddress:     fromAddress,
+		ToAddress:       toAddress,
+		EmittedAt:       rawLog.EmittedAt,
 	}
 
 	switch {
-	case rawEvent.IndexData[0] == zeroValueHash:
-		m.Type = event.Mint
-	case rawEvent.IndexData[1] == zeroValueHash:
-		m.Type = event.Burn
+	case rawLog.IndexData[0] == zeroValueHash:
+		l.Type = log.Mint
+	case rawLog.IndexData[1] == zeroValueHash:
+		l.Type = log.Burn
 	default:
-		m.Type = event.Transfer
+		l.Type = log.Transfer
 	}
 
-	return &m, nil
+	return &l, nil
 }

@@ -9,9 +9,9 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/service/client"
 )
 
@@ -64,7 +64,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 
 	name := functionName(job)
-	lambdaOutput, err := d.dispatcher.Dispatch(name, payload)
+	output, err := d.dispatcher.Dispatch(name, payload)
 	if err != nil {
 		d.handleError(delivery, err, "could not dispatch message")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
@@ -74,10 +74,10 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	var jobResult []event.Event
-	err = json.Unmarshal(lambdaOutput, &jobResult)
+	var logs []log.Log
+	err = json.Unmarshal(output, &logs)
 	if err != nil {
-		d.handleError(delivery, err, "could not unmarshal job result")
+		d.handleError(delivery, err, "could not unmarshal output logs")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.handleError(delivery, err, "could not updating job state")
@@ -85,9 +85,9 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	err = d.processEvents(jobResult)
+	err = d.processLogs(logs)
 	if err != nil {
-		d.handleError(delivery, err, "could not handle job result")
+		d.handleError(delivery, err, "could not handle output logs")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.handleError(delivery, err, "could not updating job state")
@@ -110,14 +110,6 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		d.log.Error().Err(err).Msg("could not acknowledge message")
 		return
 	}
-}
-
-func (d *Parsing) processEvents(result []event.Event) error {
-	for _, e := range result {
-		d.log.Info().Interface("event", e).Msg("got new event from lamdba") // FIXME: Update this to the correct logic
-	}
-
-	return nil
 }
 
 func (d *Parsing) handleError(delivery rmq.Delivery, err error, message string) {

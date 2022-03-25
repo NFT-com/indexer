@@ -6,8 +6,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"
 	"github.com/NFT-com/indexer/parsers"
@@ -33,11 +33,11 @@ func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, error) {
-	log := h.log.With().
+	h.log.Info().
 		Str("block", job.BlockNumber).
 		Str("event", job.EventType).
 		Str("contract", job.Address).
-		Logger()
+		Msg("processing job")
 
 	network, err := web3.New(ctx, job.ChainURL)
 	if err != nil {
@@ -50,21 +50,20 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 		return nil, err
 	}
 
-	rawEvents, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
+	rawLogs, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
 	if err != nil {
-		return nil, fmt.Errorf("could not get block event: %w", err)
+		return nil, fmt.Errorf("could not get block events: %w", err)
 	}
 
-	parsedEvents := make([]event.Event, 0, len(rawEvents))
-	for _, rawEvent := range rawEvents {
-		parsedEvent, err := parser.ParseRawEvent(rawEvent)
+	logs := make([]log.Log, 0, len(rawLogs))
+	for _, rawLog := range rawLogs {
+		log, err := parser.ParseRawLog(rawLog)
 		if err != nil {
-			log.Error().Err(err).Msg("could not parse raw event")
-			return nil, fmt.Errorf("could not parse raw event: %w", err)
+			return nil, fmt.Errorf("could not parse raw events: %w", err)
 		}
 
-		parsedEvents = append(parsedEvents, *parsedEvent)
+		logs = append(logs, *log)
 	}
 
-	return parsedEvents, nil
+	return logs, nil
 }

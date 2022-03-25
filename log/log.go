@@ -1,4 +1,4 @@
-package event
+package log
 
 import (
 	"time"
@@ -28,19 +28,22 @@ func (e Type) String() string {
 	}
 }
 
-type Event struct {
-	ID          string    `json:"id"`
-	Type        string    `json:"type"`
-	ChainID     string    `json:"chain_id"`
-	NftID       string    `json:"nft_id"`
-	Contract    string    `json:"contract"`
-	FromAddress string    `json:"from_address"`
-	ToAddress   string    `json:"to_address"`
-	Price       string    `json:"price"`
-	EmittedAt   time.Time `json:"emitted_at"`
+type Log struct {
+	ID                   string    `json:"id"`
+	ChainID              string    `json:"chain_id"`
+	Contract             string    `json:"contract"`
+	Block                string    `json:"block"`
+	TransactionHash      string    `json:"transaction_hash"`
+	Type                 Type      `json:"type"`
+	ContractCollectionID string    `json:"contract_collection_id"`
+	NftID                string    `json:"nft_id"`
+	FromAddress          string    `json:"from_address"`
+	ToAddress            string    `json:"to_address"`
+	Price                string    `json:"price"`
+	EmittedAt            time.Time `json:"emitted_at"`
 }
 
-type RawEvent struct {
+type RawLog struct {
 	ID              string    `json:"id"`
 	ChainID         string    `json:"chain_id"`
 	BlockNumber     string    `json:"block_number"`

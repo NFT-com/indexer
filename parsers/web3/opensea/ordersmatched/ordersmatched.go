@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/networks"
 )
 
@@ -35,37 +35,39 @@ func NewParser(client networks.Network) (*Parser, error) {
 	return &p, nil
 }
 
-func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
-	if len(rawEvent.IndexData) < 2 {
-		return nil, fmt.Errorf("could not parse raw event: index data lenght is less than 2")
+func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
+	if len(rawLog.IndexData) < 2 {
+		return nil, fmt.Errorf("could not parse raw log: index data lenght is less than 2")
 	}
 
 	var (
-		seller = rawEvent.IndexData[0]
-		buyer  = rawEvent.IndexData[1]
+		seller = rawLog.IndexData[0]
+		buyer  = rawLog.IndexData[1]
 	)
 
-	order := make(map[string]interface{})
-	err := p.abi.UnpackIntoMap(order, eventName, rawEvent.Data)
+	data := make(map[string]interface{})
+	err := p.abi.UnpackIntoMap(data, eventName, rawLog.Data)
 	if err != nil {
-		return nil, fmt.Errorf("could not unpack event: %w", err)
+		return nil, fmt.Errorf("could not unpack log data: %w", err)
 	}
 
-	price, ok := order[priceFieldName].(*big.Int)
+	price, ok := data[priceFieldName].(*big.Int)
 	if !ok {
 		return nil, fmt.Errorf("could not parse price: price is empty or not a big.Int pointer")
 	}
 
-	m := event.Event{
-		ID:          rawEvent.ID,
-		Type:        event.Sale,
-		ChainID:     rawEvent.ChainID,
-		Contract:    rawEvent.Address,
-		FromAddress: common.HexToAddress(seller).String(),
-		ToAddress:   common.HexToAddress(buyer).String(),
-		Price:       price.String(),
-		EmittedAt:   rawEvent.EmittedAt,
+	l := log.Log{
+		ID:              rawLog.ID,
+		Type:            log.Sale,
+		ChainID:         rawLog.ChainID,
+		Block:           rawLog.BlockNumber,
+		TransactionHash: rawLog.TransactionHash,
+		Contract:        rawLog.Address,
+		FromAddress:     common.HexToAddress(seller).String(),
+		ToAddress:       common.HexToAddress(buyer).String(),
+		Price:           price.String(),
+		EmittedAt:       rawLog.EmittedAt,
 	}
 
-	return &m, nil
+	return &l, nil
 }

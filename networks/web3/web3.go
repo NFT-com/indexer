@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/log"
 )
 
 const (
@@ -43,57 +43,58 @@ func New(ctx context.Context, url string) (*Web3, error) {
 	return &w, nil
 }
 
-func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]event.RawEvent, error) {
-	zero := big.NewInt(0)
-	startIndex, _ := zero.SetString(blockNumber, indexBase)
-	endIndex, _ := zero.SetString(blockNumber, indexBase)
+func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]log.RawLog, error) {
+	index, ok := big.NewInt(0).SetString(blockNumber, indexBase)
+	if !ok {
+		return nil, fmt.Errorf("could not parse block number into big.Int")
+	}
 
 	query := ethereum.FilterQuery{
-		FromBlock: startIndex,
-		ToBlock:   endIndex,
+		FromBlock: index,
+		ToBlock:   index,
 		Addresses: []common.Address{common.HexToAddress(contract)},
 		Topics:    [][]common.Hash{{common.HexToHash(eventType)}},
 	}
 
-	logs, err := w.ethClient.FilterLogs(ctx, query)
+	web3Logs, err := w.ethClient.FilterLogs(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	evts := make([]event.RawEvent, 0, len(logs))
-	for _, log := range logs {
-		if log.Removed {
+	logs := make([]log.RawLog, 0, len(web3Logs))
+	for _, web3Log := range web3Logs {
+		if web3Log.Removed {
 			continue
 		}
 
-		eventJson, err := log.MarshalJSON()
+		eventJson, err := web3Log.MarshalJSON()
 		if err != nil {
-			return nil, fmt.Errorf("could not marshal event to json: %w", err)
+			return nil, fmt.Errorf("could not marshal events to json: %w", err)
 		}
 
 		hash := sha256.Sum256(eventJson)
 
-		indexData := make([]string, 0, len(log.Topics)-1)
-		for _, topic := range log.Topics[1:] {
+		indexData := make([]string, 0, len(web3Log.Topics)-1)
+		for _, topic := range web3Log.Topics[1:] {
 			indexData = append(indexData, topic.String())
 		}
 
-		e := event.RawEvent{
+		l := log.RawLog{
 			ID:              common.Bytes2Hex(hash[:]),
 			ChainID:         w.chainID,
 			BlockNumber:     blockNumber,
-			BlockHash:       log.BlockHash.String(),
+			BlockHash:       web3Log.BlockHash.String(),
 			Address:         contract,
-			TransactionHash: log.TxHash.String(),
-			EventType:       log.Topics[0].String(),
+			TransactionHash: web3Log.TxHash.String(),
+			EventType:       web3Log.Topics[0].String(),
 			IndexData:       indexData,
-			Data:            log.Data,
+			Data:            web3Log.Data,
 		}
 
-		evts = append(evts, e)
+		logs = append(logs, l)
 	}
 
-	return evts, nil
+	return logs, nil
 }
 
 func (w *Web3) Close() {

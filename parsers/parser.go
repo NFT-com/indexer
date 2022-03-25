@@ -1,9 +1,9 @@
 package parsers
 
 import (
-	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/log"
 )
 
 type Parser interface {
-	ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error)
+	ParseRawLog(log log.RawLog) (*log.Log, error)
 }
