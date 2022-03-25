@@ -145,7 +145,7 @@ func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
-func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
+func (c *Client) UpdateDiscoveryJobStatus(id string, status jobs.Status) error {
 	requestBody := request.Status{
 		Status: string(status),
 	}

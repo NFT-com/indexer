@@ -9,13 +9,10 @@ import (
 	"time"
 
 	"github.com/adjust/rmq/v4"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/queue/consumer"
 	"github.com/NFT-com/indexer/service/client"
 )
@@ -49,7 +46,6 @@ func run() error {
 		flagRedisDatabase        int
 		flagRedisNetwork         string
 		flagRedisURL             string
-		flagRegion               string
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
@@ -61,7 +57,6 @@ func run() error {
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-central-1", "aws lambda region")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -73,15 +68,6 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
-	session := session.Must(session.NewSession(&sessionConfig))
-	lambda := lambda.New(session)
-
-	dispatcher, err := function.NewClient(lambda)
-	if err != nil {
-		return fmt.Errorf("could not create function client dispatcher: %w", err)
-	}
-
 	cli := http.DefaultClient
 	cli.Timeout = defaultHTTPTimeout
 
@@ -90,14 +76,17 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
-	consumer, err := consumer.NewParsingConsumer(log, api, dispatcher)
-	if err != nil {
-		return fmt.Errorf("could not create consumer: %w", err)
-	}
+	consumer := consumer.NewParsingConsumer(log, api)
 
 	failed := make(chan error)
 
-	rmqConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	redisClient := redis.NewClient(&redis.Options{
+		Network: flagRedisNetwork,
+		Addr:    flagRedisURL,
+		DB:      flagRedisDatabase,
+	})
+
+	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
 	if err != nil {
 		return fmt.Errorf("could not open redis connection: %w", err)
 	}

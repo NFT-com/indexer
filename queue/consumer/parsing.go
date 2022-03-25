@@ -17,14 +17,13 @@ type Parsing struct {
 	apiClient  *client.Client
 }
 
-func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher) (*Parsing, error) {
+func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client) *Parsing {
 	c := Parsing{
-		log:        log,
-		dispatcher: dispatcher,
-		apiClient:  apiClient,
+		log:       log,
+		apiClient: apiClient,
 	}
 
-	return &c, nil
+	return &c
 }
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
@@ -61,7 +60,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
-	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
+	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
 			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("could not retrieve parsing job")
@@ -72,16 +71,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	err = d.dispatcher.Dispatch("test", payload)
-	if err != nil {
-		if rejectErr := delivery.Reject(); rejectErr != nil {
-			d.log.Error().Err(err).AnErr("reject_error", rejectErr).Msg("could not dispatch message")
-			return
-		}
-
-		d.log.Error().Err(err).Msg("could not dispatch message")
-		return
-	}
+	d.log.Info().Bytes("payload", payload).Msg("expected function call")
 
 	err = delivery.Ack()
 	if err != nil {

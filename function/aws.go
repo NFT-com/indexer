@@ -16,7 +16,7 @@ type Client struct {
 	lambdaClient Lambda
 }
 
-func NewClient(lambdaClient Lambda) (*Client, error) {
+func New(lambdaClient Lambda) (*Client, error) {
 	if lambdaClient == nil {
 		return nil, errors.New("invalid lambda client")
 	}
