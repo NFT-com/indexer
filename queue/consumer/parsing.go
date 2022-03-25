@@ -9,7 +9,7 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"
@@ -66,7 +66,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	name := functionName(job)
 	lambdaOutput, err := d.dispatcher.Dispatch(name, payload)
 	if err != nil {
-		d.HandleError(delivery, err, "could not dispatch message")
+		d.handleError(delivery, err, "could not dispatch message")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.handleError(delivery, err, "could not updating job state")
@@ -77,7 +77,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	var jobResult []event.Event
 	err = json.Unmarshal(lambdaOutput, &jobResult)
 	if err != nil {
-		d.HandleError(delivery, err, "could not unmarshal job result")
+		d.handleError(delivery, err, "could not unmarshal job result")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.handleError(delivery, err, "could not updating job state")
@@ -87,20 +87,20 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err = d.processEvents(jobResult)
 	if err != nil {
-		d.HandleError(delivery, err, "could not handle job result")
+		d.handleError(delivery, err, "could not handle job result")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
 
 	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
-		d.HandleError(delivery, err, "could not updating job state")
+		d.handleError(delivery, err, "could not updating job state")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job state")
 		}
 		return
 	}

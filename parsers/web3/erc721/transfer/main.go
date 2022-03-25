@@ -6,8 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/rs/zerolog"
+
+	"github.com/aws/aws-lambda-go/lambda"
 
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/parsers"

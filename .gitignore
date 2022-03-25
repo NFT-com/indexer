@@ -1,3 +1,5 @@
 /cmd/jobs-api/jobs-api
 /cmd/jobs-watcher/jobs-watcher
 /cmd/parsing-dispatcher/parsing-dispatcher
+/parsers/web3/erc721/transfer/transfer
+/parsers/web3/opensea/ordersmatched/ordersmatched
