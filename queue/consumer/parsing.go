@@ -114,10 +114,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 func (d *Parsing) processEvents(result []event.Event) error {
 	for _, e := range result {
-		err := d.store.InsertHistory(e)
-		if err != nil {
-			return fmt.Errorf("could not insert history: %w", err)
-		}
+		d.log.Info().Interface("event", e).Msg("got new event from lamdba") // FIXME: Update this to the correct logic
 	}
 
 	return nil

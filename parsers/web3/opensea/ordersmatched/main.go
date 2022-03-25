@@ -46,7 +46,7 @@ func run() error {
 	handler := parsing.NewHandler(log, func(client networks.Network) (parsers.Parser, error) {
 		parser, err := NewParser(client)
 		if err != nil {
-			return nil, fmt.Errorf("could not create parser client: %w", err)
+			return nil, fmt.Errorf("could not create parser: %w", err)
 		}
 
 		return parser, nil

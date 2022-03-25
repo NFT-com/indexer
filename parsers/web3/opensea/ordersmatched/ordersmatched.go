@@ -60,7 +60,6 @@ func (p *Parser) ParseRawEvent(rawEvent event.RawEvent) (*event.Event, error) {
 		ID:          rawEvent.ID,
 		Type:        event.Sale,
 		ChainID:     rawEvent.ChainID,
-		NetworkID:   rawEvent.NetworkID,
 		Contract:    rawEvent.Address,
 		FromAddress: common.HexToAddress(seller).String(),
 		ToAddress:   common.HexToAddress(buyer).String(),
