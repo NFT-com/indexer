@@ -74,8 +74,8 @@ func run() error {
 	log = log.Level(level)
 
 	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
-	sess := session.Must(session.NewSession(&sessionConfig))
-	lambda := lambda.New(sess)
+	session := session.Must(session.NewSession(&sessionConfig))
+	lambda := lambda.New(session)
 
 	dispatcher, err := function.NewClient(lambda)
 	if err != nil {
