@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/adjust/rmq/v4"
-	"github.com/go-redis/redis/v8"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/go-redis/redis/v8"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
@@ -109,7 +108,7 @@ func run() error {
 		return fmt.Errorf("could not create store: %w", err)
 	}
 
-	consumer := consumer.NewParsingConsumer(log, api)
+	consumer := consumer.NewParsingConsumer(log, api, dispatcher, postgresStore)
 
 	failed := make(chan error)
 

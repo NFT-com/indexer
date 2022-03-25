@@ -2,7 +2,9 @@ package consumer
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/NFT-com/indexer/events"
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
@@ -53,7 +55,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
-	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
+	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		d.HandleError(delivery, err, "could not retrieve parsing job")
 		return
@@ -62,7 +64,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	lambdaOutput, err := d.dispatcher.Dispatch("parsing-85cd71d", payload)
 	if err != nil {
 		d.HandleError(delivery, err, "could not dispatch message")
-		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.HandleError(delivery, err, "could not updating job state")
 		}
@@ -83,12 +85,20 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	err = d.HandlerJobResult(jobResult)
 	if err != nil {
 		d.HandleError(delivery, err, "could not handle job result")
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
+		if err != nil {
+			d.HandleError(delivery, err, "could not updating job state")
+		}
 		return
 	}
 
-	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFinished)
+	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
 		d.HandleError(delivery, err, "could not updating job state")
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
+		if err != nil {
+			d.HandleError(delivery, err, "could not updating job state")
+		}
 		return
 	}
 
