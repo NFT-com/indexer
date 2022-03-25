@@ -13,7 +13,7 @@ import (
 
 func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), parsingBasePath)
-	connection, _, err := c.wsClient.Dial(requestURL, nil)
+	connection, _, err := c.options.wsDialer.Dial(requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("could not dial to websocket: %w", err)
 	}
@@ -56,7 +56,7 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 	}
 
 	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), parsingBasePath)
-	resp, err := c.httpClient.Post(requestURL, jsonContentType, bytes.NewReader(body))
+	resp, err := c.options.httpClient.Post(requestURL, jsonContentType, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -81,7 +81,7 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 }
 
 func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), parsingBasePath, status))
+	resp, err := c.options.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), parsingBasePath, status))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -106,7 +106,7 @@ func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 }
 
 func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), parsingBasePath, id))
+	resp, err := c.options.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), parsingBasePath, id))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -148,7 +148,7 @@ func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
 
 	req.Header.Add(contentTypeHeaderName, jsonContentType)
 
-	_, err = c.httpClient.Do(req)
+	_, err = c.options.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("could not perform request: %w", err)
 	}
@@ -157,7 +157,7 @@ func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
 }
 
 func (c *Client) RequeueParsingJob(id string) (*jobs.Parsing, error) {
-	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), parsingBasePath, id), jsonContentType, nil)
+	resp, err := c.options.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), parsingBasePath, id), jsonContentType, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
