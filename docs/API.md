@@ -16,171 +16,15 @@ Discovery jobs
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {}
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "addresses": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
-              }
-            }
-          }
-
-+ Response 200 (application/json)
-
-  Discovery job created
-
-  + Body
-
-          {}
-
-  + Schema
-
-          {
-            "type": "object"
-          }
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "addresses": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
-              }
-            }
-          }
-
-+ Response 400 (application/json)
-
-  Invalid job
-
-  + Body
-
-#### Find Discoveries jobs [GET /discoveries{?status}]
-
-+ Parameters
-
-  + status: created,queued,processing,failed,finished,canceled - Job Status, empty for all status
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-          [
-            {},
-            {
-              "addresses": [
-                "ullamco",
-                "pariatur in laborum",
-                "ipsum magna adipisicing exercitation commodo"
-              ]
-            },
             {}
-          ]
 
   + Schema
 
-          {
-            "type": "array",
-            "items": {
+            {
               "type": "object",
               "properties": {
                 "id": {
@@ -224,7 +68,163 @@ Discovery jobs
                 }
               }
             }
-          }
+
++ Response 200 (application/json)
+
+  Discovery job created
+
+  + Body
+
+            {}
+
+  + Schema
+
+            {
+              "type": "object"
+            }
+
++ Request (application/json)
+
+  + Headers
+
+            Accept: application/json
+
+  + Body
+
+  + Schema
+
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
+                },
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
+                },
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
+                },
+                "addresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
+              }
+            }
+
++ Response 400 (application/json)
+
+  Invalid job
+
+  + Body
+
+#### Find Discoveries jobs [GET /discoveries{?status}]
+
++ Parameters
+
+  + status: created,queued,processing,failed,finished,canceled - Job Status, empty for all status
+
++ Request
+
+  + Headers
+
+            Accept: application/json
+
+  + Body
+
++ Response 200 (application/json)
+
+  successful operation
+
+  + Body
+
+            [
+              {},
+              {
+                "addresses": [
+                  "ullamco",
+                  "pariatur in laborum",
+                  "ipsum magna adipisicing exercitation commodo"
+                ]
+              },
+              {}
+            ]
+
+  + Schema
+
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "chain_url": {
+                    "type": "string",
+                    "format": "url"
+                  },
+                  "chain_type": {
+                    "type": "string",
+                    "example": "web3"
+                  },
+                  "block_number": {
+                    "type": "string",
+                    "example": "12345"
+                  },
+                  "addresses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "standard_type": {
+                    "type": "string",
+                    "example": "ERC721"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Discovery Status",
+                    "default": "created",
+                    "enum": [
+                      "created",
+                      "queued",
+                      "processing",
+                      "failed",
+                      "finished",
+                      "canceled"
+                    ]
+                  }
+                }
+              }
+            }
 
 ### /discoveries/{id}
 
@@ -240,7 +240,7 @@ Returns a single discovery job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -250,60 +250,60 @@ Returns a single discovery job
 
   + Body
 
-          {}
+            {}
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "addresses": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
+                },
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
+                },
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
+                },
+                "addresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
                 }
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
               }
             }
-          }
 
 + Request
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -323,34 +323,34 @@ Returns a single discovery job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {
-            "status": "created"
-          }
+            {
+              "status": "created"
+            }
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "description": "Job Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Job Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Response 200 (application/json)
 
@@ -358,90 +358,90 @@ Returns a single discovery job
 
   + Body
 
-          {
-            "chain_type": "consectetur eiusmod incididunt",
-            "block_number": "dolore incididunt"
-          }
+            {
+              "chain_type": "consectetur eiusmod incididunt",
+              "block_number": "dolore incididunt"
+            }
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "addresses": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
+                },
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
+                },
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
+                },
+                "addresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
                 }
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
               }
             }
-          }
 
 + Request (application/json)
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {
-            "status": "processing"
-          }
+            {
+              "status": "processing"
+            }
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "description": "Job Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Job Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Response 400 (application/json)
 
@@ -453,34 +453,34 @@ Returns a single discovery job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {
-            "status": "canceled"
-          }
+            {
+              "status": "canceled"
+            }
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "description": "Job Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Job Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Response 404 (application/json)
 
@@ -500,7 +500,7 @@ Returns a single discovery job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -514,7 +514,7 @@ Returns a single discovery job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -536,187 +536,19 @@ Parsing jobs
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {
-            "block_number": "ex",
-            "event_type": "sint",
-            "chain_type": "proident Lorem quis dolore"
-          }
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "address": {
-                "type": "string",
-                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "event_type": {
-                "type": "string",
-                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
-              }
+            {
+              "block_number": "ex",
+              "event_type": "sint",
+              "chain_type": "proident Lorem quis dolore"
             }
-          }
-
-+ Response 200 (application/json)
-
-  Parsing job created
-
-  + Body
-
-          {}
 
   + Schema
 
-          {
-            "type": "object"
-          }
-
-+ Request (application/json)
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-  + Schema
-
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "address": {
-                "type": "string",
-                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "event_type": {
-                "type": "string",
-                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
-              }
-            }
-          }
-
-+ Response 400 (application/json)
-
-  Invalid parsing job
-
-  + Body
-
-#### Find parsing jobs [GET /parsings{?status}]
-
-+ Parameters
-
-  + status: ,created,queued,processing,failed,finished,canceled - Job Status, empty for all status
-
-+ Request
-
-  + Headers
-
-          Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  Successful operation
-
-  + Body
-
-          [
             {
-              "status": "failed"
-            },
-            {
-              "status": "finished"
-            },
-            {
-              "status": "created"
-            },
-            {
-              "status": "failed",
-              "address": "ut dolore anim in"
-            },
-            {
-              "standard_type": "ex dolore",
-              "address": "proident exercitation aliqua ipsum in"
-            }
-          ]
-
-  + Schema
-
-          {
-            "type": "array",
-            "items": {
               "type": "object",
               "properties": {
                 "id": {
@@ -762,7 +594,175 @@ Parsing jobs
                 }
               }
             }
-          }
+
++ Response 200 (application/json)
+
+  Parsing job created
+
+  + Body
+
+            {}
+
+  + Schema
+
+            {
+              "type": "object"
+            }
+
++ Request (application/json)
+
+  + Headers
+
+            Accept: application/json
+
+  + Body
+
+  + Schema
+
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
+                },
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
+                },
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
+                },
+                "address": {
+                  "type": "string",
+                  "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+                },
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
+                },
+                "event_type": {
+                  "type": "string",
+                  "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
+              }
+            }
+
++ Response 400 (application/json)
+
+  Invalid parsing job
+
+  + Body
+
+#### Find parsing jobs [GET /parsings{?status}]
+
++ Parameters
+
+  + status: created,queued,processing,failed,finished,canceled - Job Status, empty for all status
+
++ Request
+
+  + Headers
+
+            Accept: application/json
+
+  + Body
+
++ Response 200 (application/json)
+
+  Successful operation
+
+  + Body
+
+            [
+              {
+                "status": "failed"
+              },
+              {
+                "status": "finished"
+              },
+              {
+                "status": "created"
+              },
+              {
+                "status": "failed",
+                "address": "ut dolore anim in"
+              },
+              {
+                "standard_type": "ex dolore",
+                "address": "proident exercitation aliqua ipsum in"
+              }
+            ]
+
+  + Schema
+
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "chain_url": {
+                    "type": "string",
+                    "format": "url"
+                  },
+                  "chain_type": {
+                    "type": "string",
+                    "example": "web3"
+                  },
+                  "block_number": {
+                    "type": "string",
+                    "example": "12345"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+                  },
+                  "standard_type": {
+                    "type": "string",
+                    "example": "ERC721"
+                  },
+                  "event_type": {
+                    "type": "string",
+                    "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Discovery Status",
+                    "default": "created",
+                    "enum": [
+                      "created",
+                      "queued",
+                      "processing",
+                      "failed",
+                      "finished",
+                      "canceled"
+                    ]
+                  }
+                }
+              }
+            }
 
 ### /parsings/{id}
 
@@ -778,7 +778,7 @@ Returns a single parsing job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -788,62 +788,62 @@ Returns a single parsing job
 
   + Body
 
-          {}
+            {}
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "address": {
-                "type": "string",
-                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "event_type": {
-                "type": "string",
-                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
+                },
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
+                },
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
+                },
+                "address": {
+                  "type": "string",
+                  "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+                },
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
+                },
+                "event_type": {
+                  "type": "string",
+                  "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Request
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -863,32 +863,32 @@ Returns a single parsing job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {}
+            {}
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "description": "Job Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Job Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Response 200 (application/json)
 
@@ -896,92 +896,92 @@ Returns a single parsing job
 
   + Body
 
-          {
-            "standard_type": "anim culpa consequat ut minim",
-            "address": "commodo ex cillum"
-          }
+            {
+              "standard_type": "anim culpa consequat ut minim",
+              "address": "commodo ex cillum"
+            }
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "chain_url": {
-                "type": "string",
-                "format": "url"
-              },
-              "chain_type": {
-                "type": "string",
-                "example": "web3"
-              },
-              "block_number": {
-                "type": "string",
-                "example": "12345"
-              },
-              "address": {
-                "type": "string",
-                "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
-              },
-              "standard_type": {
-                "type": "string",
-                "example": "ERC721"
-              },
-              "event_type": {
-                "type": "string",
-                "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-              },
-              "status": {
-                "type": "string",
-                "description": "Discovery Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "chain_url": {
+                  "type": "string",
+                  "format": "url"
+                },
+                "chain_type": {
+                  "type": "string",
+                  "example": "web3"
+                },
+                "block_number": {
+                  "type": "string",
+                  "example": "12345"
+                },
+                "address": {
+                  "type": "string",
+                  "example": "0x2685d224956b311c8729f1ad72c9cacd9f6e8f56"
+                },
+                "standard_type": {
+                  "type": "string",
+                  "example": "ERC721"
+                },
+                "event_type": {
+                  "type": "string",
+                  "example": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Discovery Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Request (application/json)
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {
-            "status": "failed"
-          }
+            {
+              "status": "failed"
+            }
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "description": "Job Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Job Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Response 400 (application/json)
 
@@ -993,32 +993,32 @@ Returns a single parsing job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
-          {}
+            {}
 
   + Schema
 
-          {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "description": "Job Status",
-                "default": "created",
-                "enum": [
-                  "created",
-                  "queued",
-                  "processing",
-                  "failed",
-                  "finished",
-                  "canceled"
-                ]
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Job Status",
+                  "default": "created",
+                  "enum": [
+                    "created",
+                    "queued",
+                    "processing",
+                    "failed",
+                    "finished",
+                    "canceled"
+                  ]
+                }
               }
             }
-          }
 
 + Response 404 (application/json)
 
@@ -1038,7 +1038,7 @@ Returns a single parsing job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
@@ -1052,7 +1052,7 @@ Returns a single parsing job
 
   + Headers
 
-          Accept: application/json
+            Accept: application/json
 
   + Body
 
