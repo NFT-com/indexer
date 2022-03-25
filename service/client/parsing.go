@@ -4,18 +4,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"net/url"
+	"path"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/request"
 )
 
 func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
-	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), ParsingBasePath)
-	connection, _, err := c.wsClient.Dial(requestURL, nil)
+	url := c.config.jobsWebsocket
+	url.Path = path.Join("ws", parsingBasePath)
+
+	connection, _, err := c.config.dialer.Dial(url.String(), nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not dial websocket: %w", err)
 	}
 
 	go func() {
@@ -24,15 +28,16 @@ func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 			case <-c.close:
 				return
 			default:
-				job := jobs.Parsing{}
-				err := connection.ReadJSON(&job)
-				if err != nil {
-					c.log.Error().Err(err).Msg("could not read message socket")
-					return
-				}
-
-				parsingJobs <- job
 			}
+
+			job := jobs.Parsing{}
+			err := connection.ReadJSON(&job)
+			if err != nil {
+				c.log.Error().Err(err).Msg("could not read message socket")
+				continue
+			}
+
+			parsingJobs <- job
 		}
 	}()
 
@@ -51,128 +56,120 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 
 	body, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), ParsingBasePath)
-	resp, err := c.httpClient.Post(requestURL, JsonContentType, bytes.NewReader(body))
+	url := c.config.jobsAPI
+	url.Path = parsingBasePath
+
+	resp, err := c.config.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	newJob := jobs.Parsing{}
 	err = json.Unmarshal(responseBody, &newJob)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return &newJob, nil
 }
 
 func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), ParsingBasePath, status))
+	params := url.Values{}
+	params.Set("status", string(status))
+
+	url := c.config.jobsAPI
+	url.Path = parsingBasePath
+	url.RawQuery = params.Encode()
+
+	resp, err := c.config.client.Get(url.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	jobList := make([]jobs.Parsing, 0)
 	err = json.Unmarshal(body, &jobList)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return jobList, nil
 }
 
 func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, id))
+	url := c.config.jobsAPI
+	url.Path = path.Join(parsingBasePath, id)
+
+	resp, err := c.config.client.Get(url.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read body: %w", err)
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not close response body: %w", err)
 	}
 
 	job := jobs.Parsing{}
 	err = json.Unmarshal(body, &job)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
 	return &job, nil
 }
 
-func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
-	requestBody := request.Status{Status: string(status)}
+func (c *Client) UpdateParsingJobStatus(id string, status jobs.Status) error {
+	requestBody := request.Status{
+		Status: string(status),
+	}
+
 	body, err := json.Marshal(requestBody)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), ParsingBasePath, id)
-	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
+	url := c.config.jobsAPI
+	url.Path = path.Join(parsingBasePath, id)
+
+	req, err := http.NewRequest(http.MethodPatch, url.String(), bytes.NewReader(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create request: %w", err)
 	}
 
-	req.Header.Add(ContentTypeHeaderName, JsonContentType)
+	req.Header.Add(contentTypeHeaderName, jsonContentType)
 
-	_, err = c.httpClient.Do(req)
+	_, err = c.config.client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not perform request: %w", err)
 	}
 
 	return nil
-}
-
-func (c *Client) RequeueParsingJob(id string) (*jobs.Parsing, error) {
-	resp, err := c.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), ParsingBasePath, id), JsonContentType, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	job := jobs.Parsing{}
-	err = json.Unmarshal(body, &job)
-	if err != nil {
-		return nil, err
-	}
-
-	return &job, nil
 }

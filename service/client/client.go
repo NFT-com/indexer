@@ -1,38 +1,33 @@
 package client
 
 import (
-	"net/http"
-
-	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )
 
 const (
-	DiscoveryBasePath = "discoveries"
-	ParsingBasePath   = "parsings"
+	discoveryBasePath = "discoveries"
+	parsingBasePath   = "parsings"
 
-	ContentTypeHeaderName = "content-type"
-	JsonContentType       = "application/json"
+	contentTypeHeaderName = "content-type"
+	jsonContentType       = "application/json"
 )
 
 type Client struct {
-	log        zerolog.Logger
-	wsClient   *websocket.Dialer
-	httpClient *http.Client
-	options    *options
-	close      chan struct{}
+	log    zerolog.Logger
+	config config
+	close  chan struct{}
 }
 
-func NewClient(log zerolog.Logger, optionList OptionsList) *Client {
-	opts := defaultOptions()
-	optionList.Apply(opts)
+func New(log zerolog.Logger, opts ...Option) *Client {
+	cfg := defaultConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 
 	c := Client{
-		log:        log.With().Str("component", "api_client").Logger(),
-		wsClient:   opts.wsDialer,
-		httpClient: opts.httpClient,
-		options:    opts,
-		close:      make(chan struct{}),
+		log:    log.With().Str("component", "api_client").Logger(),
+		config: cfg,
+		close:  make(chan struct{}),
 	}
 
 	return &c

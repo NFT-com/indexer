@@ -18,6 +18,12 @@ import (
 	"github.com/NFT-com/indexer/watcher"
 )
 
+const (
+	defaultHTTPTimeout       = time.Second * 30
+	defaultDeliveryQueueName = "discovery"
+	defaultParsingQueueName  = "parsing"
+)
+
 func main() {
 	err := run()
 	if err != nil {
@@ -44,11 +50,11 @@ func run() error {
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "name of the network for redis connection")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "url of the network for redis connection")
-	pflag.IntVar(&flagRedisDatabase, "database", 1, "database of the network for redis connection")
-	pflag.StringVarP(&flagDeliveryQueueName, "delivery-queue", "q", "discovery", "name of the queue for delivery queue")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "w", "parsing", "name of the queue for delivery queue")
+	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
+	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
+	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
+	pflag.StringVar(&flagDeliveryQueueName, "delivery-queue", defaultDeliveryQueueName, "name of the queue for delivery queue")
+	pflag.StringVar(&flagParsingQueueName, "parsing-queue", defaultParsingQueueName, "name of the queue for parsing queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Parse()
 
@@ -63,55 +69,55 @@ func run() error {
 
 	failed := make(chan error)
 
-	httpClient := http.DefaultClient
-	httpClient.Timeout = time.Second * 30
+	cli := http.DefaultClient
+	cli.Timeout = defaultHTTPTimeout
 
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
 		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
-	apiClient := client.NewClient(log, client.NewOptions(
-		client.WithHTTPClient(httpClient),
+	api := client.New(log,
+		client.WithHTTPClient(cli),
 		client.WithHost(flagAPIEndpoint),
-	))
-	messageProducer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName)
+	)
+	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
 
-	jobWatcher := watcher.NewJobWatcher(log, apiClient, messageProducer)
+	watcher := watcher.New(log, api, producer)
 
 	discoveryJobs := make(chan jobs.Discovery)
-	err = apiClient.SubscribeNewDiscoveryJob(discoveryJobs)
+	err = api.SubscribeNewDiscoveryJob(discoveryJobs)
 	if err != nil {
-		return fmt.Errorf("could not subscriber to new discovery jobs: %w", err)
+		return fmt.Errorf("could not subscribe to new discovery jobs: %w", err)
 	}
 
 	parsingJobs := make(chan jobs.Parsing)
-	err = apiClient.SubscribeNewParsingJob(parsingJobs)
+	err = api.SubscribeNewParsingJob(parsingJobs)
 	if err != nil {
-		return fmt.Errorf("could not subscriber to new parsing jobs: %w", err)
+		return fmt.Errorf("could not subscribe to new parsing jobs: %w", err)
 	}
 
 	go func() {
-		log.Info().Msg("job watcher starting")
+		log.Info().Msg("jobs watcher starting")
 
-		err = jobWatcher.Watch(discoveryJobs, parsingJobs)
+		err = watcher.Watch(discoveryJobs, parsingJobs)
 		if err != nil {
 			failed <- fmt.Errorf("could not watch jobs: %w", err)
 		}
 
-		log.Info().Msg("job watcher done")
+		log.Info().Msg("jobs watcher done")
 	}()
 
 	select {
 	case <-sig:
-		log.Info().Msg("job watcher stopping")
-		jobWatcher.Close()
-		apiClient.Close()
+		log.Info().Msg("jobs watcher stopping")
+		watcher.Close()
+		api.Close()
 	case err = <-failed:
-		log.Error().Err(err).Msg("job watcher aborted")
+		log.Error().Err(err).Msg("jobs watcher aborted")
 		return err
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/event"
+	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"
@@ -22,7 +22,7 @@ type Parsing struct {
 	store      Store
 }
 
-func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher, store Store) (*Parsing, error) {
+func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher, store Store) *Parsing {
 	c := Parsing{
 		log:        log,
 		dispatcher: dispatcher,
@@ -30,7 +30,7 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher
 		store:      store,
 	}
 
-	return &c, nil
+	return &c
 }
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
@@ -57,7 +57,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		}
 	}
 
-	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusProcessing)
+	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		d.handleError(delivery, err, "could not retrieve parsing job")
 		return
@@ -66,8 +66,8 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	name := functionName(job)
 	lambdaOutput, err := d.dispatcher.Dispatch(name, payload)
 	if err != nil {
-		d.handleError(delivery, err, "could not dispatch message")
-		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		d.HandleError(delivery, err, "could not dispatch message")
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.handleError(delivery, err, "could not updating job state")
 		}
@@ -77,8 +77,8 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	var jobResult []event.Event
 	err = json.Unmarshal(lambdaOutput, &jobResult)
 	if err != nil {
-		d.handleError(delivery, err, "failed unmarshal job result")
-		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		d.HandleError(delivery, err, "could not unmarshal job result")
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.handleError(delivery, err, "could not updating job state")
 		}
@@ -87,20 +87,20 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err = d.processEvents(jobResult)
 	if err != nil {
-		d.handleError(delivery, err, "could not handle job result")
-		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		d.HandleError(delivery, err, "could not handle job result")
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.handleError(delivery, err, "could not updating job state")
+			d.HandleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
 
-	err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFinished)
+	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
-		d.handleError(delivery, err, "could not updating job state")
-		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		d.HandleError(delivery, err, "could not updating job state")
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.handleError(delivery, err, "could not updating job state")
+			d.HandleError(delivery, err, "could not updating job state")
 		}
 		return
 	}

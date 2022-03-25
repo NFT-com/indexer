@@ -1,6 +1,7 @@
 package postgres
 
 const (
+	// this represents the unique violation error code from postgres
 	uniqueViolation = "23505"
 
 	discoveryJobsTableName = "discovery_jobs"
