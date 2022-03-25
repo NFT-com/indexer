@@ -15,7 +15,7 @@ import (
 
 func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
 	url := c.options.jobsWebsocket
-	url.RawPath = parsingBasePath
+	url.Path = path.Join("ws", parsingBasePath)
 
 	connection, _, err := c.options.dialer.Dial(url.String(), nil)
 	if err != nil {
@@ -60,7 +60,7 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 	}
 
 	url := c.options.jobsAPI
-	url.RawPath = parsingBasePath
+	url.Path = parsingBasePath
 
 	resp, err := c.options.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
@@ -91,7 +91,7 @@ func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	params.Set("status", string(status))
 
 	url := c.options.jobsAPI
-	url.RawPath = parsingBasePath
+	url.Path = parsingBasePath
 	url.RawQuery = params.Encode()
 
 	resp, err := c.options.client.Get(url.String())
@@ -120,7 +120,7 @@ func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 
 func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
 	url := c.options.jobsAPI
-	url.RawPath = path.Join(parsingBasePath, id)
+	url.Path = path.Join(parsingBasePath, id)
 
 	resp, err := c.options.client.Get(url.String())
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
 	}
 
 	url := c.options.jobsAPI
-	url.RawPath = path.Join(parsingBasePath, id)
+	url.Path = path.Join(parsingBasePath, id)
 
 	req, err := http.NewRequest(http.MethodPatch, url.String(), bytes.NewReader(body))
 	if err != nil {

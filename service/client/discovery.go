@@ -15,7 +15,7 @@ import (
 
 func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
 	url := c.options.jobsWebsocket
-	url.RawPath = discoveryBasePath
+	url.Path = path.Join("ws", discoveryBasePath)
 
 	connection, _, err := c.options.dialer.Dial(url.String(), nil)
 	if err != nil {
@@ -59,7 +59,7 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 	}
 
 	url := c.options.jobsAPI
-	url.RawPath = discoveryBasePath
+	url.Path = discoveryBasePath
 
 	resp, err := c.options.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
@@ -90,7 +90,7 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 	params.Set("status", string(status))
 
 	url := c.options.jobsAPI
-	url.RawPath = discoveryBasePath
+	url.Path = discoveryBasePath
 	url.RawQuery = params.Encode()
 
 	resp, err := c.options.client.Get(url.String())
@@ -119,7 +119,7 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 
 func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	url := c.options.jobsAPI
-	url.RawPath = path.Join(discoveryBasePath, id)
+	url.Path = path.Join(discoveryBasePath, id)
 
 	resp, err := c.options.client.Get(url.String())
 	if err != nil {
@@ -156,7 +156,7 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 	}
 
 	url := c.options.jobsAPI
-	url.RawPath = path.Join(discoveryBasePath, id)
+	url.Path = path.Join(discoveryBasePath, id)
 
 	req, err := http.NewRequest(http.MethodPatch, url.String(), bytes.NewReader(body))
 	if err != nil {
