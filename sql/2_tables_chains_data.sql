@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS collections
 (
     id                     UUID PRIMARY KEY,
     chain_id               UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
-    contract_collection_id VARCHAR(128) NOT NULL,
+    contract_collection_id VARCHAR(128) NULL,
     address                VARCHAR(128) NOT NULL,
     name                   TEXT         NOT NULL,
     description            TEXT         NOT NULL,
