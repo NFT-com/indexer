@@ -9,12 +9,12 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/networks/web3"
-	"github.com/NFT-com/indexer/watcher/chain"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/networks/web3"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/watcher/chain"
 )
 
 const (
