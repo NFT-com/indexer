@@ -69,7 +69,7 @@ func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
 		return fmt.Errorf("could not get publish discovery job: %w", err)
 	}
 
-	err = j.apiClient.UpdateDiscoveryJobState(newJob.ID, jobs.StatusQueued)
+	err = j.apiClient.UpdateDiscoveryJobStatus(newJob.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update discovery job status: %w", err)
 	}
@@ -83,7 +83,7 @@ func (j *Job) publishParsingJob(newJob jobs.Parsing) error {
 		return fmt.Errorf("could not get publish parsing job: %w", err)
 	}
 
-	err = j.apiClient.UpdateParsingJobState(newJob.ID, jobs.StatusQueued)
+	err = j.apiClient.UpdateParsingJobStatus(newJob.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
