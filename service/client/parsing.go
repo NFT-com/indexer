@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/request"
 )
 
 func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
-	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), parsingBasePath)
-	connection, _, err := c.options.wsDialer.Dial(requestURL, nil)
+	url := c.options.jobsWebsocket
+	url.RawPath = parsingBasePath
+
+	connection, _, err := c.options.dialer.Dial(url.String(), nil)
 	if err != nil {
 		return fmt.Errorf("could not dial websocket: %w", err)
 	}
@@ -55,8 +59,10 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), parsingBasePath)
-	resp, err := c.options.httpClient.Post(requestURL, jsonContentType, bytes.NewReader(body))
+	url := c.options.jobsAPI
+	url.RawPath = parsingBasePath
+
+	resp, err := c.options.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -81,7 +87,14 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 }
 
 func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
-	resp, err := c.options.httpClient.Get(fmt.Sprintf("%s/%s?status=%s", c.options.httpURL.String(), parsingBasePath, status))
+	params := url.Values{}
+	params.Set("status", string(status))
+
+	url := c.options.jobsAPI
+	url.RawPath = parsingBasePath
+	url.RawQuery = params.Encode()
+
+	resp, err := c.options.client.Get(url.String())
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -106,7 +119,10 @@ func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 }
 
 func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
-	resp, err := c.options.httpClient.Get(fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), parsingBasePath, id))
+	url := c.options.jobsAPI
+	url.RawPath = path.Join(parsingBasePath, id)
+
+	resp, err := c.options.client.Get(url.String())
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -140,43 +156,20 @@ func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
 		return fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), parsingBasePath, id)
-	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
+	url := c.options.jobsAPI
+	url.RawPath = path.Join(parsingBasePath, id)
+
+	req, err := http.NewRequest(http.MethodPatch, url.String(), bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("could not create request: %w", err)
 	}
 
 	req.Header.Add(contentTypeHeaderName, jsonContentType)
 
-	_, err = c.options.httpClient.Do(req)
+	_, err = c.options.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("could not perform request: %w", err)
 	}
 
 	return nil
-}
-
-func (c *Client) RequeueParsingJob(id string) (*jobs.Parsing, error) {
-	resp, err := c.options.httpClient.Post(fmt.Sprintf("%s/%s/%s/requeue", c.options.httpURL.String(), parsingBasePath, id), jsonContentType, nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not perform request: %w", err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read body: %w", err)
-	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close response body: %w", err)
-	}
-
-	job := jobs.Parsing{}
-	err = json.Unmarshal(body, &job)
-	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
-	}
-
-	return &job, nil
 }
