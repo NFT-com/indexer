@@ -6,9 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/rs/zerolog"
 
+	"github.com/aws/aws-lambda-go/lambda"
+
+	"github.com/NFT-com/indexer/networks"
+	"github.com/NFT-com/indexer/parsers"
 	"github.com/NFT-com/indexer/workers/parsing"
 )
 
@@ -19,7 +22,8 @@ const (
 )
 
 func main() {
-	if err := run(); err != nil {
+	err := run()
+	if err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -39,7 +43,14 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	handler := parsing.NewHandler(log)
+	handler := parsing.NewHandler(log, func(client networks.Network) (parsers.Parser, error) {
+		parser, err := NewParser(client)
+		if err != nil {
+			return nil, fmt.Errorf("could not create parser client: %w", err)
+		}
+
+		return parser, nil
+	})
 	lambda.Start(handler.Handle)
 
 	return nil

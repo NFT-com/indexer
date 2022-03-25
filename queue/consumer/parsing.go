@@ -1,13 +1,15 @@
 package consumer
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/NFT-com/indexer/events"
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"
@@ -37,13 +39,13 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
-		d.HandleError(delivery, err, "could not unmarshal message")
+		d.handleError(delivery, err, "could not unmarshal message")
 		return
 	}
 
 	storedJob, err := d.apiClient.GetParsingJob(job.ID)
 	if err != nil {
-		d.HandleError(delivery, err, "could not retrieve parsing job")
+		d.handleError(delivery, err, "could not retrieve parsing job")
 		return
 	}
 
@@ -57,47 +59,48 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 
 	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
-		d.HandleError(delivery, err, "could not retrieve parsing job")
+		d.handleError(delivery, err, "could not retrieve parsing job")
 		return
 	}
 
-	lambdaOutput, err := d.dispatcher.Dispatch("parsing-85cd71d", payload)
+	name := functionName(job)
+	lambdaOutput, err := d.dispatcher.Dispatch(name, payload)
 	if err != nil {
-		d.HandleError(delivery, err, "could not dispatch message")
+		d.handleError(delivery, err, "could not dispatch message")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
 
-	var jobResult jobs.ParsingResult
+	var jobResult []event.Event
 	err = json.Unmarshal(lambdaOutput, &jobResult)
 	if err != nil {
-		d.HandleError(delivery, err, "failed unmarshal job result")
+		d.handleError(delivery, err, "could not unmarshal job result")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
 
-	err = d.HandlerJobResult(jobResult)
+	err = d.processEvents(jobResult)
 	if err != nil {
-		d.HandleError(delivery, err, "could not handle job result")
+		d.handleError(delivery, err, "could not handle job result")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
 
 	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
-		d.HandleError(delivery, err, "could not updating job state")
+		d.handleError(delivery, err, "could not updating job state")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.HandleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job state")
 		}
 		return
 	}
@@ -109,45 +112,40 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (d *Parsing) HandlerJobResult(result jobs.ParsingResult) error {
-	for _, event := range result.RawEvents {
-		err := d.store.InsertRawEvent(event)
+func (d *Parsing) processEvents(result []event.Event) error {
+	for _, e := range result {
+		err := d.store.InsertHistory(e)
 		if err != nil {
-			return fmt.Errorf("could not insert raw events into store: %w", err)
-		}
-	}
-
-	for _, event := range result.ParsedEvents {
-		switch event.Type {
-		case events.EventTypeMint:
-			err := d.store.InsertNewNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
-			if err != nil {
-				return fmt.Errorf("could not insert new nft into store: %w", err)
-			}
-		case events.EventTypeUpdate, events.EventTypeBurn:
-			err := d.store.UpdateNFT(event.NetworkID, event.ChainID, event.Contract, event.NftID, event.ToAddress)
-			if err != nil {
-				return fmt.Errorf("could not update nft data: %w", err)
-			}
+			return fmt.Errorf("could not insert history: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func (d *Parsing) HandleError(delivery rmq.Delivery, err error, message string) {
-	if rejectErr := delivery.Reject(); rejectErr != nil {
-		log := d.log.Error()
-
-		if err != nil {
-			log = log.Err(err)
-		}
-
-		log.AnErr("reject_error", rejectErr).Msg(message)
-		return
-	}
+func (d *Parsing) handleError(delivery rmq.Delivery, err error, message string) {
+	log := d.log.Error()
 
 	if err != nil {
-		d.log.Error().Err(err).Msg(message)
+		log = log.Err(err)
 	}
+
+	// rejects the message from the consumer
+	rejectErr := delivery.Reject()
+	if rejectErr != nil {
+		log = log.AnErr("reject_error", rejectErr)
+	}
+
+	log.Msg(message)
+}
+
+func functionName(job jobs.Parsing) string {
+	h := sha256.New()
+
+	s := strings.Join([]string{job.ChainType, job.StandardType, job.EventType}, "-")
+	h.Write([]byte(s))
+
+	name := fmt.Sprintf("%x", h.Sum(nil))
+
+	return name
 }

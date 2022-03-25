@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 )
 
 const (
@@ -43,7 +43,7 @@ func New(ctx context.Context, url string) (*Web3, error) {
 	return &w, nil
 }
 
-func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]events.RawEvent, error) {
+func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]event.RawEvent, error) {
 	zero := big.NewInt(0)
 	startIndex, _ := zero.SetString(blockNumber, indexBase)
 	endIndex, _ := zero.SetString(blockNumber, indexBase)
@@ -60,7 +60,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	evts := make([]events.RawEvent, 0)
+	evts := make([]event.RawEvent, 0, len(logs))
 	for _, log := range logs {
 		if log.Removed {
 			continue
@@ -78,7 +78,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 			indexData = append(indexData, topic.String())
 		}
 
-		e := events.RawEvent{
+		e := event.RawEvent{
 			ID:              common.Bytes2Hex(hash[:]),
 			ChainID:         w.chainID,
 			BlockNumber:     blockNumber,

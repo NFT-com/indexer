@@ -6,19 +6,27 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/event"
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"
-	"github.com/NFT-com/indexer/parsers/erc721/transfer"
+	"github.com/NFT-com/indexer/parsers"
 )
 
+// Initializer initializes the parser to use with the network client.
+type Initializer func(client networks.Network) (parsers.Parser, error)
+
+// Handler handles the parsing message from queue.
 type Handler struct {
-	log zerolog.Logger
+	log         zerolog.Logger
+	initializer Initializer
 }
 
-func NewHandler(log zerolog.Logger) *Handler {
+// NewHandler creates a new parsing handler consumer.
+func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 	h := Handler{
-		log: log.With().Str("component", "parsing_handler").Logger(),
+		log:         log.With().Str("component", "parsing_handler").Logger(),
+		initializer: initializer,
 	}
 
 	return &h
@@ -33,32 +41,30 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 
 	network, err := web3.New(ctx, job.ChainURL)
 	if err != nil {
-		return nil, fmt.Errorf("could create web3 client: %w", err)
+		return nil, fmt.Errorf("could not create web3 client: %w", err)
 	}
 	defer network.Close()
 
-	parser := transfer.NewParser()
+	parser, err := h.initializer(network)
+	if err != nil {
+		return nil, err
+	}
 
 	rawEvents, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
 	if err != nil {
-		return nil, fmt.Errorf("could not get block events: %w", err)
+		return nil, fmt.Errorf("could not get block event: %w", err)
 	}
 
-	parsedEvents := make([]events.Event, 0)
+	parsedEvents := make([]event.Event, 0, len(rawEvents))
 	for _, rawEvent := range rawEvents {
 		parsedEvent, err := parser.ParseRawEvent(rawEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("could not parse raw events")
-			return nil, fmt.Errorf("could not parse raw events: %w", err)
+			log.Error().Err(err).Msg("could not parse raw event")
+			return nil, fmt.Errorf("could not parse raw event: %w", err)
 		}
 
-		parsedEvents = append(parsedEvents, parsedEvent)
+		parsedEvents = append(parsedEvents, *parsedEvent)
 	}
 
-	jobResult := jobs.ParsingResult{
-		RawEvents:    rawEvents,
-		ParsedEvents: parsedEvents,
-	}
-
-	return jobResult, nil
+	return parsedEvents, nil
 }
