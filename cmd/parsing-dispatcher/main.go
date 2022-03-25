@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/adjust/rmq/v4"
+	"github.com/go-redis/redis/v8"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -26,6 +27,10 @@ import (
 
 const (
 	databaseDriver = "postgres"
+
+	defaultHTTPTimeout      = time.Second * 30
+	defaultPollDuration     = time.Second * 20
+	defaultParsingQueueName = "parsing"
 )
 
 func main() {
@@ -47,29 +52,25 @@ func run() error {
 		flagConsumerPollDuration time.Duration
 		flagDBConnectionInfo     string
 		flagParsingQueueName     string
-		flagLambdaURL            string
 		flagLogLevel             string
 		flagRMQTag               string
 		flagRedisDatabase        int
 		flagRedisNetwork         string
 		flagRedisURL             string
 		flagRegion               string
-		flagTestMode             bool
 	)
 
-	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
+	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "amount of message to prefetch in the consumer")
-	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", time.Second*20, "time for each consumer poll")
-	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "data source name for database connection")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", "parsing", "name of the queue for parsing")
-	pflag.StringVarP(&flagLambdaURL, "function-url", "f", "", "url for the custom lambda server on local testing")
+	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "time for each consumer poll")
+	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
+	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "parsing dispatcher consumer tag")
-	pflag.IntVar(&flagRedisDatabase, "database", 1, "database of the network for redis connection")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "name of the network for redis connection")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "url of the network for redis connection")
-	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "name of the region for the lambda")
-	pflag.BoolVarP(&flagTestMode, "test", "t", false, "set dispatcher component to run in test mode")
+	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
+	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
+	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
+	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
+	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -82,30 +83,21 @@ func run() error {
 	log = log.Level(level)
 
 	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
-	if flagTestMode {
-		sessionConfig.Credentials = credentials.AnonymousCredentials
-	}
+	session := session.Must(session.NewSession(&sessionConfig))
+	lambdaClient := lambda.New(session)
 
-	lambdaConfig := &aws.Config{}
-	if flagLambdaURL != "" {
-		lambdaConfig.Endpoint = aws.String(flagLambdaURL)
-	}
-
-	sess := session.Must(session.NewSession(&sessionConfig))
-	lambdaClient := lambda.New(sess, lambdaConfig)
-
-	dispatcher, err := function.NewClient(lambdaClient)
+	dispatcher, err := function.New(lambdaClient)
 	if err != nil {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	httpClient := http.DefaultClient
-	httpClient.Timeout = time.Second * 30
+	cli := http.DefaultClient
+	cli.Timeout = defaultHTTPTimeout
 
-	apiClient := client.NewClient(log, client.NewOptions(
-		client.WithHTTPClient(httpClient),
+	api := client.New(log,
+		client.WithHTTPClient(cli),
 		client.WithHost(flagAPIEndpoint),
-	))
+	)
 
 	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
@@ -117,19 +109,22 @@ func run() error {
 		return fmt.Errorf("could not create store: %w", err)
 	}
 
-	parsingConsumer, err := consumer.NewParsingConsumer(log, apiClient, dispatcher, postgresStore)
-	if err != nil {
-		return fmt.Errorf("could not create consumer: %w", err)
-	}
+	consumer := consumer.NewParsingConsumer(log, api)
 
 	failed := make(chan error)
 
-	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	redisClient := redis.NewClient(&redis.Options{
+		Network: flagRedisNetwork,
+		Addr:    flagRedisURL,
+		DB:      flagRedisDatabase,
+	})
+
+	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
 	if err != nil {
 		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
-	queue, err := redisConnection.OpenQueue(flagParsingQueueName)
+	queue, err := rmqConnection.OpenQueue(flagParsingQueueName)
 	if err != nil {
 		return fmt.Errorf("could not open redis queue: %w", err)
 	}
@@ -139,7 +134,7 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumerName, err := queue.AddConsumer(flagRMQTag, parsingConsumer)
+	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)
 	}
@@ -148,7 +143,7 @@ func run() error {
 
 	select {
 	case <-sig:
-		redisConnection.StopAllConsuming()
+		rmqConnection.StopAllConsuming()
 	case err := <-failed:
 		return err
 	}

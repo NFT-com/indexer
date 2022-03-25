@@ -2,12 +2,10 @@ package consumer
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/client"
@@ -20,7 +18,7 @@ type Parsing struct {
 	store      Store
 }
 
-func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher, store Store) (*Parsing, error) {
+func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher, store Store) *Parsing {
 	c := Parsing{
 		log:        log,
 		dispatcher: dispatcher,
@@ -28,7 +26,7 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher
 		store:      store,
 	}
 
-	return &c, nil
+	return &c
 }
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
@@ -75,7 +73,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	err = json.Unmarshal(lambdaOutput, &jobResult)
 	if err != nil {
 		d.HandleError(delivery, err, "failed unmarshal job result")
-		err = d.apiClient.UpdateParsingJobState(job.ID, jobs.StatusFailed)
+		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
 			d.HandleError(delivery, err, "could not updating job state")
 		}

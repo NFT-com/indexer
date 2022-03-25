@@ -2,6 +2,7 @@ package producer
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/adjust/rmq/v4"
 
@@ -24,39 +25,39 @@ func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue 
 	return &p, nil
 }
 
-func (p *Producer) PublishDiscoveryJob(discoveryJob jobs.Discovery) error {
+func (p *Producer) PublishDiscoveryJob(job jobs.Discovery) error {
+	payload, err := json.Marshal(job)
+	if err != nil {
+		return fmt.Errorf("could not marshal payload: %w", err)
+	}
+
 	q, err := p.connection.OpenQueue(p.discoveryQueue)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open connection with queue: %w", err)
 	}
 
-	jobPayload, err := json.Marshal(discoveryJob)
+	err = q.PublishBytes(payload)
 	if err != nil {
-		return err
-	}
-
-	err = q.PublishBytes(jobPayload)
-	if err != nil {
-		return err
+		return fmt.Errorf("could not publish job: %w", err)
 	}
 
 	return nil
 }
 
-func (p *Producer) PublishParsingJob(parsingJob jobs.Parsing) error {
+func (p *Producer) PublishParsingJob(job jobs.Parsing) error {
+	payload, err := json.Marshal(job)
+	if err != nil {
+		return fmt.Errorf("could not marshal payload: %w", err)
+	}
+
 	q, err := p.connection.OpenQueue(p.parsingQueue)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open connection with queue: %w", err)
 	}
 
-	jobPayload, err := json.Marshal(parsingJob)
+	err = q.PublishBytes(payload)
 	if err != nil {
-		return err
-	}
-
-	err = q.PublishBytes(jobPayload)
-	if err != nil {
-		return err
+		return fmt.Errorf("could not publish job: %w", err)
 	}
 
 	return nil

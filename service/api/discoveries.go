@@ -36,7 +36,7 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 		ChainType:    req.ChainType,
 		BlockNumber:  req.BlockNumber,
 		Addresses:    req.Addresses,
-		StandardType: req.InterfaceType,
+		StandardType: req.StandardType,
 	}
 
 	newJob, err := h.jobs.CreateDiscoveryJob(job)
