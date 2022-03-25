@@ -77,10 +77,10 @@ func run() error {
 		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
-	api := client.New(log, client.NewOptions(
+	api := client.New(log,
 		client.WithHTTPClient(cli),
 		client.WithHost(flagAPIEndpoint),
-	))
+	)
 	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)

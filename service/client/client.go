@@ -13,19 +13,21 @@ const (
 )
 
 type Client struct {
-	log     zerolog.Logger
-	options *options
-	close   chan struct{}
+	log    zerolog.Logger
+	config config
+	close  chan struct{}
 }
 
-func New(log zerolog.Logger, optionList OptionsList) *Client {
-	opts := defaultOptions()
-	optionList.Apply(opts)
+func New(log zerolog.Logger, opts ...Option) *Client {
+	cfg := defaultConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 
 	c := Client{
-		log:     log.With().Str("component", "api_client").Logger(),
-		options: opts,
-		close:   make(chan struct{}),
+		log:    log.With().Str("component", "api_client").Logger(),
+		config: cfg,
+		close:  make(chan struct{}),
 	}
 
 	return &c

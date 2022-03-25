@@ -7,51 +7,39 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type options struct {
+var (
+	defaultConfig = config{
+		jobsWebsocket: url.URL{Scheme: "ws", Host: "localhost:8081"},
+		jobsAPI:       url.URL{Scheme: "http", Host: "localhost:8081"},
+		client:        http.DefaultClient,
+		dialer:        websocket.DefaultDialer,
+	}
+)
+
+type config struct {
 	jobsWebsocket url.URL
 	jobsAPI       url.URL
 	client        *http.Client
 	dialer        *websocket.Dialer
 }
 
-type Option func(*options)
-
-type OptionsList []Option
-
-func NewOptions(opts ...Option) OptionsList {
-	return opts
-}
-
-func defaultOptions() *options {
-	return &options{
-		jobsWebsocket: url.URL{Scheme: "ws", Host: "localhost:8081"},
-		jobsAPI:       url.URL{Scheme: "http", Host: "localhost:8081"},
-		client:        http.DefaultClient,
-		dialer:        websocket.DefaultDialer,
-	}
-}
+type Option func(*config)
 
 func WithWebsocketScheme(scheme string) Option {
-	return func(o *options) {
+	return func(o *config) {
 		o.jobsWebsocket.Scheme = scheme
 	}
 }
 
 func WithHost(host string) Option {
-	return func(o *options) {
+	return func(o *config) {
 		o.jobsWebsocket.Host = host
 		o.jobsAPI.Host = host
 	}
 }
 
 func WithHTTPClient(httpClient *http.Client) Option {
-	return func(o *options) {
+	return func(o *config) {
 		o.client = httpClient
-	}
-}
-
-func (o OptionsList) Apply(opts *options) {
-	for _, opt := range o {
-		opt(opts)
 	}
 }

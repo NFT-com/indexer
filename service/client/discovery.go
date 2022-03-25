@@ -14,10 +14,10 @@ import (
 )
 
 func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
-	url := c.options.jobsWebsocket
+	url := c.config.jobsWebsocket
 	url.Path = path.Join("ws", discoveryBasePath)
 
-	connection, _, err := c.options.dialer.Dial(url.String(), nil)
+	connection, _, err := c.config.dialer.Dial(url.String(), nil)
 	if err != nil {
 		return fmt.Errorf("could not dial websocket: %w", err)
 	}
@@ -58,10 +58,10 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 		return nil, fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	url := c.options.jobsAPI
+	url := c.config.jobsAPI
 	url.Path = discoveryBasePath
 
-	resp, err := c.options.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
+	resp, err := c.config.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -89,11 +89,11 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 	params := url.Values{}
 	params.Set("status", string(status))
 
-	url := c.options.jobsAPI
+	url := c.config.jobsAPI
 	url.Path = discoveryBasePath
 	url.RawQuery = params.Encode()
 
-	resp, err := c.options.client.Get(url.String())
+	resp, err := c.config.client.Get(url.String())
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -118,10 +118,10 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 }
 
 func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
-	url := c.options.jobsAPI
+	url := c.config.jobsAPI
 	url.Path = path.Join(discoveryBasePath, id)
 
-	resp, err := c.options.client.Get(url.String())
+	resp, err := c.config.client.Get(url.String())
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -155,7 +155,7 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 		return fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	url := c.options.jobsAPI
+	url := c.config.jobsAPI
 	url.Path = path.Join(discoveryBasePath, id)
 
 	req, err := http.NewRequest(http.MethodPatch, url.String(), bytes.NewReader(body))
@@ -165,7 +165,7 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 
 	req.Header.Add(contentTypeHeaderName, jsonContentType)
 
-	_, err = c.options.client.Do(req)
+	_, err = c.config.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("could not perform request: %w", err)
 	}
