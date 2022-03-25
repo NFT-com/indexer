@@ -36,7 +36,7 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 		ChainType:    req.ChainType,
 		BlockNumber:  req.BlockNumber,
 		Address:      req.Address,
-		StandardType: req.InterfaceType,
+		StandardType: req.StandardType,
 		EventType:    req.EventType,
 	}
 
@@ -65,10 +65,9 @@ func (h *Handler) ListParsingJobs(ctx echo.Context) error {
 }
 
 func (h *Handler) GetParsingJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	id := ctx.Param(jobIDParamKey)
 
-	job, err := h.jobs.GetParsingJob(jobID)
+	job, err := h.jobs.GetParsingJob(id)
 	if err != nil {
 		return apiError(err)
 	}
@@ -77,8 +76,7 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 }
 
 func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	id := ctx.Param(jobIDParamKey)
 
 	var req request.Status
 	err := ctx.Bind(&req)
@@ -96,7 +94,7 @@ func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 		return parsingError(err)
 	}
 
-	err = h.jobs.UpdateParsingJobState(jobID, newState)
+	err = h.jobs.UpdateParsingJobState(id, newState)
 	if err != nil {
 		return apiError(err)
 	}
@@ -105,10 +103,9 @@ func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 }
 
 func (h *Handler) RequeueParsingJob(ctx echo.Context) error {
-	rawJobID := ctx.Param(jobIDParamKey)
-	jobID := jobs.ID(rawJobID)
+	id := ctx.Param(jobIDParamKey)
 
-	job, err := h.jobs.RequeueParsingJob(jobID)
+	job, err := h.jobs.RequeueParsingJob(id)
 	if err != nil {
 		return apiError(err)
 	}

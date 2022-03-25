@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NFT-com/indexer/jobs"
 	"github.com/lib/pq"
+
+	"github.com/NFT-com/indexer/jobs"
 )
 
 func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
@@ -59,11 +60,11 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	return jobList, nil
 }
 
-func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
+func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	result, err := s.sqlBuilder.
 		Select(discoveryJobsTableColumns...).
 		From(discoveryJobsTableName).
-		Where("id = ?", jobID).
+		Where("id = ?", id).
 		Query()
 	if err != nil {
 		return nil, err
@@ -99,11 +100,11 @@ func (s *Store) DiscoveryJob(jobID jobs.ID) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
-func (s *Store) UpdateDiscoveryJobState(jobID jobs.ID, jobStatus jobs.Status) error {
+func (s *Store) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 	res, err := s.sqlBuilder.
 		Update(discoveryJobsTableName).
-		Where("id = ?", jobID).
-		Set("status", jobStatus).
+		Where("id = ?", id).
+		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {

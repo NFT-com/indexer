@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/service/validator"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
@@ -21,6 +21,7 @@ import (
 	"github.com/NFT-com/indexer/service/api"
 	"github.com/NFT-com/indexer/service/handler"
 	"github.com/NFT-com/indexer/service/postgres"
+	"github.com/NFT-com/indexer/service/validator"
 )
 
 const (
@@ -30,10 +31,8 @@ const (
 func main() {
 	err := run()
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
-
-	os.Exit(0)
 }
 
 func run() error {
