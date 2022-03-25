@@ -12,7 +12,7 @@ import (
 )
 
 func (c *Client) SubscribeNewParsingJob(parsingJobs chan jobs.Parsing) error {
-	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), DiscoveryBasePath)
+	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), ParsingBasePath)
 	connection, _, err := c.wsClient.Dial(requestURL, nil)
 	if err != nil {
 		return err

@@ -1,5 +1,9 @@
 package consumer
 
+import (
+	"github.com/NFT-com/indexer/event"
+)
+
 type Store interface {
-	InsertHistory(event events.Event) error
+	InsertHistory(event event.Event) error
 }
