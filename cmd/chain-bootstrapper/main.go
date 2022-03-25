@@ -106,7 +106,7 @@ func run() error {
 		flagEndIndex,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create bootstrapper: %w", err)
+		return fmt.Errorf("could not create bootstrapper: %w", err)
 	}
 
 	done := make(chan struct{})

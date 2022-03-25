@@ -2,6 +2,7 @@ package bootstrapper
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	"github.com/rs/zerolog"
@@ -47,6 +48,7 @@ func New(
 
 func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 	index := b.startIndex
+
 	for {
 		select {
 		case <-b.close:
@@ -67,8 +69,7 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 
 			_, err := b.apiClient.CreateParsingJob(job)
 			if err != nil {
-				b.log.Error().Err(err).Str("block", job.BlockNumber).Msg("failed create parsing job")
-				return err
+				return fmt.Errorf("could not create parsing job for block %s: %w", job.BlockNumber, err)
 			}
 
 			index++
