@@ -12,8 +12,8 @@ import (
 )
 
 func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
-	requestURL := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), discoveryBasePath)
-	connection, _, err := c.wsClient.Dial(requestURL, nil)
+	url := fmt.Sprintf("%s/ws/%s", c.options.websocketURL.String(), discoveryBasePath)
+	connection, _, err := c.wsClient.Dial(url, nil)
 	if err != nil {
 		return fmt.Errorf("could not dial to websocket: %w", err)
 	}
@@ -26,14 +26,14 @@ func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) err
 			default:
 			}
 
-			newDiscoveryJob := jobs.Discovery{}
-			err := connection.ReadJSON(&newDiscoveryJob)
+			job := jobs.Discovery{}
+			err := connection.ReadJSON(&job)
 			if err != nil {
 				c.log.Error().Err(err).Msg("could not read message socket")
 				continue
 			}
 
-			discoveryJobs <- newDiscoveryJob
+			discoveryJobs <- job
 		}
 	}()
 
@@ -54,8 +54,8 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 		return nil, fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s", c.options.httpURL.String(), discoveryBasePath)
-	resp, err := c.httpClient.Post(requestURL, jsonContentType, bytes.NewReader(body))
+	url := fmt.Sprintf("%s/%s", c.options.httpURL.String(), discoveryBasePath)
+	resp, err := c.httpClient.Post(url, jsonContentType, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
@@ -139,8 +139,8 @@ func (c *Client) UpdateDiscoveryJobState(id string, status jobs.Status) error {
 		return fmt.Errorf("could not marshal request: %w", err)
 	}
 
-	requestURL := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), discoveryBasePath, id)
-	req, err := http.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(body))
+	url := fmt.Sprintf("%s/%s/%s", c.options.httpURL.String(), discoveryBasePath, id)
+	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("could not create request: %w", err)
 	}

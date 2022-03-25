@@ -34,13 +34,23 @@ func (j *Job) Watch(discoveryJobs chan jobs.Discovery, parsingJobs chan jobs.Par
 		case newJob := <-discoveryJobs:
 			err := j.publishDiscoveryJob(newJob)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not publish discovery job")
+				j.log.Error().
+					Err(err).
+					Str("id", newJob.ID).
+					Str("block", newJob.BlockNumber).
+					Str("status", string(newJob.Status)).
+					Msg("could not publish discovery job")
 				continue
 			}
 		case newJob := <-parsingJobs:
 			err := j.publishParsingJob(newJob)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not publish parsing job")
+				j.log.Error().
+					Err(err).
+					Str("id", newJob.ID).
+					Str("block", newJob.BlockNumber).
+					Str("status", string(newJob.Status)).
+					Msg("could not publish parsing job")
 				continue
 			}
 		case <-j.close:
