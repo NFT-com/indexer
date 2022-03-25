@@ -2,7 +2,7 @@ FORMAT: 1A
 
 # Jobs API
 
-[Jobs API](https://github.com/NFT-com/indexer) is a REST API serving the data related to discovery and parsing blockchain data.
+[Jobs API](https://github.com/NFT-com/indexer) is a REST API serving the data related to discovery and parsing of NFT data.
 
 ## Group discovery
 
@@ -148,7 +148,7 @@ Discovery jobs
 
 + Parameters
 
-  + status: ,created,queued,processing,failed,finished,canceled - Job Status, empty for all status
+  + status: created,queued,processing,failed,finished,canceled - Job Status, empty for all status
 
 + Request
 
