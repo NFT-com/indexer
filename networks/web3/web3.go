@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -61,6 +62,13 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
+	header, err := w.ethClient.HeaderByNumber(ctx, index)
+	if err != nil {
+		return nil, fmt.Errorf("could not get block header: %w", err)
+	}
+
+	blockDate := time.Unix(int64(header.Time), 0)
+
 	logs := make([]log.RawLog, 0, len(web3Logs))
 	for _, web3Log := range web3Logs {
 		if web3Log.Removed {
@@ -89,6 +97,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 			EventType:       web3Log.Topics[0].String(),
 			IndexData:       indexData,
 			Data:            web3Log.Data,
+			EmittedAt:       blockDate,
 		}
 
 		logs = append(logs, l)

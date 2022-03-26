@@ -69,7 +69,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		d.handleError(delivery, err, "could not dispatch message")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.handleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job status")
 		}
 		return
 	}
@@ -80,7 +80,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		d.handleError(delivery, err, "could not unmarshal output logs")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.handleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job status")
 		}
 		return
 	}
@@ -90,17 +90,17 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 		d.handleError(delivery, err, "could not handle output logs")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.handleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job status")
 		}
 		return
 	}
 
 	err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
-		d.handleError(delivery, err, "could not updating job state")
+		d.handleError(delivery, err, "could not updating job status")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
 		if err != nil {
-			d.handleError(delivery, err, "could not updating job state")
+			d.handleError(delivery, err, "could not updating job status")
 		}
 		return
 	}

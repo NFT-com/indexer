@@ -27,6 +27,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				Block:           l.Block,
 				TransactionHash: l.TransactionHash,
 				Owner:           l.ToAddress,
+				EmittedAt:       l.EmittedAt,
 			}
 
 			err = d.store.UpsertMintEvent(event)
@@ -47,6 +48,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				Seller:          l.ToAddress,
 				Buyer:           l.FromAddress,
 				Price:           l.Price,
+				EmittedAt:       l.EmittedAt,
 			}
 
 			err = d.store.UpsertSaleEvent(event)
@@ -66,6 +68,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				TransactionHash: l.TransactionHash,
 				FromAddress:     l.FromAddress,
 				ToAddress:       l.ToAddress,
+				EmittedAt:       l.EmittedAt,
 			}
 
 			err = d.store.UpsertTransferEvent(event)
@@ -83,6 +86,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				CollectionID:    collection.ID,
 				Block:           l.Block,
 				TransactionHash: l.TransactionHash,
+				EmittedAt:       l.EmittedAt,
 			}
 
 			err = d.store.UpsertBurnEvent(event)

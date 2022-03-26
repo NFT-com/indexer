@@ -19,21 +19,3 @@ func (s *Store) UpsertBurnEvent(event events.Burn) error {
 
 	return nil
 }
-
-func (s *Store) UpsertBurnEvents(events []events.Burn) error {
-	query := s.sqlBuilder.
-		Insert(burnEventTableName).
-		Columns(burnEventTableColumns...).
-		Suffix(burnTableOnConflictStatement)
-
-	for _, event := range events {
-		query = query.Values(event.ID, event.Block, event.TransactionHash, event.CollectionID, event.EmittedAt)
-	}
-
-	_, err := query.Exec()
-	if err != nil {
-		return fmt.Errorf("could not insert burn events: %w", err)
-	}
-
-	return nil
-}
