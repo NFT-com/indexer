@@ -78,14 +78,13 @@ func run() error {
 
 	consumer := consumer.NewParsingConsumer(log, api)
 
-	failed := make(chan error)
-
 	redisClient := redis.NewClient(&redis.Options{
 		Network: flagRedisNetwork,
 		Addr:    flagRedisURL,
 		DB:      flagRedisDatabase,
 	})
 
+	failed := make(chan error)
 	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
 	if err != nil {
 		return fmt.Errorf("could not open redis connection: %w", err)

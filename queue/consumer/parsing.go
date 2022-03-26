@@ -28,8 +28,8 @@ func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client) *Parsing {
 
 func (d *Parsing) Consume(delivery rmq.Delivery) {
 	payload := []byte(delivery.Payload())
-	var job jobs.Parsing
 
+	var job jobs.Parsing
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
 		if rejectErr := delivery.Reject(); rejectErr != nil {
