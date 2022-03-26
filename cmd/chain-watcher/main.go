@@ -79,7 +79,7 @@ func run() error {
 	}
 
 	if chainID != flagChainID {
-		return fmt.Errorf("could not start watcher: chain-id doesn't match id retrieved from chain-url")
+		return fmt.Errorf("could not start watcher: mismatch between chain ID and chain URL")
 	}
 
 	cli := http.DefaultClient
