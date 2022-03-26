@@ -91,7 +91,7 @@ func run() error {
 	}
 
 	if chainID != flagChainID {
-		return fmt.Errorf("could not start bootstrapper: chain-id doesn't match id retrieved from chain-url")
+		return fmt.Errorf("could not start bootstrapper: mismatch between chain ID and chain URL")
 	}
 
 	bootstrapper := bootstrapper.New(
@@ -123,20 +123,12 @@ func run() error {
 	}()
 
 	select {
+	case <-done:
+		log.Info().Msg("bootstrapper done")
 	case <-sig:
 		log.Info().Msg("bootstrapper stopping")
 	case err = <-failed:
 		log.Error().Err(err).Msg("bootstrapper aborted")
-		return err
-	}
-
-	select {
-	case <-done:
-		log.Info().Msg("chain bootstrapper done")
-	case <-sig:
-		log.Info().Msg("chain bootstrapper stopping")
-	case err = <-failed:
-		log.Error().Err(err).Msg("chain bootstrapper aborted")
 		return err
 	}
 

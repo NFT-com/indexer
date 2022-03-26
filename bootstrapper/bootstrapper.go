@@ -54,26 +54,27 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 		case <-b.close:
 			return nil
 		default:
-			if index > b.endIndex {
-				return nil
-			}
-
-			job := jobs.Parsing{
-				ChainURL:     b.chainURL,
-				ChainType:    b.chainType,
-				BlockNumber:  big.NewInt(index).String(),
-				Address:      b.contract,
-				StandardType: b.standardType,
-				EventType:    b.eventType,
-			}
-
-			_, err := b.apiClient.CreateParsingJob(job)
-			if err != nil {
-				return fmt.Errorf("could not create parsing job for block %s: %w", job.BlockNumber, err)
-			}
-
-			index++
 		}
+
+		if index > b.endIndex {
+			return nil
+		}
+
+		job := jobs.Parsing{
+			ChainURL:     b.chainURL,
+			ChainType:    b.chainType,
+			BlockNumber:  big.NewInt(index).String(),
+			Address:      b.contract,
+			StandardType: b.standardType,
+			EventType:    b.eventType,
+		}
+
+		_, err := b.apiClient.CreateParsingJob(job)
+		if err != nil {
+			return fmt.Errorf("could not create parsing job for block %s: %w", job.BlockNumber, err)
+		}
+
+		index++
 	}
 }
 
