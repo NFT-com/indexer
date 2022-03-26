@@ -9,8 +9,7 @@ import (
 func (s *Store) Marketplace(chainID, address string) (*marketplace.Marketplace, error) {
 	result, err := s.sqlBuilder.
 		Select("marketplaces.id", "marketplaces.name", "marketplaces.description", "marketplaces.website").
-		From(marketplaceTableName).
-		From(chainMarketplaceTableName).
+		From("marketplaces, chains_marketplaces").
 		Where("chains_marketplaces.address = ?", address).
 		Where("chains_marketplaces.chain_id = ?", chainID).
 		Where("chains_marketplaces.marketplace_id = marketplaces.id").

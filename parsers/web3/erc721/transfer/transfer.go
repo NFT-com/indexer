@@ -17,10 +17,12 @@ func NewParser() *Parser {
 	return &p
 }
 
-func (p *Parser) ParseRawEvent(rawLog log.RawLog) (*log.Log, error) {
+func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
 	if len(rawLog.IndexData) < 3 {
 		return nil, fmt.Errorf("could not parse raw log: index data lenght is less than 3")
 	}
+
+	fmt.Println(rawLog.IndexData)
 
 	var (
 		fromAddress = common.HexToAddress(rawLog.IndexData[0]).String()

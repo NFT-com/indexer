@@ -131,7 +131,14 @@ func (d *Parsing) handleError(delivery rmq.Delivery, err error, message string) 
 func functionName(job jobs.Parsing) string {
 	h := sha256.New()
 
-	s := strings.Join([]string{job.ChainType, job.StandardType, job.EventType}, "-")
+	s := strings.Join(
+		[]string{
+			strings.ToLower(job.ChainType),
+			strings.ToLower(job.StandardType),
+			strings.ToLower(job.EventType),
+		},
+		"-",
+	)
 	h.Write([]byte(s))
 
 	name := fmt.Sprintf("%x", h.Sum(nil))

@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/NFT-com/indexer/collection"
@@ -27,11 +28,15 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*coll
 		return nil, fmt.Errorf("could not retrieve collection: %w", errResourceNotFound)
 	}
 
-	var collection collection.Collection
+	var (
+		collection collection.Collection
+		ccID       sql.NullString
+	)
+
 	err = result.Scan(
 		&collection.ID,
 		&collection.ChainID,
-		&collection.ContractCollectionID,
+		&ccID,
 		&collection.Address,
 		&collection.Name,
 		&collection.Description,
@@ -42,6 +47,7 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*coll
 		&collection.ImageURL,
 	)
 
+	collection.ContractCollectionID = ccID.String
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve collection: %w", err)
 	}

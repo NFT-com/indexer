@@ -12,10 +12,9 @@ const (
 	burnEventTableName     = "bruns"
 
 	// data table names
-	chainTableName            = "chains"
-	collectionTableName       = "collections"
-	marketplaceTableName      = "marketplaces"
-	chainMarketplaceTableName = "chains_marketplaces"
+	chainTableName       = "chains"
+	collectionTableName  = "collections"
+	marketplaceTableName = "marketplaces"
 )
 
 var (
@@ -30,10 +29,10 @@ var (
 	burnEventTableColumns     = []string{"id", "block", "transaction_hash", "collection", "emitted_at"}
 
 	// events on conflict statements
-	mintTableOnConflictStatement     = "ON CONFLICT DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection, owner = EXCLUDED.owner, emitted_at = EXCLUDED.emitted_at"
-	transferTableOnConflictStatement = "ON CONFLICT DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection, from_address = EXCLUDED.from_address, to_address = EXCLUDED.to_address, emitted_at = EXCLUDED.emitted_at"
-	saleTableOnConflictStatement     = "ON CONFLICT DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, marketplace = EXCLUDED.marketplace, seller = EXCLUDED.seller, buyer = EXCLUDED.buyer, price = EXCLUDED.price, emitted_at = EXCLUDED.emitted_at"
-	burnTableOnConflictStatement     = "ON CONFLICT DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection, emitted_at = EXCLUDED.emitted_at"
+	mintTableOnConflictStatement     = "ON CONFLICT (id) DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection, owner = EXCLUDED.owner, emitted_at = EXCLUDED.emitted_at"
+	transferTableOnConflictStatement = "ON CONFLICT (id) DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection, from_address = EXCLUDED.from_address, to_address = EXCLUDED.to_address, emitted_at = EXCLUDED.emitted_at"
+	saleTableOnConflictStatement     = "ON CONFLICT (id) DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, marketplace = EXCLUDED.marketplace, seller = EXCLUDED.seller, buyer = EXCLUDED.buyer, price = EXCLUDED.price, emitted_at = EXCLUDED.emitted_at"
+	burnTableOnConflictStatement     = "ON CONFLICT (id) DO UPDATE SET block = EXCLUDED.block, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection, emitted_at = EXCLUDED.emitted_at"
 
 	// data table columns
 	chainTableColumns       = []string{"id", "chain_id", "name", "description", "symbol"}
