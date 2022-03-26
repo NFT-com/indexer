@@ -57,6 +57,8 @@ func (j *Watcher) Watch(ctx context.Context) error {
 	for {
 		select {
 		case block := <-j.blocks:
+			j.log.Info().Str("block", block.String()).Msg("got new block")
+
 			job := jobs.Parsing{
 				ChainURL:     j.chainURL,
 				ChainType:    j.chainType,
