@@ -22,8 +22,6 @@ func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
 		return nil, fmt.Errorf("could not parse raw log: index data lenght is less than 3")
 	}
 
-	fmt.Println(rawLog.IndexData)
-
 	var (
 		fromAddress = common.HexToAddress(rawLog.IndexData[0]).String()
 		toAddress   = common.HexToAddress(rawLog.IndexData[1]).String()
