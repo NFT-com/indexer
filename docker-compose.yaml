@@ -53,3 +53,11 @@ services:
     entrypoint: '/agent -u redis:6379'
     depends_on:
       - redis
+  bootstrapper:
+    build:
+      context: .
+      dockerfile: Dockerfile.bootstrapper
+    entrypoint: '/bootstrapper -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0xb55b7e00152d2ef27357944a96f29271f8073f11 --event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -s 1 -e 14398902'
+    depends_on:
+      - api
+      - watcher
