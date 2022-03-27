@@ -70,7 +70,7 @@ func (j *Watcher) Watch(ctx context.Context) error {
 
 			_, err := j.apiClient.CreateParsingJob(job)
 			if err != nil {
-				j.log.Error().Err(err).Str("block", block.String()).Msg("failed create parsing job")
+				j.log.Error().Err(err).Str("block", block.String()).Msg("could not create parsing job for block")
 				continue
 			}
 		case <-j.close:
