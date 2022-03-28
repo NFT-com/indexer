@@ -3,6 +3,8 @@ package networks
 import (
 	"context"
 	"math/big"
+
+	"github.com/NFT-com/indexer/log"
 )
 
 type Network interface {
