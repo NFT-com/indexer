@@ -28,7 +28,7 @@ func New(lambdaClient Lambda) (*Client, error) {
 	return &d, nil
 }
 
-func (d *Client) Dispatch(functionName string, payload []byte) ([]byte, error) {
+func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,

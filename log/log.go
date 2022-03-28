@@ -4,16 +4,16 @@ import (
 	"time"
 )
 
-type Type int
+type EventType int
 
 const (
-	Mint Type = iota + 1
+	Mint EventType = iota + 1
 	Transfer
 	Burn
 	Sale
 )
 
-func (e Type) String() string {
+func (e EventType) String() string {
 	switch e {
 	case Mint:
 		return "mint"
@@ -34,7 +34,7 @@ type Log struct {
 	Contract             string    `json:"contract"`
 	Block                string    `json:"block"`
 	TransactionHash      string    `json:"transaction_hash"`
-	Type                 Type      `json:"type"`
+	Type                 EventType `json:"type"`
 	ContractCollectionID string    `json:"contract_collection_id"`
 	NftID                string    `json:"nft_id"`
 	FromAddress          string    `json:"from_address"`

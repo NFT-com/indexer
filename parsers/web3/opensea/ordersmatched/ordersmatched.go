@@ -19,7 +19,7 @@ type Parser struct {
 
 func NewParser(client networks.Network) (*Parser, error) {
 	if client == nil {
-		return nil, fmt.Errorf("invalid argment: network client")
+		return nil, fmt.Errorf("invalid argument: nil network client")
 	}
 
 	parsedABI, err := abi.JSON(bytes.NewBufferString(eventABI))

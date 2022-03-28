@@ -41,9 +41,9 @@ func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
 	}
 
 	switch {
-	case rawLog.IndexData[0] == zeroValueHash:
+	case fromAddress == zeroValueAddress:
 		l.Type = log.Mint
-	case rawLog.IndexData[1] == zeroValueHash:
+	case toAddress == zeroValueAddress:
 		l.Type = log.Burn
 	default:
 		l.Type = log.Transfer

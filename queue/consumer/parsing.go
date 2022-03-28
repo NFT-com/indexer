@@ -64,7 +64,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 	}
 
 	name := functionName(job)
-	output, err := d.dispatcher.Dispatch(name, payload)
+	output, err := d.dispatcher.Invoke(name, payload)
 	if err != nil {
 		d.handleError(delivery, err, "could not dispatch message")
 		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusFailed)
@@ -113,11 +113,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 }
 
 func (d *Parsing) handleError(delivery rmq.Delivery, err error, message string) {
-	log := d.log.Error()
-
-	if err != nil {
-		log = log.Err(err)
-	}
+	log := d.log.Error().Err(err)
 
 	// rejects the message from the consumer
 	rejectErr := delivery.Reject()

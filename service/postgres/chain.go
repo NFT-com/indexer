@@ -29,7 +29,6 @@ func (s *Store) Chain(chainID string) (*chain.Chain, error) {
 		&chain.Description,
 		&chain.Symbol,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve chain: %w", err)
 	}

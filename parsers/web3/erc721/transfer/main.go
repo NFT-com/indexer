@@ -44,9 +44,7 @@ func run() error {
 	log = log.Level(level)
 
 	handler := parsing.NewHandler(log, func(_ networks.Network) (parsers.Parser, error) {
-		parser := NewParser()
-
-		return parser, nil
+		return NewParser(), nil
 	})
 	lambda.Start(handler.Handle)
 

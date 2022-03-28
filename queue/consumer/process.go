@@ -34,6 +34,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 			if err != nil {
 				return fmt.Errorf("could not upsert mint event: %w", err)
 			}
+
 		case log.Sale:
 			marketplace, err := d.store.Marketplace(chain.ID, l.Contract)
 			if err != nil {
@@ -55,6 +56,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 			if err != nil {
 				return fmt.Errorf("could not upsert sale event: %w", err)
 			}
+
 		case log.Transfer:
 			collection, err := d.store.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
@@ -75,6 +77,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 			if err != nil {
 				return fmt.Errorf("could not upsert transfer event: %w", err)
 			}
+
 		case log.Burn:
 			collection, err := d.store.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
@@ -93,6 +96,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 			if err != nil {
 				return fmt.Errorf("could not upsert burn event: %w", err)
 			}
+
 		default:
 			d.log.Error().Str("type", l.Type.String()).Msg("got unexpected log type")
 		}

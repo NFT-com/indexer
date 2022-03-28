@@ -30,7 +30,6 @@ func (s *Store) Marketplace(chainID, address string) (*marketplace.Marketplace, 
 		&marketplace.Description,
 		&marketplace.Website,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve marketplace: %w", err)
 	}

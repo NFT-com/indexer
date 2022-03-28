@@ -46,11 +46,10 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*coll
 		&collection.URI,
 		&collection.ImageURL,
 	)
-
-	collection.ContractCollectionID = ccID.String
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve collection: %w", err)
 	}
 
+	collection.ContractCollectionID = ccID.String
 	return &collection, nil
 }
