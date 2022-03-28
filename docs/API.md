@@ -488,42 +488,6 @@ Returns a single discovery job
 
   + Body
 
-### /discoveries/{id}/requeue
-
-#### Recreates a discovery job [POST]
-
-+ Parameters
-
-  + id (required) - ID of discovery job to requeue
-
-+ Request
-
-  + Headers
-
-            Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  Successful operation
-
-  + Body
-
-+ Request
-
-  + Headers
-
-            Accept: application/json
-
-  + Body
-
-+ Response 404 (application/json)
-
-  Discovery job not found
-
-  + Body
-
 ## Group parse
 
 Parsing jobs
@@ -1025,40 +989,3 @@ Returns a single parsing job
   Parsing job not found
 
   + Body
-
-### /parsings/{id}/requeue
-
-#### Recreates a parsing job [POST]
-
-+ Parameters
-
-  + id (required) - ID of parsing job to requeue
-
-+ Request
-
-  + Headers
-
-            Accept: application/json
-
-  + Body
-
-+ Response 200 (application/json)
-
-  successful operation
-
-  + Body
-
-+ Request
-
-  + Headers
-
-            Accept: application/json
-
-  + Body
-
-+ Response 404 (application/json)
-
-  Parsing job not found
-
-  + Body
-
