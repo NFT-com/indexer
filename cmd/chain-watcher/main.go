@@ -90,17 +90,15 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
-	watcher, err := chain.NewWatcher(
-		log,
-		ctx,
-		api,
-		network,
-		flagChainURL,
-		flagChainType,
-		flagStandardType,
-		flagContract,
-		flagEventType,
-	)
+	cfg := chain.Config{
+		ChainURL:     flagChainURL,
+		ChainType:    flagChainType,
+		StandardType: flagStandardType,
+		Contract:     flagContract,
+		EventType:    flagEventType,
+	}
+
+	watcher, err := chain.NewWatcher(log, ctx, api, network, cfg)
 	if err != nil {
 		return fmt.Errorf("could not create watcher: %w", err)
 	}

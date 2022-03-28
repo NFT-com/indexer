@@ -12,42 +12,29 @@ import (
 )
 
 type Bootstrapper struct {
-	log          zerolog.Logger
-	apiClient    *client.Client
-	chainURL     string
-	chainType    string
-	standardType string
-	contract     string
-	eventType    string
-	startIndex   int64
-	endIndex     int64
-	close        chan struct{}
+	log       zerolog.Logger
+	apiClient *client.Client
+	config    Config
+	close     chan struct{}
 }
 
 func New(
 	log zerolog.Logger,
 	apiClient *client.Client,
-	chainURL, chainType, standardType, contract, eventType string,
-	startIndex, endIndex int64,
+	config Config,
 ) *Bootstrapper {
 	b := Bootstrapper{
-		log:          log.With().Str("component", "bootstrapper").Logger(),
-		apiClient:    apiClient,
-		chainURL:     chainURL,
-		chainType:    chainType,
-		standardType: standardType,
-		contract:     contract,
-		eventType:    eventType,
-		startIndex:   startIndex,
-		endIndex:     endIndex,
-		close:        make(chan struct{}),
+		log:       log.With().Str("component", "bootstrapper").Logger(),
+		apiClient: apiClient,
+		config:    config,
+		close:     make(chan struct{}),
 	}
 
 	return &b
 }
 
 func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
-	index := b.startIndex
+	index := b.config.StartIndex
 
 	for {
 		select {
@@ -56,17 +43,17 @@ func (b *Bootstrapper) Bootstrap(ctx context.Context) error {
 		default:
 		}
 
-		if index > b.endIndex {
+		if index > b.config.EndIndex {
 			return nil
 		}
 
 		job := jobs.Parsing{
-			ChainURL:     b.chainURL,
-			ChainType:    b.chainType,
+			ChainURL:     b.config.ChainURL,
+			ChainType:    b.config.ChainType,
 			BlockNumber:  big.NewInt(index).String(),
-			Address:      b.contract,
-			StandardType: b.standardType,
-			EventType:    b.eventType,
+			Address:      b.config.Contract,
+			StandardType: b.config.StandardType,
+			EventType:    b.config.EventType,
 		}
 
 		_, err := b.apiClient.CreateParsingJob(job)

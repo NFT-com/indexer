@@ -12,17 +12,13 @@ import (
 )
 
 type Watcher struct {
-	log          zerolog.Logger
-	apiClient    *client.Client
-	network      networks.Network
-	chainURL     string
-	chainType    string
-	standardType string
-	contract     string
-	eventType    string
-	startIndex   *big.Int
-	blocks       chan *big.Int
-	close        chan struct{}
+	log        zerolog.Logger
+	apiClient  *client.Client
+	network    networks.Network
+	config     Config
+	startIndex *big.Int
+	blocks     chan *big.Int
+	close      chan struct{}
 }
 
 func NewWatcher(
@@ -30,19 +26,15 @@ func NewWatcher(
 	ctx context.Context,
 	apiClient *client.Client,
 	network networks.Network,
-	chainURL, chainType, standardType, contract, eventType string,
+	config Config,
 ) (*Watcher, error) {
 	w := Watcher{
-		log:          log.With().Str("component", "watcher").Logger(),
-		apiClient:    apiClient,
-		network:      network,
-		chainURL:     chainURL,
-		chainType:    chainType,
-		standardType: standardType,
-		contract:     contract,
-		eventType:    eventType,
-		blocks:       make(chan *big.Int),
-		close:        make(chan struct{}),
+		log:       log.With().Str("component", "watcher").Logger(),
+		apiClient: apiClient,
+		network:   network,
+		config:    config,
+		blocks:    make(chan *big.Int),
+		close:     make(chan struct{}),
 	}
 
 	err := network.SubscribeToBlocks(ctx, w.blocks)
@@ -56,16 +48,18 @@ func NewWatcher(
 func (j *Watcher) Watch(ctx context.Context) error {
 	for {
 		select {
+		case <-j.close:
+			return nil
 		case block := <-j.blocks:
 			j.log.Info().Str("block", block.String()).Msg("got new block")
 
 			job := jobs.Parsing{
-				ChainURL:     j.chainURL,
-				ChainType:    j.chainType,
+				ChainURL:     j.config.ChainURL,
+				ChainType:    j.config.ChainType,
 				BlockNumber:  block.String(),
-				Address:      j.contract,
-				StandardType: j.standardType,
-				EventType:    j.eventType,
+				Address:      j.config.Contract,
+				StandardType: j.config.StandardType,
+				EventType:    j.config.EventType,
 			}
 
 			_, err := j.apiClient.CreateParsingJob(job)
@@ -73,8 +67,6 @@ func (j *Watcher) Watch(ctx context.Context) error {
 				j.log.Error().Err(err).Str("block", block.String()).Msg("could not create parsing job for block")
 				continue
 			}
-		case <-j.close:
-			return nil
 		}
 	}
 }

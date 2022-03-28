@@ -94,17 +94,17 @@ func run() error {
 		return fmt.Errorf("could not start bootstrapper: mismatch between chain ID and chain URL")
 	}
 
-	bootstrapper := bootstrapper.New(
-		log,
-		api,
-		flagChainURL,
-		flagChainType,
-		flagStandardType,
-		flagContract,
-		flagEventType,
-		flagStartIndex,
-		flagEndIndex,
-	)
+	cfg := bootstrapper.Config{
+		ChainURL:     flagChainURL,
+		ChainType:    flagChainType,
+		StandardType: flagStandardType,
+		Contract:     flagContract,
+		EventType:    flagEventType,
+		StartIndex:   flagStartIndex,
+		EndIndex:     flagEndIndex,
+	}
+
+	bootstrapper := bootstrapper.New(log, api, cfg)
 	if err != nil {
 		return fmt.Errorf("could not create bootstrapper: %w", err)
 	}
