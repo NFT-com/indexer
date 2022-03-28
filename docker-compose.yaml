@@ -26,12 +26,12 @@ services:
     restart: always
     ports:
       - '6379:6379'
-  api:
+  jobs-api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      target: jobs-api
     restart: always
-    entrypoint: '/api -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
+    entrypoint: '/jobs-api -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
     ports:
       - '8081:8081'
     depends_on:
@@ -39,26 +39,26 @@ services:
   jobs-watcher:
     build:
       context: .
-      dockerfile: Dockerfile.jobwatcher
+      target: jobs-watcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u redis:6379'
+    entrypoint: '/jobs-watcher -a jobs-api:8081 -u redis:6379'
     depends_on:
-      - api
+      - jobs-api
       - redis
   chain-watcher:
     build:
       context: .
-      dockerfile: Dockerfile.chainwatcher
+      target: chain-watcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x4a537f61ef574153664c0dbc8c8f4b900cacbe5d -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721'
+    entrypoint: '/chain-watcher -a jobs-api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x4a537f61ef574153664c0dbc8c8f4b900cacbe5d -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721'
     depends_on:
-      - api
+      - jobs-api
       - jobs-watcher
-  bootstrapper:
+  chain-bootstrapper:
     build:
       context: .
-      dockerfile: Dockerfile.bootstrapper
-    entrypoint: '/bootstrapper -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0xb55b7e00152d2ef27357944a96f29271f8073f11 --event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -s 1 -e 14398902'
+      target: chain-bootstrapper
+    entrypoint: '/chain-bootstrapper -a jobs-api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0xb55b7e00152d2ef27357944a96f29271f8073f11 --event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -s 1 -e 14398902'
     depends_on:
-      - api
-      - watcher
+      - jobs-api
+      - jobs-watcher

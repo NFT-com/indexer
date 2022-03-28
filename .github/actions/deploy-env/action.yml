@@ -48,18 +48,36 @@ runs:
         STAGE: ${{ inputs.stage }}
         DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
       run: npm run build:indexer:env
-    - name: Build and Push Indexer Image(s)
+    - name: Build and Push Indexer Docker Image(s)
       shell: bash
       env:
         REPO: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.stage }}-indexer
       run: |
         export DOCKER_BUILDKIT=1
+      
         docker pull ${{ env.REPO }}:build || true
-        docker build . -f indexer.Dockerfile --build-arg BUILDKIT_INLINE_CACHE=1 --target build --cache-from ${{ env.REPO }}:build -t ${{ env.REPO }}:build
-        docker build . -f indexer.Dockerfile --build-arg BUILDKIT_INLINE_CACHE=1 --target release -t ${{ env.REPO }}:latest -t ${{ env.REPO }}:${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target build --cache-from ${{ env.REPO }}:build -t ${{ env.REPO }}:build
         docker push ${{ env.REPO }}:build
-        docker push ${{ env.REPO }}:latest
-        docker push ${{ env.REPO }}:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target jobs-api -t ${{ env.REPO }}-jobs-api:latest -t ${{ env.REPO }}-jobs-api:${{ github.sha }} 
+        docker push ${{ env.REPO }}-jobs-api:latest
+        docker push ${{ env.REPO }}-jobs-api:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target chain-bootstrapper -t ${{ env.REPO }}-chain-bootstrapper:latest -t ${{ env.REPO }}-chain-bootstrapper:${{ github.sha }} 
+        docker push ${{ env.REPO }}-chain-bootstrapper:latest
+        docker push ${{ env.REPO }}-chain-bootstrapper:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target chain-watcher -t ${{ env.REPO }}-chain-watcher:latest -t ${{ env.REPO }}-chain-watcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-chain-watcher:latest
+        docker push ${{ env.REPO }}-chain-watcher:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target jobs-watcher -t ${{ env.REPO }}-jobs-watcher:latest -t ${{ env.REPO }}-jobs-watcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-jobs-watcher:latest
+        docker push ${{ env.REPO }}-jobs-watcher:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target parsing-dispatcher -t ${{ env.REPO }}-parsing-dispatcher:latest -t ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-parsing-dispatcher:latest
+        docker push ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }}
     - name: Deploy Indexer Infra
       shell: bash
       working-directory: infra
