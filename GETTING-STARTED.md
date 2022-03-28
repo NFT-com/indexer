@@ -20,7 +20,7 @@ There are currently two parsers:
 * ERC721 Transfer Parser (`a1a4105017a0e93b98cff7ddc33b58993cd40502bcbec24e715e99ec47b964c0`)
 * OpenSea OrdersMatched Parser (`485bd9051f5399c862cf3c08d8cea266459c4ee2d2acdbf2c1eb4b324e4983b2`)
 
-*TODO*
+Checkout the [deployment guide](DEPLOYMENT-GUIDE.md) if you want to deploy it manually.
 
 ### Starting the jobs-api, jobs-watcher, chain-bootstrapper, chain-watcher
 
