@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"database/sql"
-	
+
 	"github.com/Masterminds/squirrel"
 )
 
