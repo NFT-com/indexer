@@ -12,9 +12,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/bootstrapper"
 	"github.com/NFT-com/indexer/networks/web3"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/watcher/chain"
 )
 
 const (
@@ -43,10 +43,8 @@ func run() error {
 		flagChainType    string
 		flagContract     string
 		flagEventType    string
-		flagEndIndex     int64
 		flagLogLevel     string
 		flagStandardType string
-		flagStartIndex   int64
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
@@ -54,11 +52,9 @@ func run() error {
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
 	pflag.StringVarP(&flagContract, "contract", "c", "", "contract to watch")
-	pflag.StringVar(&flagEventType, "event", "", "event type to watch")
+	pflag.StringVarP(&flagEventType, "event", "e", "", "event type to watch")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVar(&flagStandardType, "standard-type", "", "standard type")
-	pflag.Int64VarP(&flagStartIndex, "start-index", "s", 0, "start index")
-	pflag.Int64VarP(&flagEndIndex, "end-index", "e", 0, "end index")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -72,14 +68,6 @@ func run() error {
 
 	failed := make(chan error)
 
-	cli := http.DefaultClient
-	cli.Timeout = defaultHTTPTimeout
-
-	api := client.New(log,
-		client.WithHTTPClient(cli),
-		client.WithHost(flagAPIEndpoint),
-	)
-
 	network, err := web3.New(ctx, flagChainURL)
 	if err != nil {
 		return fmt.Errorf("could not create web3 network: %w", err)
@@ -91,50 +79,51 @@ func run() error {
 	}
 
 	if chainID != flagChainID {
-		return fmt.Errorf("could not start bootstrapper: mismatch between chain ID and chain URL")
+		return fmt.Errorf("could not start watcher: mismatch between chain ID and chain URL")
 	}
 
-	cfg := bootstrapper.Config{
+	cli := http.DefaultClient
+	cli.Timeout = defaultHTTPTimeout
+
+	api := client.New(log,
+		client.WithHTTPClient(cli),
+		client.WithHost(flagAPIEndpoint),
+	)
+
+	cfg := chain.Config{
 		ChainURL:     flagChainURL,
 		ChainType:    flagChainType,
 		StandardType: flagStandardType,
 		Contract:     flagContract,
 		EventType:    flagEventType,
-		StartIndex:   flagStartIndex,
-		EndIndex:     flagEndIndex,
 	}
 
-	bootstrapper := bootstrapper.New(log, api, cfg)
+	watcher, err := chain.NewWatcher(log, ctx, api, network, cfg)
 	if err != nil {
-		return fmt.Errorf("could not create bootstrapper: %w", err)
+		return fmt.Errorf("could not create watcher: %w", err)
 	}
 
-	done := make(chan struct{})
 	go func() {
-		log.Info().Msg("bootstrapper starting")
+		log.Info().Msg("chain watcher starting")
 
-		err = bootstrapper.Bootstrap(ctx)
+		err = watcher.Watch(ctx)
 		if err != nil {
-			failed <- fmt.Errorf("could not bootstrap: %w", err)
+			failed <- fmt.Errorf("could not watch chain: %w", err)
 		}
 
-		close(done)
-		log.Info().Msg("bootstrapper done")
+		log.Info().Msg("chain watcher done")
 	}()
 
 	select {
-	case <-done:
-		log.Info().Msg("bootstrapper done")
 	case <-sig:
-		log.Info().Msg("bootstrapper stopping")
+		log.Info().Msg("chain watcher stopping")
+		network.Close()
+		watcher.Close()
+		api.Close()
 	case err = <-failed:
-		log.Error().Err(err).Msg("bootstrapper aborted")
+		log.Error().Err(err).Msg("chain watcher aborted")
 		return err
 	}
-
-	bootstrapper.Close()
-	network.Close()
-	api.Close()
 
 	go func() {
 		<-sig
