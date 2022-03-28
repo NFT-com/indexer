@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -76,23 +75,16 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	}
 
 	var job jobs.Discovery
-	rawAddresses := make([]byte, 0)
-
 	err = result.Scan(
 		&job.ID,
 		&job.ChainURL,
 		&job.ChainType,
 		&job.BlockNumber,
-		&rawAddresses,
+		pq.Array(&job.Addresses),
 		&job.StandardType,
 		&job.Status,
 	)
 
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve discovery job: %w", err)
-	}
-
-	err = json.Unmarshal(rawAddresses, &job.Addresses)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve discovery job: %w", err)
 	}

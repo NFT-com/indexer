@@ -110,16 +110,13 @@ func run() error {
 		return fmt.Errorf("could not create store: %w", err)
 	}
 
-	consumer := consumer.NewParsingConsumer(log, api, dispatcher, postgresStore)
-
-	failed := make(chan error)
-
 	redisClient := redis.NewClient(&redis.Options{
 		Network: flagRedisNetwork,
 		Addr:    flagRedisURL,
 		DB:      flagRedisDatabase,
 	})
 
+	failed := make(chan error)
 	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
 	if err != nil {
 		return fmt.Errorf("could not open redis connection: %w", err)
@@ -135,6 +132,7 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
+	consumer := consumer.NewParsingConsumer(log, api, dispatcher, postgresStore)
 	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)
