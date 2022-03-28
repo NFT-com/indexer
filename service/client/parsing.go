@@ -146,7 +146,7 @@ func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-func (c *Client) UpdateParsingJobState(id string, status jobs.Status) error {
+func (c *Client) UpdateParsingJobStatus(id string, status jobs.Status) error {
 	requestBody := request.Status{
 		Status: string(status),
 	}

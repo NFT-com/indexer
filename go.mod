@@ -5,8 +5,10 @@ go 1.17
 require (
 	github.com/Masterminds/squirrel v1.5.2
 	github.com/adjust/rmq/v4 v4.0.4
+	github.com/aws/aws-sdk-go v1.43.22
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/go-playground/validator/v10 v10.10.1
+	github.com/go-redis/redis/v8 v8.3.2
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.6.1
@@ -27,9 +29,9 @@ require (
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-redis/redis/v8 v8.3.2 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
@@ -47,8 +49,8 @@ require (
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	go.opentelemetry.io/otel v0.13.0 // indirect
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
-	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect

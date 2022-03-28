@@ -1,3 +1,4 @@
 /cmd/jobs-api/jobs-api
 /cmd/jobs-watcher/jobs-watcher
+/cmd/parsing-dispatcher/parsing-dispatcher
 /cmd/chain-boostrapper/chain-boostrapper
