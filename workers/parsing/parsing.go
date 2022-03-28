@@ -33,7 +33,7 @@ func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, error) {
-	h.log.Info().
+	h.log.Debug().
 		Str("block", job.BlockNumber).
 		Str("event", job.EventType).
 		Str("contract", job.Address).
@@ -59,7 +59,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	for _, rawLog := range rawLogs {
 		log, err := parser.ParseRawLog(rawLog)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse raw events: %w", err)
+			return nil, fmt.Errorf("could not parse raw event: %w", err)
 		}
 
 		logs = append(logs, *log)

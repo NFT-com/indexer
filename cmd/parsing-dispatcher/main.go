@@ -105,7 +105,7 @@ func run() error {
 		return fmt.Errorf("could not open SQL connection: %w", err)
 	}
 
-	postgresStore, err := postgres.NewStore(db)
+	store, err := postgres.NewStore(db)
 	if err != nil {
 		return fmt.Errorf("could not create store: %w", err)
 	}
@@ -132,7 +132,7 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := consumer.NewParsingConsumer(log, api, dispatcher, postgresStore)
+	consumer := consumer.NewParsingConsumer(log, api, dispatcher, store)
 	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)

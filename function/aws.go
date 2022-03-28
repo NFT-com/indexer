@@ -44,7 +44,7 @@ func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 			return nil, fmt.Errorf("error during lambda runtime: %s", *output.FunctionError)
 		}
 
-		return nil, fmt.Errorf("unexpected error during lambda runtime")
+		return nil, fmt.Errorf("unexpected error during lambda runtime: %v", *output.StatusCode)
 	}
 
 	return output.Payload, nil

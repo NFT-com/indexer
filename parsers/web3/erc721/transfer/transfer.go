@@ -17,27 +17,27 @@ func NewParser() *Parser {
 	return &p
 }
 
-func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
-	if len(rawLog.IndexData) < 3 {
-		return nil, fmt.Errorf("could not parse raw log: index data lenght is less than 3")
+func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
+	if len(raw.IndexData) != defaultIndexDataLen {
+		return nil, fmt.Errorf("unexpected index data length (have: %v, want: %v)", len(raw.IndexData), defaultIndexDataLen)
 	}
 
 	var (
-		fromAddress = common.HexToAddress(rawLog.IndexData[0]).String()
-		toAddress   = common.HexToAddress(rawLog.IndexData[1]).String()
-		nftID       = common.HexToHash(rawLog.IndexData[2]).Big().String()
+		fromAddress = common.HexToAddress(raw.IndexData[0]).String()
+		toAddress   = common.HexToAddress(raw.IndexData[1]).String()
+		nftID       = common.HexToHash(raw.IndexData[2]).Big().String()
 	)
 
 	l := log.Log{
-		ID:              rawLog.ID,
-		ChainID:         rawLog.ChainID,
-		Contract:        rawLog.Address,
-		Block:           rawLog.BlockNumber,
-		TransactionHash: rawLog.TransactionHash,
+		ID:              raw.ID,
+		ChainID:         raw.ChainID,
+		Contract:        raw.Address,
+		Block:           raw.BlockNumber,
+		TransactionHash: raw.TransactionHash,
 		NftID:           nftID,
 		FromAddress:     fromAddress,
 		ToAddress:       toAddress,
-		EmittedAt:       rawLog.EmittedAt,
+		EmittedAt:       raw.EmittedAt,
 	}
 
 	switch {

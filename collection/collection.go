@@ -12,4 +12,5 @@ type Collection struct {
 	Standard             string `json:"standard"`
 	URI                  string `json:"uri"`
 	ImageURL             string `json:"image_url"`
+	Website              string `json:"website"`
 }

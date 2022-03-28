@@ -30,7 +30,7 @@ func (s *Store) Chain(chainID string) (*chain.Chain, error) {
 		&chain.Symbol,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve chain: %w", err)
+		return nil, fmt.Errorf("could not scan chain: %w", err)
 	}
 
 	return &chain, nil

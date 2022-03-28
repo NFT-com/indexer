@@ -9,7 +9,7 @@ const (
 	mintEventTableName     = "mints"
 	transferEventTableName = "transfers"
 	saleEventTableName     = "sales"
-	burnEventTableName     = "bruns"
+	burnEventTableName     = "burns"
 
 	// data table names
 	chainTableName       = "chains"
@@ -36,6 +36,6 @@ var (
 
 	// data table columns
 	chainTableColumns       = []string{"id", "chain_id", "name", "description", "symbol"}
-	collectionTableColumns  = []string{"id", "chain_id", "contract_collection_id", "address", "name", "description", "symbol", "slug", "standard", "uri", "image_url"}
+	collectionTableColumns  = []string{"id", "chain_id", "contract_collection_id", "address", "name", "description", "symbol", "slug", "standard", "uri", "image_url", "website"}
 	marketplaceTableColumns = []string{"id", "name", "description", "website"}
 )

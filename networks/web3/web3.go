@@ -49,7 +49,7 @@ func New(ctx context.Context, url string) (*Web3, error) {
 func (w *Web3) ChainID(ctx context.Context) (string, error) {
 	chainID, err := w.ethClient.ChainID(ctx)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not get chain id: %w", err)
 	}
 
 	return chainID.String(), nil
@@ -59,7 +59,7 @@ func (w *Web3) SubscribeToBlocks(ctx context.Context, blocks chan *big.Int) erro
 	headerChannel := make(chan *types.Header)
 	subscription, err := w.ethClient.SubscribeNewHead(ctx, headerChannel)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not subscribe to new headers: %w", err)
 	}
 
 	go func() {
@@ -79,21 +79,21 @@ func (w *Web3) SubscribeToBlocks(ctx context.Context, blocks chan *big.Int) erro
 func (w *Web3) GetLatestBlockHeight(ctx context.Context) (*big.Int, error) {
 	header, err := w.ethClient.HeaderByNumber(ctx, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get header: %w", err)
 	}
 
 	return header.Number, nil
 }
 
 func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]log.RawLog, error) {
-	index, ok := big.NewInt(0).SetString(blockNumber, indexBase)
+	block, ok := big.NewInt(0).SetString(blockNumber, indexBase)
 	if !ok {
 		return nil, fmt.Errorf("could not parse block number into big.Int")
 	}
 
 	query := ethereum.FilterQuery{
-		FromBlock: index,
-		ToBlock:   index,
+		FromBlock: block,
+		ToBlock:   block,
 		Addresses: []common.Address{common.HexToAddress(contract)},
 		Topics:    [][]common.Hash{{common.HexToHash(eventType)}},
 	}
@@ -103,7 +103,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	header, err := w.ethClient.HeaderByNumber(ctx, index)
+	header, err := w.ethClient.HeaderByNumber(ctx, block)
 	if err != nil {
 		return nil, fmt.Errorf("could not get block header: %w", err)
 	}
@@ -112,6 +112,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 
 	logs := make([]log.RawLog, 0, len(web3Logs))
 	for _, web3Log := range web3Logs {
+		// in case that the transaction got reverted
 		if web3Log.Removed {
 			continue
 		}

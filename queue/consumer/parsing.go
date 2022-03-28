@@ -17,12 +17,12 @@ import (
 
 type Parsing struct {
 	log        zerolog.Logger
-	dispatcher function.Dispatcher
+	dispatcher function.Invoker
 	apiClient  *client.Client
 	store      Store
 }
 
-func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Dispatcher, store Store) *Parsing {
+func NewParsingConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store) *Parsing {
 	c := Parsing{
 		log:        log,
 		dispatcher: dispatcher,
@@ -102,7 +102,6 @@ func (d *Parsing) handleError(id string, delivery rmq.Delivery, err error, messa
 	updateErr := d.apiClient.UpdateParsingJobStatus(id, jobs.StatusFailed)
 	if updateErr != nil {
 		d.log.Error().Err(updateErr).Msg("could not update job status")
-		return
 	}
 
 	// rejects the message from the consumer

@@ -45,9 +45,10 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*coll
 		&collection.Standard,
 		&collection.URI,
 		&collection.ImageURL,
+		&collection.Website,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve collection: %w", err)
+		return nil, fmt.Errorf("could not scan collection: %w", err)
 	}
 
 	collection.ContractCollectionID = ccID.String

@@ -35,18 +35,18 @@ func NewParser(client networks.Network) (*Parser, error) {
 	return &p, nil
 }
 
-func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
-	if len(rawLog.IndexData) < 2 {
-		return nil, fmt.Errorf("could not parse raw log: index data lenght is less than 2")
+func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
+	if len(raw.IndexData) != defaultIndexDataLen {
+		return nil, fmt.Errorf("unexpected index data length (have: %v, want: %v)", len(raw.IndexData), defaultIndexDataLen)
 	}
 
 	var (
-		seller = rawLog.IndexData[0]
-		buyer  = rawLog.IndexData[1]
+		seller = raw.IndexData[0]
+		buyer  = raw.IndexData[1]
 	)
 
 	data := make(map[string]interface{})
-	err := p.abi.UnpackIntoMap(data, eventName, rawLog.Data)
+	err := p.abi.UnpackIntoMap(data, eventName, raw.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log data: %w", err)
 	}
@@ -57,16 +57,16 @@ func (p *Parser) ParseRawLog(rawLog log.RawLog) (*log.Log, error) {
 	}
 
 	l := log.Log{
-		ID:              rawLog.ID,
+		ID:              raw.ID,
 		Type:            log.Sale,
-		ChainID:         rawLog.ChainID,
-		Block:           rawLog.BlockNumber,
-		TransactionHash: rawLog.TransactionHash,
-		Contract:        rawLog.Address,
+		ChainID:         raw.ChainID,
+		Block:           raw.BlockNumber,
+		TransactionHash: raw.TransactionHash,
+		Contract:        raw.Address,
 		FromAddress:     common.HexToAddress(seller).String(),
 		ToAddress:       common.HexToAddress(buyer).String(),
 		Price:           price.String(),
-		EmittedAt:       rawLog.EmittedAt,
+		EmittedAt:       raw.EmittedAt,
 	}
 
 	return &l, nil

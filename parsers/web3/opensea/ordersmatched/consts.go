@@ -1,8 +1,9 @@
 package main
 
 const (
-	eventName      = "OrdersMatched"
-	priceFieldName = "price"
+	defaultIndexDataLen = 3
+	eventName           = "OrdersMatched"
+	priceFieldName      = "price"
 
 	// OrdersMatchedEventABI is extracted from the OpenSea marketplace contract ABI:
 	// See https://etherscan.io/address/0x7f268357a8c2552623316e2562d90e642bb538e5#code
