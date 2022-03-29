@@ -28,7 +28,7 @@ func New(lambdaClient Lambda) (*Client, error) {
 	return &d, nil
 }
 
-func (d *Client) Dispatch(functionName string, payload []byte) error {
+func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,
@@ -36,16 +36,16 @@ func (d *Client) Dispatch(functionName string, payload []byte) error {
 
 	output, err := d.lambdaClient.Invoke(input)
 	if err != nil {
-		return fmt.Errorf("could not invoke lambda: %w", err)
+		return nil, fmt.Errorf("could not invoke lambda: %w", err)
 	}
 
 	if output.StatusCode != nil && *output.StatusCode > 299 {
 		if output.FunctionError != nil {
-			return fmt.Errorf("error during lambda runtime: %s", *output.FunctionError)
+			return nil, fmt.Errorf("error during lambda runtime: %s", *output.FunctionError)
 		}
 
-		return fmt.Errorf("unexpected error during lambda runtime")
+		return nil, fmt.Errorf("unexpected error during lambda runtime: %v", *output.StatusCode)
 	}
 
-	return nil
+	return output.Payload, nil
 }

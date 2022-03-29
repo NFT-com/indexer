@@ -3,11 +3,11 @@
 -- Creation of mints table.
 CREATE TABLE mints
 (
-    id               UUID PRIMARY KEY,
-    chain_id         UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    id               VARCHAR(128) PRIMARY KEY,
     collection       UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
+    token_id         VARCHAR(128) NOT NULL,
     owner            VARCHAR(128),
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
@@ -16,11 +16,11 @@ CREATE TABLE mints
 -- Creation of transfers table.
 CREATE TABLE transfers
 (
-    id               UUID PRIMARY KEY,
-    chain_id         UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    id               VARCHAR(128) PRIMARY KEY,
     collection       UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
+    token_id         VARCHAR(128) NOT NULL,
     from_address     VARCHAR(128) NOT NULL,
     to_address       VARCHAR(128) NOT NULL,
     emitted_at       TIMESTAMP    NOT NULL,
@@ -30,9 +30,7 @@ CREATE TABLE transfers
 -- Creation of sales table.
 CREATE TABLE sales
 (
-    id               UUID PRIMARY KEY,
-    chain_id         UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
-    collection       UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
+    id               VARCHAR(128) PRIMARY KEY,
     marketplace      UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
@@ -46,12 +44,11 @@ CREATE TABLE sales
 -- Creation of burns table.
 CREATE TABLE burns
 (
-    id               UUID PRIMARY KEY,
-    chain_id         UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    id               VARCHAR(128) PRIMARY KEY,
     collection       UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
     block            NUMERIC      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
-    burner           VARCHAR(128),
+    token_id         VARCHAR(128) NOT NULL,
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
 );

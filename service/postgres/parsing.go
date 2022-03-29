@@ -72,7 +72,7 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve parsing job: %w", ErrResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve parsing job: %w", errResourceNotFound)
 	}
 
 	var job jobs.Parsing
@@ -112,7 +112,7 @@ func (s *Store) UpdateParsingJobState(id string, status jobs.Status) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update parsing job state: %w", ErrResourceNotFound)
+		return fmt.Errorf("could not update parsing job state: %w", errResourceNotFound)
 	}
 
 	return nil

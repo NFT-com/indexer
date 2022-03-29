@@ -3,3 +3,5 @@
 /cmd/parsing-dispatcher/parsing-dispatcher
 /cmd/chain-watcher/chain-watcher
 /cmd/chain-boostrapper/chain-boostrapper
+/parsers/web3/erc721/transfer/transfer
+/parsers/web3/opensea/ordersmatched/ordersmatched

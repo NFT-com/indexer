@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/Masterminds/squirrel v1.5.2
 	github.com/adjust/rmq/v4 v4.0.4
+	github.com/aws/aws-lambda-go v1.28.0
 	github.com/aws/aws-sdk-go v1.43.22
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/go-playground/validator/v10 v10.10.1
