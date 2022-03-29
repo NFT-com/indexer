@@ -37,6 +37,8 @@ const (
 func main() {
 	err := run()
 	if err != nil {
+		// TODO: Improve this mixing logging
+		// https://github.com/NFT-com/indexer/issues/32
 		log.Fatalln(err)
 	}
 }

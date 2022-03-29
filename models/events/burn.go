@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
-type Mint struct {
+type Burn struct {
 	ID              string    `json:"id"`
 	CollectionID    string    `json:"collection_id"`
 	Block           string    `json:"block"`
 	TransactionHash string    `json:"transaction_hash"`
-	Owner           string    `json:"owner"`
+	TokenID         string    `json:"token_id"`
 	EmittedAt       time.Time `json:"emitted_at"`
 }

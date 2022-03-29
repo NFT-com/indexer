@@ -40,10 +40,10 @@ func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 		EmittedAt:       raw.EmittedAt,
 	}
 
-	switch {
-	case fromAddress == zeroValueAddress:
+	switch zeroValueAddress {
+	case fromAddress:
 		l.Type = log.Mint
-	case toAddress == zeroValueAddress:
+	case toAddress:
 		l.Type = log.Burn
 	default:
 		l.Type = log.Transfer

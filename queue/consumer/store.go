@@ -1,10 +1,8 @@
 package consumer
 
 import (
-	"github.com/NFT-com/indexer/chain"
-	"github.com/NFT-com/indexer/collection"
-	"github.com/NFT-com/indexer/events"
-	"github.com/NFT-com/indexer/marketplace"
+	"github.com/NFT-com/indexer/models/chain"
+	"github.com/NFT-com/indexer/models/events"
 )
 
 type Store interface {
@@ -14,8 +12,6 @@ type Store interface {
 	UpsertBurnEvent(event events.Burn) error
 
 	Chain(chainID string) (*chain.Chain, error)
-
-	Collection(chainID, address, contractCollectionID string) (*collection.Collection, error)
-
-	Marketplace(chainID, address string) (*marketplace.Marketplace, error)
+	Collection(chainID, address, contractCollectionID string) (*chain.Collection, error)
+	Marketplace(chainID, address string) (*chain.Marketplace, error)
 }

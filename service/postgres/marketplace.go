@@ -3,10 +3,10 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/marketplace"
+	"github.com/NFT-com/indexer/models/chain"
 )
 
-func (s *Store) Marketplace(chainID, address string) (*marketplace.Marketplace, error) {
+func (s *Store) Marketplace(chainID, address string) (*chain.Marketplace, error) {
 	result, err := s.sqlBuilder.
 		Select("marketplaces.id", "marketplaces.name", "marketplaces.description", "marketplaces.website").
 		From("marketplaces, chains_marketplaces").
@@ -15,7 +15,7 @@ func (s *Store) Marketplace(chainID, address string) (*marketplace.Marketplace, 
 		Where("chains_marketplaces.marketplace_id = marketplaces.id").
 		Query()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not query marketplace: %w", err)
 	}
 	defer result.Close()
 
@@ -23,7 +23,7 @@ func (s *Store) Marketplace(chainID, address string) (*marketplace.Marketplace, 
 		return nil, fmt.Errorf("could not retrieve marketplace: %w", errResourceNotFound)
 	}
 
-	var marketplace marketplace.Marketplace
+	var marketplace chain.Marketplace
 	err = result.Scan(
 		&marketplace.ID,
 		&marketplace.Name,

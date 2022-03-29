@@ -3,7 +3,7 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/chain"
+	"github.com/NFT-com/indexer/models/chain"
 )
 
 func (s *Store) Chain(chainID string) (*chain.Chain, error) {

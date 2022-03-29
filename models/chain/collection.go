@@ -1,4 +1,4 @@
-package collection
+package chain
 
 type Collection struct {
 	ID                   string `json:"id"`

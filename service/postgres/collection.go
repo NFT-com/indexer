@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/NFT-com/indexer/collection"
+	"github.com/NFT-com/indexer/models/chain"
 )
 
-func (s *Store) Collection(chainID, address, contractCollectionID string) (*collection.Collection, error) {
+func (s *Store) Collection(chainID, address, contractCollectionID string) (*chain.Collection, error) {
 	query := s.sqlBuilder.
 		Select(collectionTableColumns...).
 		From(collectionTableName).
@@ -20,7 +20,7 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*coll
 
 	result, err := query.Query()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not query collection: %w", err)
 	}
 	defer result.Close()
 
@@ -29,7 +29,7 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*coll
 	}
 
 	var (
-		collection collection.Collection
+		collection chain.Collection
 		ccID       sql.NullString
 	)
 

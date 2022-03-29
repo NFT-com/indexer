@@ -3,8 +3,8 @@ package consumer
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/events"
 	"github.com/NFT-com/indexer/log"
+	"github.com/NFT-com/indexer/models/events"
 )
 
 func (d *Parsing) processLogs(logs []log.Log) error {
@@ -26,6 +26,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				CollectionID:    collection.ID,
 				Block:           l.Block,
 				TransactionHash: l.TransactionHash,
+				TokenID:         l.NftID,
 				Owner:           l.ToAddress,
 				EmittedAt:       l.EmittedAt,
 			}
@@ -68,6 +69,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				CollectionID:    collection.ID,
 				Block:           l.Block,
 				TransactionHash: l.TransactionHash,
+				TokenID:         l.NftID,
 				FromAddress:     l.FromAddress,
 				ToAddress:       l.ToAddress,
 				EmittedAt:       l.EmittedAt,
@@ -89,6 +91,7 @@ func (d *Parsing) processLogs(logs []log.Log) error {
 				CollectionID:    collection.ID,
 				Block:           l.Block,
 				TransactionHash: l.TransactionHash,
+				TokenID:         l.NftID,
 				EmittedAt:       l.EmittedAt,
 			}
 

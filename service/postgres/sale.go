@@ -3,7 +3,7 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/events"
+	"github.com/NFT-com/indexer/models/events"
 )
 
 func (s *Store) UpsertSaleEvent(event events.Sale) error {

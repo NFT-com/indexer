@@ -1,4 +1,4 @@
-package marketplace
+package chain
 
 type Marketplace struct {
 	ID          string `json:"id"`
