@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"time"
 
 	"github.com/adjust/rmq/v4"
@@ -90,28 +91,20 @@ func run() error {
 
 	watcher := watcher.New(log, api, producer)
 
-	discoveryJobs := make(chan jobs.Discovery)
-	err = api.SubscribeNewDiscoveryJob(discoveryJobs)
+	discoveryJobs := make(chan []jobs.Discovery, runtime.GOMAXPROCS(-1))
+	err = api.SubscribeNewDiscoveryJob(client.SubscriberTypeCreateJobs, discoveryJobs)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to new discovery jobs: %w", err)
 	}
 
-	parsingJobs := make(chan jobs.Parsing)
-	err = api.SubscribeNewParsingJob(parsingJobs)
+	parsingJobs := make(chan []jobs.Parsing, runtime.GOMAXPROCS(-1))
+	err = api.SubscribeNewParsingJob(client.SubscriberTypeCreateJobs, parsingJobs)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to new parsing jobs: %w", err)
 	}
 
-	go func() {
-		log.Info().Msg("jobs watcher starting")
-
-		err = watcher.Watch(discoveryJobs, parsingJobs)
-		if err != nil {
-			failed <- fmt.Errorf("could not watch jobs: %w", err)
-		}
-
-		log.Info().Msg("jobs watcher done")
-	}()
+	log.Info().Msg("jobs watcher starting")
+	watcher.Watch(discoveryJobs, parsingJobs)
 
 	select {
 	case <-sig:
@@ -128,6 +121,8 @@ func run() error {
 		log.Warn().Msg("forcing exit")
 		os.Exit(1)
 	}()
+
+	log.Info().Msg("jobs watcher done")
 
 	return nil
 }

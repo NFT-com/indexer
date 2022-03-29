@@ -43,6 +43,7 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 
 	discoveries := server.Group("/discoveries")
 	discoveries.POST("", h.CreateDiscoveryJob)
+	discoveries.POST("/batch", h.CreateDiscoveryJobs)
 	discoveries.GET("", h.ListDiscoveryJobs)
 	discoveries.GET("/highest", h.GetHighestBlockNumberDiscoveryJob)
 	discoveries.GET("/:id", h.GetDiscoveryJob)
@@ -50,6 +51,7 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 
 	parsings := server.Group("/parsings")
 	parsings.POST("", h.CreateParsingJob)
+	parsings.POST("/batch", h.CreateParsingJobs)
 	parsings.GET("", h.ListParsingJobs)
 	parsings.GET("/highest", h.GetHighestBlockNumberParsingJob)
 	parsings.GET("/:id", h.GetParsingJob)

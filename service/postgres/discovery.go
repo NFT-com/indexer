@@ -23,6 +23,23 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
+func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
+	query := s.sqlBuilder.
+		Insert(discoveryJobsTableName).
+		Columns(discoveryJobsTableColumns...)
+
+	for _, job := range jobs {
+		query = query.Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status)
+	}
+
+	_, err := query.Exec()
+	if err != nil {
+		return fmt.Errorf("could not create discovery jobs: %w", err)
+	}
+
+	return nil
+}
+
 // DiscoveryJobs returns a list of discovery jobs filtered by status. Empty string status returns every job.
 func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	query := s.sqlBuilder.

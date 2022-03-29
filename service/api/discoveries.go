@@ -15,6 +15,11 @@ import (
 func (h *Handler) DiscoveryWebsocketConnection(ctx echo.Context) error {
 	keys := make(map[string]interface{})
 
+	params := ctx.QueryParams()
+	if params.Has(statusQueryKey) {
+		keys = broadcaster.WithStatus(keys, params.Get(statusQueryKey))
+	}
+
 	return h.wsHandler.HandleRequestWithKeys(
 		ctx.Response(),
 		ctx.Request(),
@@ -49,6 +54,40 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusCreated, *newJob)
+}
+
+// CreateDiscoveryJobs handles the api request to create multiple new discovery jobs.
+func (h *Handler) CreateDiscoveryJobs(ctx echo.Context) error {
+	var req request.Discoveries
+	err := ctx.Bind(&req)
+	if err != nil {
+		return badRequest(err)
+	}
+
+	err = h.validator.Request(req)
+	if err != nil {
+		return badRequest(err)
+	}
+
+	jobList := make([]jobs.Discovery, 0, len(req.Jobs))
+	for _, j := range req.Jobs {
+		job := jobs.Discovery{
+			ChainURL:     j.ChainURL,
+			ChainType:    j.ChainType,
+			BlockNumber:  j.BlockNumber,
+			Addresses:    j.Addresses,
+			StandardType: j.StandardType,
+		}
+
+		jobList = append(jobList, job)
+	}
+
+	err = h.jobs.CreateDiscoveryJobs(jobList)
+	if err != nil {
+		return internalError(err)
+	}
+
+	return ctx.NoContent(http.StatusCreated)
 }
 
 // ListDiscoveryJobs handles the api request to retrieve all the discovery jobs.

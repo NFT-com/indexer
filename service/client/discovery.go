@@ -13,31 +13,46 @@ import (
 	"github.com/NFT-com/indexer/service/request"
 )
 
-func (c *Client) SubscribeNewDiscoveryJob(discoveryJobs chan jobs.Discovery) error {
+func (c *Client) SubscribeNewDiscoveryJob(subscriberType string, discoveryJobs chan []jobs.Discovery) error {
+	params := url.Values{}
+	if subscriberType != SubscriberTypeAllJobs {
+		params.Set("status", subscriberType)
+	}
+
 	url := c.config.jobsWebsocket
 	url.Path = path.Join("ws", discoveryBasePath)
+	url.RawQuery = params.Encode()
 
 	connection, _, err := c.config.dialer.Dial(url.String(), nil)
 	if err != nil {
 		return fmt.Errorf("could not dial websocket: %w", err)
 	}
 
+	internalClose := make(chan struct{})
+	connection.SetCloseHandler(func(code int, text string) error {
+		c.log.Info().Int("code", code).Str("text", text).Msg("discovery jobs websocket connection closed")
+		close(internalClose)
+		return nil
+	})
+
 	go func() {
 		for {
 			select {
 			case <-c.close:
 				return
+			case <-internalClose:
+				return
 			default:
 			}
 
-			job := jobs.Discovery{}
-			err := connection.ReadJSON(&job)
+			var jobs []jobs.Discovery
+			err := connection.ReadJSON(&jobs)
 			if err != nil {
 				c.log.Error().Err(err).Msg("could not read message socket")
 				continue
 			}
 
-			discoveryJobs <- job
+			discoveryJobs <- jobs
 		}
 	}()
 
@@ -87,6 +102,40 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 	}
 
 	return &newJob, nil
+}
+
+func (c *Client) CreateDiscoveryJobs(jobList []jobs.Discovery) error {
+	requestJobs := make([]request.Discovery, 0, len(jobList))
+	for _, job := range jobList {
+		requestJob := request.Discovery{
+			ChainURL:     job.ChainURL,
+			ChainType:    job.ChainType,
+			BlockNumber:  job.BlockNumber,
+			Addresses:    job.Addresses,
+			StandardType: job.StandardType,
+		}
+
+		requestJobs = append(requestJobs, requestJob)
+	}
+
+	req := request.Discoveries{
+		Jobs: requestJobs,
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("could not marshal request: %w", err)
+	}
+
+	url := c.config.jobsAPI
+	url.Path = path.Join(discoveryBasePath, "batch")
+
+	_, err = c.config.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("could not perform request: %w", err)
+	}
+
+	return nil
 }
 
 func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
