@@ -1,5 +1,6 @@
 package jobs
 
+// Parsing is a job that parses an NFT's data from block data.
 type Parsing struct {
 	ID           string `json:"id"`
 	ChainURL     string `json:"chain_url"`

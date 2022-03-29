@@ -6,18 +6,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func unpackError(err error) *echo.HTTPError {
+// badRequest returns a bad request error warped with the initial error.
+func badRequest(err error) *echo.HTTPError {
 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 }
 
-func validateError(err error) *echo.HTTPError {
-	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-}
-
-func parsingError(err error) *echo.HTTPError {
-	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-}
-
-func apiError(err error) *echo.HTTPError {
+// internalError returns an internal server error warped with the initial error.
+func internalError(err error) *echo.HTTPError {
 	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 }

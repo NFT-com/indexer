@@ -7,6 +7,7 @@ import (
 	"github.com/NFT-com/indexer/jobs"
 )
 
+// CreateParsingJob creates a new parsing job.
 func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	_, err := s.sqlBuilder.
 		Insert(parsingJobsTableName).
@@ -21,6 +22,7 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	return nil
 }
 
+// ParsingJobs returns a list of parsing jobs filtered by status. Empty string status returns every job.
 func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	query := s.sqlBuilder.
 		Select(parsingJobsTableColumns...).
@@ -60,6 +62,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	return jobList, nil
 }
 
+// ParsingJob returns a parsing job.
 func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	result, err := s.sqlBuilder.
 		Select(parsingJobsTableColumns...).
@@ -94,7 +97,8 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-func (s *Store) UpdateParsingJobState(id string, status jobs.Status) error {
+// UpdateParsingJobStatus updates a parsing job status.
+func (s *Store) UpdateParsingJobStatus(id string, status jobs.Status) error {
 	res, err := s.sqlBuilder.
 		Update(parsingJobsTableName).
 		Where("id = ?", id).
@@ -103,16 +107,16 @@ func (s *Store) UpdateParsingJobState(id string, status jobs.Status) error {
 		Exec()
 
 	if err != nil {
-		return fmt.Errorf("could not update parsing job state: %w", err)
+		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
 
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("could not update parsing job state: %w", err)
+		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update parsing job state: %w", errResourceNotFound)
+		return fmt.Errorf("could not update parsing job status: %w", errResourceNotFound)
 	}
 
 	return nil

@@ -1,5 +1,9 @@
 # Indexer Service
 
+## Binaries
+
+* [JOBS API](./cmd/jobs-api/README.md)
+
 ## APIs
 
 * [JobsAPI](./cmd/jobs-api/API.md)

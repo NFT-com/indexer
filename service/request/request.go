@@ -1,5 +1,6 @@
 package request
 
+// Discovery represents a request to the Discovery API.
 type Discovery struct {
 	ChainURL     string   `json:"chain_url" validate:"required"`
 	ChainType    string   `json:"chain_type" validate:"required"`
@@ -8,6 +9,7 @@ type Discovery struct {
 	StandardType string   `json:"standard_type" validate:"required"`
 }
 
+// Parsing represents a request to the Parsing API.
 type Parsing struct {
 	ChainURL     string `json:"chain_url" validate:"required"`
 	ChainType    string `json:"chain_type" validate:"required"`
@@ -17,6 +19,7 @@ type Parsing struct {
 	EventType    string `json:"event_type" validate:"required"`
 }
 
+// Status represents the status API change request.
 type Status struct {
 	Status string `json:"status" validate:"required"`
 }

@@ -24,11 +24,14 @@ var (
 		StatusFinished:   {},
 	}
 
-	ErrStatusNotFound = errors.New("status not found")
+	errStatusNotFound = errors.New("status not found")
 )
 
+// Status represents the job status.
 type Status string
 
+// ParseStatus returns the status type from a raw status string.
+// Returns empty status if the status is empty.
 func ParseStatus(rawStatus string) (Status, error) {
 	if rawStatus == "" {
 		return Status(rawStatus), nil
@@ -38,7 +41,7 @@ func ParseStatus(rawStatus string) (Status, error) {
 
 	_, exists := statusMap[rawStatus]
 	if !exists {
-		return "", ErrStatusNotFound
+		return "", errStatusNotFound
 	}
 
 	return Status(rawStatus), nil
