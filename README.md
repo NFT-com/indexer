@@ -1,5 +1,9 @@
 # Indexer Service
 
+## APIs
+
+* [JobsAPI](./cmd/jobs-api/API.md)
+
 ## Local Development
 
 ### Requirements
