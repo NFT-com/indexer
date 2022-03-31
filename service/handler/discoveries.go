@@ -46,6 +46,16 @@ func (c *Handler) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	return job, nil
 }
 
+// GetHighestBlockNumberDiscoveryJob returns the highest block number parsing block with the specified elements.
+func (c *Handler) GetHighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (*jobs.Discovery, error) {
+	job, err := c.store.HighestBlockNumberDiscoveryJob(chainURL, chainType, addresses, standardType, eventType)
+	if err != nil {
+		return nil, fmt.Errorf("could not get highest block number discovery job: %w", err)
+	}
+
+	return job, nil
+}
+
 // UpdateDiscoveryJobStatus updates the discovery job status.
 func (c *Handler) UpdateDiscoveryJobStatus(id string, newStatus jobs.Status) error {
 	job, err := c.store.DiscoveryJob(id)

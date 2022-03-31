@@ -8,7 +8,13 @@ import (
 const (
 	jobIDParamKey = "id"
 
-	statusQueryKey = "status"
+	statusQueryKey       = "status"
+	chainURLQueryKey     = "chain_url"
+	chainTypeQueryKey    = "chain_type"
+	addressQueryKey      = "address"
+	addressesQueryKey    = "addresses"
+	standardTypeQueryKey = "standard_type"
+	eventTypeQueryKey    = "event_type"
 )
 
 // Handler represents the API handler.
@@ -38,12 +44,14 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	discoveries := server.Group("/discoveries")
 	discoveries.POST("", h.CreateDiscoveryJob)
 	discoveries.GET("", h.ListDiscoveryJobs)
+	discoveries.GET("/highest", h.GetHighestBlockNumberDiscoveryJob)
 	discoveries.GET("/:id", h.GetDiscoveryJob)
 	discoveries.PATCH("/:id", h.UpdateDiscoveryJobStatus)
 
 	parsings := server.Group("/parsings")
 	parsings.POST("", h.CreateParsingJob)
 	parsings.GET("", h.ListParsingJobs)
+	parsings.GET("/highest", h.GetHighestBlockNumberParsingJob)
 	parsings.GET("/:id", h.GetParsingJob)
 	parsings.PATCH("/:id", h.UpdateParsingJobStatus)
 }

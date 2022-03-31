@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/NFT-com/indexer/jobs"
@@ -92,6 +93,47 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
+	}
+
+	return &job, nil
+}
+
+// HighestBlockNumberParsingJob returns the highest block number parsing job.
+func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
+	result, err := s.sqlBuilder.
+		Select(parsingJobsTableColumns...).
+		From(parsingJobsTableName).
+		Where("chain_url = ?", chainURL).
+		Where("chain_type = ?", chainType).
+		Where("address = ?", address).
+		Where("interface_type = ?", standardType).
+		Where("event_type = ?", eventType).
+		OrderBy("block_number DESC").
+		Query()
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", err)
+	}
+	defer result.Close()
+
+	if !result.Next() || result.Err() != nil {
+		log.Println(result.Err())
+		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", errResourceNotFound)
+	}
+
+	var job jobs.Parsing
+	err = result.Scan(
+		&job.ID,
+		&job.ChainURL,
+		&job.ChainType,
+		&job.BlockNumber,
+		&job.Address,
+		&job.StandardType,
+		&job.EventType,
+		&job.Status,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", err)
 	}
 
 	return &job, nil

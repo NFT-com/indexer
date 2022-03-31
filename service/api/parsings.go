@@ -80,6 +80,24 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, *job)
 }
 
+// GetHighestBlockNumberParsingJob handles the api request to retrieve the highest parsing block number.
+func (h *Handler) GetHighestBlockNumberParsingJob(ctx echo.Context) error {
+	var (
+		chainURL     = ctx.QueryParam(chainURLQueryKey)
+		chainType    = ctx.QueryParam(chainTypeQueryKey)
+		address      = ctx.QueryParam(addressQueryKey)
+		standardType = ctx.QueryParam(standardTypeQueryKey)
+		eventType    = ctx.QueryParam(eventTypeQueryKey)
+	)
+
+	job, err := h.jobs.GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType)
+	if err != nil {
+		return internalError(err)
+	}
+
+	return ctx.JSON(http.StatusOK, *job)
+}
+
 // UpdateParsingJobStatus handles the api request to update a parsing job status.
 func (h *Handler) UpdateParsingJobStatus(ctx echo.Context) error {
 	id := ctx.Param(jobIDParamKey)

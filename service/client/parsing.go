@@ -67,6 +67,10 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("could not create job: got status code %v", resp.StatusCode)
+	}
+
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
@@ -99,6 +103,10 @@ func (c *Client) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not perform request: %w", err)
 	}
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("could not list job: got status code %v", resp.StatusCode)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
@@ -125,6 +133,50 @@ func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
 	resp, err := c.config.client.Get(url.String())
 	if err != nil {
 		return nil, fmt.Errorf("could not perform request: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("could not get job: got status code %v", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read body: %w", err)
+	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("could not close response body: %w", err)
+	}
+
+	job := jobs.Parsing{}
+	err = json.Unmarshal(body, &job)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
+	}
+
+	return &job, nil
+}
+
+func (c *Client) GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
+	params := url.Values{}
+	params.Set("chain_url", chainURL)
+	params.Set("chain_type", chainType)
+	params.Set("address", address)
+	params.Set("standard_type", standardType)
+	params.Set("event_type", eventType)
+
+	url := c.config.jobsAPI
+	url.Path = path.Join(parsingBasePath, "highest")
+	url.RawQuery = params.Encode()
+
+	resp, err := c.config.client.Get(url.String())
+	if err != nil {
+		return nil, fmt.Errorf("could not perform request: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("could not highest block number job: got status code %v", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -166,9 +218,13 @@ func (c *Client) UpdateParsingJobStatus(id string, status jobs.Status) error {
 
 	req.Header.Add(contentTypeHeaderName, jsonContentType)
 
-	_, err = c.config.client.Do(req)
+	resp, err := c.config.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("could not perform request: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("could not update job: got status code %v", resp.StatusCode)
 	}
 
 	return nil

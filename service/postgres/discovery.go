@@ -95,6 +95,45 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
+// HighestBlockNumberDiscoveryJob returns the highest block number discovery job.
+func (s *Store) HighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (*jobs.Discovery, error) {
+	result, err := s.sqlBuilder.
+		Select(parsingJobsTableColumns...).
+		From(parsingJobsTableName).
+		Where("chain_url = ?", chainURL).
+		Where("chain_type = ?", chainType).
+		Where("addresses <@ ? AND ? <@ addresses", pq.Array(addresses), pq.Array(addresses)).
+		Where("standard_type = ?", standardType).
+		Where("event_type = ?", eventType).
+		OrderBy("block_number DESC").
+		Query()
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve highest block number discovery job: %w", err)
+	}
+	defer result.Close()
+
+	if !result.Next() || result.Err() != nil {
+		return nil, fmt.Errorf("could not retrieve highest block number discovery job: %w", errResourceNotFound)
+	}
+
+	var job jobs.Discovery
+	err = result.Scan(
+		&job.ID,
+		&job.ChainURL,
+		&job.ChainType,
+		&job.BlockNumber,
+		pq.Array(&job.Addresses),
+		&job.StandardType,
+		&job.Status,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve highest block number discovery job: %w", err)
+	}
+
+	return &job, nil
+}
+
 // UpdateDiscoveryJobStatus updates a discovery job status.
 func (s *Store) UpdateDiscoveryJobStatus(id string, status jobs.Status) error {
 	res, err := s.sqlBuilder.

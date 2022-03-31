@@ -92,12 +92,20 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
+	highestJobIndex := "1"
+	highestJob, err := api.GetHighestBlockNumberParsingJob(flagChainURL, flagChainType, flagContract, flagStandardType, flagEventType)
+	if err == nil {
+		highestJobIndex = highestJob.BlockNumber
+	}
+
+	fmt.Println(highestJobIndex)
 	cfg := chain.Config{
 		ChainURL:     flagChainURL,
 		ChainType:    flagChainType,
 		StandardType: flagStandardType,
 		Contract:     flagContract,
 		EventType:    flagEventType,
+		StartIndex:   highestJobIndex,
 	}
 
 	watcher, err := chain.NewWatcher(log, ctx, api, network, cfg)
