@@ -32,18 +32,18 @@ func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator Validator)
 // ApplyRoutes applies the routes to the echo server.
 func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	websocket := server.Group("/ws")
-	websocket.GET("/discoveries/", h.DiscoveryWebsocketConnection)
-	websocket.GET("/parsings/", h.ParsingWebsocketConnection)
+	websocket.GET("/discoveries", h.DiscoveryWebsocketConnection)
+	websocket.GET("/parsings", h.ParsingWebsocketConnection)
 
 	discoveries := server.Group("/discoveries")
-	discoveries.POST("/", h.CreateDiscoveryJob)
-	discoveries.GET("/", h.ListDiscoveryJobs)
-	discoveries.GET("/:id/", h.GetDiscoveryJob)
-	discoveries.PATCH("/:id/", h.UpdateDiscoveryJobStatus)
+	discoveries.POST("", h.CreateDiscoveryJob)
+	discoveries.GET("", h.ListDiscoveryJobs)
+	discoveries.GET("/:id", h.GetDiscoveryJob)
+	discoveries.PATCH("/:id", h.UpdateDiscoveryJobStatus)
 
 	parsings := server.Group("/parsings")
-	parsings.POST("/", h.CreateParsingJob)
-	parsings.GET("/", h.ListParsingJobs)
-	parsings.GET("/:id/", h.GetParsingJob)
-	parsings.PATCH("/:id/", h.UpdateParsingJobStatus)
+	parsings.POST("", h.CreateParsingJob)
+	parsings.GET("", h.ListParsingJobs)
+	parsings.GET("/:id", h.GetParsingJob)
+	parsings.PATCH("/:id", h.UpdateParsingJobStatus)
 }
