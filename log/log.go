@@ -33,6 +33,7 @@ type Log struct {
 	ChainID              string    `json:"chain_id"`
 	Contract             string    `json:"contract"`
 	Block                string    `json:"block"`
+	Index                uint      `json:"index"`
 	TransactionHash      string    `json:"transaction_hash"`
 	Type                 EventType `json:"type"`
 	ContractCollectionID string    `json:"contract_collection_id"`
@@ -46,6 +47,7 @@ type Log struct {
 type RawLog struct {
 	ID              string    `json:"id"`
 	ChainID         string    `json:"chain_id"`
+	Index           uint      `json:"index"`
 	BlockNumber     string    `json:"block_number"`
 	BlockHash       string    `json:"block_hash"`
 	Address         string    `json:"address"`

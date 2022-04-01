@@ -10,7 +10,7 @@ func (s *Store) UpsertBurnEvent(event events.Burn) error {
 	_, err := s.sqlBuilder.
 		Insert(burnEventTableName).
 		Columns(burnEventTableColumns...).
-		Values(event.ID, event.Block, event.TransactionHash, event.CollectionID, event.TokenID, event.EmittedAt).
+		Values(event.ID, event.Block, event.EventIndex, event.TransactionHash, event.CollectionID, event.TokenID, event.EmittedAt).
 		Suffix(burnTableOnConflictStatement).
 		Exec()
 	if err != nil {

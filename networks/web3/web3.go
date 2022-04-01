@@ -133,6 +133,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 			ID:              common.Bytes2Hex(hash[:]),
 			ChainID:         w.chainID,
 			BlockNumber:     blockNumber,
+			Index:           web3Log.Index,
 			BlockHash:       web3Log.BlockHash.String(),
 			Address:         contract,
 			TransactionHash: web3Log.TxHash.String(),

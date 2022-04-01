@@ -33,6 +33,7 @@ func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 		ChainID:         raw.ChainID,
 		Contract:        raw.Address,
 		Block:           raw.BlockNumber,
+		Index:           raw.Index,
 		TransactionHash: raw.TransactionHash,
 		NftID:           nftID,
 		FromAddress:     fromAddress,
