@@ -61,6 +61,7 @@ func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 		Type:            log.Sale,
 		ChainID:         raw.ChainID,
 		Block:           raw.BlockNumber,
+		Index:           raw.Index,
 		TransactionHash: raw.TransactionHash,
 		Contract:        raw.Address,
 		FromAddress:     common.HexToAddress(seller).String(),

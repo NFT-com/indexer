@@ -10,7 +10,7 @@ func (s *Store) UpsertMintEvent(event events.Mint) error {
 	_, err := s.sqlBuilder.
 		Insert(mintEventTableName).
 		Columns(mintEventTableColumns...).
-		Values(event.ID, event.Block, event.TransactionHash, event.CollectionID, event.TokenID, event.Owner, event.EmittedAt).
+		Values(event.ID, event.Block, event.EventIndex, event.TransactionHash, event.CollectionID, event.TokenID, event.Owner, event.EmittedAt).
 		Suffix(mintTableOnConflictStatement).
 		Exec()
 	if err != nil {

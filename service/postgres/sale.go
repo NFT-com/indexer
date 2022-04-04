@@ -10,7 +10,7 @@ func (s *Store) UpsertSaleEvent(event events.Sale) error {
 	_, err := s.sqlBuilder.
 		Insert(saleEventTableName).
 		Columns(saleEventTableColumns...).
-		Values(event.ID, event.Block, event.TransactionHash, event.MarketplaceID, event.Seller, event.Buyer, event.Price, event.EmittedAt).
+		Values(event.ID, event.Block, event.EventIndex, event.TransactionHash, event.MarketplaceID, event.Seller, event.Buyer, event.Price, event.EmittedAt).
 		Suffix(saleTableOnConflictStatement).
 		Exec()
 	if err != nil {
