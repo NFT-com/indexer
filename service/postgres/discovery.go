@@ -87,7 +87,6 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 		&job.StandardType,
 		&job.Status,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve discovery job: %w", err)
 	}

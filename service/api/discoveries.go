@@ -81,13 +81,11 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 
 // GetHighestBlockNumberDiscoveryJob handles the api request to retrieve the highest discovery block number.
 func (h *Handler) GetHighestBlockNumberDiscoveryJob(ctx echo.Context) error {
-	var (
-		chainURL     = ctx.QueryParam(chainURLQueryKey)
-		chainType    = ctx.QueryParam(chainTypeQueryKey)
-		addresses    = strings.Split(ctx.QueryParam(addressesQueryKey), ",")
-		standardType = ctx.QueryParam(standardTypeQueryKey)
-		eventType    = ctx.QueryParam(eventTypeQueryKey)
-	)
+	chainURL := ctx.QueryParam(chainURLQueryKey)
+	chainType := ctx.QueryParam(chainTypeQueryKey)
+	addresses := strings.Split(ctx.QueryParam(addressesQueryKey), ",")
+	standardType := ctx.QueryParam(standardTypeQueryKey)
+	eventType := ctx.QueryParam(eventTypeQueryKey)
 
 	job, err := h.jobs.GetHighestBlockNumberDiscoveryJob(chainURL, chainType, addresses, standardType, eventType)
 	if err != nil {

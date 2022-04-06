@@ -43,13 +43,13 @@ func NewWatcher(
 		return nil, err
 	}
 
-	latestBlock := <-w.blocks
-	w.latestBlock = latestBlock
-
 	return &w, nil
 }
 
 func (j *Watcher) Watch(_ context.Context) error {
+	latestBlock := <-j.blocks
+	j.latestBlock = latestBlock
+
 	err := j.bootstrap()
 	if err != nil {
 		return fmt.Errorf("could not bootstrap system: %w", err)
@@ -110,6 +110,6 @@ func (j *Watcher) bootstrap() error {
 			return fmt.Errorf("could not create parsing job for block %s: %w", job.BlockNumber, err)
 		}
 
-		index = index.Add(index, big.NewInt(1))
+		index.Add(index, big.NewInt(1))
 	}
 }

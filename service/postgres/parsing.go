@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/NFT-com/indexer/jobs"
@@ -116,7 +115,6 @@ func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, stand
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		log.Println(result.Err())
 		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", errResourceNotFound)
 	}
 

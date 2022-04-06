@@ -98,7 +98,6 @@ func run() error {
 		highestJobIndex = highestJob.BlockNumber
 	}
 
-	fmt.Println(highestJobIndex)
 	cfg := chain.Config{
 		ChainURL:     flagChainURL,
 		ChainType:    flagChainType,
