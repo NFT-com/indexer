@@ -1,5 +1,7 @@
 # Jobs API
 
+Job API exposes an API for discovery and parsing jobs and pushes updates into a websocket connection.
+
 ## Usage
 
 ```
