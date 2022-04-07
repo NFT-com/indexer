@@ -1,7 +1,7 @@
 # Deployment Guide
 
 1. [Requirements](#requirements)
-2. [Build the containers](#build-the-containers)
+2. [Building the containers](#building-the-containers)
 3. [Running the containers](#running-the-containers)
     1. [Job API](#job-api)
     2. [Job Watcher](#job-watcher)
@@ -14,13 +14,13 @@
 * [Postgres](https://hub.docker.com/_/postgres)
 * [Redis](https://hub.docker.com/_/redis)
 
-Native installed postgres and redis will also work. No need to have postgres and redis in containers.
+Natively installed postgres and redis instances can alternatively be used instead of running them containers.
 
-## Build the containers
+## Building the Containers
 
 In order to run the indexer the first step is to build the container images.
 
-For this the command bellow allows building and tagging the containers. Replace `<name>` with:
+For this the command below allows building and tagging the containers. Replace `<name>` with:
 
 * api
 * jobwatcher
@@ -31,18 +31,18 @@ For this the command bellow allows building and tagging the containers. Replace 
 docker build . -f Dockerfile.<name> -t indexer:<name>
 ```
 
-## Running the containers
+## Running the Containers
 
 ### Job API
 
-Job API allows creating, listing, and updating discovery and parsing jobs. Flags with
-descriptions [here.](cmd/jobs-api/README.md)
+Job API allows creating, listing, and updating discovery and parsing jobs.
+See the [job API binary readme file](cmd/jobs-api/README.md) for more details about its flags.
 
 #### Requirements
 
 * Postgres
 
-#### Starting the container
+#### Starting the Container
 
 ```console
 docker run indexer:api -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
@@ -51,7 +51,7 @@ docker run indexer:api -d "host=<postgres_host> port=<postgres_port> user=<postg
 ### Job Watcher
 
 Job Watcher watches the dispatcher and parsing websockets for new updates and pushes them into their respective queue.
-Flags with descriptions [here.](cmd/jobs-watcher/README.md)
+See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -66,8 +66,8 @@ docker run indexer:jobwatcher -a <jobs_api_url> -u <redis_url>
 
 ### Parsing Dispatcher
 
-Parsing Dispatcher consumes messages from the queue and launches lambdas. Flags with
-descriptions [here.](cmd/parsing-dispatcher/README.md)
+The Parsing Dispatcher consumes messages from the queue and launches jobs.
+See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -76,7 +76,7 @@ descriptions [here.](cmd/parsing-dispatcher/README.md)
 * Redis
 * AWS Credentials in Environment
 
-#### Starting the container
+#### Starting the Container
 
 ```console
 docker run indexer:parsingdispatcher -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
@@ -84,31 +84,31 @@ docker run indexer:parsingdispatcher -u <redis_url> -a <jobs_api_url> -d "port=<
 
 ### Chain Watcher
 
-Chain Watcher watches the chain and instantiates all the parsing jobs required for the network. If the chain watcher
-stop in the middle of the instantiation, it will retrieve the last job saved in the API and start from that height
-instead of 0. Flags with descriptions [here.](cmd/chain-watcher/README.md)
+Chain Watcher watches the chain and instantiates all the parsing jobs required for the network.
+If the chain watcher stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height instead of 0.
+See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more details about its flags.
 
 #### Requirements
 
 * Ethereum Node
 * Jobs API
 
-#### Starting the container
+#### Starting the Container
 
 ```console
 docker run indexer:parsingdispatcher -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
 ```
 
-For example, running the watcher for
-contract [Fighter (FIGHTER)](https://etherscan.io/address/0x87E738a3d5E5345d6212D8982205A564289e6324) (`0x87E738a3d5E5345d6212D8982205A564289e6324`)
-, the event type Transfer (`0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`) and standard
-type `ERC721`.
+Here is an example where the watcher is configured to watch for:
+
+* The following contract: [Fighter (FIGHTER)](https://etherscan.io/address/0x87E738a3d5E5345d6212D8982205A564289e6324) (`0x87E738a3d5E5345d6212D8982205A564289e6324`);
+* With the event type _Transfer_ (`0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`);
+* With the `ERC721` standard type.
 
 ```console
-docker run indexer:parsingdispatcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721"
+docker run indexer:chainwatcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721"
 ```
 
-> 🚧 The Chain Watcher will change to remove the need to pass event_type, contract and standard_type. As it is not yet implemented. I will update this in the future.
+> 🚧 The Chain Watcher will in the future no longer need an event type, contract and standard type.
 
 (Related issue: https://github.com/NFT-com/indexer/issues/47)
-** TODO CHAIN-WATCHER **

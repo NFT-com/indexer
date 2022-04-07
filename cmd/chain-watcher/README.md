@@ -1,12 +1,12 @@
 # Chain Watcher
 
-Chain Watcher watches the chain and instantiates all the parsing jobs required for the network.
-If the chain watcher stop in the middle of the instantiation, it will retrieve the last job saved in the API and start from that height instead of 0.
+Chain Watcher watches the chain and push jobs to parse network data.
+If the chain watcher stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height instead of 0.
 
 ## Usage
 
 ```
-Usage of jobs-api:
+Usage of chain-watcher:
   -a, --api string              jobs api base endpoint
   -i, --chain-id string         id of the chain to watch
   -u, --chain-url string        url of the chain to connect

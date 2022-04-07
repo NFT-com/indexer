@@ -1,11 +1,11 @@
 # Parsing Dispatcher
 
-Parsing Dispatcher consumes messages from the queue and launches lambdas.
+Parsing Dispatcher consumes messages from the queue and launches jobs.
 
 ## Usage
 
 ```
-Usage of jobs-api:
+Usage of parsing-dispatcher:
   -a, --api string              jobs api base endpoint
   -t, --tag string              rmq producer tag (default "jobs-watcher")
   -n, --network string          redis network type (default "tcp")

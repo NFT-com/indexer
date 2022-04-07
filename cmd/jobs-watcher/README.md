@@ -5,7 +5,7 @@ Job Watcher watches the dispatcher and parsing websockets for new updates and pu
 ## Usage
 
 ```
-Usage of jobs-api:
+Usage of jobs-watcher:
   -a, --api string              jobs api base endpoint
   -t, --tag string              rmq producer tag (default "jobs-watcher")
   -n, --network string          redis network type (default "tcp")
