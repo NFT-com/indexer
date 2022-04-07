@@ -28,7 +28,7 @@ For this the command below allows building and tagging the containers. Replace `
 * watcher
 
 ```console
-docker build . -f Dockerfile.<name> -t indexer:<name>
+docker build . -f Dockerfile.<name> -t indexer-<name>:latest
 ```
 
 ## Running the Containers
@@ -45,7 +45,7 @@ See the [job API binary readme file](cmd/jobs-api/README.md) for more details ab
 #### Starting the Container
 
 ```console
-docker run indexer:api -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run indexer-api:latest -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Job Watcher
@@ -61,7 +61,7 @@ See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more de
 #### Starting the container
 
 ```console
-docker run indexer:jobwatcher -a <jobs_api_url> -u <redis_url>
+docker run indexer-jobwatcher:latest -a <jobs_api_url> -u <redis_url>
 ```
 
 ### Parsing Dispatcher
@@ -75,11 +75,12 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 * Jobs API
 * Redis
 * [AWS Credentials in Environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
+* Deployed Functions to AWS
 
 #### Starting the Container
 
 ```console
-docker run indexer:parsingdispatcher -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
+docker run indexer-parsingdispatcher:latest -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
 
 ### Chain Watcher
@@ -96,7 +97,7 @@ See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more
 #### Starting the Container
 
 ```console
-docker run indexer:chainwatcher -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
+docker run indexer-chainwatcher:latest -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
 ```
 
 Here is an example where the watcher is configured to watch for:
@@ -109,4 +110,4 @@ Here is an example where the watcher is configured to watch for:
 docker run indexer:chainwatcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721"
 ```
 
-> 🚧 The Chain Watcher will in the future no longer need an event type, contract and standard type.
+> 🚧 The Chain Watcher will no longer need an event type, contract and standard type.
