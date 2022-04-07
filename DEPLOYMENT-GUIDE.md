@@ -110,5 +110,3 @@ docker run indexer:chainwatcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b
 ```
 
 > 🚧 The Chain Watcher will in the future no longer need an event type, contract and standard type.
-
-(Related issue: https://github.com/NFT-com/indexer/issues/47)
