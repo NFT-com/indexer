@@ -74,7 +74,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 * Postgres
 * Jobs API
 * Redis
-* AWS Credentials in Environment
+* [AWS Credentials in Environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 
 #### Starting the Container
 
