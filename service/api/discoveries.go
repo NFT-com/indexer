@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
@@ -71,6 +72,22 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 	id := ctx.Param(jobIDParamKey)
 
 	job, err := h.jobs.GetDiscoveryJob(id)
+	if err != nil {
+		return internalError(err)
+	}
+
+	return ctx.JSON(http.StatusOK, *job)
+}
+
+// GetHighestBlockNumberDiscoveryJob handles the api request to retrieve the highest discovery block number.
+func (h *Handler) GetHighestBlockNumberDiscoveryJob(ctx echo.Context) error {
+	chainURL := ctx.QueryParam(chainURLQueryKey)
+	chainType := ctx.QueryParam(chainTypeQueryKey)
+	addresses := strings.Split(ctx.QueryParam(addressesQueryKey), ",")
+	standardType := ctx.QueryParam(standardTypeQueryKey)
+	eventType := ctx.QueryParam(eventTypeQueryKey)
+
+	job, err := h.jobs.GetHighestBlockNumberDiscoveryJob(chainURL, chainType, addresses, standardType, eventType)
 	if err != nil {
 		return internalError(err)
 	}

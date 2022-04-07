@@ -6,4 +6,5 @@ type Config struct {
 	StandardType string
 	Contract     string
 	EventType    string
+	StartIndex   string
 }
