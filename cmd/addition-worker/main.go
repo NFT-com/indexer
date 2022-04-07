@@ -10,10 +10,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"github.com/NFT-com/indexer/networks"
-	"github.com/NFT-com/indexer/parsers"
-
-	"github.com/NFT-com/indexer/function/handlers/parsing"
+	"github.com/NFT-com/indexer/function/handlers/addition"
 )
 
 const (
@@ -46,9 +43,7 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	handler := parsing.NewHandler(log, func(_ networks.Network) (parsers.Parser, error) {
-		return NewParser(), nil
-	})
+	handler := addition.NewHandler(log)
 	lambda.Start(handler.Handle)
 
 	return nil

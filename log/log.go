@@ -36,6 +36,7 @@ type Log struct {
 	Index                uint      `json:"index"`
 	TransactionHash      string    `json:"transaction_hash"`
 	Type                 EventType `json:"type"`
+	NeedsAdditionJob     bool      `json:"needs_addition_job"`
 	ContractCollectionID string    `json:"contract_collection_id"`
 	NftID                string    `json:"nft_id"`
 	FromAddress          string    `json:"from_address"`

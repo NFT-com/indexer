@@ -8,6 +8,7 @@ import (
 type JobsStore interface {
 	DiscoveryStore
 	ParsingStore
+	AdditionStore
 }
 
 // DiscoveryStore represents the discovery job store interface.
@@ -28,4 +29,13 @@ type ParsingStore interface {
 	HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error)
 	ParsingJob(id string) (*jobs.Parsing, error)
 	UpdateParsingJobStatus(id string, status jobs.Status) error
+}
+
+// AdditionStore represents the addition job store interface.
+type AdditionStore interface {
+	CreateAdditionJob(job jobs.Addition) error
+	CreateAdditionJobs(jobs []jobs.Addition) error
+	AdditionJobs(status jobs.Status) ([]jobs.Addition, error)
+	AdditionJob(id string) (*jobs.Addition, error)
+	UpdateAdditionJobStatus(id string, status jobs.Status) error
 }

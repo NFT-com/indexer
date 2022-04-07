@@ -9,7 +9,6 @@ type Collection struct {
 	Description          string `json:"description"`
 	Symbol               string `json:"symbol"`
 	Slug                 string `json:"slug"`
-	Standard             string `json:"standard"`
 	URI                  string `json:"uri"`
 	ImageURL             string `json:"image_url"`
 	Website              string `json:"website"`

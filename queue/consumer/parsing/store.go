@@ -1,4 +1,4 @@
-package consumer
+package parsing
 
 import (
 	"github.com/NFT-com/indexer/models/chain"

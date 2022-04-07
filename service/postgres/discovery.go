@@ -23,6 +23,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
+// CreateDiscoveryJobs creates a batch of discovery jobs.
 func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
 	query := s.sqlBuilder.
 		Insert(discoveryJobsTableName).

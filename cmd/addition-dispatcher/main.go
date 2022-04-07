@@ -21,7 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 
 	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/queue/consumer/parsing"
+	"github.com/NFT-com/indexer/queue/consumer/addition"
 	"github.com/NFT-com/indexer/service/client"
 	"github.com/NFT-com/indexer/service/postgres"
 )
@@ -29,9 +29,9 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout      = time.Second * 30
-	defaultPollDuration     = time.Second * 20
-	defaultParsingQueueName = "parsing"
+	defaultHTTPTimeout       = time.Second * 30
+	defaultPollDuration      = time.Second * 20
+	defaultAdditionQueueName = "addition"
 )
 
 func main() {
@@ -50,12 +50,12 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
+		flagAdditionQueueName    string
 		flagAPIEndpoint          string
 		flagConcurrentJobs       int
-		flagConsumerPrefetch     int64
 		flagConsumerPollDuration time.Duration
+		flagConsumerPrefetch     int64
 		flagDBConnectionInfo     string
-		flagParsingQueueName     string
 		flagLogLevel             string
 		flagRMQTag               string
 		flagRedisDatabase        int
@@ -64,14 +64,14 @@ func run() error {
 		flagRegion               string
 	)
 
+	pflag.StringVarP(&flagAdditionQueueName, "addition-queue", "q", defaultAdditionQueueName, "name of the queue for addition jobs")
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
-	pflag.IntVarP(&flagConcurrentJobs, "jobs", "j", 4, "amount of concurrent jobs for the consumer")
-	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 80, "amount of message to prefetch in the consumer")
-	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "time for each consumer poll")
+	pflag.IntVarP(&flagConcurrentJobs, "jobs", "j", 4, "number of concurrent jobs for the consumer")
+	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "consumer poll duration")
+	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "amount of messages to prefetch in the consumer")
 	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
+	pflag.StringVarP(&flagRMQTag, "tag", "c", "dispatcher-agent", "rmq consumer tag")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
@@ -86,6 +86,16 @@ func run() error {
 		return fmt.Errorf("could not parse log level: %w", err)
 	}
 	log = log.Level(level)
+
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	if err != nil {
+		return fmt.Errorf("could not open SQL connection: %w", err)
+	}
+
+	store, err := postgres.NewStore(db)
+	if err != nil {
+		return fmt.Errorf("could not create store: %w", err)
+	}
 
 	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
 	session := session.Must(session.NewSession(&sessionConfig))
@@ -104,16 +114,6 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
-	if err != nil {
-		return fmt.Errorf("could not open SQL connection: %w", err)
-	}
-
-	store, err := postgres.NewStore(db)
-	if err != nil {
-		return fmt.Errorf("could not create store: %w", err)
-	}
-
 	redisClient := redis.NewClient(&redis.Options{
 		Network: flagRedisNetwork,
 		Addr:    flagRedisURL,
@@ -126,7 +126,7 @@ func run() error {
 		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
-	queue, err := rmqConnection.OpenQueue(flagParsingQueueName)
+	queue, err := rmqConnection.OpenQueue(flagAdditionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not open redis queue: %w", err)
 	}
@@ -136,14 +136,14 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := parsing.NewConsumer(log, api, dispatcher, store, flagConcurrentJobs)
+	consumer := addition.NewConsumer(log, api, dispatcher, store, flagConcurrentJobs)
 	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
-		return fmt.Errorf("could not add parsing consumer: %w", err)
+		return fmt.Errorf("could not add addition consumer: %w", err)
 	}
 	log = log.With().Str("name", consumerName).Logger()
 
-	log.Info().Msg("started parsing dispatcher")
+	log.Info().Msg("started addition dispatcher")
 	consumer.Run()
 
 	select {
@@ -159,7 +159,7 @@ func run() error {
 		log.Fatal().Msg("forced interruption")
 	}()
 
-	log.Info().Msg("stopped parsing dispatcher gracefully")
+	log.Info().Msg("stopped addition dispatcher gracefully")
 
 	return nil
 }
