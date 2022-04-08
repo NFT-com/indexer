@@ -42,7 +42,6 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*chai
 		&collection.Description,
 		&collection.Symbol,
 		&collection.Slug,
-		&collection.Standard,
 		&collection.URI,
 		&collection.ImageURL,
 		&collection.Website,
