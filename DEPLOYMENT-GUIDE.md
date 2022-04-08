@@ -63,7 +63,7 @@ See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more de
 * Jobs API
 * Redis
 
-#### Starting the container
+#### Starting the Container
 
 ```console
 docker run indexer-jobwatcher:1.0.0 -a <jobs_api_url> -u <redis_url>
