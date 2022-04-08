@@ -14,7 +14,7 @@
 * [Postgres](https://hub.docker.com/_/postgres)
 * [Redis](https://hub.docker.com/_/redis)
 
-Natively installed postgres and redis instances can alternatively be used instead of running them containers.
+Natively installed postgres and redis instances can alternatively be used instead of running them in containers.
 
 ## Building the Containers
 
@@ -25,10 +25,10 @@ For this the command below allows building and tagging the containers. Replace `
 * api
 * jobwatcher
 * parsingdispatcher
-* watcher
+* chainwatcher
 
 ```console
-docker build . -f Dockerfile.<name> -t indexer-<name>:latest
+docker build . -f Dockerfile.<name> -t indexer-<name>:1.0.0
 ```
 
 ## Running the Containers
@@ -45,7 +45,7 @@ See the [job API binary readme file](cmd/jobs-api/README.md) for more details ab
 #### Starting the Container
 
 ```console
-docker run indexer-api:latest -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run -p '8081:8081' indexer-api:1.0.0 -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Job Watcher
@@ -61,7 +61,7 @@ See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more de
 #### Starting the container
 
 ```console
-docker run indexer-jobwatcher:latest -a <jobs_api_url> -u <redis_url>
+docker run indexer-jobwatcher:1.0.0 -a <jobs_api_url> -u <redis_url>
 ```
 
 ### Parsing Dispatcher
@@ -107,7 +107,7 @@ Here is an example where the watcher is configured to watch for:
 * With the `ERC721` standard type.
 
 ```console
-docker run indexer:chainwatcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721"
+docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721"
 ```
 
 > 🚧 The Chain Watcher will no longer need an event type, contract and standard type.
