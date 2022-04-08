@@ -41,12 +41,20 @@ CREATE TABLE IF NOT EXISTS collections
     description            TEXT         NOT NULL,
     symbol                 VARCHAR(16)  NOT NULL,
     slug                   VARCHAR(256) NOT NULL,
-    standard               UUID         NOT NULL,
     uri                    TEXT         NOT NULL,
     website                TEXT         NOT NULL,
     image_url              TEXT         NOT NULL,
     created_at             TIMESTAMP DEFAULT NOW(),
     updated_at             TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS standards
+(
+    standard     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
+    collection   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
+    created_at   TIMESTAMP DEFAULT NOW(),
+    updated_at   TIMESTAMP,
+    PRIMARY KEY(standard, collection)
 );
 
 CREATE TABLE IF NOT EXISTS standards
