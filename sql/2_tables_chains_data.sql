@@ -41,12 +41,37 @@ CREATE TABLE IF NOT EXISTS collections
     description            TEXT         NOT NULL,
     symbol                 VARCHAR(16)  NOT NULL,
     slug                   VARCHAR(256) NOT NULL,
-    standard               VARCHAR(128) NOT NULL,
     uri                    TEXT         NOT NULL,
     website                TEXT         NOT NULL,
     image_url              TEXT         NOT NULL,
     created_at             TIMESTAMP DEFAULT NOW(),
     updated_at             TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS standards_collections
+(
+    standard     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
+    collection   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
+    created_at   TIMESTAMP DEFAULT NOW(),
+    updated_at   TIMESTAMP,
+    PRIMARY KEY(standard, collection)
+);
+
+CREATE TABLE IF NOT EXISTS standards
+(
+    id         UUID PRIMARY KEY,
+    name       TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS event_types
+(
+    id         TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    standard   UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_collections
@@ -60,12 +85,24 @@ CREATE TABLE IF NOT EXISTS marketplaces_collections
 
 CREATE TABLE IF NOT EXISTS nfts
 (
-    id         UUID PRIMARY KEY,
-    collection UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
-    token_id   VARCHAR(128) NOT NULL,
-    owner      VARCHAR(128) NOT NULL,
-    rarity     DECIMAL   DEFAULT 0.0,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP,
+    id          UUID PRIMARY KEY,
+    collection  UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
+    token_id    VARCHAR(128) NOT NULL,
+    name        TEXT         NOT NULL,
+    image       TEXT         NULL,
+    description TEXT         NULL,
+    owner       VARCHAR(128) NOT NULL,
+    created_at  TIMESTAMP DEFAULT NOW(),
+    updated_at  TIMESTAMP,
     UNIQUE (collection, token_id)
+);
+
+CREATE TABLE IF NOT EXISTS traits
+(
+    id         UUID PRIMARY KEY,
+    name       TEXT NOT NULL,
+    value      TEXT NOT NULL,
+    nft        UUID NOT NULL REFERENCES nfts ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
 );
