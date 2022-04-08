@@ -97,7 +97,7 @@ See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more
 #### Starting the Container
 
 ```console
-docker run indexer-chainwatcher:latest -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
+docker run indexer-chainwatcher:1.0.0 -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
 ```
 
 Here is an example where the watcher is configured to watch for:
