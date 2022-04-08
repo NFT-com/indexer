@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS collections
     updated_at             TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS standards
+CREATE TABLE IF NOT EXISTS standards_collections
 (
     standard     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     collection   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
