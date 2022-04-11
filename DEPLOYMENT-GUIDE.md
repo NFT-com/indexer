@@ -85,7 +85,7 @@ the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) fo
 #### Starting the Container
 
 ```console
-docker run indexer-parsingdispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode> -e <aws env vars>"
+docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsingdispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
 
 ### Chain Watcher
