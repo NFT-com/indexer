@@ -30,7 +30,7 @@ func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer
 }
 
 func (j *Job) Watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing) {
-	for i := 0; i < runtime.GOMAXPROCS(-1); i++ {
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
 		go j.watch(discoveryJobs, parsingJobs)
 	}
 }

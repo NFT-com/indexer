@@ -91,13 +91,13 @@ func run() error {
 
 	watcher := watcher.New(log, api, producer)
 
-	discoveryJobs := make(chan []jobs.Discovery, runtime.GOMAXPROCS(-1))
+	discoveryJobs := make(chan []jobs.Discovery, runtime.GOMAXPROCS(0))
 	err = api.SubscribeNewDiscoveryJob(client.SubscriberTypeCreateJobs, discoveryJobs)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to new discovery jobs: %w", err)
 	}
 
-	parsingJobs := make(chan []jobs.Parsing, runtime.GOMAXPROCS(-1))
+	parsingJobs := make(chan []jobs.Parsing, runtime.GOMAXPROCS(0))
 	err = api.SubscribeNewParsingJob(client.SubscriberTypeCreateJobs, parsingJobs)
 	if err != nil {
 		return fmt.Errorf("could not subscribe to new parsing jobs: %w", err)

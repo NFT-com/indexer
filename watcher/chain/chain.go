@@ -81,35 +81,3 @@ func (j *Watcher) Watch(_ context.Context) error {
 func (j *Watcher) Close() {
 	close(j.close)
 }
-
-func (j *Watcher) bootstrap() error {
-	startingBlock, ok := big.NewInt(0).SetString(j.config.StartIndex, 0)
-	if !ok {
-		return fmt.Errorf("could not parse block number into big.Int")
-	}
-
-	index := startingBlock
-	for {
-		select {
-		case <-j.close:
-			return nil
-		default:
-		}
-
-		job := jobs.Parsing{
-			ChainURL:     j.config.ChainURL,
-			ChainType:    j.config.ChainType,
-			BlockNumber:  index.String(),
-			Address:      j.config.Contract,
-			StandardType: j.config.StandardType,
-			EventType:    j.config.EventType,
-		}
-
-		_, err := j.apiClient.CreateParsingJob(job)
-		if err != nil {
-			return fmt.Errorf("could not create parsing job for block %s: %w", job.BlockNumber, err)
-		}
-
-		index.Add(index, big.NewInt(1))
-	}
-}
