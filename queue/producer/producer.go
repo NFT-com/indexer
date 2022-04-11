@@ -46,7 +46,6 @@ func (p *Producer) PublishDiscoveryJob(job jobs.Discovery) error {
 
 func (p *Producer) PublishDiscoveryJobs(jobs []jobs.Discovery) error {
 	payloads := make([][]byte, 0, len(jobs))
-
 	for _, job := range jobs {
 		payload, err := json.Marshal(job)
 		if err != nil {
