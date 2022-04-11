@@ -20,13 +20,14 @@ func (j *Watcher) bootstrap() error {
 		case <-j.close:
 			return nil
 		case <-time.After(j.config.BatchDelay):
-			if index.CmpAbs(j.latestBlock) >= 0 {
+			if index.CmpAbs(big.NewInt(212)) > 0 {
 				return nil
 			}
 
-			jobList := make([]jobs.Parsing, 0, j.config.Batch)
 			batchEnd := big.NewInt(0).Add(index, big.NewInt(j.config.Batch))
-			for i := index; i.CmpAbs(j.latestBlock) >= 0 || i.CmpAbs(batchEnd) >= 0; i.Add(i, big.NewInt(1)) {
+
+			jobList := make([]jobs.Parsing, 0, j.config.Batch)
+			for ; index.CmpAbs(big.NewInt(212)) <= 0 && index.CmpAbs(batchEnd) < 0; index.Add(index, big.NewInt(1)) {
 				job := jobs.Parsing{
 					ChainURL:     j.config.ChainURL,
 					ChainType:    j.config.ChainType,
@@ -43,8 +44,6 @@ func (j *Watcher) bootstrap() error {
 			if err != nil {
 				return fmt.Errorf("could not create parsing jobs: %w", err)
 			}
-
-			index.Add(index, big.NewInt(j.config.Batch))
 		}
 	}
 }
