@@ -20,14 +20,14 @@ func (j *Watcher) bootstrap() error {
 		case <-j.close:
 			return nil
 		case <-time.After(j.config.BatchDelay):
-			if index.CmpAbs(big.NewInt(212)) > 0 {
+			if index.CmpAbs(j.latestBlock) > 0 {
 				return nil
 			}
 
 			batchEnd := big.NewInt(0).Add(index, big.NewInt(j.config.Batch))
 
 			jobList := make([]jobs.Parsing, 0, j.config.Batch)
-			for ; index.CmpAbs(big.NewInt(212)) <= 0 && index.CmpAbs(batchEnd) < 0; index.Add(index, big.NewInt(1)) {
+			for ; index.CmpAbs(j.latestBlock) <= 0 && index.CmpAbs(batchEnd) < 0; index.Add(index, big.NewInt(1)) {
 				job := jobs.Parsing{
 					ChainURL:     j.config.ChainURL,
 					ChainType:    j.config.ChainType,
