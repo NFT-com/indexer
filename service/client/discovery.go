@@ -62,6 +62,7 @@ func (c *Client) SubscribeNewDiscoveryJob(subscriberType string, discoveryJobs c
 func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
 	req := request.Discovery{
 		ChainURL:     job.ChainURL,
+		ChainID:      job.ChainID,
 		ChainType:    job.ChainType,
 		BlockNumber:  job.BlockNumber,
 		Addresses:    job.Addresses,
@@ -109,6 +110,7 @@ func (c *Client) CreateDiscoveryJobs(jobList []jobs.Discovery) error {
 	for _, job := range jobList {
 		requestJob := request.Discovery{
 			ChainURL:     job.ChainURL,
+			ChainID:      job.ChainID,
 			ChainType:    job.ChainType,
 			BlockNumber:  job.BlockNumber,
 			Addresses:    job.Addresses,

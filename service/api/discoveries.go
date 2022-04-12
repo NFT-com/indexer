@@ -42,6 +42,7 @@ func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {
 
 	job := jobs.Discovery{
 		ChainURL:     req.ChainURL,
+		ChainID:      req.ChainID,
 		ChainType:    req.ChainType,
 		BlockNumber:  req.BlockNumber,
 		Addresses:    req.Addresses,
@@ -73,6 +74,7 @@ func (h *Handler) CreateDiscoveryJobs(ctx echo.Context) error {
 	for _, j := range req.Jobs {
 		job := jobs.Discovery{
 			ChainURL:     j.ChainURL,
+			ChainID:      j.ChainID,
 			ChainType:    j.ChainType,
 			BlockNumber:  j.BlockNumber,
 			Addresses:    j.Addresses,

@@ -6,6 +6,7 @@ import (
 
 type Config struct {
 	ChainURL     string
+	ChainID      string
 	ChainType    string
 	StandardType string
 	Contract     string

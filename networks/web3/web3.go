@@ -47,12 +47,7 @@ func New(ctx context.Context, url string) (*Web3, error) {
 }
 
 func (w *Web3) ChainID(ctx context.Context) (string, error) {
-	chainID, err := w.ethClient.ChainID(ctx)
-	if err != nil {
-		return "", fmt.Errorf("could not get chain id: %w", err)
-	}
-
-	return chainID.String(), nil
+	return w.chainID, nil
 }
 
 func (w *Web3) SubscribeToBlocks(ctx context.Context, blocks chan *big.Int) error {

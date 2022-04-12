@@ -108,6 +108,7 @@ func run() error {
 
 	cfg := chain.Config{
 		ChainURL:     flagChainURL,
+		ChainID:      chainID,
 		ChainType:    flagChainType,
 		StandardType: flagStandardType,
 		Contract:     flagContract,

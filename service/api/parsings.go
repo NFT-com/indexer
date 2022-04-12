@@ -41,6 +41,7 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 
 	job := jobs.Parsing{
 		ChainURL:     req.ChainURL,
+		ChainID:      req.ChainID,
 		ChainType:    req.ChainType,
 		BlockNumber:  req.BlockNumber,
 		Address:      req.Address,
@@ -73,6 +74,7 @@ func (h *Handler) CreateParsingJobs(ctx echo.Context) error {
 	for _, j := range req.Jobs {
 		job := jobs.Parsing{
 			ChainURL:     j.ChainURL,
+			ChainID:      j.ChainID,
 			ChainType:    j.ChainType,
 			BlockNumber:  j.BlockNumber,
 			Address:      j.Address,
