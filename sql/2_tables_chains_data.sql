@@ -48,15 +48,6 @@ CREATE TABLE IF NOT EXISTS collections
     updated_at             TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS standards_collections
-(
-    standard     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
-    collection   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
-    created_at   TIMESTAMP DEFAULT NOW(),
-    updated_at   TIMESTAMP,
-    PRIMARY KEY(standard, collection)
-);
-
 CREATE TABLE IF NOT EXISTS standards
 (
     id         UUID PRIMARY KEY,
@@ -72,6 +63,15 @@ CREATE TABLE IF NOT EXISTS event_types
     standard   UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS standards_collections
+(
+    standard     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
+    collection   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
+    created_at   TIMESTAMP DEFAULT NOW(),
+    updated_at   TIMESTAMP,
+    PRIMARY KEY(standard, collection)
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_collections
