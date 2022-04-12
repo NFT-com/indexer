@@ -19,12 +19,33 @@ func (c *Handler) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error
 		return nil, fmt.Errorf("could not create discovery job: %w", err)
 	}
 
-	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, job)
+	jobList := []jobs.Discovery{job}
+	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, broadcaster.CreateStatusValue, jobList)
 	if err != nil {
 		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return &job, nil
+}
+
+// CreateDiscoveryJobs creates a new discovery jobs.
+func (c *Handler) CreateDiscoveryJobs(jobList []jobs.Discovery) error {
+	for i := range jobList {
+		jobList[i].ID = uuid.New().String()
+		jobList[i].Status = jobs.StatusCreated
+	}
+
+	err := c.store.CreateDiscoveryJobs(jobList)
+	if err != nil {
+		return fmt.Errorf("could not create discovery jobs: %w", err)
+	}
+
+	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, broadcaster.CreateStatusValue, jobList)
+	if err != nil {
+		return fmt.Errorf("could not broadcast message: %w", err)
+	}
+
+	return nil
 }
 
 // ListDiscoveryJobs returns a list of discovery jobs given the status. Empty string status returns all jobs.
@@ -72,8 +93,10 @@ func (c *Handler) UpdateDiscoveryJobStatus(id string, newStatus jobs.Status) err
 	if err != nil {
 		return fmt.Errorf("could not update job state: %w", err)
 	}
+	job.Status = newStatus
 
-	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, job)
+	jobList := []jobs.Discovery{*job}
+	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, broadcaster.UpdateStatusValue, jobList)
 	if err != nil {
 		return fmt.Errorf("could not broadcast message: %w", err)
 	}

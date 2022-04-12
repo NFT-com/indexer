@@ -19,12 +19,33 @@ func (c *Handler) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not create parsing job: %w", err)
 	}
 
-	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, job)
+	jobList := []jobs.Parsing{job}
+	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, broadcaster.CreateStatusValue, jobList)
 	if err != nil {
 		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return &job, nil
+}
+
+// CreateParsingJobs creates a new parsing jobs.
+func (c *Handler) CreateParsingJobs(jobList []jobs.Parsing) error {
+	for i := range jobList {
+		jobList[i].ID = uuid.New().String()
+		jobList[i].Status = jobs.StatusCreated
+	}
+
+	err := c.store.CreateParsingJobs(jobList)
+	if err != nil {
+		return fmt.Errorf("could not create parsing jobs: %w", err)
+	}
+
+	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, broadcaster.CreateStatusValue, jobList)
+	if err != nil {
+		return fmt.Errorf("could not broadcast message: %w", err)
+	}
+
+	return nil
 }
 
 // ListParsingJobs returns a list of parsing jobs given the status. Empty string status returns all jobs.
@@ -66,15 +87,17 @@ func (c *Handler) UpdateParsingJobStatus(id string, newStatus jobs.Status) error
 
 	err = c.validateStatusSwitch(job.Status, newStatus)
 	if err != nil {
-		return fmt.Errorf("could not create parsing job: %w", err)
+		return fmt.Errorf("could not validate new job status: %w", err)
 	}
 
 	err = c.store.UpdateParsingJobStatus(id, newStatus)
 	if err != nil {
 		return fmt.Errorf("could not update job state: %w", err)
 	}
+	job.Status = newStatus
 
-	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, job)
+	jobList := []jobs.Parsing{*job}
+	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, broadcaster.UpdateStatusValue, jobList)
 	if err != nil {
 		return fmt.Errorf("could not broadcast message: %w", err)
 	}

@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/rs/zerolog"
 
@@ -28,34 +29,9 @@ func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer
 	return &j
 }
 
-func (j *Job) Watch(discoveryJobs chan jobs.Discovery, parsingJobs chan jobs.Parsing) error {
-	for {
-		select {
-		case newJob := <-discoveryJobs:
-			err := j.publishDiscoveryJob(newJob)
-			if err != nil {
-				j.log.Error().
-					Err(err).
-					Str("id", newJob.ID).
-					Str("block", newJob.BlockNumber).
-					Str("status", string(newJob.Status)).
-					Msg("could not publish discovery job")
-				continue
-			}
-		case newJob := <-parsingJobs:
-			err := j.publishParsingJob(newJob)
-			if err != nil {
-				j.log.Error().
-					Err(err).
-					Str("id", newJob.ID).
-					Str("block", newJob.BlockNumber).
-					Str("status", string(newJob.Status)).
-					Msg("could not publish parsing job")
-				continue
-			}
-		case <-j.close:
-			return nil
-		}
+func (j *Job) Watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing) {
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
+		go j.watch(discoveryJobs, parsingJobs)
 	}
 }
 
@@ -63,13 +39,45 @@ func (j *Job) Close() {
 	close(j.close)
 }
 
-func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
-	err := j.messageProducer.PublishDiscoveryJob(newJob)
+func (j *Job) watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing) {
+	for {
+		select {
+		case jobs := <-discoveryJobs:
+			j.handleDiscoveryJobs(jobs)
+		case jobs := <-parsingJobs:
+			j.handleParsingJobs(jobs)
+		case <-j.close:
+			return
+		}
+	}
+}
+
+func (j *Job) handleDiscoveryJobs(jobsList []jobs.Discovery) {
+	for _, job := range jobsList {
+		err := j.publishDiscoveryJob(job)
+		if err != nil {
+			j.log.Error().
+				Err(err).
+				Str("id", job.ID).
+				Str("block", job.BlockNumber).
+				Str("status", string(job.Status)).
+				Msg("could not publish discovery job")
+			continue
+		}
+	}
+}
+
+func (j *Job) publishDiscoveryJob(job jobs.Discovery) error {
+	if job.Status != jobs.StatusCreated {
+		return nil
+	}
+
+	err := j.messageProducer.PublishDiscoveryJob(job)
 	if err != nil {
 		return fmt.Errorf("could not get publish discovery job: %w", err)
 	}
 
-	err = j.apiClient.UpdateDiscoveryJobStatus(newJob.ID, jobs.StatusQueued)
+	err = j.apiClient.UpdateDiscoveryJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update discovery job status: %w", err)
 	}
@@ -77,13 +85,32 @@ func (j *Job) publishDiscoveryJob(newJob jobs.Discovery) error {
 	return nil
 }
 
-func (j *Job) publishParsingJob(newJob jobs.Parsing) error {
-	err := j.messageProducer.PublishParsingJob(newJob)
+func (j *Job) handleParsingJobs(jobsList []jobs.Parsing) {
+	for _, job := range jobsList {
+		err := j.publishParsingJob(job)
+		if err != nil {
+			j.log.Error().
+				Err(err).
+				Str("id", job.ID).
+				Str("block", job.BlockNumber).
+				Str("status", string(job.Status)).
+				Msg("could not publish parsing job")
+			continue
+		}
+	}
+}
+
+func (j *Job) publishParsingJob(job jobs.Parsing) error {
+	if job.Status != jobs.StatusCreated {
+		return nil
+	}
+
+	err := j.messageProducer.PublishParsingJob(job)
 	if err != nil {
 		return fmt.Errorf("could not get publish parsing job: %w", err)
 	}
 
-	err = j.apiClient.UpdateParsingJobStatus(newJob.ID, jobs.StatusQueued)
+	err = j.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
 	}

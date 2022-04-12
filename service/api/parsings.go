@@ -14,6 +14,11 @@ import (
 func (h *Handler) ParsingWebsocketConnection(ctx echo.Context) error {
 	keys := make(map[string]interface{})
 
+	params := ctx.QueryParams()
+	if params.Has(statusQueryKey) {
+		keys = broadcaster.WithStatus(keys, params.Get(statusQueryKey))
+	}
+
 	return h.wsHandler.HandleRequestWithKeys(
 		ctx.Response(),
 		ctx.Request(),
@@ -49,6 +54,41 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusCreated, *newJob)
+}
+
+// CreateParsingJobs handles the api request to create multiple new parsing jobs.
+func (h *Handler) CreateParsingJobs(ctx echo.Context) error {
+	var req request.Parsings
+	err := ctx.Bind(&req)
+	if err != nil {
+		return badRequest(err)
+	}
+
+	err = h.validator.Request(req)
+	if err != nil {
+		return badRequest(err)
+	}
+
+	jobList := make([]jobs.Parsing, 0, len(req.Jobs))
+	for _, j := range req.Jobs {
+		job := jobs.Parsing{
+			ChainURL:     j.ChainURL,
+			ChainType:    j.ChainType,
+			BlockNumber:  j.BlockNumber,
+			Address:      j.Address,
+			StandardType: j.StandardType,
+			EventType:    j.EventType,
+		}
+
+		jobList = append(jobList, job)
+	}
+
+	err = h.jobs.CreateParsingJobs(jobList)
+	if err != nil {
+		return internalError(err)
+	}
+
+	return ctx.NoContent(http.StatusCreated)
 }
 
 // ListParsingJobs handles the api request to retrieve all the parsing jobs.

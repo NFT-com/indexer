@@ -22,6 +22,23 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	return nil
 }
 
+func (s *Store) CreateParsingJobs(jobs []jobs.Parsing) error {
+	query := s.sqlBuilder.
+		Insert(parsingJobsTableName).
+		Columns(parsingJobsTableColumns...)
+
+	for _, job := range jobs {
+		query = query.Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status)
+	}
+
+	_, err := query.Exec()
+	if err != nil {
+		return fmt.Errorf("could not create parsing jobs: %w", err)
+	}
+
+	return nil
+}
+
 // ParsingJobs returns a list of parsing jobs filtered by status. Empty string status returns every job.
 func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 	query := s.sqlBuilder.

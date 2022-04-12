@@ -19,6 +19,10 @@ import (
 
 const (
 	defaultHTTPTimeout = time.Second * 30
+
+	// This defaults the batch of historic data to 200 messages per request each second
+	defaultBatchDelay = time.Second
+	defaultBatch      = 200
 )
 
 func main() {
@@ -40,6 +44,8 @@ func run() error {
 	// Command line parameter initialization.
 	var (
 		flagAPIEndpoint  string
+		flagBatch        int64
+		flagBatchDelay   time.Duration
 		flagChainID      string
 		flagChainURL     string
 		flagChainType    string
@@ -50,6 +56,8 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
+	pflag.Int64VarP(&flagBatch, "batch", "b", defaultBatch, "number of jobs to publish each batch")
+	pflag.DurationVar(&flagBatchDelay, "batch-delay", defaultBatchDelay, "delay between each batch request")
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
@@ -105,6 +113,8 @@ func run() error {
 		Contract:     flagContract,
 		EventType:    flagEventType,
 		StartIndex:   highestJobIndex,
+		Batch:        flagBatch,
+		BatchDelay:   flagBatchDelay,
 	}
 
 	watcher, err := chain.NewWatcher(log, ctx, api, network, cfg)

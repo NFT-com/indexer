@@ -27,14 +27,22 @@ func New(store JobsStore, broadcaster *melody.Melody) *Handler {
 }
 
 // BroadcastMessage broadcast a message to the handlers.
-func (c *Handler) BroadcastMessage(handler string, message interface{}) error {
+func (c *Handler) BroadcastMessage(handler string, status string, message interface{}) error {
 	rawMessage, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("could not marshal message: %w", err)
 	}
 
 	err = c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
-		return broadcaster.HasHandler(session.Keys, handler)
+		if !broadcaster.HasHandler(session.Keys, handler) {
+			return false
+		}
+
+		if !broadcaster.HasStatusKey(session.Keys) {
+			return true
+		}
+
+		return broadcaster.HasStatus(session.Keys, status)
 	})
 	if err != nil {
 		return fmt.Errorf("could not broadcast message: %w", err)
