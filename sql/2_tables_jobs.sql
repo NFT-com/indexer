@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS discovery_jobs
 (
     id             UUID PRIMARY KEY,
     chain_url      TEXT           NOT NULL,
+    chain_id       VARCHAR(128)   NOT NULL,
     chain_type     VARCHAR(256)   NOT NULL,
     block_number   NUMERIC        NOT NULL,
     addresses      VARCHAR(256)[] NOT NULL,
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS parsing_jobs
 (
     id             UUID PRIMARY KEY,
     chain_url      TEXT         NOT NULL,
+    chain_id       VARCHAR(128) NOT NULL,
     chain_type     VARCHAR(256) NOT NULL,
     block_number   NUMERIC      NOT NULL,
     address        VARCHAR(128) NOT NULL,
