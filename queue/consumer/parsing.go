@@ -1,9 +1,7 @@
 package consumer
 
 import (
-	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/adjust/rmq/v4"
@@ -114,9 +112,7 @@ func (d *Parsing) handleError(id string, delivery rmq.Delivery, err error, messa
 }
 
 func functionName(job jobs.Parsing) string {
-	h := sha256.New()
-
-	s := strings.Join(
+	name := strings.Join(
 		[]string{
 			strings.ToLower(job.ChainType),
 			strings.ToLower(job.StandardType),
@@ -124,9 +120,6 @@ func functionName(job jobs.Parsing) string {
 		},
 		"-",
 	)
-	h.Write([]byte(s))
-
-	name := fmt.Sprintf("%x", h.Sum(nil))
 
 	return name
 }
