@@ -14,7 +14,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 	_, err := s.sqlBuilder.
 		Insert(discoveryJobsTableName).
 		Columns(discoveryJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status).
+		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status).
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not create discovery job: %w", err)
@@ -29,7 +29,7 @@ func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
 		Columns(discoveryJobsTableColumns...)
 
 	for _, job := range jobs {
-		query = query.Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status)
+		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status)
 	}
 
 	_, err := query.Exec()
@@ -62,6 +62,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 		err = result.Scan(
 			&job.ID,
 			&job.ChainURL,
+			&job.ChainID,
 			&job.ChainType,
 			&job.BlockNumber,
 			pq.Array(&job.Addresses),
@@ -98,6 +99,7 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	err = result.Scan(
 		&job.ID,
 		&job.ChainURL,
+		&job.ChainID,
 		&job.ChainType,
 		&job.BlockNumber,
 		pq.Array(&job.Addresses),
@@ -136,6 +138,7 @@ func (s *Store) HighestBlockNumberDiscoveryJob(chainURL, chainType string, addre
 	err = result.Scan(
 		&job.ID,
 		&job.ChainURL,
+		&job.ChainID,
 		&job.ChainType,
 		&job.BlockNumber,
 		pq.Array(&job.Addresses),

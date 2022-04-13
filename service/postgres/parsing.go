@@ -12,7 +12,7 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	_, err := s.sqlBuilder.
 		Insert(parsingJobsTableName).
 		Columns(parsingJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
+		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
 		Exec()
 
 	if err != nil {
@@ -28,7 +28,7 @@ func (s *Store) CreateParsingJobs(jobs []jobs.Parsing) error {
 		Columns(parsingJobsTableColumns...)
 
 	for _, job := range jobs {
-		query = query.Values(job.ID, job.ChainURL, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status)
+		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status)
 	}
 
 	_, err := query.Exec()
@@ -61,6 +61,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 		err = result.Scan(
 			&job.ID,
 			&job.ChainURL,
+			&job.ChainID,
 			&job.ChainType,
 			&job.BlockNumber,
 			&job.Address,
@@ -99,6 +100,7 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	err = result.Scan(
 		&job.ID,
 		&job.ChainURL,
+		&job.ChainID,
 		&job.ChainType,
 		&job.BlockNumber,
 		&job.Address,
@@ -139,6 +141,7 @@ func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, stand
 	err = result.Scan(
 		&job.ID,
 		&job.ChainURL,
+		&job.ChainID,
 		&job.ChainType,
 		&job.BlockNumber,
 		&job.Address,

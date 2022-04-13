@@ -62,6 +62,7 @@ func (c *Client) SubscribeNewParsingJob(subscriberType string, parsingJobs chan 
 func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 	req := request.Parsing{
 		ChainURL:     job.ChainURL,
+		ChainID:      job.ChainID,
 		ChainType:    job.ChainType,
 		BlockNumber:  job.BlockNumber,
 		Address:      job.Address,
@@ -110,6 +111,7 @@ func (c *Client) CreateParsingJobs(jobList []jobs.Parsing) error {
 	for _, job := range jobList {
 		requestJob := request.Parsing{
 			ChainURL:     job.ChainURL,
+			ChainID:      job.ChainID,
 			ChainType:    job.ChainType,
 			BlockNumber:  job.BlockNumber,
 			Address:      job.Address,

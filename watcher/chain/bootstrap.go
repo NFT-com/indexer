@@ -30,6 +30,7 @@ func (j *Watcher) bootstrap() error {
 			for ; index.CmpAbs(j.latestBlock) <= 0 && index.CmpAbs(batchEnd) < 0; index.Add(index, big.NewInt(1)) {
 				job := jobs.Parsing{
 					ChainURL:     j.config.ChainURL,
+					ChainID:      j.config.ChainID,
 					ChainType:    j.config.ChainType,
 					BlockNumber:  index.String(),
 					Address:      j.config.Contract,

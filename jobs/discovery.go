@@ -4,6 +4,7 @@ package jobs
 type Discovery struct {
 	ID           string   `json:"id"`
 	ChainURL     string   `json:"chain_url"`
+	ChainID      string   `json:"chain_id"`
 	ChainType    string   `json:"chain_type"`
 	BlockNumber  string   `json:"block_number"`
 	Addresses    []string `json:"addresses"`
