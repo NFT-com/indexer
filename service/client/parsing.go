@@ -116,6 +116,7 @@ func (c *Client) CreateParsingJobs(jobList []jobs.Parsing) error {
 			BlockNumber:  job.BlockNumber,
 			Address:      job.Address,
 			StandardType: job.StandardType,
+			EventType:    job.EventType,
 		}
 
 		requestJobs = append(requestJobs, requestJob)
