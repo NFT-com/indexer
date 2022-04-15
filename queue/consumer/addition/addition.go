@@ -20,19 +20,19 @@ type Addition struct {
 	dispatcher    function.Invoker
 	apiClient     *client.Client
 	store         Store
-	jobNumbers    int
+	jobCount      int
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store, jobNumbers int) *Addition {
+func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store, jobCount int) *Addition {
 	c := Addition{
 		log:           log,
 		dispatcher:    dispatcher,
 		apiClient:     apiClient,
 		store:         store,
-		jobNumbers:    jobNumbers,
-		consumerQueue: make(chan []byte, jobNumbers),
+		jobCount:      jobCount,
+		consumerQueue: make(chan []byte, jobCount),
 		close:         make(chan struct{}),
 	}
 
@@ -51,7 +51,7 @@ func (d *Addition) Consume(delivery rmq.Delivery) {
 }
 
 func (d *Addition) Run() {
-	for i := 0; i < d.jobNumbers; i++ {
+	for i := 0; i < d.jobCount; i++ {
 		go func() {
 			for {
 				select {

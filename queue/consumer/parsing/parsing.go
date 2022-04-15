@@ -20,19 +20,19 @@ type Parsing struct {
 	dispatcher    function.Invoker
 	apiClient     *client.Client
 	store         Store
-	jobNumbers    int
+	jobCount      int
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store, jobNumbers int) *Parsing {
+func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store, jobCount int) *Parsing {
 	c := Parsing{
 		log:           log,
 		dispatcher:    dispatcher,
 		apiClient:     apiClient,
 		store:         store,
-		jobNumbers:    jobNumbers,
-		consumerQueue: make(chan []byte, jobNumbers),
+		jobCount:      jobCount,
+		consumerQueue: make(chan []byte, jobCount),
 		close:         make(chan struct{}),
 	}
 
@@ -51,7 +51,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 }
 
 func (d *Parsing) Run() {
-	for i := 0; i < d.jobNumbers; i++ {
+	for i := 0; i < d.jobCount; i++ {
 		go func() {
 			for {
 				select {
