@@ -59,6 +59,7 @@ func (p *Processor) Process(ctx context.Context, job jobs.Addition) (*chain.NFT,
 	if err != nil {
 		return nil, fmt.Errorf("could not perform get request: %w", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("could not perform get request: unexpected status code %d", resp.StatusCode)
