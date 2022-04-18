@@ -11,6 +11,18 @@ VALUES ('0556dfb2-0281-4483-b36d-0708c50593a8', '94c754fe-e06c-4d2b-bb76-2faa240
         'LAND', 'mavialand', 'https://be.mavia.com/api/nft/metadata/{{ .nft_id }}',
         'https://www.mavia.com/', ''),
 
+       ('df65ac20-e39c-441c-bee3-6cacfb7fa991', '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', NULL,
+        '0x90d4ffbf13bf3203940e6dace392f7c23ff6b9ed', 'Cupcat Kittens',
+        'Cupcat Kittens are a collection made by Cupcats as 2nd season. This collection includes cute kittens that are part of Cupcats ecosystem.',
+        'CCK', 'cupcatkittens', 'https://cupcat.mypinata.cloud/ipfs/QmWzju1QTCYmNU59WGYw8CoGabhKPv1SDwdKTY8ow4s3sy/{{ .nft_id }}/',
+        '', ''),
+
+       ('e0ddf773-d4d9-4749-ae2f-17dc90ced1f0', '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', NULL,
+        '0x87E738a3d5E5345d6212D8982205A564289e6324', 'Fighter',
+        'The on-chain idle MMO.',
+        'FIGHTER', 'fighter', 'https://api.raid.party/metadata/fighter/{{ .nft_id }}',
+        'https://raid.party/', ''),
+
        ('14bd2888-389a-47b1-93d2-582c695e9426', '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', NULL,
         '0xe3086b98ba498501491f69b4bae4ef8960f77a11', 'CryptoBears Official',
         'CryptoBears is a collection of 5000 generative NFTs.', 'CB', 'cryptobearsofficiall', '',

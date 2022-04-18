@@ -22,6 +22,7 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	return nil
 }
 
+// CreateParsingJobs creates a batch of parsing jobs.
 func (s *Store) CreateParsingJobs(jobs []jobs.Parsing) error {
 	query := s.sqlBuilder.
 		Insert(parsingJobsTableName).

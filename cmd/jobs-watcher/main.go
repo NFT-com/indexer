@@ -23,6 +23,7 @@ const (
 	defaultHTTPTimeout       = time.Second * 30
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
+	defaultAdditionQueueName = "addition"
 )
 
 func main() {
@@ -41,6 +42,7 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
+		flagAdditionQueueName string
 		flagAPIEndpoint       string
 		flagRMQTag            string
 		flagRedisNetwork      string
@@ -51,6 +53,7 @@ func run() error {
 		flagLogLevel          string
 	)
 
+	pflag.StringVar(&flagAdditionQueueName, "addition-queue", defaultAdditionQueueName, "name of the queue for addition queue")
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
@@ -84,7 +87,7 @@ func run() error {
 		client.WithHTTPClient(cli),
 		client.WithHost(flagAPIEndpoint),
 	)
-	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName)
+	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagAdditionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
@@ -103,8 +106,14 @@ func run() error {
 		return fmt.Errorf("could not subscribe to new parsing jobs: %w", err)
 	}
 
+	additionJobs := make(chan []jobs.Addition)
+	err = api.SubscribeNewAdditionJob(client.SubscriberTypeCreateJobs, additionJobs)
+	if err != nil {
+		return fmt.Errorf("could not subscribe to new addition jobs: %w", err)
+	}
+
 	log.Info().Msg("jobs watcher starting")
-	watcher.Watch(discoveryJobs, parsingJobs)
+	watcher.Watch(discoveryJobs, parsingJobs, additionJobs)
 
 	select {
 	case <-sig:

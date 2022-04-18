@@ -29,9 +29,9 @@ func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer
 	return &j
 }
 
-func (j *Job) Watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing) {
+func (j *Job) Watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing, additionJobs chan []jobs.Addition) {
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
-		go j.watch(discoveryJobs, parsingJobs)
+		go j.watch(discoveryJobs, parsingJobs, additionJobs)
 	}
 }
 
@@ -39,13 +39,15 @@ func (j *Job) Close() {
 	close(j.close)
 }
 
-func (j *Job) watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing) {
+func (j *Job) watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing, additionJobs chan []jobs.Addition) {
 	for {
 		select {
 		case jobs := <-discoveryJobs:
 			j.handleDiscoveryJobs(jobs)
 		case jobs := <-parsingJobs:
 			j.handleParsingJobs(jobs)
+		case jobs := <-additionJobs:
+			j.handleAdditionJobs(jobs)
 		case <-j.close:
 			return
 		}
@@ -113,6 +115,39 @@ func (j *Job) publishParsingJob(job jobs.Parsing) error {
 	err = j.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
+	}
+
+	return nil
+}
+
+func (j *Job) handleAdditionJobs(jobsList []jobs.Addition) {
+	for _, job := range jobsList {
+		err := j.publishAdditionJob(job)
+		if err != nil {
+			j.log.Error().
+				Err(err).
+				Str("id", job.ID).
+				Str("block", job.BlockNumber).
+				Str("status", string(job.Status)).
+				Msg("could not publish addition job")
+			continue
+		}
+	}
+}
+
+func (j *Job) publishAdditionJob(job jobs.Addition) error {
+	if job.Status != jobs.StatusCreated {
+		return nil
+	}
+
+	err := j.messageProducer.PublishAdditionJob(job)
+	if err != nil {
+		return fmt.Errorf("could not publish addition job: %w", err)
+	}
+
+	err = j.apiClient.UpdateAdditionJobStatus(job.ID, jobs.StatusQueued)
+	if err != nil {
+		return fmt.Errorf("could not update addition job status: %w", err)
 	}
 
 	return nil

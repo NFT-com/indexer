@@ -8,6 +8,8 @@ const (
 	DiscoveryHandlerValue = "discovery"
 	// ParsingHandlerValue represents the parsing handler value.
 	ParsingHandlerValue = "parsing"
+	// AdditionHandlerValue represents the addition handler value.
+	AdditionHandlerValue = "addition"
 	// CreateStatusValue represents the create status value.
 	CreateStatusValue = "create"
 	// UpdateStatusValue represents the update status value.

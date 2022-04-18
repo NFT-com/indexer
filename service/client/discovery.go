@@ -83,20 +83,16 @@ func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not create job: got status code %v", resp.StatusCode)
+		return nil, fmt.Errorf("could not create job: got status code %d", resp.StatusCode)
 	}
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
+	defer resp.Body.Close()
 
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close response body: %w", err)
-	}
-
-	newJob := jobs.Discovery{}
+	var newJob jobs.Discovery
 	err = json.Unmarshal(responseBody, &newJob)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
@@ -154,18 +150,14 @@ func (c *Client) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not list job: got status code %v", resp.StatusCode)
+		return nil, fmt.Errorf("could not list job: got status code %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close response body: %w", err)
-	}
+	defer resp.Body.Close()
 
 	jobList := make([]jobs.Discovery, 0)
 	err = json.Unmarshal(body, &jobList)
@@ -186,20 +178,16 @@ func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not get job: got status code %v", resp.StatusCode)
+		return nil, fmt.Errorf("could not get job: got status code %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
+	defer resp.Body.Close()
 
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close response body: %w", err)
-	}
-
-	job := jobs.Discovery{}
+	var job jobs.Discovery
 	err = json.Unmarshal(body, &job)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
@@ -226,20 +214,16 @@ func (c *Client) GetHighestBlockNumberDiscoveryJob(chainURL, chainType, address,
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not get highest block number: got status code %v", resp.StatusCode)
+		return nil, fmt.Errorf("could not get highest block number: got status code %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read body: %w", err)
 	}
+	defer resp.Body.Close()
 
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close response body: %w", err)
-	}
-
-	job := jobs.Discovery{}
+	var job jobs.Discovery
 	err = json.Unmarshal(body, &job)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
@@ -272,9 +256,10 @@ func (c *Client) UpdateDiscoveryJobStatus(id string, status jobs.Status) error {
 	if err != nil {
 		return fmt.Errorf("could not perform request: %w", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("could not update job: got status code %v", resp.StatusCode)
+		return fmt.Errorf("could not update job: got status code %d", resp.StatusCode)
 	}
 
 	return nil

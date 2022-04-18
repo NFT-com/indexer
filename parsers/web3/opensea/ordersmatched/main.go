@@ -12,7 +12,8 @@ import (
 
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/parsers"
-	"github.com/NFT-com/indexer/workers/parsing"
+
+	"github.com/NFT-com/indexer/function/handlers/parsing"
 )
 
 const (

@@ -85,24 +85,23 @@ CREATE TABLE IF NOT EXISTS marketplaces_collections
 
 CREATE TABLE IF NOT EXISTS nfts
 (
-    id          UUID PRIMARY KEY,
-    collection  UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
+    id          VARCHAR(128) PRIMARY KEY,
     token_id    VARCHAR(128) NOT NULL,
+    collection  UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
     name        TEXT         NOT NULL,
     image       TEXT         NULL,
     description TEXT         NULL,
     owner       VARCHAR(128) NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
-    updated_at  TIMESTAMP,
-    UNIQUE (collection, token_id)
+    updated_at  TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS traits
 (
-    id         UUID PRIMARY KEY,
-    name       TEXT NOT NULL,
-    value      TEXT NOT NULL,
-    nft        UUID NOT NULL REFERENCES nfts ON DELETE CASCADE,
+    id         VARCHAR(128) PRIMARY KEY,
+    name       TEXT         NOT NULL,
+    value      TEXT         NOT NULL,
+    nft        VARCHAR(128) NOT NULL REFERENCES nfts ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
 );

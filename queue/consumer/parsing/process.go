@@ -1,17 +1,34 @@
-package consumer
+package parsing
 
 import (
 	"fmt"
 
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/models/events"
 )
 
-func (d *Parsing) processLogs(logs []log.Log) error {
+func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 	for _, l := range logs {
 		chain, err := d.store.Chain(l.ChainID)
 		if err != nil {
 			return fmt.Errorf("could not get chain: %w", err)
+		}
+
+		if l.NeedsAdditionJob {
+			_, err := d.apiClient.CreateAdditionJob(jobs.Addition{
+				ChainURL:     job.ChainURL,
+				ChainID:      job.ChainID,
+				ChainType:    job.ChainType,
+				BlockNumber:  job.BlockNumber,
+				Address:      job.Address,
+				StandardType: job.StandardType,
+				EventType:    job.EventType,
+				TokenID:      l.NftID,
+			})
+			if err != nil {
+				return fmt.Errorf("could not create addition job: %w", err)
+			}
 		}
 
 		switch l.Type {

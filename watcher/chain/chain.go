@@ -62,6 +62,7 @@ func (j *Watcher) Watch(_ context.Context) error {
 		case block := <-j.blocks:
 			job := jobs.Parsing{
 				ChainURL:     j.config.ChainURL,
+				ChainID:      j.config.ChainID,
 				ChainType:    j.config.ChainType,
 				BlockNumber:  block.String(),
 				Address:      j.config.Contract,

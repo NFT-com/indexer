@@ -144,6 +144,21 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 	return logs, nil
 }
 
+func (w *Web3) CallContract(ctx context.Context, block *big.Int, sender, contract string, input []byte) ([]byte, error) {
+	var (
+		from    = common.HexToAddress(sender)
+		address = common.HexToAddress(contract)
+	)
+
+	msg := ethereum.CallMsg{From: from, To: &address, Data: input}
+	output, err := w.ethClient.CallContract(ctx, msg, block)
+	if err != nil {
+		return nil, fmt.Errorf("could not call contract: %w", err)
+	}
+
+	return output, nil
+}
+
 func (w *Web3) Close() {
 	close(w.close)
 	w.ethClient.Close()

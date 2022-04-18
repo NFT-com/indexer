@@ -37,7 +37,7 @@ func NewParser(client networks.Network) (*Parser, error) {
 
 func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 	if len(raw.IndexData) != defaultIndexDataLen {
-		return nil, fmt.Errorf("unexpected index data length (have: %v, want: %v)", len(raw.IndexData), defaultIndexDataLen)
+		return nil, fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(raw.IndexData), defaultIndexDataLen)
 	}
 
 	var (

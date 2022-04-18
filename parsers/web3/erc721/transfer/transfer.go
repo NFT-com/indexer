@@ -19,7 +19,7 @@ func NewParser() *Parser {
 
 func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 	if len(raw.IndexData) != defaultIndexDataLen {
-		return nil, fmt.Errorf("unexpected index data length (have: %v, want: %v)", len(raw.IndexData), defaultIndexDataLen)
+		return nil, fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(raw.IndexData), defaultIndexDataLen)
 	}
 
 	var (
@@ -44,6 +44,7 @@ func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 	switch zeroValueAddress {
 	case fromAddress:
 		l.Type = log.Mint
+		l.NeedsAdditionJob = true
 	case toAddress:
 		l.Type = log.Burn
 	default:

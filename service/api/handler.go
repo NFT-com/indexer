@@ -40,6 +40,7 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	websocket := server.Group("/ws")
 	websocket.GET("/discoveries", h.DiscoveryWebsocketConnection)
 	websocket.GET("/parsings", h.ParsingWebsocketConnection)
+	websocket.GET("/additions", h.AdditionWebsocketConnection)
 
 	discoveries := server.Group("/discoveries")
 	discoveries.POST("", h.CreateDiscoveryJob)
@@ -56,4 +57,11 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	parsings.GET("/highest", h.GetHighestBlockNumberParsingJob)
 	parsings.GET("/:id", h.GetParsingJob)
 	parsings.PATCH("/:id", h.UpdateParsingJobStatus)
+
+	additions := server.Group("/additions")
+	additions.POST("", h.CreateAdditionJob)
+	additions.POST("/batch", h.CreateAdditionJobs)
+	additions.GET("", h.ListAdditionJobs)
+	additions.GET("/:id", h.GetAdditionJob)
+	additions.PATCH("/:id", h.UpdateAdditionJobStatus)
 }
