@@ -49,7 +49,7 @@ func run() error {
 		flagChainID      string
 		flagChainURL     string
 		flagChainType    string
-		flagContract     string
+		flagContracts    []string
 		flagEventType    string
 		flagLogLevel     string
 		flagStandardType string
@@ -61,7 +61,7 @@ func run() error {
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
-	pflag.StringVarP(&flagContract, "contract", "c", "", "contract to watch")
+	pflag.StringArrayVarP(&flagContracts, "contracts", "c", nil, "contracts to watch")
 	pflag.StringVarP(&flagEventType, "event", "e", "", "event type to watch")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVar(&flagStandardType, "standard-type", "", "standard type")
@@ -100,22 +100,26 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
-	highestJobIndex := "1"
-	highestJob, err := api.GetHighestBlockNumberParsingJob(flagChainURL, flagChainType, flagContract, flagStandardType, flagEventType)
-	if err == nil {
-		highestJobIndex = highestJob.BlockNumber
-	}
-
 	cfg := chain.Config{
 		ChainURL:     flagChainURL,
 		ChainID:      chainID,
 		ChainType:    flagChainType,
 		StandardType: flagStandardType,
-		Contract:     flagContract,
+		Contracts:    flagContracts,
 		EventType:    flagEventType,
-		StartIndex:   highestJobIndex,
 		Batch:        flagBatch,
 		BatchDelay:   flagBatchDelay,
+	}
+
+	blockHeights := make(map[string]string, len(flagContracts))
+	for _, contract := range flagContracts {
+		blockHeights[contract] = "1"
+	}
+	cfg.ContractBlockHeights = blockHeights
+
+	blockHeightsSaved, err := api.GetHighestBlockNumbersParsingJob(flagChainURL, flagChainType, flagContracts, flagStandardType, flagEventType)
+	if err == nil {
+		cfg.ContractBlockHeights = blockHeightsSaved
 	}
 
 	watcher, err := chain.NewWatcher(log, ctx, api, network, cfg)

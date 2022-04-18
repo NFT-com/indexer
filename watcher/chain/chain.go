@@ -65,7 +65,7 @@ func (j *Watcher) Watch(_ context.Context) error {
 				ChainID:      j.config.ChainID,
 				ChainType:    j.config.ChainType,
 				BlockNumber:  block.String(),
-				Address:      j.config.Contract,
+				Addresses:    j.config.Contracts,
 				StandardType: j.config.StandardType,
 				EventType:    j.config.EventType,
 			}

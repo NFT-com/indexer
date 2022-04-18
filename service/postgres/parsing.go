@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lib/pq"
+
 	"github.com/NFT-com/indexer/jobs"
 )
 
@@ -12,7 +14,7 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 	_, err := s.sqlBuilder.
 		Insert(parsingJobsTableName).
 		Columns(parsingJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
+		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.EventType, job.Status).
 		Exec()
 
 	if err != nil {
@@ -29,7 +31,7 @@ func (s *Store) CreateParsingJobs(jobs []jobs.Parsing) error {
 		Columns(parsingJobsTableColumns...)
 
 	for _, job := range jobs {
-		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status)
+		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.EventType, job.Status)
 	}
 
 	_, err := query.Exec()
@@ -65,7 +67,7 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 			&job.ChainID,
 			&job.ChainType,
 			&job.BlockNumber,
-			&job.Address,
+			pq.Array(&job.Addresses),
 			&job.StandardType,
 			&job.EventType,
 			&job.Status,
@@ -104,7 +106,7 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 		&job.ChainID,
 		&job.ChainType,
 		&job.BlockNumber,
-		&job.Address,
+		pq.Array(&job.Addresses),
 		&job.StandardType,
 		&job.EventType,
 		&job.Status,
@@ -117,45 +119,49 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-// HighestBlockNumberParsingJob returns the highest block number parsing job.
-func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
+// HighestBlockNumbersParsingJob returns the highest block numbers for parsing jobs.
+func (s *Store) HighestBlockNumbersParsingJob(chainURL, chainType string, addresses []string, standardType, eventType string) (map[string]string, error) {
 	result, err := s.sqlBuilder.
-		Select(parsingJobsTableColumns...).
-		From(parsingJobsTableName).
-		Where("chain_url = ?", chainURL).
-		Where("chain_type = ?", chainType).
-		Where("address = ?", address).
-		Where("interface_type = ?", standardType).
-		Where("event_type = ?", eventType).
-		OrderBy("block_number DESC").
+		Select("jobs.address, jobs.block_number").
+		FromSelect(
+			s.sqlBuilder.
+				Select("unnest(addresses) as address, max(block_number) as block_number").
+				From(parsingJobsTableName).
+				Where("chain_url = ?", chainURL).
+				Where("chain_type = ?", chainType).
+				Where("? <@ addresses", pq.Array(addresses)).
+				Where("interface_type = ?", standardType).
+				GroupBy("address"),
+			"jobs",
+		).
+		Where("jobs.address = any(?)", pq.Array(addresses)).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", err)
 	}
 	defer result.Close()
 
-	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", errResourceNotFound)
-	}
+	highestBlocks := make(map[string]string)
+	for result.Next() && result.Err() == nil {
+		var address string
+		var value string
+		err = result.Scan(
+			&address,
+			&value,
+		)
 
-	var job jobs.Parsing
-	err = result.Scan(
-		&job.ID,
-		&job.ChainURL,
-		&job.ChainID,
-		&job.ChainType,
-		&job.BlockNumber,
-		&job.Address,
-		&job.StandardType,
-		&job.EventType,
-		&job.Status,
-	)
+		if err != nil {
+			return nil, fmt.Errorf("could not heighest block: %w", err)
+		}
+
+		highestBlocks[address] = value
+	}
 
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", err)
+		return nil, fmt.Errorf("could not retrieve highest block number for addresses: %w", err)
 	}
 
-	return &job, nil
+	return highestBlocks, nil
 }
 
 // UpdateParsingJobStatus updates a parsing job status.

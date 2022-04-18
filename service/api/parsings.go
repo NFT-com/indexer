@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
@@ -44,7 +45,7 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 		ChainID:      req.ChainID,
 		ChainType:    req.ChainType,
 		BlockNumber:  req.BlockNumber,
-		Address:      req.Address,
+		Addresses:    req.Addresses,
 		StandardType: req.StandardType,
 		EventType:    req.EventType,
 	}
@@ -77,7 +78,7 @@ func (h *Handler) CreateParsingJobs(ctx echo.Context) error {
 			ChainID:      j.ChainID,
 			ChainType:    j.ChainType,
 			BlockNumber:  j.BlockNumber,
-			Address:      j.Address,
+			Addresses:    j.Addresses,
 			StandardType: j.StandardType,
 			EventType:    j.EventType,
 		}
@@ -122,22 +123,23 @@ func (h *Handler) GetParsingJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, *job)
 }
 
-// GetHighestBlockNumberParsingJob handles the api request to retrieve the highest parsing block number.
-func (h *Handler) GetHighestBlockNumberParsingJob(ctx echo.Context) error {
+// GetHighestBlockNumbersParsingJob handles the api request to retrieve the highest parsing block number.
+func (h *Handler) GetHighestBlockNumbersParsingJob(ctx echo.Context) error {
 	var (
 		chainURL     = ctx.QueryParam(chainURLQueryKey)
 		chainType    = ctx.QueryParam(chainTypeQueryKey)
-		address      = ctx.QueryParam(addressQueryKey)
+		addressQuery = ctx.QueryParam(addressesQueryKey)
 		standardType = ctx.QueryParam(standardTypeQueryKey)
 		eventType    = ctx.QueryParam(eventTypeQueryKey)
 	)
 
-	job, err := h.jobs.GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType)
+	addresses := strings.Split(addressQuery, ",")
+	highestBlocks, err := h.jobs.GetHighestBlockNumbersParsingJob(chainURL, chainType, addresses, standardType, eventType)
 	if err != nil {
 		return internalError(err)
 	}
 
-	return ctx.JSON(http.StatusOK, *job)
+	return ctx.JSON(http.StatusOK, highestBlocks)
 }
 
 // UpdateParsingJobStatus handles the api request to update a parsing job status.

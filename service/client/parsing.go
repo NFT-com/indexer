@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/request"
@@ -65,7 +66,7 @@ func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 		ChainID:      job.ChainID,
 		ChainType:    job.ChainType,
 		BlockNumber:  job.BlockNumber,
-		Address:      job.Address,
+		Addresses:    job.Addresses,
 		StandardType: job.StandardType,
 		EventType:    job.EventType,
 	}
@@ -110,7 +111,7 @@ func (c *Client) CreateParsingJobs(jobList []jobs.Parsing) error {
 			ChainID:      job.ChainID,
 			ChainType:    job.ChainType,
 			BlockNumber:  job.BlockNumber,
-			Address:      job.Address,
+			Addresses:    job.Addresses,
 			StandardType: job.StandardType,
 			EventType:    job.EventType,
 		}
@@ -198,11 +199,11 @@ func (c *Client) GetParsingJob(id string) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-func (c *Client) GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
+func (c *Client) GetHighestBlockNumbersParsingJob(chainURL, chainType string, addresses []string, standardType, eventType string) (map[string]string, error) {
 	params := url.Values{}
 	params.Set("chain_url", chainURL)
 	params.Set("chain_type", chainType)
-	params.Set("address", address)
+	params.Set("addresses", strings.Join(addresses, ","))
 	params.Set("standard_type", standardType)
 	params.Set("event_type", eventType)
 
@@ -216,7 +217,7 @@ func (c *Client) GetHighestBlockNumberParsingJob(chainURL, chainType, address, s
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not highest block number job: got status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("could not highest block numbers from jobs: got status code %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -225,13 +226,13 @@ func (c *Client) GetHighestBlockNumberParsingJob(chainURL, chainType, address, s
 	}
 	defer resp.Body.Close()
 
-	var job jobs.Parsing
-	err = json.Unmarshal(body, &job)
+	var highestBlocks map[string]string
+	err = json.Unmarshal(body, &highestBlocks)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
-	return &job, nil
+	return highestBlocks, nil
 }
 
 func (c *Client) UpdateParsingJobStatus(id string, status jobs.Status) error {

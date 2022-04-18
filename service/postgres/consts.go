@@ -22,7 +22,7 @@ const (
 var (
 	// jobs table columns
 	discoveryJobsTableColumns = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "addresses", "interface_type", "status"}
-	parsingJobsTableColumns   = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "event_type", "status"}
+	parsingJobsTableColumns   = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "addresses", "interface_type", "event_type", "status"}
 	additionJobsTableColumns  = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "token_id", "status"}
 
 	// events table columns

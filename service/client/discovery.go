@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/service/request"
@@ -196,11 +197,11 @@ func (c *Client) GetDiscoveryJob(id string) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
-func (c *Client) GetHighestBlockNumberDiscoveryJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Discovery, error) {
+func (c *Client) GetHighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (map[string]string, error) {
 	params := url.Values{}
 	params.Set("chain_url", chainURL)
 	params.Set("chain_type", chainType)
-	params.Set("address", address)
+	params.Set("addresses", strings.Join(addresses, ","))
 	params.Set("standard_type", standardType)
 	params.Set("event_type", eventType)
 
@@ -223,13 +224,13 @@ func (c *Client) GetHighestBlockNumberDiscoveryJob(chainURL, chainType, address,
 	}
 	defer resp.Body.Close()
 
-	var job jobs.Discovery
-	err = json.Unmarshal(body, &job)
+	var highestBlocks map[string]string
+	err = json.Unmarshal(body, &highestBlocks)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
 	}
 
-	return &job, nil
+	return highestBlocks, nil
 }
 
 func (c *Client) UpdateDiscoveryJobStatus(id string, status jobs.Status) error {

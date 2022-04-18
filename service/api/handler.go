@@ -11,7 +11,6 @@ const (
 	statusQueryKey       = "status"
 	chainURLQueryKey     = "chain_url"
 	chainTypeQueryKey    = "chain_type"
-	addressQueryKey      = "address"
 	addressesQueryKey    = "addresses"
 	standardTypeQueryKey = "standard_type"
 	eventTypeQueryKey    = "event_type"
@@ -46,7 +45,7 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	discoveries.POST("", h.CreateDiscoveryJob)
 	discoveries.POST("/batch", h.CreateDiscoveryJobs)
 	discoveries.GET("", h.ListDiscoveryJobs)
-	discoveries.GET("/highest", h.GetHighestBlockNumberDiscoveryJob)
+	discoveries.GET("/highest", h.GetHighestBlockNumbersDiscoveryJob)
 	discoveries.GET("/:id", h.GetDiscoveryJob)
 	discoveries.PATCH("/:id", h.UpdateDiscoveryJobStatus)
 
@@ -54,7 +53,7 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	parsings.POST("", h.CreateParsingJob)
 	parsings.POST("/batch", h.CreateParsingJobs)
 	parsings.GET("", h.ListParsingJobs)
-	parsings.GET("/highest", h.GetHighestBlockNumberParsingJob)
+	parsings.GET("/highest", h.GetHighestBlockNumbersParsingJob)
 	parsings.GET("/:id", h.GetParsingJob)
 	parsings.PATCH("/:id", h.UpdateParsingJobStatus)
 

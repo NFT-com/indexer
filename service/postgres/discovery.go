@@ -114,44 +114,49 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 	return &job, nil
 }
 
-// HighestBlockNumberDiscoveryJob returns the highest block number discovery job.
-func (s *Store) HighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (*jobs.Discovery, error) {
+// HighestBlockNumbersDiscoveryJob returns the highest block numbers for discovery jobs.
+func (s *Store) HighestBlockNumbersDiscoveryJob(chainURL, chainType string, addresses []string, standardType string) (map[string]string, error) {
 	result, err := s.sqlBuilder.
-		Select(parsingJobsTableColumns...).
-		From(parsingJobsTableName).
-		Where("chain_url = ?", chainURL).
-		Where("chain_type = ?", chainType).
-		Where("addresses <@ ? AND ? <@ addresses", pq.Array(addresses), pq.Array(addresses)).
-		Where("standard_type = ?", standardType).
-		Where("event_type = ?", eventType).
-		OrderBy("block_number DESC").
+		Select("jobs.address, jobs.block_number").
+		FromSelect(
+			s.sqlBuilder.
+				Select("unnest(addresses) as address, max(block_number) as block_number").
+				From(discoveryJobsTableName).
+				Where("chain_url = ?", chainURL).
+				Where("chain_type = ?", chainType).
+				Where("? <@ addresses", pq.Array(addresses)).
+				Where("interface_type = ?", standardType).
+				GroupBy("address"),
+			"jobs",
+		).
+		Where("jobs.address = any(?)", pq.Array(addresses)).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve highest block number discovery job: %w", err)
 	}
 	defer result.Close()
 
-	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve highest block number discovery job: %w", errResourceNotFound)
-	}
+	highestBlocks := make(map[string]string)
+	for result.Next() && result.Err() == nil {
+		var address string
+		var value string
+		err = result.Scan(
+			&address,
+			&value,
+		)
 
-	var job jobs.Discovery
-	err = result.Scan(
-		&job.ID,
-		&job.ChainURL,
-		&job.ChainID,
-		&job.ChainType,
-		&job.BlockNumber,
-		pq.Array(&job.Addresses),
-		&job.StandardType,
-		&job.Status,
-	)
+		if err != nil {
+			return nil, fmt.Errorf("could not heighest block: %w", err)
+		}
+
+		highestBlocks[address] = value
+	}
 
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve highest block number discovery job: %w", err)
+		return nil, fmt.Errorf("could not retrieve highest block number for addresses: %w", err)
 	}
 
-	return &job, nil
+	return highestBlocks, nil
 }
 
 // UpdateDiscoveryJobStatus updates a discovery job status.

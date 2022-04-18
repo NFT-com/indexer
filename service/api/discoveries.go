@@ -120,20 +120,22 @@ func (h *Handler) GetDiscoveryJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, *job)
 }
 
-// GetHighestBlockNumberDiscoveryJob handles the api request to retrieve the highest discovery block number.
-func (h *Handler) GetHighestBlockNumberDiscoveryJob(ctx echo.Context) error {
-	chainURL := ctx.QueryParam(chainURLQueryKey)
-	chainType := ctx.QueryParam(chainTypeQueryKey)
-	addresses := strings.Split(ctx.QueryParam(addressesQueryKey), ",")
-	standardType := ctx.QueryParam(standardTypeQueryKey)
-	eventType := ctx.QueryParam(eventTypeQueryKey)
+// GetHighestBlockNumbersDiscoveryJob handles the api request to retrieve the highest discovery block number.
+func (h *Handler) GetHighestBlockNumbersDiscoveryJob(ctx echo.Context) error {
+	var (
+		chainURL     = ctx.QueryParam(chainURLQueryKey)
+		chainType    = ctx.QueryParam(chainTypeQueryKey)
+		addressQuery = ctx.QueryParam(addressesQueryKey)
+		standardType = ctx.QueryParam(standardTypeQueryKey)
+	)
 
-	job, err := h.jobs.GetHighestBlockNumberDiscoveryJob(chainURL, chainType, addresses, standardType, eventType)
+	addresses := strings.Split(addressQuery, ",")
+	highestBlocks, err := h.jobs.GetHighestBlockNumbersDiscoveryJob(chainURL, chainType, addresses, standardType)
 	if err != nil {
 		return internalError(err)
 	}
 
-	return ctx.JSON(http.StatusOK, *job)
+	return ctx.JSON(http.StatusOK, highestBlocks)
 }
 
 // UpdateDiscoveryJobStatus handles the api request to update a discovery job status.

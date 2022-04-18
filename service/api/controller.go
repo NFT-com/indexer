@@ -17,7 +17,7 @@ type DiscoveryJobHandler interface {
 	CreateDiscoveryJobs(jobs []jobs.Discovery) error
 	ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
 	GetDiscoveryJob(id string) (*jobs.Discovery, error)
-	GetHighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (*jobs.Discovery, error)
+	GetHighestBlockNumbersDiscoveryJob(chainURL, chainType string, addresses []string, standardType string) (map[string]string, error)
 	UpdateDiscoveryJobStatus(id string, status jobs.Status) error
 }
 
@@ -27,7 +27,7 @@ type ParsingJobHandler interface {
 	CreateParsingJobs(jobs []jobs.Parsing) error
 	ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
 	GetParsingJob(id string) (*jobs.Parsing, error)
-	GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error)
+	GetHighestBlockNumbersParsingJob(chainURL, chainType string, addresses []string, standardType, eventType string) (map[string]string, error)
 	UpdateParsingJobStatus(id string, status jobs.Status) error
 }
 
