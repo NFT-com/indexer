@@ -6,6 +6,7 @@
     1. [Job API](#job-api)
     2. [Job Watcher](#job-watcher)
     3. [Parsing Dispatcher](#parsing-dispatcher)
+    3. [Addition Dispatcher](#addition-dispatcher)
     4. [Chain Watcher](#chain-watcher)
     5. [Functions](#functions)
 
@@ -26,6 +27,7 @@ For this the command below allows building and tagging the containers. Replace `
 * api
 * jobwatcher
 * parsingdispatcher
+* additiondispatcher
 * chainwatcher
 
 ```console
@@ -36,8 +38,8 @@ docker build . -f Dockerfile.<name> -t indexer-<name>:1.0.0
 
 ### Job API
 
-Job API allows creating, listing, and updating discovery and parsing jobs. See
-the [job API binary readme file](cmd/jobs-api/README.md) for more details about its flags.
+Job API allows creating, listing, and updating discovery and parsing jobs.
+See the [job API binary readme file](cmd/jobs-api/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -71,8 +73,8 @@ docker run indexer-jobwatcher:1.0.0 -a <jobs_api_url> -u <redis_url>
 
 ### Parsing Dispatcher
 
-The Parsing Dispatcher consumes messages from the queue and launches jobs. See
-the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
+The Parsing Dispatcher consumes messages from the queue and launches jobs.
+See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -88,11 +90,30 @@ the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) fo
 docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsingdispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
 
+### Addition Dispatcher
+
+Addition Dispatcher consumes messages from the queue and launches jobs.
+See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
+
+#### Requirements
+
+* Postgres
+* Jobs API
+* Redis
+* [AWS Credentials in Environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
+* [Deployed Functions to AWS](#functions)
+
+#### Starting the Container
+
+```console
+docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-additiondispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
+```
+
 ### Chain Watcher
 
-Chain Watcher watches the chain and instantiates all the parsing jobs required for the network. If the chain watcher
-stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height
-instead of 0. See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more details about its flags.
+Chain Watcher watches the chain and instantiates all the parsing jobs required for the network.
+If the chain watcher stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height instead of 0.
+See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -107,9 +128,7 @@ docker run indexer-chainwatcher:1.0.0 -a <api_url> -u <web3_node_url> -i <web3_c
 
 Here is an example where the watcher is configured to watch for:
 
-* The following
-  contract: [Fighter (FIGHTER)](https://etherscan.io/address/0x87E738a3d5E5345d6212D8982205A564289e6324) (`0x87E738a3d5E5345d6212D8982205A564289e6324`)
-  ;
+* The following contract: [Fighter (FIGHTER)](https://etherscan.io/address/0x87E738a3d5E5345d6212D8982205A564289e6324) (`0x87E738a3d5E5345d6212D8982205A564289e6324`);
 * With the event type _Transfer_ (`0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`);
 * With the `ERC721` standard type.
 

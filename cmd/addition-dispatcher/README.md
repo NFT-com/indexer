@@ -1,19 +1,19 @@
-# Parsing Dispatcher
+# Addition Dispatcher
 
-Parsing Dispatcher consumes messages from the queue and launches jobs.
+Addition Dispatcher consumes messages from the queue and launches jobs.
 
 ## Usage
 
 ```
 Usage of parsing-dispatcher:
+  -q, --addition-queue string   addition queue name (default "addition")
   -a, --api string              jobs api base endpoint
   -j, --jobs int                amount of concurrent lambda calls (default 4)
-  -p, --prefetch int            amount of queued messages to prefetch on init (default 80)
+  -p, --prefetch int            amount of queued messages to prefetch on init (default 5)
   -i, --poll-duration duration  time between polls on queue (default 1s)
   -d, --db string               data source name for database connection
-  -q, --parsing-queue string    parsing queue name (default "parsing")
   -l, --log-level string        log level (default "info")
-  -c, --tag string              rmq producer tag (default "parsing-agent")
+  -c, --tag string              rmq producer tag (default "dispatcher-agent")
   --database int                redis database number (default 1)
   -n, --network string          redis network type (default "tcp")
   -u, --url string              redis server connection url
