@@ -54,10 +54,18 @@ func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 	}
 
 	var lambdaError LambdaError
-	_ = json.Unmarshal(output.Payload, &lambdaError)
+	err = json.Unmarshal(output.Payload, &lambdaError)
+	if err != nil && !isArray(output.Payload) {
+		return nil, fmt.Errorf("could not unmarshal output body error: %d", *output.StatusCode)
+	}
+
 	if lambdaError.ErrorMessage != "" {
 		return nil, fmt.Errorf("got an error from the lambda function: %s (error_type: %s)", lambdaError.ErrorMessage, lambdaError.ErrorType)
 	}
 
 	return output.Payload, nil
+}
+
+func isArray(in []byte) bool {
+	return in[0] == '['
 }
