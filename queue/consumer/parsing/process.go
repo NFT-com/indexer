@@ -21,7 +21,7 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 				ChainID:      job.ChainID,
 				ChainType:    job.ChainType,
 				BlockNumber:  job.BlockNumber,
-				Address:      job.Address,
+				Address:      l.Contract,
 				StandardType: job.StandardType,
 				EventType:    job.EventType,
 				TokenID:      l.NftID,
