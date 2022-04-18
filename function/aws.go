@@ -56,7 +56,7 @@ func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 	var lambdaError LambdaError
 	err = json.Unmarshal(output.Payload, &lambdaError)
 	if err != nil && !isArray(output.Payload) {
-		return nil, fmt.Errorf("could not unmarshal output body error: %d", *output.StatusCode)
+		return nil, fmt.Errorf("could not unmarshal output body error: %w", err)
 	}
 
 	if lambdaError.ErrorMessage != "" {
