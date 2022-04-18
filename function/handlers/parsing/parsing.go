@@ -36,7 +36,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	h.log.Debug().
 		Str("block", job.BlockNumber).
 		Str("event", job.EventType).
-		Str("contract", job.Address).
+		Strs("contracts", job.Addresses).
 		Msg("processing job")
 
 	network, err := web3.New(ctx, job.ChainURL)
@@ -50,7 +50,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 		return nil, err
 	}
 
-	rawLogs, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
+	rawLogs, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Addresses)
 	if err != nil {
 		return nil, fmt.Errorf("could not get block events: %w", err)
 	}

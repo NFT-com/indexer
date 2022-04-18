@@ -80,16 +80,21 @@ func (w *Web3) GetLatestBlockHeight(ctx context.Context) (*big.Int, error) {
 	return header.Number, nil
 }
 
-func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]log.RawLog, error) {
+func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType string, contracts []string) ([]log.RawLog, error) {
 	block, ok := big.NewInt(0).SetString(blockNumber, indexBase)
 	if !ok {
 		return nil, fmt.Errorf("could not parse block number into big.Int")
 	}
 
+	addresses := make([]common.Address, 0, len(contracts))
+	for _, contract := range contracts {
+		addresses = append(addresses, common.HexToAddress(contract))
+	}
+
 	query := ethereum.FilterQuery{
 		FromBlock: block,
 		ToBlock:   block,
-		Addresses: []common.Address{common.HexToAddress(contract)},
+		Addresses: addresses,
 		Topics:    [][]common.Hash{{common.HexToHash(eventType)}},
 	}
 
@@ -130,7 +135,7 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 			BlockNumber:     blockNumber,
 			Index:           web3Log.Index,
 			BlockHash:       web3Log.BlockHash.String(),
-			Address:         contract,
+			Address:         web3Log.Address.String(),
 			TransactionHash: web3Log.TxHash.String(),
 			EventType:       web3Log.Topics[0].String(),
 			IndexData:       indexData,
