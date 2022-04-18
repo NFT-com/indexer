@@ -56,7 +56,7 @@ func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 	var lambdaError LambdaError
 	_ = json.Unmarshal(output.Payload, &lambdaError)
 	if lambdaError.ErrorMessage != "" {
-		return nil, fmt.Errorf("got an error from the lambda function: %s", lambdaError.ErrorMessage)
+		return nil, fmt.Errorf("got an error from the lambda function: %s (error_type: %s)", lambdaError.ErrorMessage, lambdaError.ErrorType)
 	}
 
 	return output.Payload, nil
