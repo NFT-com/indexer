@@ -1,4 +1,4 @@
-package main
+package opensea
 
 import (
 	"bytes"
@@ -33,6 +33,10 @@ func NewParser(client networks.Network) (*Parser, error) {
 	}
 
 	return &p, nil
+}
+
+func (p *Parser) Type() string {
+	return openseaType
 }
 
 func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
