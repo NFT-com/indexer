@@ -101,7 +101,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 * Jobs API
 * Redis
 * [AWS Credentials in Environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
-* [Deployed Functions to AWS](#functions)
+* [Deployed Functions in AWS](#functions)
 
 #### Starting the Container
 

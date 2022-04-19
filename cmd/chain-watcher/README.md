@@ -19,5 +19,5 @@ Usage of chain-watcher:
   --standard-type string        standard type of the contract to watch
 ```
 
-> ⚠️ Attention changing the batch amount, as it can cause the job-watcher to crash.
+> ⚠️ Be careful when changing the batch amount, as it can cause the job-watcher to crash.
 > The recommended value of 200 is set by default in order to prevent job-watcher crashes.

@@ -1,8 +1,8 @@
 # Addition Worker
 
-Addition Workers gets invoked with new addition jobs and returns new NFTs information.
+Addition Workers get invoked with new addition jobs and return new NFTs information.
 
 ## Usage
 
 Can't be used as CLI command.
-Must be deployed to Lambda AWS functions.
+Must be deployed as AWS Lambda functions.
