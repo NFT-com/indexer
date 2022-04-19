@@ -98,7 +98,6 @@ func (d *Parsing) consume(payload []byte) {
 		return
 	}
 
-	fmt.Println(job)
 	name := functionName(job)
 	output, err := d.dispatcher.Invoke(name, payload)
 	if err != nil {
