@@ -1,4 +1,4 @@
-package addition
+package action
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/NFT-com/indexer/models/chain"
 )
 
-func (d *Addition) processNFT(nft chain.NFT) error {
+func (d *Action) processNFT(nft chain.NFT) error {
 	chain, err := d.dataStore.Chain(nft.ChainID)
 	if err != nil {
 		return fmt.Errorf("could not get chain: %w", err)

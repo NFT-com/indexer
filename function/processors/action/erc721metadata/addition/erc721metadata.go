@@ -1,9 +1,10 @@
-package erc721metadata
+package addition
 
 import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -19,6 +20,10 @@ import (
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/models/chain"
 	"github.com/NFT-com/indexer/networks"
+)
+
+var (
+	errNoOwnerFound = errors.New("no owner found")
 )
 
 type Processor struct {
@@ -44,7 +49,15 @@ func NewProcessor(log zerolog.Logger, network networks.Network) (*Processor, err
 	return &h, nil
 }
 
-func (p *Processor) Process(ctx context.Context, job jobs.Addition) (*chain.NFT, error) {
+func (p *Processor) Type() string {
+	return processorType
+}
+
+func (p *Processor) Standard() string {
+	return processorStandard
+}
+
+func (p *Processor) Process(ctx context.Context, job jobs.Action) (*chain.NFT, error) {
 	chainID, err := p.network.ChainID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not get chain id: %w", err)
@@ -118,6 +131,11 @@ func (p *Processor) Process(ctx context.Context, job jobs.Addition) (*chain.NFT,
 		})
 	}
 
+	owner, err := p.getOwner(ctx, job)
+	if err != nil {
+		return nil, fmt.Errorf("could not get owner: %w", err)
+	}
+
 	nft := chain.NFT{
 		ID:          nftID,
 		ChainID:     chainID,
@@ -127,12 +145,13 @@ func (p *Processor) Process(ctx context.Context, job jobs.Addition) (*chain.NFT,
 		Image:       info.Image,
 		Description: info.Description,
 		Traits:      traits,
+		Owner:       owner,
 	}
 
 	return &nft, nil
 }
 
-func (p *Processor) getURI(ctx context.Context, job jobs.Addition) (string, error) {
+func (p *Processor) getURI(ctx context.Context, job jobs.Action) (string, error) {
 	tokenID, ok := big.NewInt(0).SetString(job.TokenID, 0)
 	if !ok {
 		return "", fmt.Errorf("could not parse token id to big int")
@@ -163,4 +182,21 @@ func (p *Processor) getURI(ctx context.Context, job jobs.Addition) (string, erro
 	}
 
 	return uri, nil
+}
+
+func (p *Processor) getOwner(ctx context.Context, job jobs.Action) (string, error) {
+	logs, err := p.network.BlockEvents(ctx, job.BlockNumber, job.BlockNumber, []string{job.Event}, []string{job.Address})
+	if err != nil {
+		return "", fmt.Errorf("could not get block events: %w", err)
+	}
+
+	for _, log := range logs {
+		if len(log.IndexData) != defaultIndexDataLen {
+			return "", fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(log.IndexData), defaultIndexDataLen)
+		}
+
+		return common.HexToAddress(log.IndexData[1]).String(), nil
+	}
+
+	return "", errNoOwnerFound
 }

@@ -8,7 +8,7 @@ import (
 type JobsStore interface {
 	DiscoveryStore
 	ParsingStore
-	AdditionStore
+	ActionStore
 }
 
 // DiscoveryStore represents the discovery job store interface.
@@ -31,11 +31,11 @@ type ParsingStore interface {
 	UpdateParsingJobStatus(id string, status jobs.Status) error
 }
 
-// AdditionStore represents the addition job store interface.
-type AdditionStore interface {
-	CreateAdditionJob(job *jobs.Addition) error
-	CreateAdditionJobs(jobs []*jobs.Addition) error
-	AdditionJobs(status jobs.Status) ([]*jobs.Addition, error)
-	AdditionJob(id string) (*jobs.Addition, error)
-	UpdateAdditionJobStatus(id string, status jobs.Status) error
+// ActionStore represents the action job store interface.
+type ActionStore interface {
+	CreateActionJob(job *jobs.Action) error
+	CreateActionJobs(jobs []*jobs.Action) error
+	ActionJobs(status jobs.Status) ([]*jobs.Action, error)
+	ActionJob(id string) (*jobs.Action, error)
+	UpdateActionJobStatus(id string, status jobs.Status) error
 }

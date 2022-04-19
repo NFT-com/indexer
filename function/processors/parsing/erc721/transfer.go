@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/NFT-com/indexer/action"
 	"github.com/NFT-com/indexer/log"
 )
 
@@ -50,11 +51,16 @@ func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) (*log.
 	switch zeroValueAddress {
 	case fromAddress:
 		l.Type = log.Mint
-		l.NeedsAdditionJob = true
+		l.NeedsActionJob = true
+		l.ActionJobType = action.Addition
 	case toAddress:
 		l.Type = log.Burn
+		l.NeedsActionJob = true
+		l.ActionJobType = action.OwnerChange
 	default:
 		l.Type = log.Transfer
+		l.NeedsActionJob = true
+		l.ActionJobType = action.OwnerChange
 	}
 
 	return &l, nil

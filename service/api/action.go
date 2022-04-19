@@ -9,9 +9,9 @@ import (
 	"github.com/NFT-com/indexer/service/request"
 )
 
-// CreateAdditionJob handles the api request to create new addition job.
-func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
-	var req request.Addition
+// CreateActionJob handles the api request to create new action job.
+func (h *Handler) CreateActionJob(ctx echo.Context) error {
+	var req request.Action
 	err := ctx.Bind(&req)
 	if err != nil {
 		return badRequest(err)
@@ -22,7 +22,7 @@ func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
 		return badRequest(err)
 	}
 
-	job := jobs.Addition{
+	job := jobs.Action{
 		ChainURL:    req.ChainURL,
 		ChainID:     req.ChainID,
 		ChainType:   req.ChainType,
@@ -32,7 +32,7 @@ func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
 		TokenID:     req.TokenID,
 	}
 
-	newJob, err := h.jobs.CreateAdditionJob(&job)
+	newJob, err := h.jobs.CreateActionJob(&job)
 	if err != nil {
 		return internalError(err)
 	}
@@ -40,9 +40,9 @@ func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusCreated, *newJob)
 }
 
-// CreateAdditionJobs handles the api request to create multiple new addition jobs.
-func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
-	var req request.Additions
+// CreateActionJobs handles the api request to create multiple new action jobs.
+func (h *Handler) CreateActionJobs(ctx echo.Context) error {
+	var req request.Actions
 	err := ctx.Bind(&req)
 	if err != nil {
 		return badRequest(err)
@@ -53,9 +53,9 @@ func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
 		return badRequest(err)
 	}
 
-	jobList := make([]*jobs.Addition, 0, len(req.Jobs))
+	jobList := make([]*jobs.Action, 0, len(req.Jobs))
 	for _, j := range req.Jobs {
-		job := jobs.Addition{
+		job := jobs.Action{
 			ChainURL:    j.ChainURL,
 			ChainID:     j.ChainID,
 			ChainType:   j.ChainType,
@@ -68,7 +68,7 @@ func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
 		jobList = append(jobList, &job)
 	}
 
-	err = h.jobs.CreateAdditionJobs(jobList)
+	err = h.jobs.CreateActionJobs(jobList)
 	if err != nil {
 		return internalError(err)
 	}
@@ -76,15 +76,15 @@ func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusCreated)
 }
 
-// ListAdditionJobs handles the api request to retrieve all the addition jobs.
-func (h *Handler) ListAdditionJobs(ctx echo.Context) error {
+// ListActionJobs handles the api request to retrieve all the action jobs.
+func (h *Handler) ListActionJobs(ctx echo.Context) error {
 	rawStatus := ctx.QueryParam(statusQueryKey)
 	status, err := jobs.ParseStatus(rawStatus)
 	if err != nil {
 		return badRequest(err)
 	}
 
-	jobs, err := h.jobs.ListAdditionJobs(status)
+	jobs, err := h.jobs.ListActionJobs(status)
 	if err != nil {
 		return internalError(err)
 	}
@@ -92,11 +92,11 @@ func (h *Handler) ListAdditionJobs(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, jobs)
 }
 
-// GetAdditionJob handles the api request to retrieve a discovery job.
-func (h *Handler) GetAdditionJob(ctx echo.Context) error {
+// GetActionJob handles the api request to retrieve an action job.
+func (h *Handler) GetActionJob(ctx echo.Context) error {
 	id := ctx.Param(jobIDParamKey)
 
-	job, err := h.jobs.GetAdditionJob(id)
+	job, err := h.jobs.GetActionJob(id)
 	if err != nil {
 		return internalError(err)
 	}
@@ -104,8 +104,8 @@ func (h *Handler) GetAdditionJob(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, *job)
 }
 
-// UpdateAdditionJobStatus handles the api request to update a addition job status.
-func (h *Handler) UpdateAdditionJobStatus(ctx echo.Context) error {
+// UpdateActionJobStatus handles the api request to update an action job status.
+func (h *Handler) UpdateActionJobStatus(ctx echo.Context) error {
 	id := ctx.Param(jobIDParamKey)
 
 	var req request.Status
@@ -124,7 +124,7 @@ func (h *Handler) UpdateAdditionJobStatus(ctx echo.Context) error {
 		return badRequest(err)
 	}
 
-	err = h.jobs.UpdateAdditionJobStatus(id, newState)
+	err = h.jobs.UpdateActionJobStatus(id, newState)
 	if err != nil {
 		return internalError(err)
 	}

@@ -1,4 +1,4 @@
-package erc721metadata
+package addition
 
 import (
 	"fmt"

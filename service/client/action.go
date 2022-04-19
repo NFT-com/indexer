@@ -13,8 +13,8 @@ import (
 	"github.com/NFT-com/indexer/service/request"
 )
 
-func (c *Client) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
-	req := request.Addition{
+func (c *Client) CreateActionJob(job jobs.Action) (*jobs.Action, error) {
+	req := request.Action{
 		ChainURL:    job.ChainURL,
 		ChainID:     job.ChainID,
 		ChainType:   job.ChainType,
@@ -30,7 +30,7 @@ func (c *Client) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 	}
 
 	url := c.config.jobsAPI
-	url.Path = additionBasePath
+	url.Path = actionBasePath
 
 	resp, err := c.config.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
@@ -47,7 +47,7 @@ func (c *Client) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 	}
 	defer resp.Body.Close()
 
-	var newJob jobs.Addition
+	var newJob jobs.Action
 	err = json.Unmarshal(responseBody, &newJob)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
@@ -56,10 +56,10 @@ func (c *Client) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 	return &newJob, nil
 }
 
-func (c *Client) CreateAdditionJobs(jobList []jobs.Addition) error {
-	requestJobs := make([]request.Addition, 0, len(jobList))
+func (c *Client) CreateActionJobs(jobList []jobs.Action) error {
+	requestJobs := make([]request.Action, 0, len(jobList))
 	for _, job := range jobList {
-		requestJob := request.Addition{
+		requestJob := request.Action{
 			ChainURL:    job.ChainURL,
 			ChainID:     job.ChainID,
 			ChainType:   job.ChainType,
@@ -72,7 +72,7 @@ func (c *Client) CreateAdditionJobs(jobList []jobs.Addition) error {
 		requestJobs = append(requestJobs, requestJob)
 	}
 
-	req := request.Additions{
+	req := request.Actions{
 		Jobs: requestJobs,
 	}
 
@@ -82,7 +82,7 @@ func (c *Client) CreateAdditionJobs(jobList []jobs.Addition) error {
 	}
 
 	url := c.config.jobsAPI
-	url.Path = path.Join(additionBasePath, "batch")
+	url.Path = path.Join(actionBasePath, "batch")
 
 	_, err = c.config.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
 	if err != nil {
@@ -92,12 +92,12 @@ func (c *Client) CreateAdditionJobs(jobList []jobs.Addition) error {
 	return nil
 }
 
-func (c *Client) ListAdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
+func (c *Client) ListActionJobs(status jobs.Status) ([]jobs.Action, error) {
 	params := url.Values{}
 	params.Set("status", string(status))
 
 	url := c.config.jobsAPI
-	url.Path = additionBasePath
+	url.Path = actionBasePath
 	url.RawQuery = params.Encode()
 
 	resp, err := c.config.client.Get(url.String())
@@ -115,7 +115,7 @@ func (c *Client) ListAdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
 	}
 	defer resp.Body.Close()
 
-	jobList := make([]jobs.Addition, 0)
+	jobList := make([]jobs.Action, 0)
 	err = json.Unmarshal(body, &jobList)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
@@ -124,9 +124,9 @@ func (c *Client) ListAdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
 	return jobList, nil
 }
 
-func (c *Client) GetAdditionJob(id string) (*jobs.Addition, error) {
+func (c *Client) GetActionJob(id string) (*jobs.Action, error) {
 	url := c.config.jobsAPI
-	url.Path = path.Join(additionBasePath, id)
+	url.Path = path.Join(actionBasePath, id)
 
 	resp, err := c.config.client.Get(url.String())
 	if err != nil {
@@ -143,7 +143,7 @@ func (c *Client) GetAdditionJob(id string) (*jobs.Addition, error) {
 	}
 	defer resp.Body.Close()
 
-	var job jobs.Addition
+	var job jobs.Action
 	err = json.Unmarshal(body, &job)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
@@ -152,7 +152,7 @@ func (c *Client) GetAdditionJob(id string) (*jobs.Addition, error) {
 	return &job, nil
 }
 
-func (c *Client) UpdateAdditionJobStatus(id string, status jobs.Status) error {
+func (c *Client) UpdateActionJobStatus(id string, status jobs.Status) error {
 	requestBody := request.Status{
 		Status: string(status),
 	}
@@ -163,7 +163,7 @@ func (c *Client) UpdateAdditionJobStatus(id string, status jobs.Status) error {
 	}
 
 	url := c.config.jobsAPI
-	url.Path = path.Join(additionBasePath, id)
+	url.Path = path.Join(actionBasePath, id)
 
 	req, err := http.NewRequest(http.MethodPatch, url.String(), bytes.NewReader(body))
 	if err != nil {

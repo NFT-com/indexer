@@ -1,4 +1,4 @@
-package addition
+package action
 
 import (
 	"github.com/NFT-com/indexer/models/chain"

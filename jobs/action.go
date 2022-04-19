@@ -1,7 +1,7 @@
 package jobs
 
-// Addition is a job that gets the NFTs data/traits and saves them to database.
-type Addition struct {
+// Action is a job that handles different type of actions.
+type Action struct {
 	ID          string `json:"id"`
 	ChainURL    string `json:"chain_url"`
 	ChainID     string `json:"chain_id"`
@@ -11,5 +11,6 @@ type Addition struct {
 	Standard    string `json:"standard_type"`
 	Event       string `json:"event_type"`
 	TokenID     string `json:"token_id"`
+	ActionType  string `json:"action_type"`
 	Status      Status `json:"status"`
 }

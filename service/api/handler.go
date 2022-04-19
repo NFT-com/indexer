@@ -50,10 +50,10 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	parsings.GET("/:id", h.GetParsingJob)
 	parsings.PATCH("/:id", h.UpdateParsingJobStatus)
 
-	additions := server.Group("/additions")
-	additions.POST("", h.CreateAdditionJob)
-	additions.POST("/batch", h.CreateAdditionJobs)
-	additions.GET("", h.ListAdditionJobs)
-	additions.GET("/:id", h.GetAdditionJob)
-	additions.PATCH("/:id", h.UpdateAdditionJobStatus)
+	actions := server.Group("/actions")
+	actions.POST("", h.CreateActionJob)
+	actions.POST("/batch", h.CreateActionJobs)
+	actions.GET("", h.ListActionJobs)
+	actions.GET("/:id", h.GetActionJob)
+	actions.PATCH("/:id", h.UpdateActionJobStatus)
 }

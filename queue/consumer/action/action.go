@@ -1,4 +1,4 @@
-package addition
+package action
 
 import (
 	"crypto/sha256"
@@ -15,7 +15,7 @@ import (
 	"github.com/NFT-com/indexer/service/client"
 )
 
-type Addition struct {
+type Action struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
 	apiClient     *client.Client
@@ -25,8 +25,8 @@ type Addition struct {
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, dataStore Store, jobCount int) *Addition {
-	c := Addition{
+func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, dataStore Store, jobCount int) *Action {
+	c := Action{
 		log:           log,
 		dispatcher:    dispatcher,
 		apiClient:     apiClient,
@@ -39,7 +39,7 @@ func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher functi
 	return &c
 }
 
-func (d *Addition) Consume(delivery rmq.Delivery) {
+func (d *Action) Consume(delivery rmq.Delivery) {
 	payload := []byte(delivery.Payload())
 	d.consumerQueue <- payload
 
@@ -50,7 +50,7 @@ func (d *Addition) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (d *Addition) Run() {
+func (d *Action) Run() {
 	for i := 0; i < d.jobCount; i++ {
 		go func() {
 			for {
@@ -65,12 +65,12 @@ func (d *Addition) Run() {
 	}
 }
 
-func (d *Addition) Close() {
+func (d *Action) Close() {
 	close(d.close)
 }
 
-func (d *Addition) consume(payload []byte) {
-	var job jobs.Addition
+func (d *Action) consume(payload []byte) {
+	var job jobs.Action
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
 		d.log.Error().Err(err).Msg("could not unmarshal message")
@@ -82,9 +82,9 @@ func (d *Addition) consume(payload []byte) {
 		return
 	}
 
-	storedJob, err := d.apiClient.GetAdditionJob(job.ID)
+	storedJob, err := d.apiClient.GetActionJob(job.ID)
 	if err != nil {
-		d.handleError(job.ID, err, "could not retrieve addition job")
+		d.handleError(job.ID, err, "could not retrieve action job")
 		return
 	}
 
@@ -92,7 +92,7 @@ func (d *Addition) consume(payload []byte) {
 		return
 	}
 
-	err = d.apiClient.UpdateAdditionJobStatus(job.ID, jobs.StatusProcessing)
+	err = d.apiClient.UpdateActionJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		d.handleError(job.ID, err, "could not update job status")
 		return
@@ -118,15 +118,15 @@ func (d *Addition) consume(payload []byte) {
 		return
 	}
 
-	err = d.apiClient.UpdateAdditionJobStatus(job.ID, jobs.StatusFinished)
+	err = d.apiClient.UpdateActionJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
 		d.handleError(job.ID, err, "could not update job status")
 		return
 	}
 }
 
-func (d *Addition) handleError(id string, err error, message string) {
-	updateErr := d.apiClient.UpdateAdditionJobStatus(id, jobs.StatusFailed)
+func (d *Action) handleError(id string, err error, message string) {
+	updateErr := d.apiClient.UpdateActionJobStatus(id, jobs.StatusFailed)
 	if updateErr != nil {
 		d.log.Error().Err(updateErr).Msg("could not update job status")
 	}
@@ -134,12 +134,12 @@ func (d *Addition) handleError(id string, err error, message string) {
 	d.log.Error().Err(err).Str("job_id", id).Msg(message)
 }
 
-func functionName(job jobs.Addition) string {
+func functionName(job jobs.Action) string {
 	h := sha256.New()
 
 	s := strings.Join(
 		[]string{
-			"addition",
+			"action",
 			strings.ToLower(job.ChainType),
 		},
 		"-",

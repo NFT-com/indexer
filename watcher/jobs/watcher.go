@@ -37,7 +37,7 @@ func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer
 func (j *Job) Watch() {
 	go j.watchDiscoveries()
 	go j.watchParsings()
-	go j.watchAdditions()
+	go j.watchActions()
 }
 
 func (j *Job) Close() {
@@ -76,16 +76,16 @@ func (j *Job) watchParsings() {
 	}
 }
 
-func (j *Job) watchAdditions() {
+func (j *Job) watchActions() {
 	for {
 		select {
 		case <-time.After(j.delay):
-			jobs, err := j.store.AdditionJobs(jobs.StatusCreated)
+			jobs, err := j.store.ActionJobs(jobs.StatusCreated)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not retrieve addition jobs")
+				j.log.Error().Err(err).Msg("could not retrieve action jobs")
 				continue
 			}
-			j.handleAdditionJobs(jobs)
+			j.handleActionJobs(jobs)
 		case <-j.close:
 			return
 		}
@@ -158,34 +158,34 @@ func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 	return nil
 }
 
-func (j *Job) handleAdditionJobs(jobsList []*jobs.Addition) {
+func (j *Job) handleActionJobs(jobsList []*jobs.Action) {
 	for _, job := range jobsList {
-		err := j.publishAdditionJob(job)
+		err := j.publishActionJob(job)
 		if err != nil {
 			j.log.Error().
 				Err(err).
 				Str("id", job.ID).
 				Str("block", job.BlockNumber).
 				Str("status", string(job.Status)).
-				Msg("could not publish addition job")
+				Msg("could not publish action job")
 			continue
 		}
 	}
 }
 
-func (j *Job) publishAdditionJob(job *jobs.Addition) error {
+func (j *Job) publishActionJob(job *jobs.Action) error {
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}
 
-	err := j.messageProducer.PublishAdditionJob(job)
+	err := j.messageProducer.PublishActionJob(job)
 	if err != nil {
-		return fmt.Errorf("could not publish addition job: %w", err)
+		return fmt.Errorf("could not publish action job: %w", err)
 	}
 
-	err = j.apiClient.UpdateAdditionJobStatus(job.ID, jobs.StatusQueued)
+	err = j.apiClient.UpdateActionJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
-		return fmt.Errorf("could not update addition job status: %w", err)
+		return fmt.Errorf("could not update action job status: %w", err)
 	}
 
 	return nil

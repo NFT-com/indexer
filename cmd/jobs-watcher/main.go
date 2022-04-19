@@ -26,7 +26,7 @@ const (
 	defaultReadDelay         = 100 * time.Millisecond
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
-	defaultAdditionQueueName = "addition"
+	defaultActionQueueName   = "action"
 )
 
 func main() {
@@ -45,7 +45,7 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagAdditionQueueName string
+		flagActionQueueName   string
 		flagAPIEndpoint       string
 		flagDBConnectionInfo  string
 		flagDatabaseReadDelay time.Duration
@@ -58,7 +58,7 @@ func run() error {
 		flagLogLevel          string
 	)
 
-	pflag.StringVar(&flagAdditionQueueName, "addition-queue", defaultAdditionQueueName, "name of the queue for addition queue")
+	pflag.StringVar(&flagActionQueueName, "action-queue", defaultActionQueueName, "name of the queue for action queue")
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
 	pflag.DurationVar(&flagDatabaseReadDelay, "read-delay", defaultReadDelay, "data read for new jobs delay")
@@ -95,7 +95,7 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
-	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagAdditionQueueName)
+	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagActionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}

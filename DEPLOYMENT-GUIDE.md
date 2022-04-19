@@ -6,7 +6,7 @@
     1. [Job API](#job-api)
     2. [Job Watcher](#job-watcher)
     3. [Parsing Dispatcher](#parsing-dispatcher)
-    3. [Addition Dispatcher](#addition-dispatcher)
+    3. [Action Dispatcher](#action-dispatcher)
     4. [Chain Watcher](#chain-watcher)
     5. [Functions](#functions)
 
@@ -27,7 +27,7 @@ For this the command below allows building and tagging the containers. Replace `
 * api
 * jobwatcher
 * parsingdispatcher
-* additiondispatcher
+* actiondispatcher
 * chainwatcher
 
 ```console
@@ -90,9 +90,9 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsingdispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
 
-### Addition Dispatcher
+### Action Dispatcher
 
-Addition Dispatcher consumes messages from the queue and launches jobs.
+Action Dispatcher consumes messages from the queue and launches jobs.
 See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 #### Requirements
@@ -106,7 +106,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-additiondispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
+docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-actiondispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
 
 ### Chain Watcher
@@ -150,8 +150,8 @@ docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/
 > 
 > * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/parsing-worker `
 > * ` zip parsing.zip worker `
-> * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/addition-worker `
-> * ` zip addition.zip worker `
+> * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/action-worker `
+> * ` zip action.zip worker `
 >
 > After this, with the functions already zipped.
 > There is two options for deployment:

@@ -21,7 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 
 	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/queue/consumer/addition"
+	"github.com/NFT-com/indexer/queue/consumer/action"
 	"github.com/NFT-com/indexer/service/client"
 	"github.com/NFT-com/indexer/service/postgres"
 )
@@ -29,9 +29,9 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout       = time.Second * 30
-	defaultPollDuration      = time.Second * 20
-	defaultAdditionQueueName = "addition"
+	defaultHTTPTimeout     = time.Second * 30
+	defaultPollDuration    = time.Second * 20
+	defaultActionQueueName = "action"
 )
 
 func main() {
@@ -50,7 +50,7 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagAdditionQueueName    string
+		flagActionQueueName      string
 		flagAPIEndpoint          string
 		flagConcurrentJobs       int
 		flagConsumerPollDuration time.Duration
@@ -64,7 +64,7 @@ func run() error {
 		flagRegion               string
 	)
 
-	pflag.StringVarP(&flagAdditionQueueName, "addition-queue", "q", defaultAdditionQueueName, "name of the queue for addition jobs")
+	pflag.StringVarP(&flagActionQueueName, "action-queue", "q", defaultActionQueueName, "name of the queue for action jobs")
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
 	pflag.IntVarP(&flagConcurrentJobs, "jobs", "j", 4, "number of concurrent jobs for the consumer")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "consumer poll duration")
@@ -126,7 +126,7 @@ func run() error {
 		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
-	queue, err := rmqConnection.OpenQueue(flagAdditionQueueName)
+	queue, err := rmqConnection.OpenQueue(flagActionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not open redis queue: %w", err)
 	}
@@ -136,14 +136,14 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := addition.NewConsumer(log, api, dispatcher, dataStore, flagConcurrentJobs)
+	consumer := action.NewConsumer(log, api, dispatcher, dataStore, flagConcurrentJobs)
 	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
-		return fmt.Errorf("could not add addition consumer: %w", err)
+		return fmt.Errorf("could not add action consumer: %w", err)
 	}
 	log = log.With().Str("name", consumerName).Logger()
 
-	log.Info().Msg("started addition dispatcher")
+	log.Info().Msg("started action dispatcher")
 	consumer.Run()
 
 	select {
@@ -159,7 +159,7 @@ func run() error {
 		log.Fatal().Msg("forced interruption")
 	}()
 
-	log.Info().Msg("stopped addition dispatcher gracefully")
+	log.Info().Msg("stopped action dispatcher gracefully")
 
 	return nil
 }
