@@ -19,18 +19,20 @@ type Parsing struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
 	apiClient     *client.Client
-	store         Store
+	eventStore    Store
+	dataStore     Store
 	jobCount      int
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store, jobCount int) *Parsing {
+func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, eventStore Store, dataStore Store, jobCount int) *Parsing {
 	c := Parsing{
 		log:           log,
 		dispatcher:    dispatcher,
 		apiClient:     apiClient,
-		store:         store,
+		eventStore:    eventStore,
+		dataStore:     dataStore,
 		jobCount:      jobCount,
 		consumerQueue: make(chan []byte, jobCount),
 		close:         make(chan struct{}),

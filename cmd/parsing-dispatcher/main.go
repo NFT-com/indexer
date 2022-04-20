@@ -50,25 +50,27 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagAPIEndpoint          string
-		flagConcurrentJobs       int
-		flagConsumerPrefetch     int64
-		flagConsumerPollDuration time.Duration
-		flagDBConnectionInfo     string
-		flagParsingQueueName     string
-		flagLogLevel             string
-		flagRMQTag               string
-		flagRedisDatabase        int
-		flagRedisNetwork         string
-		flagRedisURL             string
-		flagRegion               string
+		flagAPIEndpoint            string
+		flagConcurrentJobs         int
+		flagConsumerPrefetch       int64
+		flagConsumerPollDuration   time.Duration
+		flagDBDataConnectionInfo   string
+		flagDBEventsConnectionInfo string
+		flagParsingQueueName       string
+		flagLogLevel               string
+		flagRMQTag                 string
+		flagRedisDatabase          int
+		flagRedisNetwork           string
+		flagRedisURL               string
+		flagRegion                 string
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
 	pflag.IntVarP(&flagConcurrentJobs, "jobs", "j", 4, "amount of concurrent jobs for the consumer")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 80, "amount of message to prefetch in the consumer")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "time for each consumer poll")
-	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
+	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
+	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
@@ -104,14 +106,24 @@ func run() error {
 		client.WithHost(flagAPIEndpoint),
 	)
 
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	eventDB, err := sql.Open(databaseDriver, flagDBEventsConnectionInfo)
 	if err != nil {
-		return fmt.Errorf("could not open SQL connection: %w", err)
+		return fmt.Errorf("could not open events SQL connection: %w", err)
 	}
 
-	store, err := postgres.NewStore(db)
+	eventStore, err := postgres.NewStore(eventDB)
 	if err != nil {
-		return fmt.Errorf("could not create store: %w", err)
+		return fmt.Errorf("could not create event store: %w", err)
+	}
+
+	dataDB, err := sql.Open(databaseDriver, flagDBDataConnectionInfo)
+	if err != nil {
+		return fmt.Errorf("could not open data SQL connection: %w", err)
+	}
+
+	dataStore, err := postgres.NewStore(dataDB)
+	if err != nil {
+		return fmt.Errorf("could not create data store: %w", err)
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
@@ -136,7 +148,7 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := parsing.NewConsumer(log, api, dispatcher, store, flagConcurrentJobs)
+	consumer := parsing.NewConsumer(log, api, dispatcher, eventStore, dataStore, flagConcurrentJobs)
 	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)
