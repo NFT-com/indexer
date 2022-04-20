@@ -14,7 +14,8 @@ VALUES ('0556dfb2-0281-4483-b36d-0708c50593a8', '94c754fe-e06c-4d2b-bb76-2faa240
        ('df65ac20-e39c-441c-bee3-6cacfb7fa991', '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', NULL,
         '0x90d4ffbf13bf3203940e6dace392f7c23ff6b9ed', 'Cupcat Kittens',
         'Cupcat Kittens are a collection made by Cupcats as 2nd season. This collection includes cute kittens that are part of Cupcats ecosystem.',
-        'CCK', 'cupcatkittens', 'https://cupcat.mypinata.cloud/ipfs/QmWzju1QTCYmNU59WGYw8CoGabhKPv1SDwdKTY8ow4s3sy/{{ .nft_id }}/',
+        'CCK', 'cupcatkittens',
+        'https://cupcat.mypinata.cloud/ipfs/QmWzju1QTCYmNU59WGYw8CoGabhKPv1SDwdKTY8ow4s3sy/{{ .nft_id }}/',
         '', ''),
 
        ('e0ddf773-d4d9-4749-ae2f-17dc90ced1f0', '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', NULL,
@@ -28,3 +29,14 @@ VALUES ('0556dfb2-0281-4483-b36d-0708c50593a8', '94c754fe-e06c-4d2b-bb76-2faa240
         'CryptoBears is a collection of 5000 generative NFTs.', 'CB', 'cryptobearsofficiall', '',
         'https://www.cryptobearscollection.com/',
         'https://lh3.googleusercontent.com/DryBypRjydCQ4RQ5YUgzlf_3R0KQLmipkNs-bp5i_Y7LXo9iyvKxJbjZXWP82shVH6BQaX8y763e8u3TDlyXCj99XWLvhj_s4QFTGug=s120');
+
+
+INSERT INTO standards (id, name)
+VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'ERC721');
+
+INSERT INTO event_types (id, name, standard)
+VALUES ('0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', 'Transfer(address,address,uint64)',
+        'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
+
+INSERT INTO standards_collections (standard, collection)
+VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'df65ac20-e39c-441c-bee3-6cacfb7fa991');
