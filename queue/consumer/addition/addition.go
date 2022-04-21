@@ -19,18 +19,18 @@ type Addition struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
 	apiClient     *client.Client
-	store         Store
+	dataStore     Store
 	jobCount      int
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, store Store, jobCount int) *Addition {
+func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, dataStore Store, jobCount int) *Addition {
 	c := Addition{
 		log:           log,
 		dispatcher:    dispatcher,
 		apiClient:     apiClient,
-		store:         store,
+		dataStore:     dataStore,
 		jobCount:      jobCount,
 		consumerQueue: make(chan []byte, jobCount),
 		close:         make(chan struct{}),

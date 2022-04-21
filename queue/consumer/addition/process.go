@@ -7,23 +7,23 @@ import (
 )
 
 func (d *Addition) processNFT(nft chain.NFT) error {
-	chain, err := d.store.Chain(nft.ChainID)
+	chain, err := d.dataStore.Chain(nft.ChainID)
 	if err != nil {
 		return fmt.Errorf("could not get chain: %w", err)
 	}
 
-	collection, err := d.store.Collection(chain.ID, nft.Contract, nft.ContractCollectionID)
+	collection, err := d.dataStore.Collection(chain.ID, nft.Contract, nft.ContractCollectionID)
 	if err != nil {
 		return fmt.Errorf("could not get collection: %w", err)
 	}
 
-	err = d.store.UpsertNFT(nft, collection.ID)
+	err = d.dataStore.UpsertNFT(nft, collection.ID)
 	if err != nil {
 		return fmt.Errorf("could not store nft: %w", err)
 	}
 
 	for _, trait := range nft.Traits {
-		err = d.store.UpsertTrait(trait)
+		err = d.dataStore.UpsertTrait(trait)
 		if err != nil {
 			return fmt.Errorf("could not store trait: %w", err)
 		}

@@ -10,7 +10,7 @@ import (
 
 func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 	for _, l := range logs {
-		chain, err := d.store.Chain(l.ChainID)
+		chain, err := d.dataStore.Chain(l.ChainID)
 		if err != nil {
 			return fmt.Errorf("could not get chain: %w", err)
 		}
@@ -33,7 +33,7 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 
 		switch l.Type {
 		case log.Mint:
-			collection, err := d.store.Collection(chain.ID, l.Contract, l.ContractCollectionID)
+			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
 				return fmt.Errorf("could not get collection: %w", err)
 			}
@@ -49,13 +49,13 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 				EmittedAt:       l.EmittedAt,
 			}
 
-			err = d.store.UpsertMintEvent(event)
+			err = d.eventStore.UpsertMintEvent(event)
 			if err != nil {
 				return fmt.Errorf("could not upsert mint event: %w", err)
 			}
 
 		case log.Sale:
-			marketplace, err := d.store.Marketplace(chain.ID, l.Contract)
+			marketplace, err := d.dataStore.Marketplace(chain.ID, l.Contract)
 			if err != nil {
 				return fmt.Errorf("could not get marketplace: %w", err)
 			}
@@ -72,13 +72,13 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 				EmittedAt:       l.EmittedAt,
 			}
 
-			err = d.store.UpsertSaleEvent(event)
+			err = d.eventStore.UpsertSaleEvent(event)
 			if err != nil {
 				return fmt.Errorf("could not upsert sale event: %w", err)
 			}
 
 		case log.Transfer:
-			collection, err := d.store.Collection(chain.ID, l.Contract, l.ContractCollectionID)
+			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
 				return fmt.Errorf("could not get collection: %w", err)
 			}
@@ -95,13 +95,13 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 				EmittedAt:       l.EmittedAt,
 			}
 
-			err = d.store.UpsertTransferEvent(event)
+			err = d.eventStore.UpsertTransferEvent(event)
 			if err != nil {
 				return fmt.Errorf("could not upsert transfer event: %w", err)
 			}
 
 		case log.Burn:
-			collection, err := d.store.Collection(chain.ID, l.Contract, l.ContractCollectionID)
+			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
 				return fmt.Errorf("could not get collection: %w", err)
 			}
@@ -116,7 +116,7 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 				EmittedAt:       l.EmittedAt,
 			}
 
-			err = d.store.UpsertBurnEvent(event)
+			err = d.eventStore.UpsertBurnEvent(event)
 			if err != nil {
 				return fmt.Errorf("could not upsert burn event: %w", err)
 			}
