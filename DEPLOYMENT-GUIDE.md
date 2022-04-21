@@ -149,7 +149,7 @@ docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/
 > Go into the pipeline folder and run:
 > 
 > * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/parsing-worker `
-> * ` zip parsing.zip worker  `
+> * ` zip parsing.zip worker `
 > * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/addition-worker `
 > * ` zip addition.zip worker `
 >

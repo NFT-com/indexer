@@ -29,8 +29,13 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout      = time.Second * 30
-	defaultPollDuration     = time.Second * 20
+	defaultHTTPTimeout = 30 * time.Second
+
+	defaultPollDuration = time.Second
+	defaultPrefetch     = 1000
+	defaultBatchTimeout = 30 * time.Second
+	defaultBatchSize    = 500
+
 	defaultParsingQueueName = "parsing"
 )
 
@@ -51,6 +56,8 @@ func run() error {
 	// Command line parameter initialization.
 	var (
 		flagAPIEndpoint            string
+		flagBatchSize              int64
+		flagBatchTimeout           time.Duration
 		flagConsumerPollDuration   time.Duration
 		flagConsumerPrefetch       int64
 		flagDBDataConnectionInfo   string
@@ -66,8 +73,10 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
+	pflag.Int64VarP(&flagBatchSize, "batch", "b", defaultBatchSize, "batch size to process")
+	pflag.DurationVar(&flagBatchTimeout, "batch-timeout", defaultBatchTimeout, "batch timeout to process")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "time for each consumer poll")
-	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 80, "amount of message to prefetch in the consumer")
+	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", defaultPrefetch, "amount of message to prefetch in the consumer")
 	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
@@ -149,7 +158,7 @@ func run() error {
 	}
 
 	consumer := parsing.NewConsumer(log, api, dispatcher, eventStore, dataStore, flagRateLimit)
-	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
+	consumerName, err := queue.AddBatchConsumer(flagRMQTag, flagBatchSize, flagBatchTimeout, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)
 	}

@@ -2,7 +2,7 @@ package opensea
 
 const (
 	// This represents the type of this parser.
-	openseaType = "OPENSEA"
+	openseaType = "0xc4109843e0b7d514e4c093114b863f8e7d8d9a458c372cd51bfe526b588006c9"
 
 	defaultIndexDataLen = 3
 	eventName           = "OrdersMatched"
