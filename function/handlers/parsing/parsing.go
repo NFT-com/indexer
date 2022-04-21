@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/NFT-com/indexer/function/processors/parsing"
 	"github.com/rs/zerolog"
 
+	"github.com/NFT-com/indexer/function/processors/parsing"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/networks"

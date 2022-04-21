@@ -6,14 +6,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/NFT-com/indexer/function/processors/parsing/erc721"
-	"github.com/NFT-com/indexer/function/processors/parsing/opensea"
 	"github.com/rs/zerolog"
 
 	"github.com/aws/aws-lambda-go/lambda"
 
 	handler "github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/function/processors/parsing"
+	"github.com/NFT-com/indexer/function/processors/parsing/erc721"
+	"github.com/NFT-com/indexer/function/processors/parsing/opensea"
 	"github.com/NFT-com/indexer/networks"
 )
 
@@ -53,11 +53,11 @@ func run() error {
 
 		openseaParser, err := opensea.NewParser(client)
 		if err != nil {
-			return nil, fmt.Errorf("could not create opense parser: %w", err)
+			return nil, fmt.Errorf("could not create opensea parser: %w", err)
 		}
 		parsers = append(parsers, openseaParser)
 
-		return nil, nil
+		return parsers, nil
 	})
 	lambda.Start(handler.Handle)
 
