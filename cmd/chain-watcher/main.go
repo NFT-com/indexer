@@ -133,7 +133,7 @@ func run() error {
 	}
 
 	highestJobIndexes, startingBlock := getHighestJobBlockNumberForCollections(api, flagChainURL, flagChainType, contracts, contractStandards, standardsEventTypes)
-	fmt.Println(highestJobIndexes, startingBlock)
+
 	cfg := chain.Config{
 		ChainURL:      flagChainURL,
 		ChainID:       chainID,
