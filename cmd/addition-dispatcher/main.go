@@ -55,7 +55,7 @@ func run() error {
 		flagConcurrentJobs       int
 		flagConsumerPollDuration time.Duration
 		flagConsumerPrefetch     int64
-		flagDBDataConnectionInfo string
+		flagDBConnectionInfo     string
 		flagLogLevel             string
 		flagRMQTag               string
 		flagRedisDatabase        int
@@ -69,7 +69,7 @@ func run() error {
 	pflag.IntVarP(&flagConcurrentJobs, "jobs", "j", 4, "number of concurrent jobs for the consumer")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "consumer poll duration")
 	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 5, "amount of messages to prefetch in the consumer")
-	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
+	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "dispatcher-agent", "rmq consumer tag")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
@@ -87,12 +87,12 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	dataDB, err := sql.Open(databaseDriver, flagDBDataConnectionInfo)
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}
 
-	dataStore, err := postgres.NewStore(dataDB)
+	dataStore, err := postgres.NewStore(db)
 	if err != nil {
 		return fmt.Errorf("could not create data store: %w", err)
 	}
