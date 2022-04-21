@@ -13,11 +13,19 @@ Usage of chain-watcher:
   -i, --chain-id string         id of the chain to watch
   -u, --chain-url string        url of the chain to connect
   -t, --chain-type string       type of chain to parse
-  -c, --contract string         chain contract to watch
-  -e, --event string            chain event type to watch
+  -d, --db string               data source name for database connection
   -l, --log-level string        log level (default "info")
   --standard-type string        standard type of the contract to watch
 ```
 
 > ⚠️ Be careful when changing the batch amount, as it can cause the job-watcher to crash.
 > The recommended value of 200 is set by default in order to prevent job-watcher crashes.
+
+## Database Address - Data Source Name
+
+Data Source Name (DSN) is the string specified describing how the connection to the database should be established.
+Format of the string is the following:
+
+```
+host=localhost user=database-user password=password dbname=database-name port=5432 sslmode=disable
+```
