@@ -23,6 +23,7 @@ const (
 	databaseDriver = "postgres"
 
 	defaultHTTPTimeout       = time.Second * 30
+	defaultReadDelay         = time.Millisecond * 200
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
 	defaultAdditionQueueName = "addition"
@@ -47,6 +48,7 @@ func run() error {
 		flagAdditionQueueName string
 		flagAPIEndpoint       string
 		flagDBConnectionInfo  string
+		flagDatabaseReadDelay time.Duration
 		flagRMQTag            string
 		flagRedisNetwork      string
 		flagRedisURL          string
@@ -59,6 +61,7 @@ func run() error {
 	pflag.StringVar(&flagAdditionQueueName, "addition-queue", defaultAdditionQueueName, "name of the queue for addition queue")
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
 	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
+	pflag.DurationVar(&flagDatabaseReadDelay, "read-delay", defaultReadDelay, "data read for new jobs delay")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
@@ -111,7 +114,7 @@ func run() error {
 		return err
 	}
 
-	watcher := watcher.New(log, api, producer, store, time.Second)
+	watcher := watcher.New(log, api, producer, store, flagDatabaseReadDelay)
 
 	log.Info().Msg("jobs watcher starting")
 	watcher.Watch()
