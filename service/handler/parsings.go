@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
 // CreateParsingJob creates a new parsing job and returns it.
@@ -17,12 +16,6 @@ func (c *Handler) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 	err := c.store.CreateParsingJob(job)
 	if err != nil {
 		return nil, fmt.Errorf("could not create parsing job: %w", err)
-	}
-
-	jobList := []jobs.Parsing{job}
-	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, broadcaster.CreateStatusValue, jobList)
-	if err != nil {
-		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return &job, nil
@@ -38,11 +31,6 @@ func (c *Handler) CreateParsingJobs(jobList []jobs.Parsing) error {
 	err := c.store.CreateParsingJobs(jobList)
 	if err != nil {
 		return fmt.Errorf("could not create parsing jobs: %w", err)
-	}
-
-	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, broadcaster.CreateStatusValue, jobList)
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return nil
@@ -95,12 +83,6 @@ func (c *Handler) UpdateParsingJobStatus(id string, newStatus jobs.Status) error
 		return fmt.Errorf("could not update job state: %w", err)
 	}
 	job.Status = newStatus
-
-	jobList := []jobs.Parsing{*job}
-	err = c.BroadcastMessage(broadcaster.ParsingHandlerValue, broadcaster.UpdateStatusValue, jobList)
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
-	}
 
 	return nil
 }

@@ -7,25 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/service/broadcaster"
 	"github.com/NFT-com/indexer/service/request"
 )
-
-// DiscoveryWebsocketConnection handles a new websocket connection.
-func (h *Handler) DiscoveryWebsocketConnection(ctx echo.Context) error {
-	keys := make(map[string]interface{})
-
-	params := ctx.QueryParams()
-	if params.Has(statusQueryKey) {
-		keys = broadcaster.WithStatus(keys, params.Get(statusQueryKey))
-	}
-
-	return h.wsHandler.HandleRequestWithKeys(
-		ctx.Response(),
-		ctx.Request(),
-		broadcaster.WithHandler(keys, broadcaster.DiscoveryHandlerValue),
-	)
-}
 
 // CreateDiscoveryJob handles the api request to create new discovery job.
 func (h *Handler) CreateDiscoveryJob(ctx echo.Context) error {

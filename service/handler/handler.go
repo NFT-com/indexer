@@ -1,13 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
 // Handler represents the business handler.
@@ -17,38 +13,12 @@ type Handler struct {
 }
 
 // New returns a new business Handler.
-func New(store JobsStore, broadcaster *melody.Melody) *Handler {
+func New(store JobsStore) *Handler {
 	c := Handler{
-		store:       store,
-		broadcaster: broadcaster,
+		store: store,
 	}
 
 	return &c
-}
-
-// BroadcastMessage broadcast a message to the handlers.
-func (c *Handler) BroadcastMessage(handler string, status string, message interface{}) error {
-	rawMessage, err := json.Marshal(message)
-	if err != nil {
-		return fmt.Errorf("could not marshal message: %w", err)
-	}
-
-	err = c.broadcaster.BroadcastBinaryFilter(rawMessage, func(session *melody.Session) bool {
-		if !broadcaster.HasHandler(session.Keys, handler) {
-			return false
-		}
-
-		if !broadcaster.HasStatusKey(session.Keys) {
-			return true
-		}
-
-		return broadcaster.HasStatus(session.Keys, status)
-	})
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
-	}
-
-	return nil
 }
 
 // validateStatusSwitch validates if the current status is valid to change to the new status.

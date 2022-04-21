@@ -13,52 +13,6 @@ import (
 	"github.com/NFT-com/indexer/service/request"
 )
 
-func (c *Client) SubscribeNewAdditionJob(subscriberType string, additionJobs chan []jobs.Addition) error {
-	params := url.Values{}
-	if subscriberType != SubscriberTypeAllJobs {
-		params.Set("status", subscriberType)
-	}
-
-	url := c.config.jobsWebsocket
-	url.Path = path.Join("ws", additionBasePath)
-	url.RawQuery = params.Encode()
-
-	connection, _, err := c.config.dialer.Dial(url.String(), nil)
-	if err != nil {
-		return fmt.Errorf("could not dial websocket: %w", err)
-	}
-
-	internalClose := make(chan struct{})
-	connection.SetCloseHandler(func(code int, text string) error {
-		c.log.Info().Int("code", code).Str("text", text).Msg("addition jobs websocket connection closed")
-		close(internalClose)
-		return nil
-	})
-
-	go func() {
-		for {
-			select {
-			case <-c.close:
-				return
-			case <-internalClose:
-				return
-			default:
-			}
-
-			var jobs []jobs.Addition
-			err := connection.ReadJSON(&jobs)
-			if err != nil {
-				c.log.Error().Err(err).Msg("could not read message socket")
-				continue
-			}
-
-			additionJobs <- jobs
-		}
-	}()
-
-	return nil
-}
-
 func (c *Client) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 	req := request.Addition{
 		ChainURL:     job.ChainURL,
