@@ -139,9 +139,8 @@ func functionName(job jobs.Parsing) string {
 
 	s := strings.Join(
 		[]string{
+			"parsing",
 			strings.ToLower(job.ChainType),
-			strings.ToLower(job.StandardType),
-			strings.ToLower(job.EventType),
 		},
 		"-",
 	)

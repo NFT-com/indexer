@@ -148,10 +148,8 @@ docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/
 > After cloning the pipeline branch.
 > Go into the pipeline folder and run:
 > 
-> * ` GOOS=linux GOARCH=amd64 go build -o worker ../parsers/web3/opensea/ordersmatched `
-> * ` zip opensea_ordersmatched.zip worker  `
-> * ` GOOS=linux GOARCH=amd64 go build -o worker ../parsers/web3/erc721/transfer `
-> * ` zip erc721_transfer.zip worker `
+> * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/parsing-worker `
+> * ` zip parsing.zip worker  `
 > * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/addition-worker `
 > * ` zip addition.zip worker `
 >

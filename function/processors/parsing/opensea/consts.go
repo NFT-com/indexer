@@ -1,6 +1,9 @@
-package main
+package opensea
 
 const (
+	// This represents the type of this parser.
+	openseaType = "OPENSEA"
+
 	defaultIndexDataLen = 3
 	eventName           = "OrdersMatched"
 	priceFieldName      = "price"

@@ -1,4 +1,4 @@
-package main
+package erc721
 
 import (
 	"fmt"
@@ -15,6 +15,10 @@ func NewParser() *Parser {
 	p := Parser{}
 
 	return &p
+}
+
+func (p *Parser) Type() string {
+	return erc721Type
 }
 
 func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {

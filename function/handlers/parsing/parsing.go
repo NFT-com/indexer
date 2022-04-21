@@ -2,19 +2,24 @@ package parsing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog"
 
+	"github.com/NFT-com/indexer/function/processors/parsing"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"
-	"github.com/NFT-com/indexer/parsers"
+)
+
+var (
+	errParserNotFound = errors.New("parser not found")
 )
 
 // Initializer initializes the parser to use with the network client.
-type Initializer func(client networks.Network) (parsers.Parser, error)
+type Initializer func(client networks.Network) ([]parsing.Parser, error)
 
 // Handler handles the parsing message from queue.
 type Handler struct {
@@ -45,9 +50,9 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	}
 	defer network.Close()
 
-	parser, err := h.initializer(network)
+	parser, err := h.getParser(network, job.StandardType)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get parser: %w", err)
 	}
 
 	rawLogs, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
@@ -66,4 +71,19 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	}
 
 	return logs, nil
+}
+
+func (h *Handler) getParser(network networks.Network, standardType string) (parsing.Parser, error) {
+	parsers, err := h.initializer(network)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize parsers: %w", err)
+	}
+
+	for _, parser := range parsers {
+		if parser.Type() == standardType {
+			return parser, nil
+		}
+	}
+
+	return nil, errParserNotFound
 }

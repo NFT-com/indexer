@@ -139,8 +139,8 @@ func functionName(job jobs.Addition) string {
 
 	s := strings.Join(
 		[]string{
+			"addition",
 			strings.ToLower(job.ChainType),
-			strings.ToLower(job.StandardType),
 		},
 		"-",
 	)
