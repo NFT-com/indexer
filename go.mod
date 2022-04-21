@@ -7,6 +7,7 @@ require (
 	github.com/adjust/rmq/v4 v4.0.4
 	github.com/aws/aws-lambda-go v1.28.0
 	github.com/aws/aws-sdk-go v1.43.22
+	github.com/cenkalti/backoff/v4 v4.1.3
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/go-redis/redis/v8 v8.3.2

@@ -51,33 +51,33 @@ func run() error {
 	// Command line parameter initialization.
 	var (
 		flagAPIEndpoint            string
-		flagConcurrentJobs         int
-		flagConsumerPrefetch       int64
 		flagConsumerPollDuration   time.Duration
+		flagConsumerPrefetch       int64
 		flagDBDataConnectionInfo   string
 		flagDBEventsConnectionInfo string
-		flagParsingQueueName       string
 		flagLogLevel               string
-		flagRMQTag                 string
+		flagParsingQueueName       string
+		flagRateLimit              int
 		flagRedisDatabase          int
 		flagRedisNetwork           string
 		flagRedisURL               string
 		flagRegion                 string
+		flagRMQTag                 string
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
-	pflag.IntVarP(&flagConcurrentJobs, "jobs", "j", 4, "amount of concurrent jobs for the consumer")
-	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 80, "amount of message to prefetch in the consumer")
 	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "time for each consumer poll")
+	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", 80, "amount of message to prefetch in the consumer")
 	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
+	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
+	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 200, "maximum amount of jobs that can be invoked per second")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
+	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -148,7 +148,7 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := parsing.NewConsumer(log, api, dispatcher, eventStore, dataStore, flagConcurrentJobs)
+	consumer := parsing.NewConsumer(log, api, dispatcher, eventStore, dataStore, flagRateLimit)
 	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)

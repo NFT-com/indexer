@@ -1,23 +1,23 @@
 # Parsing Dispatcher
 
-Parsing Dispatcher consumes messages from the queue and launches jobs.
+The parsing dispatcher consumes messages from the queue and launches jobs.
 
 ## Usage
 
 ```
 Usage of parsing-dispatcher:
-  -a, --api string              jobs api base endpoint
-  -j, --jobs int                amount of concurrent lambda calls (default 4)
-  -p, --prefetch int            amount of queued messages to prefetch on init (default 80)
-  -i, --poll-duration duration  time between polls on queue (default 1s)
-  -d, --db string               data source name for database connection
-  -q, --parsing-queue string    parsing queue name (default "parsing")
-  -l, --log-level string        log level (default "info")
-  -c, --tag string              rmq producer tag (default "parsing-agent")
-  --database int                redis database number (default 1)
-  -n, --network string          redis network type (default "tcp")
-  -u, --url string              redis server connection url
-  -r, --aws-region              aws lambda region (default "eu-west-1")
+  -a, --api string               jobs api base hostname and port
+  -r, --aws-region string        aws lambda region (default "eu-west-1")
+      --database int             redis database number (default 1)
+  -d, --db string                database connection string
+  -l, --log-level string         log level (default "info")
+  -n, --network string           redis network type (default "tcp")
+  -q, --parsing-queue string     name of the queue for parsing (default "parsing")
+  -i, --poll-duration duration   time for each consumer poll (default 20s)
+  -p, --prefetch int             amount of message to prefetch in the consumer (default 80)
+  -t, --rate-limit int           amount of concurrent jobs for the consumer (default 200)
+  -c, --tag string               rmq consumer tag (default "parsing-agent")
+  -u, --url string               redis server connection url
 ```
 
 ## Database Address - Data Source Name
