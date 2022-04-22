@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
 // CreateAdditionJob creates a new addition job and returns it.
@@ -17,12 +16,6 @@ func (c *Handler) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 	err := c.store.CreateAdditionJob(job)
 	if err != nil {
 		return nil, fmt.Errorf("could not create addition job: %w", err)
-	}
-
-	jobList := []jobs.Addition{job}
-	err = c.BroadcastMessage(broadcaster.AdditionHandlerValue, broadcaster.CreateStatusValue, jobList)
-	if err != nil {
-		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return &job, nil
@@ -38,11 +31,6 @@ func (c *Handler) CreateAdditionJobs(jobList []jobs.Addition) error {
 	err := c.store.CreateAdditionJobs(jobList)
 	if err != nil {
 		return fmt.Errorf("could not create discovery jobs: %w", err)
-	}
-
-	err = c.BroadcastMessage(broadcaster.AdditionHandlerValue, broadcaster.CreateStatusValue, jobList)
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return nil
@@ -85,12 +73,6 @@ func (c *Handler) UpdateAdditionJobStatus(id string, newStatus jobs.Status) erro
 		return fmt.Errorf("could not update job state: %w", err)
 	}
 	job.Status = newStatus
-
-	jobList := []jobs.Addition{*job}
-	err = c.BroadcastMessage(broadcaster.CreateStatusValue, broadcaster.UpdateStatusValue, jobList)
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
-	}
 
 	return nil
 }

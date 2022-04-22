@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/service/broadcaster"
 )
 
 // CreateDiscoveryJob creates a new discovery job and returns it.
@@ -17,12 +16,6 @@ func (c *Handler) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error
 	err := c.store.CreateDiscoveryJob(job)
 	if err != nil {
 		return nil, fmt.Errorf("could not create discovery job: %w", err)
-	}
-
-	jobList := []jobs.Discovery{job}
-	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, broadcaster.CreateStatusValue, jobList)
-	if err != nil {
-		return nil, fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return &job, nil
@@ -38,11 +31,6 @@ func (c *Handler) CreateDiscoveryJobs(jobList []jobs.Discovery) error {
 	err := c.store.CreateDiscoveryJobs(jobList)
 	if err != nil {
 		return fmt.Errorf("could not create discovery jobs: %w", err)
-	}
-
-	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, broadcaster.CreateStatusValue, jobList)
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
 	}
 
 	return nil
@@ -94,12 +82,6 @@ func (c *Handler) UpdateDiscoveryJobStatus(id string, newStatus jobs.Status) err
 		return fmt.Errorf("could not update job state: %w", err)
 	}
 	job.Status = newStatus
-
-	jobList := []jobs.Discovery{*job}
-	err = c.BroadcastMessage(broadcaster.DiscoveryHandlerValue, broadcaster.UpdateStatusValue, jobList)
-	if err != nil {
-		return fmt.Errorf("could not broadcast message: %w", err)
-	}
 
 	return nil
 }

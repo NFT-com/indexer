@@ -6,25 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/service/broadcaster"
 	"github.com/NFT-com/indexer/service/request"
 )
-
-// AdditionWebsocketConnection handles a new websocket connection.
-func (h *Handler) AdditionWebsocketConnection(ctx echo.Context) error {
-	keys := make(map[string]interface{})
-
-	params := ctx.QueryParams()
-	if params.Has(statusQueryKey) {
-		keys = broadcaster.WithStatus(keys, params.Get(statusQueryKey))
-	}
-
-	return h.wsHandler.HandleRequestWithKeys(
-		ctx.Response(),
-		ctx.Request(),
-		broadcaster.WithHandler(keys, broadcaster.AdditionHandlerValue),
-	)
-}
 
 // CreateAdditionJob handles the api request to create new addition job.
 func (h *Handler) CreateAdditionJob(ctx echo.Context) error {

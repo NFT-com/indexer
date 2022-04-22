@@ -12,13 +12,11 @@ require (
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/go-redis/redis/v8 v8.3.2
 	github.com/google/uuid v1.1.5
-	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/lib/pq v1.10.4
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/pflag v1.0.5
 	github.com/ziflex/lecho/v2 v2.5.2
-	gopkg.in/olahol/melody.v1 v1.0.0-20170518105555-d52139073376
 )
 
 require (
@@ -33,6 +31,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect

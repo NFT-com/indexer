@@ -2,51 +2,89 @@ package jobs
 
 import (
 	"fmt"
-	"runtime"
+	"time"
 
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/queue/producer"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/service/postgres"
 )
 
 type Job struct {
 	log             zerolog.Logger
 	apiClient       *client.Client
 	messageProducer *producer.Producer
+	store           *postgres.Store
+	delay           time.Duration
 	close           chan struct{}
 }
 
-func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer) *Job {
+func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer, store *postgres.Store, delay time.Duration) *Job {
 	j := Job{
 		log:             log.With().Str("component", "watcher").Logger(),
 		apiClient:       apiClient,
 		messageProducer: messageProducer,
+		store:           store,
+		delay:           delay,
 		close:           make(chan struct{}),
 	}
 
 	return &j
 }
 
-func (j *Job) Watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing, additionJobs chan []jobs.Addition) {
-	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
-		go j.watch(discoveryJobs, parsingJobs, additionJobs)
-	}
+func (j *Job) Watch() {
+	go j.watchDiscoveries()
+	go j.watchParsings()
+	go j.watchAdditions()
 }
 
 func (j *Job) Close() {
 	close(j.close)
 }
 
-func (j *Job) watch(discoveryJobs chan []jobs.Discovery, parsingJobs chan []jobs.Parsing, additionJobs chan []jobs.Addition) {
+func (j *Job) watchDiscoveries() {
 	for {
 		select {
-		case jobs := <-discoveryJobs:
+		case <-time.After(j.delay):
+			jobs, err := j.store.DiscoveryJobs(jobs.StatusCreated)
+			if err != nil {
+				j.log.Error().Err(err).Msg("could not retrieve discovery jobs")
+				continue
+			}
 			j.handleDiscoveryJobs(jobs)
-		case jobs := <-parsingJobs:
+		case <-j.close:
+			return
+		}
+	}
+}
+
+func (j *Job) watchParsings() {
+	for {
+		select {
+		case <-time.After(j.delay):
+			jobs, err := j.store.ParsingJobs(jobs.StatusCreated)
+			if err != nil {
+				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
+				continue
+			}
 			j.handleParsingJobs(jobs)
-		case jobs := <-additionJobs:
+		case <-j.close:
+			return
+		}
+	}
+}
+
+func (j *Job) watchAdditions() {
+	for {
+		select {
+		case <-time.After(j.delay):
+			jobs, err := j.store.AdditionJobs(jobs.StatusCreated)
+			if err != nil {
+				j.log.Error().Err(err).Msg("could not retrieve addition jobs")
+				continue
+			}
 			j.handleAdditionJobs(jobs)
 		case <-j.close:
 			return

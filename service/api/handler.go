@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/labstack/echo/v4"
-	"gopkg.in/olahol/melody.v1"
 )
 
 const (
@@ -19,15 +18,13 @@ const (
 
 // Handler represents the API handler.
 type Handler struct {
-	wsHandler *melody.Melody
 	jobs      JobsHandler
 	validator Validator
 }
 
 // NewHandler returns a new API handler.
-func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator Validator) *Handler {
+func NewHandler(jobs JobsHandler, validator Validator) *Handler {
 	s := Handler{
-		wsHandler: wsHandler,
 		jobs:      jobs,
 		validator: validator,
 	}
@@ -37,11 +34,6 @@ func NewHandler(wsHandler *melody.Melody, jobs JobsHandler, validator Validator)
 
 // ApplyRoutes applies the routes to the echo server.
 func (h *Handler) ApplyRoutes(server *echo.Echo) {
-	websocket := server.Group("/ws")
-	websocket.GET("/discoveries", h.DiscoveryWebsocketConnection)
-	websocket.GET("/parsings", h.ParsingWebsocketConnection)
-	websocket.GET("/additions", h.AdditionWebsocketConnection)
-
 	discoveries := server.Group("/discoveries")
 	discoveries.POST("", h.CreateDiscoveryJob)
 	discoveries.POST("/batch", h.CreateDiscoveryJobs)

@@ -1,26 +1,29 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"runtime"
 	"time"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/queue/producer"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/service/postgres"
 	watcher "github.com/NFT-com/indexer/watcher/jobs"
 )
 
 const (
-	defaultHTTPTimeout       = time.Second * 30
+	databaseDriver = "postgres"
+
+	defaultHTTPTimeout       = 30 * time.Second
+	defaultReadDelay         = 200 * time.Millisecond
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
 	defaultAdditionQueueName = "addition"
@@ -44,6 +47,8 @@ func run() error {
 	var (
 		flagAdditionQueueName string
 		flagAPIEndpoint       string
+		flagDBConnectionInfo  string
+		flagDatabaseReadDelay time.Duration
 		flagRMQTag            string
 		flagRedisNetwork      string
 		flagRedisURL          string
@@ -55,10 +60,12 @@ func run() error {
 
 	pflag.StringVar(&flagAdditionQueueName, "addition-queue", defaultAdditionQueueName, "name of the queue for addition queue")
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
+	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
+	pflag.DurationVar(&flagDatabaseReadDelay, "read-delay", defaultReadDelay, "data read for new jobs delay")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
+	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
 	pflag.StringVar(&flagDeliveryQueueName, "delivery-queue", defaultDeliveryQueueName, "name of the queue for delivery queue")
 	pflag.StringVar(&flagParsingQueueName, "parsing-queue", defaultParsingQueueName, "name of the queue for parsing queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
@@ -87,33 +94,30 @@ func run() error {
 		client.WithHTTPClient(cli),
 		client.WithHost(flagAPIEndpoint),
 	)
+
 	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagAdditionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
 
-	watcher := watcher.New(log, api, producer)
-
-	discoveryJobs := make(chan []jobs.Discovery, runtime.GOMAXPROCS(0))
-	err = api.SubscribeNewDiscoveryJob(client.SubscriberTypeCreateJobs, discoveryJobs)
+	// Open database connection.
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
 	if err != nil {
-		return fmt.Errorf("could not subscribe to new discovery jobs: %w", err)
+		log.Error().Err(err).Msg("could not open SQL connection")
+		return err
 	}
 
-	parsingJobs := make(chan []jobs.Parsing, runtime.GOMAXPROCS(0))
-	err = api.SubscribeNewParsingJob(client.SubscriberTypeCreateJobs, parsingJobs)
+	// Create the database store.
+	store, err := postgres.NewStore(db)
 	if err != nil {
-		return fmt.Errorf("could not subscribe to new parsing jobs: %w", err)
+		log.Error().Err(err).Msg("could not create store")
+		return err
 	}
 
-	additionJobs := make(chan []jobs.Addition)
-	err = api.SubscribeNewAdditionJob(client.SubscriberTypeCreateJobs, additionJobs)
-	if err != nil {
-		return fmt.Errorf("could not subscribe to new addition jobs: %w", err)
-	}
+	watcher := watcher.New(log, api, producer, store, flagDatabaseReadDelay)
 
 	log.Info().Msg("jobs watcher starting")
-	watcher.Watch(discoveryJobs, parsingJobs, additionJobs)
+	watcher.Watch()
 
 	select {
 	case <-sig:

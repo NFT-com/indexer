@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
-	"gopkg.in/olahol/melody.v1"
 
 	"github.com/NFT-com/indexer/service/api"
 	"github.com/NFT-com/indexer/service/handler"
@@ -87,17 +86,14 @@ func run() error {
 		return err
 	}
 
-	// Create the broadcaster.
-	broadcaster := melody.New()
-
 	// Business logic handler.
-	handler := handler.New(store, broadcaster)
+	handler := handler.New(store)
 
 	// Request validator.
 	validator := validator.New()
 
 	// REST API Handler.
-	apiHandler := api.NewHandler(broadcaster, handler, validator)
+	apiHandler := api.NewHandler(handler, validator)
 	apiHandler.ApplyRoutes(server)
 
 	failed := make(chan error)
