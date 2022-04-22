@@ -15,7 +15,7 @@ Usage of parsing-dispatcher:
   -q, --parsing-queue string     name of the queue for parsing (default "parsing")
   -i, --poll-duration duration   time for each consumer poll (default 20s)
   -p, --prefetch int             amount of message to prefetch in the consumer (default 80)
-  -t, --rate-limit int           amount of concurrent jobs for the consumer (default 200)
+  -t, --rate-limit int           amount of concurrent jobs for the consumer (default 500)
   -c, --tag string               rmq consumer tag (default "parsing-agent")
   -u, --url string               redis server connection url
 ```

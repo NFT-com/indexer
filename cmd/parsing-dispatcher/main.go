@@ -72,7 +72,7 @@ func run() error {
 	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
-	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 200, "maximum amount of jobs that can be invoked per second")
+	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 500, "maximum amount of jobs that can be invoked per second")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
