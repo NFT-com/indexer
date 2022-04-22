@@ -256,3 +256,26 @@ func (s *Store) UpdateParsingJobsStatus(ids []string, status jobs.Status) error 
 
 	return nil
 }
+
+// ArchiveParsingJob creates an archived parsing job and deletes the original parsing
+// job from its table.
+func (s *Store) ArchiveParsingJob(job *jobs.Parsing) error {
+	_, err := s.build.
+		Insert(archivedParsingJobsTableName).
+		Columns(archivedParsingJobsTableColumns...).
+		Values(job.ID, job.Address, job.BlockNumber, job.Event).
+		Exec()
+	if err != nil {
+		return fmt.Errorf("could not create archived parsing job: %w", err)
+	}
+
+	_, err = s.build.
+		Delete(parsingJobsTableName).
+		Where("id = ?", job.ID).
+		Exec()
+	if err != nil {
+		return fmt.Errorf("could not drop finished parsing job after archival: %w", err)
+	}
+
+	return nil
+}

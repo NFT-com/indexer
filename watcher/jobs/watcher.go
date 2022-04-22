@@ -72,16 +72,25 @@ func (j *Job) watchParsings() {
 
 		case <-time.After(j.delay):
 
-			jobs, err := j.store.ParsingJobs(jobs.StatusCreated)
+			created, err := j.store.ParsingJobs(jobs.StatusCreated)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
-				continue
-			}
-			if len(jobs) == 0 {
+				j.log.Error().Err(err).Msg("could not retrieve created parsing jobs")
 				continue
 			}
 
-			j.handleParsingJobs(jobs)
+			if len(created) > 0 {
+				j.handleParsingJobs(created)
+			}
+
+			finished, err := j.store.ParsingJobs(jobs.StatusFinished)
+			if err != nil {
+				j.log.Error().Err(err).Msg("could not retrieve finished parsing jobs")
+				continue
+			}
+
+			if len(finished) > 0 {
+				j.archiveParsingJobs(finished)
+			}
 
 		case <-j.close:
 			return
@@ -116,7 +125,6 @@ func (j *Job) watchActions() {
 func (j *Job) handleDiscoveryJobs(jobs []*jobs.Discovery) {
 
 	for _, job := range jobs {
-
 		err := j.publishDiscoveryJob(job)
 		if err != nil {
 			j.log.Error().
@@ -160,8 +168,23 @@ func (j *Job) handleParsingJobs(jobs []*jobs.Parsing) {
 				Err(err).
 				Str("id", job.ID).
 				Uint64("block", job.BlockNumber).
-				Str("status", string(job.Status)).
-				Msg("could not publish parsing job")
+				Str("collection", job.Address).
+				Msg("could not publish created parsing job")
+			continue
+		}
+	}
+}
+
+func (j *Job) archiveParsingJobs(jobs []*jobs.Parsing) {
+	for _, job := range jobs {
+		err := j.archiveParsingJob(job)
+		if err != nil {
+			j.log.Error().
+				Err(err).
+				Str("id", job.ID).
+				Uint64("block", job.BlockNumber).
+				Str("collection", job.Address).
+				Msg("could not publish finished parsing job")
 			continue
 		}
 	}
@@ -183,6 +206,19 @@ func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 	err = j.store.UpdateParsingJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
+	}
+
+	return nil
+}
+
+func (j *Job) archiveParsingJob(job *jobs.Parsing) error {
+	if job.Status != jobs.StatusFinished {
+		return nil
+	}
+
+	err := j.store.ArchiveParsingJob(job)
+	if err != nil {
+		return fmt.Errorf("could not archive finished parsing job: %w", err)
 	}
 
 	return nil

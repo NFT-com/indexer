@@ -12,3 +12,11 @@ type Parsing struct {
 	Event       string `json:"event_type"`
 	Status      Status `json:"status"`
 }
+
+// ArchivedParsing is a successful parsing job that was archived and dropped from the Parsing table.
+type ArchivedParsing struct {
+	ID          string `json:"id"`
+	Address     string `json:"address"`
+	BlockNumber string `json:"block_number"`
+	EventType   string `json:"event_type"`
+}
