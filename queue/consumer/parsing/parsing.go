@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/adjust/rmq/v4"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/function"
@@ -15,26 +17,29 @@ import (
 	"github.com/NFT-com/indexer/service/client"
 )
 
+const concurrentConsumers = 4096
+
 type Parsing struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
 	apiClient     *client.Client
 	eventStore    Store
 	dataStore     Store
-	jobCount      int
+	rateLimiter   <-chan time.Time
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, eventStore Store, dataStore Store, jobCount int) *Parsing {
+func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, eventStore Store, dataStore Store, rateLimit int) *Parsing {
+	limiter := time.Tick(time.Second / time.Duration(rateLimit))
 	c := Parsing{
 		log:           log,
 		dispatcher:    dispatcher,
 		apiClient:     apiClient,
 		eventStore:    eventStore,
 		dataStore:     dataStore,
-		jobCount:      jobCount,
-		consumerQueue: make(chan []byte, jobCount),
+		rateLimiter:   limiter,
+		consumerQueue: make(chan []byte, concurrentConsumers),
 		close:         make(chan struct{}),
 	}
 
@@ -53,7 +58,7 @@ func (d *Parsing) Consume(delivery rmq.Delivery) {
 }
 
 func (d *Parsing) Run() {
-	for i := 0; i < d.jobCount; i++ {
+	for i := 0; i < concurrentConsumers; i++ {
 		go func() {
 			for {
 				select {
@@ -100,12 +105,27 @@ func (d *Parsing) consume(payload []byte) {
 		return
 	}
 
+	// Wait for rate limiter to have available spots.
+	<-d.rateLimiter
+
 	name := functionName(job)
-	output, err := d.dispatcher.Invoke(name, payload)
-	if err != nil {
-		d.handleError(job.ID, err, "could not dispatch message")
-		return
+
+	notify := func(err error, dur time.Duration) {
+		d.log.Error().
+			Err(err).
+			Dur("retry_in", dur).
+			Str("name", name).
+			Int("payload_len", len(payload)).
+			Msg("count not invoke lambda")
 	}
+	var output []byte
+	_ = backoff.RetryNotify(func() error {
+		output, err = d.dispatcher.Invoke(name, payload)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, backoff.NewExponentialBackOff(), notify)
 
 	var logs []log.Log
 	err = json.Unmarshal(output, &logs)
