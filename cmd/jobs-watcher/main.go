@@ -9,21 +9,21 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/service/postgres"
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
 	"github.com/NFT-com/indexer/queue/producer"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/service/postgres"
 	watcher "github.com/NFT-com/indexer/watcher/jobs"
 )
 
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout       = time.Second * 30
-	defaultReadDelay         = time.Millisecond * 200
+	defaultHTTPTimeout       = 30 * time.Second
+	defaultReadDelay         = 200 * time.Millisecond
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
 	defaultAdditionQueueName = "addition"

@@ -1,15 +1,12 @@
 package handler
 
 import (
-	"gopkg.in/olahol/melody.v1"
-
 	"github.com/NFT-com/indexer/jobs"
 )
 
 // Handler represents the business handler.
 type Handler struct {
-	store       JobsStore
-	broadcaster *melody.Melody
+	store JobsStore
 }
 
 // New returns a new business Handler.

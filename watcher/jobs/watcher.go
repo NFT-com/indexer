@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NFT-com/indexer/service/postgres"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/queue/producer"
 	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/service/postgres"
 )
 
 type Job struct {
@@ -50,7 +50,7 @@ func (j *Job) watchDiscoveries() {
 		case <-time.After(j.delay):
 			jobs, err := j.store.DiscoveryJobs(jobs.StatusCreated)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not publish discovery job")
+				j.log.Error().Err(err).Msg("could not retrieve discovery jobs")
 				continue
 			}
 			j.handleDiscoveryJobs(jobs)
@@ -66,7 +66,7 @@ func (j *Job) watchParsings() {
 		case <-time.After(j.delay):
 			jobs, err := j.store.ParsingJobs(jobs.StatusCreated)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not publish discovery job")
+				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
 				continue
 			}
 			j.handleParsingJobs(jobs)
@@ -82,7 +82,7 @@ func (j *Job) watchAdditions() {
 		case <-time.After(j.delay):
 			jobs, err := j.store.AdditionJobs(jobs.StatusCreated)
 			if err != nil {
-				j.log.Error().Err(err).Msg("could not publish discovery job")
+				j.log.Error().Err(err).Msg("could not retrieve addition jobs")
 				continue
 			}
 			j.handleAdditionJobs(jobs)

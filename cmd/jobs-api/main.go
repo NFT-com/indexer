@@ -11,15 +11,16 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/service/api"
-	"github.com/NFT-com/indexer/service/handler"
-	"github.com/NFT-com/indexer/service/postgres"
-	"github.com/NFT-com/indexer/service/validator"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
+
+	"github.com/NFT-com/indexer/service/api"
+	"github.com/NFT-com/indexer/service/handler"
+	"github.com/NFT-com/indexer/service/postgres"
+	"github.com/NFT-com/indexer/service/validator"
 )
 
 const (
