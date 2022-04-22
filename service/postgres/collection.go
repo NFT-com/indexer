@@ -34,7 +34,6 @@ func (s *Store) Collections(chainID string) ([]chain.Collection, error) {
 			&collection.Description,
 			&collection.Symbol,
 			&collection.Slug,
-			&collection.URI,
 			&collection.ImageURL,
 			&collection.Website,
 		)
@@ -85,7 +84,6 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*chai
 		&collection.Description,
 		&collection.Symbol,
 		&collection.Slug,
-		&collection.URI,
 		&collection.ImageURL,
 		&collection.Website,
 	)

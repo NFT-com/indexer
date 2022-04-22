@@ -10,7 +10,16 @@ func (s *Store) UpsertNFT(nft chain.NFT, collectionID string) error {
 	_, err := s.sqlBuilder.
 		Insert(nftTableName).
 		Columns(nftTableColumns...).
-		Values(nft.ID, nft.TokenID, collectionID, nft.Name, nft.Image, nft.Description, nft.Owner).
+		Values(
+			nft.ID,
+			nft.TokenID,
+			collectionID,
+			nft.Name,
+			nft.URI,
+			nft.Image,
+			nft.Description,
+			nft.Owner,
+		).
 		Suffix(nftTableOnConflictStatement).
 		Exec()
 	if err != nil {
