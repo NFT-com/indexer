@@ -185,7 +185,7 @@ func (d *Parsing) consume(payloads [][]byte) {
 				Dur("retry_in", dur).
 				Str("name", name).
 				Int("payload_len", len(payload)).
-				Msg("count not invoke lambda")
+				Msg("could not invoke lambda")
 		}
 		var output []byte
 		_ = backoff.RetryNotify(func() error {
@@ -195,6 +195,13 @@ func (d *Parsing) consume(payloads [][]byte) {
 			}
 			return nil
 		}, backoff.NewExponentialBackOff(), notify)
+
+		d.log.Debug().
+			Str("start", input.StartBlock).
+			Str("end", input.EndBlock).
+			Int("collections", len(input.Addresses)).
+			Int("events", len(input.EventTypes)).
+			Msg("processing job batch")
 
 		var logs []log.Log
 		err = json.Unmarshal(output, &logs)
