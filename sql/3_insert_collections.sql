@@ -40,4 +40,15 @@ VALUES
 '0x86825dFCa7A6224cfBd2DA48e85DF2fc3Aa7C4B1', 'RTFKT', '', '', '', '', '');
 
 INSERT INTO standards_collections (standard, collection)
-VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','abc44f5b-e4c7-46c2-9b2f-629c5bd763a6');
+VALUES 
+
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','41b30793-9a2f-4b22-9e88-1c3d79a8b763'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','2968ed9c-13d4-4c4a-9b74-6f3bd9a245f5'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','38df6b41-a4dd-4769-a250-bbf85fced1b1'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','c15574cf-b9b7-4920-94ed-934019e82363'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','abc44f5b-e4c7-46c2-9b2f-629c5bd763a6'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','d724a8e6-4cc5-4623-9d65-12b9ce88a137'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','1dcaf640-5f89-4835-8b82-a9cf0a2fd4f9'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','f501b362-395d-458a-ad24-6e554a97c3ad'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','d4b769ef-7bae-4118-9ee5-a674883a5002'),
+('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','1505d5a2-eecb-4f50-9f60-608e1dc87cb8');
