@@ -41,7 +41,6 @@ func main() {
 }
 
 func run() error {
-	ctx := context.Background()
 
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
@@ -69,6 +68,7 @@ func run() error {
 	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
+
 	pflag.Parse()
 
 	// Logger initialization.
@@ -82,16 +82,15 @@ func run() error {
 
 	failed := make(chan error)
 
-	network, err := web3.New(ctx, flagChainURL)
+	network, err := web3.New(context.TODO(), flagChainURL)
 	if err != nil {
 		return fmt.Errorf("could not create web3 network: %w", err)
 	}
 
-	chainID, err := network.ChainID(ctx)
+	chainID, err := network.ChainID(context.TODO())
 	if err != nil {
-		return fmt.Errorf("could not get chain id from network: %w", err)
+		return fmt.Errorf("could not get chain ID from network: %w", err)
 	}
-
 	if chainID != flagChainID {
 		return fmt.Errorf("could not start watcher: mismatch between chain ID and chain URL")
 	}
@@ -150,7 +149,7 @@ func run() error {
 		BatchDelay:    flagBatchDelay,
 	}
 
-	watcher, err := chain.NewWatcher(log, ctx, api, network, cfg)
+	watcher, err := chain.NewWatcher(log, context.TODO(), api, network, cfg)
 	if err != nil {
 		return fmt.Errorf("could not create watcher: %w", err)
 	}
@@ -158,7 +157,7 @@ func run() error {
 	go func() {
 		log.Info().Msg("chain watcher starting")
 
-		err = watcher.Watch(ctx)
+		err = watcher.Watch(context.TODO())
 		if err != nil {
 			failed <- fmt.Errorf("could not watch chain: %w", err)
 		}

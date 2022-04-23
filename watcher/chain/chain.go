@@ -47,6 +47,7 @@ func NewWatcher(
 }
 
 func (j *Watcher) Watch(_ context.Context) error {
+
 	latestBlock := <-j.blocks
 	j.latestBlock = latestBlock
 
@@ -57,13 +58,22 @@ func (j *Watcher) Watch(_ context.Context) error {
 
 	for {
 		select {
+
 		case <-j.close:
+			j.log.Debug().Msg("watching aborted")
 			return nil
+
 		case block := <-j.blocks:
+
 			jobs := make([]jobs.Parsing, 0, len(j.config.Contracts))
 			for _, contract := range j.config.Contracts {
 				jobs = append(jobs, j.createJobsForContract(contract, block)...)
 			}
+
+			j.log.Debug().
+				Uint64("height", block.Uint64()).
+				Int("jobs", len(jobs)).
+				Msg("processing block")
 
 			err = j.publishJobs(jobs)
 			if err != nil {
