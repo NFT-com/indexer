@@ -196,19 +196,20 @@ func (d *Parsing) consume(payloads [][]byte) {
 			return nil
 		}, backoff.NewExponentialBackOff(), notify)
 
-		d.log.Debug().
-			Str("start", input.StartBlock).
-			Str("end", input.EndBlock).
-			Int("collections", len(input.Addresses)).
-			Int("events", len(input.EventTypes)).
-			Msg("processing job batch")
-
 		var logs []log.Log
 		err = json.Unmarshal(output, &logs)
 		if err != nil {
 			d.handleError(err, "could not unmarshal output logs", input.IDs...)
 			return
 		}
+
+		d.log.Debug().
+			Str("start", input.StartBlock).
+			Str("end", input.EndBlock).
+			Int("collections", len(input.Addresses)).
+			Int("events", len(input.EventTypes)).
+			Int("occurences", len(logs)).
+			Msg("processing job batch")
 
 		err = d.processLogs(input, logs)
 		if err != nil {
