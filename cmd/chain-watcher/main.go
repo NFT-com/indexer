@@ -123,15 +123,21 @@ func run() error {
 		return fmt.Errorf("could not get collections: %w", err)
 	}
 
+	log.Info().Int("collections", len(collections)).Msg("loaded collections")
+
 	standards, contractStandards, err := getStandards(store, collections)
 	if err != nil {
-		return fmt.Errorf("could not get standars: %w", err)
+		return fmt.Errorf("could not get standards: %w", err)
 	}
+
+	log.Info().Int("standards", len(standards)).Msg("loaded standards")
 
 	standardsEventTypes, err := getEventTypes(store, standards)
 	if err != nil {
 		return fmt.Errorf("could not get event types: %w", err)
 	}
+
+	log.Info().Int("events", len(standardsEventTypes)).Msg("loaded events")
 
 	startingHeight := big.NewInt(0).SetUint64(flagStartHeight)
 	highestJobIndexes, startingBlock := getHighestJobBlockNumberForCollections(api, flagChainURL, flagChainType, startingHeight, contracts, contractStandards, standardsEventTypes)
