@@ -1,5 +1,3 @@
-\connect chains
-
 -- Creation of mints table.
 CREATE TABLE mints
 (

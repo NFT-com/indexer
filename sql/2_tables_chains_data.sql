@@ -1,5 +1,3 @@
-\connect chains
-
 CREATE TABLE IF NOT EXISTS chains
 (
     id          UUID PRIMARY KEY,

@@ -1,5 +1,3 @@
-\connect jobs
-
 CREATE TABLE IF NOT EXISTS discovery_jobs
 (
     id             UUID PRIMARY KEY,

@@ -1,4 +1,9 @@
-\connect chains
+INSERT INTO standards (id, name)
+VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'ERC721');
+
+INSERT INTO event_types (id, name, standard)
+VALUES ('0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', 'Transfer(address,address,uint64)',
+        'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
 
 INSERT INTO collections (id, chain_id, contract_collection_id, address, name, description, symbol, slug, website, image_url)
 
@@ -35,14 +40,6 @@ VALUES
 '0x86825dFCa7A6224cfBd2DA48e85DF2fc3Aa7C4B1', 'RTFKT', '', '', '', '', '')
 
 ;
-
-
-INSERT INTO standards (id, name)
-VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'ERC721');
-
-INSERT INTO event_types (id, name, standard)
-VALUES ('0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', 'Transfer(address,address,uint64)',
-        'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
 
 INSERT INTO standards_collections (standard, collection)
 VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','abc44f5b-e4c7-46c2-9b2f-629c5bd763a6');
