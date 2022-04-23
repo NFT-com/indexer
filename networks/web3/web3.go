@@ -15,11 +15,6 @@ import (
 	"github.com/NFT-com/indexer/log"
 )
 
-const (
-	// represents the decimal base (10) to parse the string numbers into *big.Int
-	indexBase = 10
-)
-
 type Web3 struct {
 	ethClient *ethclient.Client
 	chainID   string
@@ -80,17 +75,31 @@ func (w *Web3) GetLatestBlockHeight(ctx context.Context) (*big.Int, error) {
 	return header.Number, nil
 }
 
-func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract string) ([]log.RawLog, error) {
-	block, ok := big.NewInt(0).SetString(blockNumber, indexBase)
+func (w *Web3) BlockEvents(ctx context.Context, startBlock, endBlock string, eventTypes, contracts []string) ([]log.RawLog, error) {
+	start, ok := big.NewInt(0).SetString(startBlock, 0)
 	if !ok {
-		return nil, fmt.Errorf("could not parse block number into big.Int")
+		return nil, fmt.Errorf("could not parse start block number into big.Int")
+	}
+	end, ok := big.NewInt(0).SetString(endBlock, 0)
+	if !ok {
+		return nil, fmt.Errorf("could not parse end block number into big.Int")
+	}
+
+	addresses := make([]common.Address, 0, len(contracts))
+	for _, contract := range contracts {
+		addresses = append(addresses, common.HexToAddress(contract))
+	}
+
+	topics := make([][]common.Hash, 0, len(eventTypes))
+	for _, event := range eventTypes {
+		topics = append(topics, []common.Hash{common.HexToHash(event)})
 	}
 
 	query := ethereum.FilterQuery{
-		FromBlock: block,
-		ToBlock:   block,
-		Addresses: []common.Address{common.HexToAddress(contract)},
-		Topics:    [][]common.Hash{{common.HexToHash(eventType)}},
+		FromBlock: start,
+		ToBlock:   end,
+		Addresses: addresses,
+		Topics:    topics,
 	}
 
 	web3Logs, err := w.ethClient.FilterLogs(ctx, query)
@@ -98,19 +107,19 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		return nil, fmt.Errorf("could not get filtered logs: %w", err)
 	}
 
-	header, err := w.ethClient.HeaderByNumber(ctx, block)
-	if err != nil {
-		return nil, fmt.Errorf("could not get block header: %w", err)
-	}
-
-	blockDate := time.Unix(int64(header.Time), 0)
-
 	logs := make([]log.RawLog, 0, len(web3Logs))
 	for _, web3Log := range web3Logs {
 		// in case that the transaction got reverted
 		if web3Log.Removed {
 			continue
 		}
+
+		header, err := w.ethClient.HeaderByNumber(ctx, big.NewInt(0).SetUint64(web3Log.BlockNumber))
+		if err != nil {
+			return nil, fmt.Errorf("could not get block header: %w", err)
+		}
+
+		blockDate := time.Unix(int64(header.Time), 0)
 
 		eventJson, err := web3Log.MarshalJSON()
 		if err != nil {
@@ -127,10 +136,10 @@ func (w *Web3) BlockEvents(ctx context.Context, blockNumber, eventType, contract
 		l := log.RawLog{
 			ID:              common.Bytes2Hex(hash[:]),
 			ChainID:         w.chainID,
-			BlockNumber:     blockNumber,
+			BlockNumber:     header.Number.String(),
 			Index:           web3Log.Index,
 			BlockHash:       web3Log.BlockHash.String(),
-			Address:         contract,
+			Address:         web3Log.Address.String(),
 			TransactionHash: web3Log.TxHash.String(),
 			EventType:       web3Log.Topics[0].String(),
 			IndexData:       indexData,

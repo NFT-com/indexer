@@ -18,10 +18,10 @@ func NewParser() *Parser {
 }
 
 func (p *Parser) Type() string {
-	return erc721Type
+	return transferType
 }
 
-func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
+func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) (*log.Log, error) {
 	if len(raw.IndexData) != defaultIndexDataLen {
 		return nil, fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(raw.IndexData), defaultIndexDataLen)
 	}
@@ -37,6 +37,8 @@ func (p *Parser) ParseRawLog(raw log.RawLog) (*log.Log, error) {
 		ChainID:         raw.ChainID,
 		Contract:        raw.Address,
 		Block:           raw.BlockNumber,
+		Standard:        standards[raw.EventType],
+		Event:           raw.EventType,
 		Index:           raw.Index,
 		TransactionHash: raw.TransactionHash,
 		NftID:           nftID,

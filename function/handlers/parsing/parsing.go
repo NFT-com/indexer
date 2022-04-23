@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/function/processors/parsing"
-	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/networks"
 	"github.com/NFT-com/indexer/networks/web3"
@@ -17,6 +17,18 @@ import (
 var (
 	errParserNotFound = errors.New("parser not found")
 )
+
+type Input struct {
+	IDs        []string          `json:"ids"`
+	ChainURL   string            `json:"chain_url"`
+	ChainID    string            `json:"chain_id"`
+	ChainType  string            `json:"chain_type"`
+	StartBlock string            `json:"starting_block"`
+	EndBlock   string            `json:"end_block"`
+	Addresses  []string          `json:"addresses"`
+	Standards  map[string]string `json:"standards"`
+	EventTypes []string          `json:"event_types"`
+}
 
 // Initializer initializes the parser to use with the network client.
 type Initializer func(client networks.Network) ([]parsing.Parser, error)
@@ -37,32 +49,33 @@ func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 	return &h
 }
 
-func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, error) {
+func (h *Handler) Handle(ctx context.Context, input Input) (interface{}, error) {
 	h.log.Debug().
-		Str("block", job.BlockNumber).
-		Str("event", job.EventType).
-		Str("contract", job.Address).
+		Str("start_block", input.StartBlock).
+		Str("end_block", input.EndBlock).
+		Strs("events", input.EventTypes).
+		Strs("contracts", input.Addresses).
 		Msg("processing job")
 
-	network, err := web3.New(ctx, job.ChainURL)
+	network, err := web3.New(ctx, input.ChainURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not create web3 client: %w", err)
 	}
 	defer network.Close()
 
-	parser, err := h.getParser(network, job.StandardType)
-	if err != nil {
-		return nil, fmt.Errorf("could not get parser: %w", err)
-	}
-
-	rawLogs, err := network.BlockEvents(ctx, job.BlockNumber, job.EventType, job.Address)
+	rawLogs, err := network.BlockEvents(ctx, input.StartBlock, input.EndBlock, input.EventTypes, input.Addresses)
 	if err != nil {
 		return nil, fmt.Errorf("could not get block events: %w", err)
 	}
 
 	logs := make([]log.Log, 0, len(rawLogs))
 	for _, rawLog := range rawLogs {
-		log, err := parser.ParseRawLog(rawLog)
+		parser, err := h.getParser(network, rawLog.EventType)
+		if err != nil {
+			return nil, fmt.Errorf("could not get parser: %w", err)
+		}
+
+		log, err := parser.ParseRawLog(rawLog, input.Standards)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse raw event: %w", err)
 		}
@@ -73,14 +86,14 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Parsing) (interface{}, er
 	return logs, nil
 }
 
-func (h *Handler) getParser(network networks.Network, standardType string) (parsing.Parser, error) {
+func (h *Handler) getParser(network networks.Network, eventType string) (parsing.Parser, error) {
 	parsers, err := h.initializer(network)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize parsers: %w", err)
 	}
 
 	for _, parser := range parsers {
-		if parser.Type() == standardType {
+		if strings.ToLower(parser.Type()) == strings.ToLower(eventType) {
 			return parser, nil
 		}
 	}

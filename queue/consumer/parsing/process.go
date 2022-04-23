@@ -3,12 +3,13 @@ package parsing
 import (
 	"fmt"
 
+	"github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/models/events"
 )
 
-func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
+func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 	for _, l := range logs {
 		chain, err := d.dataStore.Chain(l.ChainID)
 		if err != nil {
@@ -17,13 +18,13 @@ func (d *Parsing) processLogs(job jobs.Parsing, logs []log.Log) error {
 
 		if l.NeedsAdditionJob {
 			_, err := d.apiClient.CreateAdditionJob(jobs.Addition{
-				ChainURL:     job.ChainURL,
-				ChainID:      job.ChainID,
-				ChainType:    job.ChainType,
-				BlockNumber:  job.BlockNumber,
-				Address:      job.Address,
-				StandardType: job.StandardType,
-				EventType:    job.EventType,
+				ChainURL:     input.ChainURL,
+				ChainID:      input.ChainID,
+				ChainType:    input.ChainType,
+				BlockNumber:  l.Block,
+				Address:      l.Contract,
+				StandardType: l.Standard,
+				EventType:    l.Event,
 				TokenID:      l.NftID,
 			})
 			if err != nil {

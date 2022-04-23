@@ -6,5 +6,5 @@ import (
 
 type Parser interface {
 	Type() string
-	ParseRawLog(log log.RawLog) (*log.Log, error)
+	ParseRawLog(log log.RawLog, standards map[string]string) (*log.Log, error)
 }
