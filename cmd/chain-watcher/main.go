@@ -57,6 +57,7 @@ func run() error {
 		flagChainType        string
 		flagDBConnectionInfo string
 		flagLogLevel         string
+		flagStartHeight      uint64
 	)
 
 	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
@@ -67,6 +68,7 @@ func run() error {
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
 	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -132,7 +134,8 @@ func run() error {
 		return fmt.Errorf("could not get event types: %w", err)
 	}
 
-	highestJobIndexes, startingBlock := getHighestJobBlockNumberForCollections(api, flagChainURL, flagChainType, contracts, contractStandards, standardsEventTypes)
+	startingHeight := big.NewInt(0).SetUint64(flagStartHeight)
+	highestJobIndexes, startingBlock := getHighestJobBlockNumberForCollections(api, flagChainURL, flagChainType, startingHeight, contracts, contractStandards, standardsEventTypes)
 
 	cfg := chain.Config{
 		ChainURL:      flagChainURL,
@@ -239,8 +242,9 @@ func getEventTypes(store *postgres.Store, standards []models.Standard) (map[stri
 	return eventTypes, nil
 }
 
-func getHighestJobBlockNumberForCollections(api *client.Client, chainURL, chainType string, contracts []string, standards map[string][]string, eventTypes map[string][]string) (chain.Indexes, *big.Int) {
-	startingBlock := big.NewInt(-1)
+func getHighestJobBlockNumberForCollections(api *client.Client, chainURL string, chainType string, startingHeight *big.Int, contracts []string, standards map[string][]string, eventTypes map[string][]string) (chain.Indexes, *big.Int) {
+
+	startingBlock := startingHeight
 
 	highestJobIndexes := make(chain.Indexes, len(contracts))
 	for _, contract := range contracts {
