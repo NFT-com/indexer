@@ -55,7 +55,13 @@ func (p *Processor) Process(ctx context.Context, job jobs.Addition) (*chain.NFT,
 		return nil, fmt.Errorf("could not get uri: %w", err)
 	}
 
-	resp, err := p.client.Get(uri)
+	// TODO: This should be a little more sophisticated resolver.
+	resolved, err := resolveURI(uri)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve URI: %w", err)
+	}
+
+	resp, err := p.client.Get(resolved)
 	if err != nil {
 		return nil, fmt.Errorf("could not perform get request: %w", err)
 	}

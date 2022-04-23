@@ -36,7 +36,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 		case log.Mint:
 			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
-				return fmt.Errorf("could not get collection: %w", err)
+				return fmt.Errorf("could not get collection (chainID:%s contract:%s): %w", chain.ChainID, l.Contract, err)
 			}
 
 			event := events.Mint{
@@ -81,7 +81,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 		case log.Transfer:
 			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
-				return fmt.Errorf("could not get collection: %w", err)
+				return fmt.Errorf("could not get collection (chainID:%s contract:%s): %w", chain.ChainID, l.Contract, err)
 			}
 
 			event := events.Transfer{
@@ -104,7 +104,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 		case log.Burn:
 			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
 			if err != nil {
-				return fmt.Errorf("could not get collection: %w", err)
+				return fmt.Errorf("could not get collection (chainID:%s contract:%s): %w", chain.ChainID, l.Contract, err)
 			}
 
 			event := events.Burn{

@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/NFT-com/indexer/models/chain"
 )
@@ -54,7 +55,7 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*chai
 		Select(collectionTableColumns...).
 		From(collectionTableName).
 		Where("chain_id = ?", chainID).
-		Where("address = ?", address)
+		Where("address = ?", strings.ToLower(address)) // FIXME: All addresses should be lowercased in all similar queries.
 
 	if contractCollectionID != "" {
 		query = query.Where("contract_collection_id = ?", contractCollectionID)

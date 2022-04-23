@@ -72,7 +72,7 @@ func run() error {
 	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "dispatcher-agent", "rmq consumer tag")
-	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
+	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
