@@ -255,15 +255,13 @@ func getHighestJobBlockNumberForCollections(api *client.Client, chainURL string,
 	for _, contract := range contracts {
 		stands := standards[contract]
 
-		collectionIndexes, lowestBlock := getHighestJobNumberForStandards(api, chainURL, chainType, contract, stands, eventTypes)
+		collectionIndexes, lowestBlock := getHighestJobNumberForStandards(api, chainURL, chainType, contract, startingBlock, stands, eventTypes)
 		if len(collectionIndexes) == 0 {
 			continue
 		}
 
-		if startingBlock.CmpAbs(big.NewInt(-1)) == 0 ||
-			startingBlock.CmpAbs(lowestBlock) > 0 {
-
-			startingBlock.SetBytes(lowestBlock.Bytes())
+		if lowestBlock.Cmp(startingBlock) > 0 {
+			startingBlock.Set(lowestBlock)
 		}
 
 		highestJobIndexes[contract] = collectionIndexes
@@ -272,8 +270,8 @@ func getHighestJobBlockNumberForCollections(api *client.Client, chainURL string,
 	return highestJobIndexes, startingBlock
 }
 
-func getHighestJobNumberForStandards(api *client.Client, chainURL, chainType, contract string, standards []string, eventTypes map[string][]string) (chain.CollectionIndexes, *big.Int) {
-	startingBlock := big.NewInt(-1)
+func getHighestJobNumberForStandards(api *client.Client, chainURL, chainType, contract string, startingHeight *big.Int, standards []string, eventTypes map[string][]string) (chain.CollectionIndexes, *big.Int) {
+	startingBlock := big.NewInt(0)
 
 	collectionIndexes := make(chain.CollectionIndexes, len(standards))
 	for _, standard := range standards {
@@ -284,10 +282,8 @@ func getHighestJobNumberForStandards(api *client.Client, chainURL, chainType, co
 			continue
 		}
 
-		if startingBlock.CmpAbs(big.NewInt(-1)) == 0 ||
-			startingBlock.CmpAbs(lowestBlock) > 0 {
-
-			startingBlock.SetBytes(lowestBlock.Bytes())
+		if lowestBlock.Cmp(startingBlock) > 0 {
+			startingBlock.Set(lowestBlock)
 		}
 
 		collectionIndexes[standard] = eventTypesIndexes
@@ -297,7 +293,7 @@ func getHighestJobNumberForStandards(api *client.Client, chainURL, chainType, co
 }
 
 func getHighestJobNumberForEventTypes(api *client.Client, chainURL, chainType, contract, standard string, eTypes []string) (chain.EventTypesIndexes, *big.Int) {
-	startingBlock := big.NewInt(-1)
+	startingBlock := big.NewInt(0)
 
 	eventTypesIndexes := make(chain.EventTypesIndexes, len(eTypes))
 	for _, eType := range eTypes {
@@ -307,10 +303,8 @@ func getHighestJobNumberForEventTypes(api *client.Client, chainURL, chainType, c
 			highestJobIndex.SetString(highestJob.BlockNumber, 0)
 		}
 
-		if startingBlock.CmpAbs(big.NewInt(-1)) == 0 ||
-			startingBlock.CmpAbs(highestJobIndex) > 0 {
-
-			startingBlock.SetBytes(highestJobIndex.Bytes())
+		if highestJobIndex.Cmp(startingBlock) > 0 {
+			startingBlock.Set(highestJobIndex)
 		}
 
 		eventTypesIndexes[eType] = highestJobIndex
