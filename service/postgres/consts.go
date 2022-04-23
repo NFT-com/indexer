@@ -38,12 +38,12 @@ var (
 	burnTableOnConflictStatement     = "ON CONFLICT (id) DO UPDATE SET block = EXCLUDED.block, event_index = EXCLUDED.event_index, transaction_hash = EXCLUDED.transaction_hash, collection = EXCLUDED.collection,token_id = EXCLUDED.token_id, emitted_at = EXCLUDED.emitted_at"
 
 	// chain on conflict statements
-	nftTableOnConflictStatement    = "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, image = EXCLUDED.image, description = EXCLUDED.description, owner = EXCLUDED.owner"
+	nftTableOnConflictStatement    = "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, uri = EXCLUDED.uri, image = EXCLUDED.image, description = EXCLUDED.description, owner = EXCLUDED.owner"
 	traitsTableOnConflictStatement = "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, value = EXCLUDED.value, nft = EXCLUDED.nft"
 
 	// data table columns
 	chainTableColumns      = []string{"id", "chain_id", "name", "description", "symbol"}
-	collectionTableColumns = []string{"id", "chain_id", "contract_collection_id", "address", "name", "description", "symbol", "slug", "uri", "image_url", "website"}
-	nftTableColumns        = []string{"id", "token_id", "collection", "name", "image", "description", "owner"}
+	collectionTableColumns = []string{"id", "chain_id", "contract_collection_id", "address", "name", "description", "symbol", "slug", "image_url", "website"}
+	nftTableColumns        = []string{"id", "token_id", "collection", "name", "uri", "image", "description", "owner"}
 	traitsTableColumns     = []string{"id", "name", "value", "nft"}
 )
