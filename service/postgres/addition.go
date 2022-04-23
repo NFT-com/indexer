@@ -9,7 +9,8 @@ import (
 
 // CreateAdditionJob creates a new addition job.
 func (s *Store) CreateAdditionJob(job jobs.Addition) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(additionJobsTableName).
 		Columns(additionJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.TokenID, job.Status).
@@ -23,7 +24,8 @@ func (s *Store) CreateAdditionJob(job jobs.Addition) error {
 
 // CreateAdditionJobs creates a batch of addition jobs.
 func (s *Store) CreateAdditionJobs(jobs []jobs.Addition) error {
-	query := s.sqlBuilder.
+
+	query := s.build.
 		Insert(additionJobsTableName).
 		Columns(additionJobsTableColumns...)
 
@@ -41,7 +43,8 @@ func (s *Store) CreateAdditionJobs(jobs []jobs.Addition) error {
 
 // AdditionJobs returns a list of addition jobs filtered by status. Empty string status returns every job.
 func (s *Store) AdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
-	query := s.sqlBuilder.
+
+	query := s.build.
 		Select(additionJobsTableColumns...).
 		From(additionJobsTableName)
 	if status != "" {
@@ -80,7 +83,8 @@ func (s *Store) AdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
 
 // AdditionJob returns an addition job.
 func (s *Store) AdditionJob(id string) (*jobs.Addition, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select(additionJobsTableColumns...).
 		From(additionJobsTableName).
 		Where("id = ?", id).
@@ -115,7 +119,8 @@ func (s *Store) AdditionJob(id string) (*jobs.Addition, error) {
 
 // UpdateAdditionJobStatus updates an addition job status.
 func (s *Store) UpdateAdditionJobStatus(id string, status jobs.Status) error {
-	res, err := s.sqlBuilder.
+
+	res, err := s.build.
 		Update(additionJobsTableName).
 		Where("id = ?", id).
 		Set("status", status).

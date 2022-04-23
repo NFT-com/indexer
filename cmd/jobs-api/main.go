@@ -37,6 +37,7 @@ func main() {
 
 // run has the server startup code.
 func run() error {
+
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -48,9 +49,10 @@ func run() error {
 		flagLogLevel         string
 	)
 
-	pflag.StringVarP(&flagBind, "bind", "b", "127.0.0.1:8081", "bind address for jobs API")
+	pflag.StringVarP(&flagBind, "bind", "b", "127.0.0.1:8081", "host and port for jobs API endpoint")
 	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "server details for Postgres database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "output level for logging")
+
 	pflag.Parse()
 
 	// Logger initialization.

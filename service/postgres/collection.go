@@ -9,7 +9,8 @@ import (
 )
 
 func (s *Store) Collections(chainID string) ([]chain.Collection, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select(collectionTableColumns...).
 		From(collectionTableName).
 		Where("chain_id = ?", chainID).
@@ -51,7 +52,7 @@ func (s *Store) Collections(chainID string) ([]chain.Collection, error) {
 }
 
 func (s *Store) Collection(chainID, address, contractCollectionID string) (*chain.Collection, error) {
-	query := s.sqlBuilder.
+	query := s.build.
 		Select(collectionTableColumns...).
 		From(collectionTableName).
 		Where("chain_id = ?", chainID).

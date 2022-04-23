@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) Standards(collectionID string) ([]chain.Standard, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select("standards.id, standards.name").
 		From("standards_collections, standards").
 		Where("standards_collections.collection = ?", collectionID).

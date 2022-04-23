@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) UpsertBurnEvent(event events.Burn) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(burnEventTableName).
 		Columns(burnEventTableColumns...).
 		Values(event.ID, event.Block, event.EventIndex, event.TransactionHash, event.CollectionID, event.TokenID, event.EmittedAt).

@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) UpsertSaleEvent(event events.Sale) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(saleEventTableName).
 		Columns(saleEventTableColumns...).
 		Values(event.ID, event.Block, event.EventIndex, event.TransactionHash, event.MarketplaceID, event.Seller, event.Buyer, event.Price, event.EmittedAt).

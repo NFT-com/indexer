@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) Chain(chainID string) (*chain.Chain, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select(chainTableColumns...).
 		From(chainTableName).
 		Where("chain_id = ?", chainID).

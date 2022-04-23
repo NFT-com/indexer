@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) UpsertTrait(trait chain.Trait) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(traitsTableName).
 		Columns(traitsTableColumns...).
 		Values(trait.ID, trait.Name, trait.Value, trait.NftID).

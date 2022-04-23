@@ -11,7 +11,8 @@ import (
 
 // CreateDiscoveryJob creates a new discovery job.
 func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(discoveryJobsTableName).
 		Columns(discoveryJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, pq.Array(job.Addresses), job.StandardType, job.Status).
@@ -25,7 +26,8 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 
 // CreateDiscoveryJobs creates a batch of discovery jobs.
 func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
-	query := s.sqlBuilder.
+
+	query := s.build.
 		Insert(discoveryJobsTableName).
 		Columns(discoveryJobsTableColumns...)
 
@@ -43,7 +45,8 @@ func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
 
 // DiscoveryJobs returns a list of discovery jobs filtered by status. Empty string status returns every job.
 func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
-	query := s.sqlBuilder.
+
+	query := s.build.
 		Select(discoveryJobsTableColumns...).
 		From(discoveryJobsTableName)
 	if status != "" {
@@ -82,7 +85,8 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 
 // DiscoveryJob returns a discovery job.
 func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select(discoveryJobsTableColumns...).
 		From(discoveryJobsTableName).
 		Where("id = ?", id).
@@ -116,7 +120,8 @@ func (s *Store) DiscoveryJob(id string) (*jobs.Discovery, error) {
 
 // HighestBlockNumberDiscoveryJob returns the highest block number discovery job.
 func (s *Store) HighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (*jobs.Discovery, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName).
 		Where("chain_url = ?", chainURL).
@@ -156,7 +161,8 @@ func (s *Store) HighestBlockNumberDiscoveryJob(chainURL, chainType string, addre
 
 // UpdateDiscoveryJobStatus updates a discovery job status.
 func (s *Store) UpdateDiscoveryJobStatus(id string, status jobs.Status) error {
-	res, err := s.sqlBuilder.
+
+	res, err := s.build.
 		Update(discoveryJobsTableName).
 		Where("id = ?", id).
 		Set("status", status).

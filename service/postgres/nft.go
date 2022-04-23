@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) UpsertNFT(nft chain.NFT, collectionID string) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(nftTableName).
 		Columns(nftTableColumns...).
 		Values(

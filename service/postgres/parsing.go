@@ -9,7 +9,8 @@ import (
 
 // CreateParsingJob creates a new parsing job.
 func (s *Store) CreateParsingJob(job jobs.Parsing) error {
-	_, err := s.sqlBuilder.
+
+	_, err := s.build.
 		Insert(parsingJobsTableName).
 		Columns(parsingJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.EventType, job.Status).
@@ -24,7 +25,8 @@ func (s *Store) CreateParsingJob(job jobs.Parsing) error {
 
 // CreateParsingJobs creates a batch of parsing jobs.
 func (s *Store) CreateParsingJobs(jobs []jobs.Parsing) error {
-	query := s.sqlBuilder.
+
+	query := s.build.
 		Insert(parsingJobsTableName).
 		Columns(parsingJobsTableColumns...)
 
@@ -42,7 +44,8 @@ func (s *Store) CreateParsingJobs(jobs []jobs.Parsing) error {
 
 // ParsingJobs returns a list of parsing jobs filtered by status. Empty string status returns every job.
 func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
-	query := s.sqlBuilder.
+
+	query := s.build.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName)
 
@@ -83,7 +86,8 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
 
 // ParsingJob returns a parsing job.
 func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName).
 		Where("id = ?", id).
@@ -120,8 +124,7 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 // HighestBlockNumberParsingJob returns the highest block number parsing job.
 func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
 
-	// FIXME: A 'Limit 1' clause could be added here to not request all rows.
-	result, err := s.sqlBuilder.
+	result, err := s.build.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName).
 		Where("chain_url = ?", chainURL).
@@ -130,6 +133,7 @@ func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, stand
 		Where("interface_type = ?", standardType).
 		Where("event_type = ?", eventType).
 		OrderBy("block_number DESC").
+		Limit(1).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", err)
@@ -162,7 +166,7 @@ func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, stand
 
 // UpdateParsingJobStatus updates a parsing job status.
 func (s *Store) UpdateParsingJobStatus(id string, status jobs.Status) error {
-	res, err := s.sqlBuilder.
+	res, err := s.build.
 		Update(parsingJobsTableName).
 		Where("id = ?", id).
 		Set("status", status).

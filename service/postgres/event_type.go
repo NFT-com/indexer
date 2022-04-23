@@ -7,7 +7,8 @@ import (
 )
 
 func (s *Store) EventTypes(standardID string) ([]chain.EventType, error) {
-	result, err := s.sqlBuilder.
+
+	result, err := s.build.
 		Select("id, name").
 		From("event_types").
 		Where("standard = ?", standardID).
