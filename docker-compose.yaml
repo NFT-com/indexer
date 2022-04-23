@@ -10,7 +10,7 @@ services:
     volumes:
       - ./sql/:/docker-entrypoint-initdb.d/
     ports:
-      - '5432:5432'
+      - '5433:5432'
   pgadmin:
     image: dpage/pgadmin4
     restart: always
@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: Dockerfile.jobwatcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u redis:6379'
+    entrypoint: '/watcher -a api:8081 -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
     depends_on:
       - api
       - redis
@@ -50,7 +50,35 @@ services:
       context: .
       dockerfile: Dockerfile.chainwatcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x4a537f61ef574153664c0dbc8c8f4b900cacbe5d -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721'
+    entrypoint: '/watcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -d "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable"'
     depends_on:
       - api
       - jobs-watcher
+  parsing-dispatcher:
+    environment:
+      - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+    build:
+      context: .
+      dockerfile: Dockerfile.parsingdispatcher
+    restart: always
+    entrypoint: '/dispatcher -u redis:6379 -a api:8081 -d "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable"'
+    depends_on:
+      - postgres
+      - api
+      - redis
+  addition-dispatcher:
+    environment:
+      - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+    build:
+      context: .
+      dockerfile: Dockerfile.additiondispatcher
+    restart: always
+    entrypoint: '/dispatcher -u redis:6379 -a api:8081 -d "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable"'
+    depends_on:
+      - postgres
+      - api
+      - redis

@@ -119,6 +119,8 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 
 // HighestBlockNumberParsingJob returns the highest block number parsing job.
 func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
+
+	// FIXME: A 'Limit 1' clause could be added here to not request all rows.
 	result, err := s.sqlBuilder.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName).

@@ -37,5 +37,4 @@ VALUES ('0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', 'T
         'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
 
 INSERT INTO standards_collections (standard, collection)
-VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'df65ac20-e39c-441c-bee3-6cacfb7fa991'),
-       ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'e0ddf773-d4d9-4749-ae2f-17dc90ced1f0');
+VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a','52cfde87-2433-42dc-a5e5-7bf3d8f9933b');
