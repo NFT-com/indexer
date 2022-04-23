@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -49,9 +48,9 @@ func run() error {
 		flagLogLevel         string
 	)
 
-	pflag.StringVarP(&flagBind, "bind", "b", "8081", "jobs api binding port")
-	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.StringVarP(&flagBind, "bind", "b", "127.0.0.1:8081", "bind address for jobs API")
+	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "server details for Postgres database")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "output level for logging")
 	pflag.Parse()
 
 	// Logger initialization.
@@ -101,7 +100,7 @@ func run() error {
 	go func() {
 		log.Info().Msg("jobs api server starting")
 
-		err = server.Start(fmt.Sprint(":", flagBind))
+		err = server.Start(flagBind)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Warn().Err(err).Msg("jobs api server failed")
 			failed <- err
