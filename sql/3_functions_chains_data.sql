@@ -3,7 +3,7 @@
     the ratio of NFTs from that collection that have 
     the same value for each trait.
 */
-CREATE OR REPLACE FUNCTION traits_ratio(nft_id UUID)
+CREATE OR REPLACE FUNCTION traits_ratio(nft_id VARCHAR)
 RETURNS TABLE (
     name TEXT,          -- trait name
     value TEXT,         -- trait value
