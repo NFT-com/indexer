@@ -27,7 +27,7 @@ func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue 
 	return &p, nil
 }
 
-func (p *Producer) PublishDiscoveryJob(job jobs.Discovery) error {
+func (p *Producer) PublishDiscoveryJob(job *jobs.Discovery) error {
 	q, err := p.connection.OpenQueue(p.discoveryQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)
@@ -46,7 +46,7 @@ func (p *Producer) PublishDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
-func (p *Producer) PublishParsingJob(job jobs.Parsing) error {
+func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 	q, err := p.connection.OpenQueue(p.parsingQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)
@@ -65,7 +65,7 @@ func (p *Producer) PublishParsingJob(job jobs.Parsing) error {
 	return nil
 }
 
-func (p *Producer) PublishAdditionJob(job jobs.Addition) error {
+func (p *Producer) PublishAdditionJob(job *jobs.Addition) error {
 	q, err := p.connection.OpenQueue(p.additionQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)

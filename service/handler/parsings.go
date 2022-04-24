@@ -9,7 +9,7 @@ import (
 )
 
 // CreateParsingJob creates a new parsing job and returns it.
-func (c *Handler) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
+func (c *Handler) CreateParsingJob(job *jobs.Parsing) (*jobs.Parsing, error) {
 	job.ID = uuid.New().String()
 	job.Status = jobs.StatusCreated
 
@@ -18,11 +18,11 @@ func (c *Handler) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 		return nil, fmt.Errorf("could not create parsing job: %w", err)
 	}
 
-	return &job, nil
+	return job, nil
 }
 
 // CreateParsingJobs creates a new parsing jobs.
-func (c *Handler) CreateParsingJobs(jobList []jobs.Parsing) error {
+func (c *Handler) CreateParsingJobs(jobList []*jobs.Parsing) error {
 	for i := range jobList {
 		jobList[i].ID = uuid.New().String()
 		jobList[i].Status = jobs.StatusCreated
@@ -37,7 +37,7 @@ func (c *Handler) CreateParsingJobs(jobList []jobs.Parsing) error {
 }
 
 // ListParsingJobs returns a list of parsing jobs given the status. Empty string status returns all jobs.
-func (c *Handler) ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error) {
+func (c *Handler) ListParsingJobs(status jobs.Status) ([]*jobs.Parsing, error) {
 	jobs, err := c.store.ParsingJobs(status)
 	if err != nil {
 		return nil, fmt.Errorf("could not get parsing jobs: %w", err)

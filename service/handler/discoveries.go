@@ -9,7 +9,7 @@ import (
 )
 
 // CreateDiscoveryJob creates a new discovery job and returns it.
-func (c *Handler) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
+func (c *Handler) CreateDiscoveryJob(job *jobs.Discovery) (*jobs.Discovery, error) {
 	job.ID = uuid.New().String()
 	job.Status = jobs.StatusCreated
 
@@ -18,11 +18,11 @@ func (c *Handler) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error
 		return nil, fmt.Errorf("could not create discovery job: %w", err)
 	}
 
-	return &job, nil
+	return job, nil
 }
 
 // CreateDiscoveryJobs creates a new discovery jobs.
-func (c *Handler) CreateDiscoveryJobs(jobList []jobs.Discovery) error {
+func (c *Handler) CreateDiscoveryJobs(jobList []*jobs.Discovery) error {
 	for i := range jobList {
 		jobList[i].ID = uuid.New().String()
 		jobList[i].Status = jobs.StatusCreated
@@ -37,7 +37,7 @@ func (c *Handler) CreateDiscoveryJobs(jobList []jobs.Discovery) error {
 }
 
 // ListDiscoveryJobs returns a list of discovery jobs given the status. Empty string status returns all jobs.
-func (c *Handler) ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
+func (c *Handler) ListDiscoveryJobs(status jobs.Status) ([]*jobs.Discovery, error) {
 	jobs, err := c.store.DiscoveryJobs(status)
 	if err != nil {
 		return nil, fmt.Errorf("could not get discovery jobs: %w", err)

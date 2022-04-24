@@ -23,16 +23,16 @@ func (h *Handler) CreateAdditionJob(ctx echo.Context) error {
 	}
 
 	job := jobs.Addition{
-		ChainURL:     req.ChainURL,
-		ChainID:      req.ChainID,
-		ChainType:    req.ChainType,
-		BlockNumber:  req.BlockNumber,
-		Address:      req.Address,
-		StandardType: req.StandardType,
-		TokenID:      req.TokenID,
+		ChainURL:    req.ChainURL,
+		ChainID:     req.ChainID,
+		ChainType:   req.ChainType,
+		BlockNumber: req.BlockNumber,
+		Address:     req.Address,
+		Standard:    req.Standard,
+		TokenID:     req.TokenID,
 	}
 
-	newJob, err := h.jobs.CreateAdditionJob(job)
+	newJob, err := h.jobs.CreateAdditionJob(&job)
 	if err != nil {
 		return internalError(err)
 	}
@@ -53,19 +53,19 @@ func (h *Handler) CreateAdditionJobs(ctx echo.Context) error {
 		return badRequest(err)
 	}
 
-	jobList := make([]jobs.Addition, 0, len(req.Jobs))
+	jobList := make([]*jobs.Addition, 0, len(req.Jobs))
 	for _, j := range req.Jobs {
 		job := jobs.Addition{
-			ChainURL:     j.ChainURL,
-			ChainID:      j.ChainID,
-			ChainType:    j.ChainType,
-			BlockNumber:  j.BlockNumber,
-			Address:      j.Address,
-			StandardType: j.StandardType,
-			TokenID:      j.TokenID,
+			ChainURL:    j.ChainURL,
+			ChainID:     j.ChainID,
+			ChainType:   j.ChainType,
+			BlockNumber: j.BlockNumber,
+			Address:     j.Address,
+			Standard:    j.Standard,
+			TokenID:     j.TokenID,
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, &job)
 	}
 
 	err = h.jobs.CreateAdditionJobs(jobList)

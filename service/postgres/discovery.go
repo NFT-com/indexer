@@ -10,7 +10,7 @@ import (
 )
 
 // CreateDiscoveryJob creates a new discovery job.
-func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
+func (s *Store) CreateDiscoveryJob(job *jobs.Discovery) error {
 
 	_, err := s.build.
 		Insert(discoveryJobsTableName).
@@ -25,7 +25,7 @@ func (s *Store) CreateDiscoveryJob(job jobs.Discovery) error {
 }
 
 // CreateDiscoveryJobs creates a batch of discovery jobs.
-func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
+func (s *Store) CreateDiscoveryJobs(jobs []*jobs.Discovery) error {
 
 	query := s.build.
 		Insert(discoveryJobsTableName).
@@ -44,7 +44,7 @@ func (s *Store) CreateDiscoveryJobs(jobs []jobs.Discovery) error {
 }
 
 // DiscoveryJobs returns a list of discovery jobs filtered by status. Empty string status returns every job.
-func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
+func (s *Store) DiscoveryJobs(status jobs.Status) ([]*jobs.Discovery, error) {
 
 	query := s.build.
 		Select(discoveryJobsTableColumns...).
@@ -59,7 +59,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 	}
 	defer result.Close()
 
-	jobList := make([]jobs.Discovery, 0)
+	jobList := make([]*jobs.Discovery, 0)
 	for result.Next() && result.Err() == nil {
 		var job jobs.Discovery
 
@@ -77,7 +77,7 @@ func (s *Store) DiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error) {
 			return nil, fmt.Errorf("could not retrieve discovery job list: %w", err)
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, &job)
 	}
 
 	return jobList, nil

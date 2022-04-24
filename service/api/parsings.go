@@ -23,16 +23,16 @@ func (h *Handler) CreateParsingJob(ctx echo.Context) error {
 	}
 
 	job := jobs.Parsing{
-		ChainURL:     req.ChainURL,
-		ChainID:      req.ChainID,
-		ChainType:    req.ChainType,
-		BlockNumber:  req.BlockNumber,
-		Address:      req.Address,
-		StandardType: req.StandardType,
-		EventType:    req.EventType,
+		ChainURL:    req.ChainURL,
+		ChainID:     req.ChainID,
+		ChainType:   req.ChainType,
+		BlockNumber: req.BlockNumber,
+		Address:     req.Address,
+		Standard:    req.Standard,
+		Event:       req.Event,
 	}
 
-	newJob, err := h.jobs.CreateParsingJob(job)
+	newJob, err := h.jobs.CreateParsingJob(&job)
 	if err != nil {
 		return internalError(err)
 	}
@@ -53,19 +53,19 @@ func (h *Handler) CreateParsingJobs(ctx echo.Context) error {
 		return badRequest(err)
 	}
 
-	jobList := make([]jobs.Parsing, 0, len(req.Jobs))
+	jobList := make([]*jobs.Parsing, 0, len(req.Jobs))
 	for _, j := range req.Jobs {
 		job := jobs.Parsing{
-			ChainURL:     j.ChainURL,
-			ChainID:      j.ChainID,
-			ChainType:    j.ChainType,
-			BlockNumber:  j.BlockNumber,
-			Address:      j.Address,
-			StandardType: j.StandardType,
-			EventType:    j.EventType,
+			ChainURL:    j.ChainURL,
+			ChainID:     j.ChainID,
+			ChainType:   j.ChainType,
+			BlockNumber: j.BlockNumber,
+			Address:     j.Address,
+			Standard:    j.Standard,
+			Event:       j.Event,
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, &job)
 	}
 
 	err = h.jobs.CreateParsingJobs(jobList)

@@ -1,6 +1,7 @@
 package parsing
 
 import (
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/models/chain"
 	"github.com/NFT-com/indexer/models/events"
 )
@@ -14,4 +15,8 @@ type Store interface {
 	Chain(chainID string) (*chain.Chain, error)
 	Collection(chainID, address, contractCollectionID string) (*chain.Collection, error)
 	Marketplace(chainID, address string) (*chain.Marketplace, error)
+
+	CreateAdditionJob(job *jobs.Addition) error
+	ParsingJob(id string) (*jobs.Parsing, error)
+	UpdateParsingJobStatus(id string, status jobs.Status) error
 }

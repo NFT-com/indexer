@@ -12,37 +12,35 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
+	"go.uber.org/ratelimit"
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
-	"github.com/NFT-com/indexer/service/client"
 )
 
-const concurrentConsumers = 4096
+const concurrentConsumers = 1000
 
 type Parsing struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
-	apiClient     *client.Client
+	jobStore      Store
 	eventStore    Store
 	dataStore     Store
-	rateLimiter   <-chan time.Time
+	limit         ratelimit.Limiter
 	consumerQueue chan [][]byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, eventStore Store, dataStore Store, rateLimit int) *Parsing {
-	limiter := time.Tick(time.Second / time.Duration(rateLimit))
+func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store, eventStore Store, dataStore Store, rateLimit int) *Parsing {
 
 	c := Parsing{
 		log:           log,
 		dispatcher:    dispatcher,
-		apiClient:     apiClient,
 		eventStore:    eventStore,
 		dataStore:     dataStore,
-		rateLimiter:   limiter,
+		limit:         ratelimit.New(rateLimit),
 		consumerQueue: make(chan [][]byte, concurrentConsumers),
 		close:         make(chan struct{}),
 	}
@@ -109,8 +107,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 		if ok {
 			input.IDs = append(input.IDs, job.ID)
 			input.Addresses = append(input.Addresses, job.Address)
-			input.EventTypes = append(input.EventTypes, job.EventType)
-			input.Standards[job.EventType] = job.StandardType
+			input.EventTypes = append(input.EventTypes, job.Event)
+			input.Standards[job.Event] = job.Standard
 
 			inputMap[currentBlock] = input
 			continue
@@ -126,8 +124,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 			StartBlock: job.BlockNumber,
 			EndBlock:   job.BlockNumber,
 			Addresses:  []string{job.Address},
-			Standards:  map[string]string{job.EventType: job.StandardType},
-			EventTypes: []string{job.EventType},
+			Standards:  map[string]string{job.Event: job.Standard},
+			EventTypes: []string{job.Event},
 		}
 
 		if lowestBlock > currentBlock {
@@ -175,7 +173,7 @@ func (d *Parsing) consume(payloads [][]byte) {
 		}
 
 		// Wait for rate limiter to have available spots.
-		<-d.rateLimiter
+		d.limit.Take()
 
 		name := functionName(input)
 
@@ -218,7 +216,7 @@ func (d *Parsing) consume(payloads [][]byte) {
 		}
 
 		for _, id := range input.IDs {
-			err = d.apiClient.UpdateParsingJobStatus(id, jobs.StatusFinished)
+			err = d.dataStore.UpdateParsingJobStatus(id, jobs.StatusFinished)
 			if err != nil {
 				d.handleError(err, "could not update job status", id)
 				continue
@@ -271,7 +269,7 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 			continue
 		}
 
-		storedJob, err := d.apiClient.GetParsingJob(job.ID)
+		storedJob, err := d.jobStore.ParsingJob(job.ID)
 		if err != nil {
 			d.handleError(err, "could not retrieve parsing job", job.ID)
 			continue
@@ -282,7 +280,7 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 			continue
 		}
 
-		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
+		err = d.jobStore.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
 		if err != nil {
 			d.handleError(err, "could not update job status", job.ID)
 			continue
@@ -296,7 +294,7 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 
 func (d *Parsing) handleError(err error, message string, ids ...string) {
 	for _, id := range ids {
-		updateErr := d.apiClient.UpdateParsingJobStatus(id, jobs.StatusFailed)
+		updateErr := d.jobStore.UpdateParsingJobStatus(id, jobs.StatusFailed)
 		if updateErr != nil {
 			d.log.Error().Err(updateErr).Msg("could not update job status")
 		}
