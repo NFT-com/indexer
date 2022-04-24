@@ -38,6 +38,7 @@ func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store
 	c := Parsing{
 		log:           log,
 		dispatcher:    dispatcher,
+		jobStore:      jobStore,
 		eventStore:    eventStore,
 		dataStore:     dataStore,
 		limit:         ratelimit.New(rateLimit),
@@ -270,8 +271,8 @@ func (d *Parsing) fillInput(base, part parsing.Input) parsing.Input {
 	return base
 }
 
-func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
-	jobList := make([]jobs.Parsing, 0, len(payloads))
+func (d *Parsing) unmarshalJobs(payloads [][]byte) []*jobs.Parsing {
+	jobList := make([]*jobs.Parsing, 0, len(payloads))
 
 	for _, payload := range payloads {
 		var job jobs.Parsing
@@ -298,7 +299,7 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 			continue
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, &job)
 	}
 
 	return jobList
