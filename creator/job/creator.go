@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/creator"
@@ -55,8 +56,6 @@ func (c *Creator) Notify(height uint64) {
 		return
 	}
 
-	c.last = height
-
 	// Check how many pending jobs are still in the DB for this combination and skip if there are too many.
 	count, err := c.check.CountPendingParsingJobs(c.template.ChainURL, c.template.ChainType, c.template.Address, c.template.Standard, c.template.Event)
 	if err != nil {
@@ -93,9 +92,11 @@ func (c *Creator) Notify(height uint64) {
 	maximum := c.limit - count
 	for index := start; index <= start+uint64(maximum) && index <= height; index++ {
 		job := c.template
+		job.ID = uuid.New().String()
 		job.BlockNumber = strconv.FormatUint(index, 10)
 		c.persist.Store(&job)
 		created++
+		c.last = index
 	}
 
 	c.log.Info().Int("jobs", created).Msg("created parsing jobs")

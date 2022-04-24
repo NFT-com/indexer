@@ -130,6 +130,7 @@ func run() error {
 
 				// create the job template for this combination
 				template := jobs.Parsing{
+					ID:          "",
 					ChainURL:    flagChainURL,
 					ChainID:     flagChainID,
 					ChainType:   flagChainType,
@@ -137,7 +138,7 @@ func run() error {
 					Address:     collection.Address,
 					Standard:    standard.Name,
 					Event:       event.ID,
-					Status:      "",
+					Status:      jobs.StatusCreated,
 				}
 
 				// initialize a job creator that will be notified of heights and
