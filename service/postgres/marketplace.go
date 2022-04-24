@@ -21,7 +21,7 @@ func (s *Store) Marketplace(chainID, address string) (*chain.Marketplace, error)
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve marketplace: %w", errResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve marketplace: %w", ErrResourceNotFound)
 	}
 
 	var marketplace chain.Marketplace

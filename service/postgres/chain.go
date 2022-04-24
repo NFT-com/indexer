@@ -19,7 +19,7 @@ func (s *Store) Chain(chainID string) (*chain.Chain, error) {
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve chain: %w", errResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve chain: %w", ErrResourceNotFound)
 	}
 
 	var chain chain.Chain

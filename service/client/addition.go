@@ -15,13 +15,13 @@ import (
 
 func (c *Client) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 	req := request.Addition{
-		ChainURL:     job.ChainURL,
-		ChainID:      job.ChainID,
-		ChainType:    job.ChainType,
-		BlockNumber:  job.BlockNumber,
-		Address:      job.Address,
-		StandardType: job.StandardType,
-		TokenID:      job.TokenID,
+		ChainURL:    job.ChainURL,
+		ChainID:     job.ChainID,
+		ChainType:   job.ChainType,
+		BlockNumber: job.BlockNumber,
+		Address:     job.Address,
+		Standard:    job.Standard,
+		TokenID:     job.TokenID,
 	}
 
 	body, err := json.Marshal(req)
@@ -60,13 +60,13 @@ func (c *Client) CreateAdditionJobs(jobList []jobs.Addition) error {
 	requestJobs := make([]request.Addition, 0, len(jobList))
 	for _, job := range jobList {
 		requestJob := request.Addition{
-			ChainURL:     job.ChainURL,
-			ChainID:      job.ChainID,
-			ChainType:    job.ChainType,
-			BlockNumber:  job.BlockNumber,
-			Address:      job.Address,
-			StandardType: job.StandardType,
-			TokenID:      job.TokenID,
+			ChainURL:    job.ChainURL,
+			ChainID:     job.ChainID,
+			ChainType:   job.ChainType,
+			BlockNumber: job.BlockNumber,
+			Address:     job.Address,
+			Standard:    job.Standard,
+			TokenID:     job.TokenID,
 		}
 
 		requestJobs = append(requestJobs, requestJob)
