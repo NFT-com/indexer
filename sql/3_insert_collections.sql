@@ -339,7 +339,7 @@ https://coolmansuniverse.com/', '', 'coolmans-universe', 'https://coolmansuniver
 
 1) Limited edition genesis merchandise
 
-2) Limited edition genesis metaverse wearables 
+2) Limited edition genesis metaverse wearables
 
 3) Support services (both performance, business and mental health)
 
@@ -2793,7 +2793,7 @@ Welcome to the Den.
 Collect Your Own Piece of Blockchain History today!', '', 'chainguardians', 'https://www.chainguardians.io', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'f7b7049b-d11a-4793-8a66-85e9596a5fd1', NULL, '0x9c8d2f53f6bff84458f1c84fdaa1e4852ca958e3', 'Super Creators By IAC', 'Super Creators are a collection of 2,222 unique ‘I Am Creator’ NFTs - unique digital collectibles living on the Ethereum blockchain. Your Super Creator  doubles as your Virtual Creators Land membership card, and grants access to members-only benefits, the first of which is access to the Super Creator Academy , a 24 hour virtual knowledge center. 
 
-Token Holders will have the benefits in both the physical and metaphysical space. Such as FREE events and trainings in a variety of fields , from yoga, to wealth building, to spirituality & personal development. This also includes private access to future developments in both the virtual and physical Creators Land.   Visit https://supercreators.io/ for more details.', '', 'supercreatorsbyiac', 'https://supercreators.io/', '' ),
+Token Holders will have the benefits in both the physical and metaphysical space. Such as FREE events and trainings in a variety of fields , from yoga, to wealth building, to spirituality & personal development. This also includes private access to future developments in both the virtual and physical Creators Land.  Visit https://supercreators.io/ for more details.', '', 'supercreatorsbyiac', 'https://supercreators.io/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '2fa266dc-be08-47ba-9fa5-f65e8b6eecad', NULL, '0x7828c811636ccf051993c1ec3157b0b732e55b23', 'DEGENERATE/REGENERATE', 'Degenerate/Regenerate is a 7,400 piece generative NFT art project by Shepard Fairey. Pulling from Fairey’s 32 year stencil, illustration, and fine art archive, this collection layers iconic images programmatically to create new, unique pieces of digital art.
 Public Mint Dec 18, 2021 -- (http://nft.obeygiant.com)', '', 'degenerate-regenerate', 'http://nft.obeygiant.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'a01fad8f-b6e1-42ec-95a2-166e2ebb0682', NULL, '0x0c58ef43ff3032005e472cb5709f8908acb00205', '6529 Gradient', 'The 6529 Gradient Collection represents the 6529 symbol in its original two stark black and white forms as well 98 grayscale gradients in-between.   
@@ -3054,9 +3054,9 @@ https://discord.gg/EDh7FvEA', '', 'unstackedtoadz', 'https://www.stackedtoads.xy
 Upon collecting a perfect set of 8 Genesis Mana from a single Order, corresponding to all 8 item types (i.e. weapon, head armor, chest armor, etc), players can resurrect a Genesis Adventurer using the 2nd smart contract.  
 
 Thus returned to defend its original Order, each Genesis Adventurer will entitle the owner to benefits and rewards, including unique access to claiim derivative projects,  airdropped ERC20 tokens similar to $AGLD and more.', '', 'genesis-mana', 'http://genesisproject.xyz', '' ),
-( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '06458d0a-f66e-40d5-aeae-86fe0a3fef6a', NULL, '0xe0c3707acb7ce96345ef4eaebf4029c0138ca685', 'Nostalgia by YMH', 'Ownership of this key grants you access to - An exclusive Discord community and private channels  | Future NFT sets created by YMH  | Early access to partner NFT projects and launches | Voting rights over Your Mom’s DAO  
+( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '06458d0a-f66e-40d5-aeae-86fe0a3fef6a', NULL, '0xe0c3707acb7ce96345ef4eaebf4029c0138ca685', 'Nostalgia by YMH', 'Ownership of this key grants you access to - An exclusive Discord community and private channels | Future NFT sets created by YMH | Early access to partner NFT projects and launches | Voting rights over Your Mom’s DAO
 
-Your Mom’s House aims to be an insightful Web3 community building the future of the Metaverse. 
+Your Mom’s House aims to be an insightful Web3 community building the future of the Metaverse.
 See the roadmap here - https://www.yourmomshouse.io', '', 'nostalgia-by-ymh', 'https://yourmomshouse.io/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '68918e8d-7fdd-4afc-9bfc-e118035a61ee', NULL, '0xa54e6b99f58b6165228abcdc681e9a16bcefdbe1', 'Sherbet NFTs', 'The sweetest NFT collection on Ethereum 🍭 
 
@@ -3297,7 +3297,7 @@ Visit https://www.legendsofvenari.com for more info.', '', 'legends-of-venari-al
 The total supply of this Genesis isoroom collection is 3,000. In the Genesis collection, there are bedrooms and workrooms with different traits and rarities. Also, there are in total of 10 legendary isorooms.', '', 'genesis-isoroom', 'https://isoroom.io/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'a8ce904c-7835-4527-be72-c59b45ddc7e2', NULL, '0x62674b8ace7d939bb07bea6d32c55b74650e0eaa', 'EtherOrcs Allies', 'EtherOrcs Allies is a collection of 12,000 100% on-chain warriors that aid Genesis Orcs in their conquest of Valkala. Four classes of Allies (Shamans, Tanks, Mages, and Rogues) each produce their own unique consumables as their entry point to the broader EtherOrcs game economy. 
 
-Each Ally can participate in all aspects of gameplay within the ecosystem and will strengthen the Horde and solidify its place as champions in the on-chain metaverse.  
+Each Ally can participate in all aspects of gameplay within the ecosystem and will strengthen the Horde and solidify its place as champions in the on-chain metaverse.
 
 EtherOrcs Genesis Collection: https://opensea.io/collection/ether-orcs', '', 'etherorcsallies', 'https://etherorcs.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'a1a2ced0-f46c-4866-9dc7-31c868354577', NULL, '0x138ff21a21dfc06fbfccf15f2d9fd290a660e152', 'Based Fish Mafia', 'Join our gang of 10,000 original Based Fish Mafia NFTs. Each Based Fish is unique including 11 entirely different species with customized traits fitting for each! Your Based Fish will grant you membership to the Family, allowing you access to the perks listed in our road map!', '', 'based-fish-mafia', 'https://basedfishmafia.com/', '' ),
@@ -3711,7 +3711,7 @@ Check out our other collections:
 [MechNuggets x Skullx](https://opensea.io/collection/mechnuggets-x-kinkyskullx)', '', 'skullx-aeons', 'https://skullxnft.io/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'c8436afc-4425-4aba-8da2-77005cd79028', NULL, '0x97e41d5ce9c8cb1f83947ef82a86e345aed673f3', 'The Ninja Hideout', 'The Ninja Hideout conceals 8,888 unique, randomized Ninjas as collectible NFTs on the Ethereum blockchain. A virtual Ninja Hideout is currently being developed. https://theninjahideout.com', '', 'theninjahideout', 'https://TheNinjaHideout.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '5e22f7f3-5316-4874-b108-bd1bfa2aa90d', NULL, '0x4e2781e3ad94b2dfcf34c51de0d8e9358c69f296', 'Sora''s Dreamworld', 'There will only be 10,000 Genesis Dream Machines that will ever be created, each and every one uniquely generated on the blockchain. Sora’s Dreamworld welcomes all digital nomads to our sanctuary to unravel what lies ahead in this super lunary world.  
- [sorasdreamworld.io](https://sorasdreamworld.io)', '', 'sorasdreamworld', 'http://sorasdreamworld.io', '' ),
+[sorasdreamworld.io](https://sorasdreamworld.io)', '', 'sorasdreamworld', 'http://sorasdreamworld.io', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '015c6b4e-8f09-47f1-a385-e3d169329d48', NULL, '0x7f9d4abd4604ae3dba34f0a1074b6c0f440020d4', 'Los Samos', 'Los Samos are revolutionaries. They fight for freedom of speech, of art, of finance, of economy. 
 They are colorful spirits that blur the line between avatars and stand-alone art. They are named after SAMO, that Jean-Michel Basquiat used to write on walls before he started painting. Same Old Shit. As crypto artists and DeFi believers, we won''t accept it. It is time for a change. Are you going to be a revolutionary ?
 Grab one of these beautiful 1:1 work of arts and join our discord to see the biggest roadmap you have ever seen in a project. Much love', '', 'los-samos-1', 'https://discord.gg/YwE6avPsHh', '' ),
@@ -3937,11 +3937,11 @@ Each Slumdoge Billionaire NFT is verifiably one-of-a-kind and the random nature 
 
 *It includes:*
 
-1) Access to all Psychedelics Anonymous Metaverse events,   spaces and clubhouses. 
+1) Access to all Psychedelics Anonymous Metaverse events,  spaces and clubhouses. 
 
 2) Access to mint all future ''Metaverse Pass'' wearable drops. 
 
-3) 1 x metaverse wearables pack,  redeemable free of charge.', '', 'metaverse-psychedelics-anonymous-pass', 'https://psychedelicsanonymous.com/', '' ),
+3) 1 x metaverse wearables pack, redeemable free of charge.', '', 'metaverse-psychedelics-anonymous-pass', 'https://psychedelicsanonymous.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'ea3d2b8d-744f-4a0f-a0a3-149cf344a6d7', NULL, '0xee0ba89699a3dd0f08cb516c069d81a762f65e56', 'Sneaky Bat Syndicate', 'Notice: Please see header for actual holder count (OpenSea is incorrect as Bats are currently being staked).
 
 [Our Site](http://svs.gg) | [Discord](https://discord.gg/SVSNFT) | [Twitter](https://twitter.com/SVSNFT) | [IG](https://www.instagram.com/sneakyvampiresyndicate) | [Sneaky Vampire Syndicate](https://opensea.io/collection/sneaky-vampire-syndicate) | [Honoraries](https://opensea.io/collection/sneaky-vampire-syndicate-honoraries)
@@ -3986,11 +3986,11 @@ Website 2.0 In Development', '', 'thecryptomoms', 'https://www.cryptodadsnft.com
 
 *It includes:*
 
-1) Access to all IRL Psychedelics Anonymous events, experiences  and  partnership events. 
+1) Access to all IRL Psychedelics Anonymous events, experiences and  partnership events. 
 
-2) Access to ''IRL Pass'' merchandise drops in the future  which will not be open to the public.
+2) Access to ''IRL Pass'' merchandise drops in the future which will not be open to the public.
 
-3) 1 x set of IRL Psychedelics Anonymous merchandise,  redeemable free of charge.', '', 'irl-psychedelics-anonymous-pass', 'https://psychedelicsanonymous.com/', '' ),
+3) 1 x set of IRL Psychedelics Anonymous merchandise, redeemable free of charge.', '', 'irl-psychedelics-anonymous-pass', 'https://psychedelicsanonymous.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '0368a07a-1fc2-4a12-9e91-43c59edd93ef', NULL, '0x9e02ffd6643f51aaafa0f0e2a911bf25ef2684cb', 'NFTheo', 'NFTheo is an art project of 3000 unique NFT Teddy Bears. Every Theo is one of a kind.
 
 This project is entirely about the art, so manage your expectations accordingly.
@@ -8336,16 +8336,16 @@ To learn more, and for our Terms of Service and Conditions - go to nicefunzombie
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '280056bc-2e49-4048-ba88-90dc548c0dc5', NULL, '0x2fe776dd5fd2388f5ccaefad214989131b3a8d6b', 'Crypto Noun Punks', 'No roadmaps. No Traits. No DAO. No utility. No BS. Just Glasses & Mirrored Phunks.
 
 Buy for the art.', '', 'crypto-noun-punks', 'https://noun-punks.com/', '' ),
-( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '115dc33d-ccb8-4f20-94cd-3899e472e141', NULL, '0x8b27a351690e62b623a7630c5294e7dac5371723', 'Demi Gods Universe', 'For thousands of years, the Demi Gods lived alongside Humans in the Metaverse. Unfortunately, it wasn’t long until that peace was unsettled with the start of the great eternal war. The Demi Gods grouped into 4 factions called the Freedom Fighters, Authoritarians, Descendants, and the Disciples that emanate their own unique qualities.    
+( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '115dc33d-ccb8-4f20-94cd-3899e472e141', NULL, '0x8b27a351690e62b623a7630c5294e7dac5371723', 'Demi Gods Universe', 'For thousands of years, the Demi Gods lived alongside Humans in the Metaverse. Unfortunately, it wasn’t long until that peace was unsettled with the start of the great eternal war. The Demi Gods grouped into 4 factions called the Freedom Fighters, Authoritarians, Descendants, and the Disciples that emanate their own unique qualities.  
 
 The Demi Gods Universe NFT collection offers 3,131 unique characters that play a specific role in this series. These roles include that of voting rights, clan rights, and community rights that will be used to dictate the outcome of this evolving story line. With the 4 1/1s being the main characters of this story and the factions separating and finding their own paths, the Demi Gods have to decide their own destiny in the Eternal War. 
 
-  Join the Demi Gods Universe and play your role in deciding the fate of the Metaverse!
+Join the Demi Gods Universe and play your role in deciding the fate of the Metaverse!
 
 [Join our site here](https://opensea.io/collection/demi-gods-universe)', '', 'demi-gods-universe', 'https://www.demigodsuniverse.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'a3e52455-7fca-47fb-8261-4a3b695d5ca9', NULL, '0x2a0acf0c4b6c3dd67c3828e099a843ab08a6b72e', 'BrokenSeaDAO', 'An after-hours club and collection for NFT Degens. At BrokenSea we wanted to take our favorite NFT collections and break them for BrokenSea. Inspiration was Banksy-Esq Cyber/Futuristic art. 
 
- This collection represents the community and what we believe NFT art would look like if Opensea were truly Broken. At BrokenseaDAO we believe in empowering and giving voice to our community. BrokenDao, BrokenBank, and $BRKN utility token play a huge factor and provide utility to all our holders. Each BrokenSea NFT grants access to the exclusive DAO community and voting rights over the DAO''s assets. BrokenBank to fund future creators and collections will be set up. Blue-chip NFT giveaways for our holders will also be hosted.', '', 'brokenseadao', 'https://brokenseadao.com/', '' ),
+This collection represents the community and what we believe NFT art would look like if Opensea were truly Broken. At BrokenseaDAO we believe in empowering and giving voice to our community. BrokenDao, BrokenBank, and $BRKN utility token play a huge factor and provide utility to all our holders. Each BrokenSea NFT grants access to the exclusive DAO community and voting rights over the DAO''s assets. BrokenBank to fund future creators and collections will be set up. Blue-chip NFT giveaways for our holders will also be hosted.', '', 'brokenseadao', 'https://brokenseadao.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'dbd819a7-5772-4f55-90c4-01ab26a32bb3', NULL, '0x895bbc29f74df77279bf585116caa24ce33ed0ba', 'Kangaroo Heroes Original', 'Kangaroo Heroes Originals Collection is apart of the Kangaroo Heroes Universe and consists of 3,600 dedicated Kangaroos in our community to rise up on the blockchain to bring financial literacy, entrepreneurship and access to a network of professionals. These 3,600 Heroes stand in unity to push our Kangaroo Heroes mission forward.', '', 'kangarooheroesoriginal', 'https://www.kangarooheroes.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '8a330c31-dded-4886-b0a1-d528b6490677', NULL, '0xc2c0fb5194cd13f282005f49c40613040ef685a4', 'The Prometheus Project', '<p>The Prometheus Project was founded on a simple premise - to unlock the gateway to exclusive high value products once only accessible to the well heeled and well connected, and make it available to all.</p>
 
@@ -10983,7 +10983,7 @@ Visit https://babydoodleart.com website to see more.', '', 'baby-d-art', 'https:
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '9169c924-4970-445e-bf33-01aa6c9d8b24', NULL, '0x6b4d92b10ae2f93b9f36dbb378c9eb4ff8da0174', 'OverCloudz', '', '', 'overcloudz', 'https://overcloudz.io/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '22660f06-7866-4e92-80ec-cd13a73ce5f0', NULL, '0x4238e50bd593119bbd0baed05f9851eb84a0b0b7', 'Great Ape Bananas', 'Great Ape Society - Banana Weapons 
 
-Powerful weapons for a powerful community!  APES STRONG. APES UNITED.', '', 'great-ape-bananas', 'http://greatapesociety.world', '' ),
+Powerful weapons for a powerful community! APES STRONG. APES UNITED.', '', 'great-ape-bananas', 'http://greatapesociety.world', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'd288148a-b10e-41f0-9874-8bad12e5bf11', NULL, '0xa04290ff2491f55aedc47dec497d432b19347768', 'On Chain Hex Truchet Tiles', 'Tiling has been a mainstay of generative art for many decades. Truchet tiles are one of the first tiling methods that were actively studied. Truchet tiles are capable of producing interesting art and patterns, but are limited in the variations due to the fact that 4 sided tiles are used.
 
 Recent research in Truchet tilings have produced Generalized Hexagonal Truchet Tiles. Hexagonal Truchet tiles triple the number of potential tiles and hence produce much greater variation. In fact, even with small tilings, the range of variation is essentially infinite.
@@ -11059,7 +11059,7 @@ The Fast Food Doges are an ultra-scarce collection of 1,696 uniquely-generated p
 For more information on the Fast Food Doge collection, check out https://fastfooddoge.com/.
 
 Make sure to join both the Fast Food Frens and the Doge NFT discords to stay up to date with the latest news.
-Fast Food Frens – http://discord.gg/fastfoodfrens  
+Fast Food Frens – http://discord.gg/fastfoodfrens 
 The Doge NFT - http://discord.gg/thedogenft', '', 'fastfooddoge', 'http://fastfooddoge.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'c4f8ee98-8f24-42bf-a0f3-7e78a45bad37', NULL, '0x05febf6a40a672854b3549f2b814e9a9946e6cc7', 'The Floor', 'The FLOOR NFT collection consists of 7,777 AI-generated collectible FLOORs artistically constructed on the Ethereum Blockchain. All 7,777 are programmatically randomly generated from 150+ attributes hand-drawn by DAHR exclusively for this project.
 
@@ -12234,7 +12234,7 @@ STAY TRIPPY APES!!!', '', 'trippy-ape-nft', 'https://trippyapesclub.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'd6e9c5f2-2549-41c5-88bb-d0a407b5007b', NULL, '0x61c81bab9f7094a038e645b8a995f13c4e102480', 'Coins & Steel', 'The adventure is beginning, the world of Coins & Steel starts to form out of the fires of forges and the promise of battle. Today, we welcome you to the Vault of Champions. Your time has come hero, join The Founders!', '', 'coins-steel', 'https://coinsandsteel.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '199bbd9c-2eed-4347-86f9-99b485b08942', NULL, '0x6cad6e1abc83068ea98924aef37e996ed02abf1c', 'Dino Gangz NFT', '', '', 'dino-gangz', 'http://dinogangz.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '330e2dd9-2fa9-423a-a916-43f77f379a36', NULL, '0x8e9ae49e639492e440525370605ea665184a522f', 'HUMBL - sscEB3si48', '', '', 'humbl-ssceb3si48', '', '' ),
-( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '721cd096-421b-423e-91c1-782c1da51a63', NULL, '0x9fcd7d84d1d607ab352c403993f20f37dde05f2f', '55 Sunrises Curated - Art Basel Miami Beach 2021', 'Sho Shibuya 55 Sunrises  Curated by Anthony Vaccarello . For the occasion of Art Basel, Saint Laurent Rive Droite commissioned Sho Shibuya to exhibit. “55 Sunrises” in a custom ephemeral gallery.', '', '55-sunrises-curated', '', '' ),
+( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '721cd096-421b-423e-91c1-782c1da51a63', NULL, '0x9fcd7d84d1d607ab352c403993f20f37dde05f2f', '55 Sunrises Curated - Art Basel Miami Beach 2021', 'Sho Shibuya 55 Sunrises Curated by Anthony Vaccarello. For the occasion of Art Basel, Saint Laurent Rive Droite commissioned Sho Shibuya to exhibit. “55 Sunrises” in a custom ephemeral gallery.', '', '55-sunrises-curated', '', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '346fd3f9-96e2-441f-abfd-0a67272c0d05', NULL, '0xb9250c9581e4594b7c6914897823ad18d6b78e96', 'LORDLESS', 'LORDLESS is a fantasy game where you rule your Tavern. 
 Recruit bounty hunters, send them on quests and reap the rewards. You can also play a bounty hunter to complete the quests and get the rewards.', '', 'lordless', 'https://game.lordless.io', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '983f7bb7-1108-4ac8-a5a7-b86729fc023d', NULL, '0x623be6b50746ca627f5f9399a5fc0e07baf304eb', 'Jail Turtles', 'Jail Turtles are the official second collection of DAO Turtles. 
@@ -12528,7 +12528,7 @@ Mint a console: https://playnftboy.com/consoles
 **Oscillo Public Sale Is On Thursday 11th November 8:00pm (GMT).**
 
 **Join Our Community On Both [Discord](discord.gg/oscillo) And [Twitter](https://twitter.com/OscilloNFT)**', '', 'oscillo', 'http://oscillo.art', '' ),
-( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '91922720-acb1-466e-abaf-3a4a8ad98c45', NULL, '0x2e7ae73127595ad323710836015eac722d0089dc', 'Spherical Harmonics V1', 'Procedural Harmonics is an NFT collection of 1770 procedurally generated to guarantee 100% unique results. All equally rare, beautiful and special in its own particular way. This collection was created by PAGESVFX a veteran of the visual effects industry with film credits such as Avatar, Gravity, Harry Potter 5 and many more.  
+( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '91922720-acb1-466e-abaf-3a4a8ad98c45', NULL, '0x2e7ae73127595ad323710836015eac722d0089dc', 'Spherical Harmonics V1', 'Procedural Harmonics is an NFT collection of 1770 procedurally generated to guarantee 100% unique results. All equally rare, beautiful and special in its own particular way. This collection was created by PAGESVFX a veteran of the visual effects industry with film credits such as Avatar, Gravity, Harry Potter 5 and many more.
 
 My procedural system takes into consideration hundreds of thousands of shape variations, color ranges and noise patterns, as well as 87 different lighting and reflection scenarios to produce millions of unique possibilities. We believe the NFT space deserves a collection that focuses on beauty with guaranteed uniqueness.
 
@@ -14530,7 +14530,7 @@ Learn more about the collection here: https://www.secondrealm.com/nft-art/the-we
 The Chads Club is primarily focused on unifying a trusted community on the blockchain. An initial stealth launch was performed to find the ultimate Chads. These Chads bought into the project with no utility and no roadmap. They only cared about the community. They are known as the Legacy Chads. The Legacy Chads will reap great benefit from this project. But, don''t worry. You are not too late! Soon you will be able to mint more Chads...', '', 'multichainchads', 'https://multichainchads.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '7fd9cd4a-a165-4757-bf69-420e11c4aa18', NULL, '0x21bd8edb31a7423e8d899bfacfb69b6bbe75081a', 'Dragons Of Midgard Official Collection', '10,000 Unique Dragons NFTs living, evolving and battling on the Ethereum Blockchain. Dragons of Midgard is ready to disrupt the NFT market forever with unique Play-To-Earn game.', '', 'dragons-of-midgard-official-collection', 'https://dragonsofmidgard.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '648a2c1e-e666-4641-9504-1001566fe5cb', NULL, '0x410eeb89bcc694ff6b57ba2a4133d977731e26d4', 'A Dream Dawns', 'Home for my digital only releases', '', 'a-dream-dawns', 'https://app.rarible.com/collection/0x410eeb89bcc694ff6b57ba2a4133d977731e26d4', '' ),
-( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'fac3cd32-c143-4d00-9330-ba290c010211', NULL, '0x989e1fb123b67afd66e10574c8b409bc6e812d9a', 'Drakons', 'Drakons is a strategy game where you get to collect and play elemental dragon non-fungible tokens or NFTs called DRAKONS in the Ethereum Blockchain and Polygon Network (Matic) sidechain. Drakon Masters will get to enjoy battles in Drakon Arenas for a chance to play-to-earn loots, boosts and valuable gems that can be exchanged to Drakons’ utility token called Drakoins or $DRK.  #BeADrakonMaster', '', 'drakons', 'https://www.drakons.io/', '' ),
+( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'fac3cd32-c143-4d00-9330-ba290c010211', NULL, '0x989e1fb123b67afd66e10574c8b409bc6e812d9a', 'Drakons', 'Drakons is a strategy game where you get to collect and play elemental dragon non-fungible tokens or NFTs called DRAKONS in the Ethereum Blockchain and Polygon Network (Matic) sidechain. Drakon Masters will get to enjoy battles in Drakon Arenas for a chance to play-to-earn loots, boosts and valuable gems that can be exchanged to Drakons’ utility token called Drakoins or $DRK.#BeADrakonMaster', '', 'drakons', 'https://www.drakons.io/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '629aa55c-38b9-4c65-97b6-6373fc1e5b29', NULL, '0x14d33db3c298e1a3800492d2474748a9b5530b47', 'VOYAGERZ', 'VOYGAERZ is MINTING NOW on https://voyagerz.art
 
 VOYAGERZ is a Generative Transfer Art Project, that lives fully on chain. When you mint one, you’ll receive a 1/1 artwork with a completely unique color palette. If you love it and want to keep it as is, you’re more than welcome. (You can even remove the wallet addresses displayed around the art.)
@@ -14848,15 +14848,15 @@ Chichi, Degen’$ Farm CEO', '', 'degens-farm-tools', 'http://www.degens.farm', 
 この作品は、NFTアート「天使の卵」シリーズの第一作目です。
 天使の卵〜予兆/空と海　5エディションです。
 ◯ストーリー
- 2021年Covid19の流行で世界の多くの人々が不安に包まれている中、
+2021年Covid19の流行で世界の多くの人々が不安に包まれている中、
 地球上のいたるところに天使の卵が降り立ち、孵化の時をまっています。
 
 天使はこの世に愛と癒しと平安をもたらすと言われています。
 天使の卵は荒廃した世界にどんな世界をもたらすのでしょうか？
 
-天使の卵は人間の目には見えませんが、たしかに存在しています。 すべての人の心に、私の心の中にも、そしてあなたの心の中にも存在しています。
+天使の卵は人間の目には見えませんが、たしかに存在しています。すべての人の心に、私の心の中にも、そしてあなたの心の中にも存在しています。
 
-天使の卵は、人の暖かい心を栄養として育ちます。 それに命を与えることができるか、死滅させてしまうかは一人一人の心にかかっています。
+天使の卵は、人の暖かい心を栄養として育ちます。それに命を与えることができるか、死滅させてしまうかは一人一人の心にかかっています。
 
 願わくは、新しい時代が、愛と赦しと平和に満ちたものとなりますように。
 祈りを込めて。
@@ -15666,7 +15666,7 @@ One hundred portraits, one hundred poems.
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '1a6b8c6f-7bd2-4cf6-bbc4-42ead81690b4', NULL, '0xc868b3f657a308363ebd8acfd2f369784f9d2117', 'Find Your Center', '', '', 'find-your-center-by-jimena-buena-vida', 'https://www.buenavidaart.com/', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '8f12d4fa-4530-4369-b0bd-db8a51ffb62b', NULL, '0xee37e56f3a47d7c752c92407064f96077338fd5d', 'Happy Astronauts V2', 'Happy Astronauts is a collection of 10,000 algorithmically generated unique digital collectibles living on the Ethereum blockchain. We are developing a visually stunning open world metaverse on the Unreal Engine and you will be able to unlock your astronaut in-game as well as other additional founders features for owning these NFTs. ALL in-game purchases will be NFTs that will exist in the metaverse. The game will have multiple gaming modes ranging from adventure, creative, co-op, and battle royal.
 
-  We are also developing the system to fully integrate NFTs and Crypto into pre-existing gaming engines as well as API’s for new and upcoming games and engines to utilize.
+We are also developing the system to fully integrate NFTs and Crypto into pre-existing gaming engines as well as API’s for new and upcoming games and engines to utilize.
 
 Suit up, buckle in and get ready to blast off on this journey with us!', '', 'happy-astronauts-v2', 'https://happyastronauts.com', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '56960f50-38d7-455f-8c81-78eb57e8f2bb', NULL, '0x834ebe76d6e0331fe86071963cad42c98199fc7c', 'Mirror Editions - S3duy1QQzE', 'Mirror Editions are a way for creators to mint a limited supply of identical NFTs at a fixed price. If a 1/1 NFT is a Picasso at Sotheby''s, Editions are like the thousands of first-edition holographic Charizards released.', '', 'mirror-editions-s3duy1qqze', 'https://mirror.xyz', '' ),
@@ -15690,11 +15690,11 @@ After being stuck in a scammer''s wallet for more than 30 days, The Worm Vigil w
 
 2,112 on-chain, animated Vigil Lights were minted at The Vigil! The Worm then Resurrected to continue its mission to visit every wallet on the Ethereum blockchain.
 
-The Worm is the first share-to-mint NFT traveling the Ethereum blockchain. Track the Worm at    [TheWorm.wtf](https://theworm.wtf/).
+The Worm is the first share-to-mint NFT traveling the Ethereum blockchain. Track the Worm at  [TheWorm.wtf](https://theworm.wtf/).
 
 ---
 
-Follow [@TheWormNFT](https://twitter.com/TheWormNFT)   |   See The Vigil at [TheWorm.wtf](https://theworm.wtf/resurrection)    |  Visit [The Worm Collection](https://opensea.io/collection/the-worm-church)', '', 'the-worm-vigil', 'https://theworm.wtf', '' ),
+Follow [@TheWormNFT](https://twitter.com/TheWormNFT)   |   See The Vigil at [TheWorm.wtf](https://theworm.wtf/resurrection)   |  Visit [The Worm Collection](https://opensea.io/collection/the-worm-church)', '', 'the-worm-vigil', 'https://theworm.wtf', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '1c26f577-0816-4c40-a308-808151a895a3', NULL, '0x495f947276749ce646f68ac8c248420045cb7b5e', 'Axiesisters Collection', '', '', 'axiesisters-collection', 'https://twitter.com/axiesisters', '' ),
 ( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', '29752f45-a5a4-4dbd-a9c7-59a8955b5edf', NULL, '0x21c8e4abf7378296f677f0a2d7faf4d650c9ac81', 'Juice Box by LOGIK', 'We want the REAL stuff not the FAKE stuff. [From consuming High Fructose Corn Syrup Drinks to 100% Fruit Juice]
 -
@@ -16567,7 +16567,7 @@ Check out [8SIAN Discord](https://discord.gg/8sian) and [8SIAN Website](https://
 
 [8SIAN VIP GOLD PASS](https://opensea.io/collection/8sian-vip-gold-pass)
 
-[8SIAN Bespoke Artworks](https://opensea.io/collection/8sian-bespoke-artworks)  
+[8SIAN Bespoke Artworks](https://opensea.io/collection/8sian-bespoke-artworks)
 
 [8SIAN Holiday Card](https://opensea.io/collection/holiday-8sian-cards)
 
@@ -16756,7 +16756,7 @@ Become a collector of physical AI art pieces!
 
 ------
 
-Original artwork 
+Original artwork
 
 Every painting is produced in a single copy. You will be granted exclusive ownership over the product. The buyer will be transferred the rights to use the painting in whatever way they see fit.
 

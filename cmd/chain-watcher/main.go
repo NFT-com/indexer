@@ -62,7 +62,7 @@ func run() error {
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
 	pflag.UintVarP(&flagJobLimit, "job-limit", "j", 1000, "maximum number of pending jobs per combination")
-	pflag.DurationVarP(&flagNotifyPeriod, "check-period", "c", 100*time.Millisecond, "how often to notify watchers to create new jobs")
+	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", time.Second, "how often to notify watchers to create new jobs")
 
 	pflag.Parse()
 
