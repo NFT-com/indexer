@@ -96,7 +96,11 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not create store: %w", err)
 	}
-	collections, err := store.Collections(flagChainID)
+	chain, err := store.Chain(flagChainID)
+	if err != nil {
+		return fmt.Errorf("could not get chain: %w", err)
+	}
+	collections, err := store.Collections(chain.ID)
 	if err != nil {
 		return fmt.Errorf("could not get collections from store (chain: %s): %w", flagChainID, err)
 	}
