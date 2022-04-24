@@ -25,7 +25,7 @@ type Creator struct {
 func NewCreator(log zerolog.Logger, start uint64, template jobs.Parsing, persist creator.Persister, check creator.Checker, limit uint) *Creator {
 
 	log = log.With().
-		Str("component", "jobs_creater").
+		Str("component", "jobs_creator").
 		Str("address", template.Address).
 		Str("standard", template.Standard).
 		Str("event", template.Event).
@@ -83,6 +83,9 @@ func (c *Creator) Notify(height uint64) {
 		}
 		start = number + 1
 	}
+	if start < c.start {
+		start = c.start
+	}
 	if start > height {
 		c.log.Debug().Uint64("height", height).Uint64("start", start).Msg("ignoring notify (all jobs pending)")
 		return
@@ -99,5 +102,5 @@ func (c *Creator) Notify(height uint64) {
 		c.last = index
 	}
 
-	c.log.Info().Int("jobs", created).Msg("created parsing jobs")
+	c.log.Info().Int("jobs", created).Uint64("start", start).Uint64("end", c.last).Msg("created parsing jobs")
 }
