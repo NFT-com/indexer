@@ -3,6 +3,7 @@ package job
 import (
 	"errors"
 	"strconv"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -13,6 +14,7 @@ import (
 )
 
 type Creator struct {
+	mutex    sync.Mutex
 	log      zerolog.Logger
 	start    uint64
 	last     uint64
@@ -32,6 +34,7 @@ func NewCreator(log zerolog.Logger, start uint64, template jobs.Parsing, persist
 		Logger()
 
 	c := Creator{
+		mutex:    sync.Mutex{},
 		log:      log,
 		start:    start,
 		last:     0,
@@ -45,6 +48,8 @@ func NewCreator(log zerolog.Logger, start uint64, template jobs.Parsing, persist
 }
 
 func (c *Creator) Notify(height uint64) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
 	if height < c.start {
 		c.log.Debug().Uint64("height", height).Uint64("start", c.start).Msg("ignoring notify (start not reached)")
