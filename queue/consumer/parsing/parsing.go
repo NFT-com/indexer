@@ -173,10 +173,6 @@ func (d *Parsing) consume(payloads [][]byte) {
 
 	d.log.Debug().Int("jobs", len(payloads)).Int("batches", len(inputs)).Msg("batched jobs for processing")
 
-	if d.dryRun {
-		return
-	}
-
 	for _, input := range inputs {
 		payload, err := json.Marshal(input)
 		if err != nil {
@@ -196,42 +192,45 @@ func (d *Parsing) consume(payloads [][]byte) {
 
 		name := functionName(input)
 
-		notify := func(err error, dur time.Duration) {
-			d.log.Error().
-				Err(err).
-				Dur("retry_in", dur).
-				Str("name", name).
-				Int("payload_len", len(payload)).
-				Msg("could not invoke lambda")
-		}
-		var output []byte
-		_ = backoff.RetryNotify(func() error {
-			output, err = d.dispatcher.Invoke(name, payload)
-			if err != nil {
-				return err
+		if !d.dryRun {
+			notify := func(err error, dur time.Duration) {
+				d.log.Error().
+					Err(err).
+					Dur("retry_in", dur).
+					Str("name", name).
+					Int("payload_len", len(payload)).
+					Msg("could not invoke lambda")
 			}
-			return nil
-		}, backoff.NewExponentialBackOff(), notify)
+			var output []byte
+			_ = backoff.RetryNotify(func() error {
 
-		var logs []log.Log
-		err = json.Unmarshal(output, &logs)
-		if err != nil {
-			d.handleError(err, "could not unmarshal output logs", input.IDs...)
-			return
-		}
+				output, err = d.dispatcher.Invoke(name, payload)
+				if err != nil {
+					return err
+				}
+				return nil
+			}, backoff.NewExponentialBackOff(), notify)
 
-		d.log.Debug().
-			Str("start", input.StartBlock).
-			Str("end", input.EndBlock).
-			Int("collections", len(input.Addresses)).
-			Int("events", len(input.EventTypes)).
-			Int("occurences", len(logs)).
-			Msg("processing results")
+			var logs []log.Log
+			err = json.Unmarshal(output, &logs)
+			if err != nil {
+				d.handleError(err, "could not unmarshal output logs", input.IDs...)
+				return
+			}
 
-		err = d.processLogs(input, logs)
-		if err != nil {
-			d.handleError(err, "could not handle output logs", input.IDs...)
-			return
+			d.log.Debug().
+				Str("start", input.StartBlock).
+				Str("end", input.EndBlock).
+				Int("collections", len(input.Addresses)).
+				Int("events", len(input.EventTypes)).
+				Int("occurences", len(logs)).
+				Msg("processing results")
+
+			err = d.processLogs(input, logs)
+			if err != nil {
+				d.handleError(err, "could not handle output logs", input.IDs...)
+				return
+			}
 		}
 
 		for _, id := range input.IDs {
