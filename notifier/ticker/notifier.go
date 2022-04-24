@@ -52,19 +52,19 @@ ProcessLoop:
 
 		case <-n.ctx.Done():
 
-			n.log.Debug().Msg("terminating ticker notifier")
+			n.log.Debug().Msg("terminating ticker notifications")
 
 			break ProcessLoop
 
 		case height := <-n.heights:
 
-			n.log.Debug().Msg("updating ticker height")
+			n.log.Debug().Uint64("height", height).Msg("updating ticker height")
 
 			n.latest = height
 
 		case <-n.ticker.C:
 
-			n.log.Debug().Uint64("height", n.latest).Msg("notifying on tick")
+			n.log.Debug().Uint64("height", n.latest).Msg("notifying ticker height")
 
 			n.listen.Notify(n.latest)
 		}
