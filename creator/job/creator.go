@@ -90,7 +90,7 @@ func (c *Creator) Notify(height uint64) {
 
 	created := 0
 	maximum := c.limit - count
-	for index := start; index <= start+uint64(maximum) && index <= height; index++ {
+	for index := start; index < start+uint64(maximum) && index <= height; index++ {
 		job := c.template
 		job.ID = uuid.New().String()
 		job.BlockNumber = strconv.FormatUint(index, 10)
