@@ -89,10 +89,14 @@ func (c *Creator) Notify(height uint64) {
 		return
 	}
 
+	created := 0
 	maximum := c.limit - count
-	for index := start; index <= start+uint64(maximum); index++ {
+	for index := start; index <= start+uint64(maximum) && index <= height; index++ {
 		job := c.template
 		job.BlockNumber = strconv.FormatUint(index, 10)
 		c.persist.Store(&job)
+		created++
 	}
+
+	c.log.Info().Int("jobs", created).Msg("created parsing jobs")
 }

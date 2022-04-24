@@ -64,6 +64,8 @@ func (p *Persister) execute() {
 		p.log.Error().Err(err).Msg("could not create parsing jobs")
 	}
 
+	p.log.Info().Int("jobs", len(p.jobs)).Msg("persisted parsing jobs")
+
 	p.jobs = []*jobs.Parsing{}
 }
 
