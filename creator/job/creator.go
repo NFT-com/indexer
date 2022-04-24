@@ -23,8 +23,15 @@ type Creator struct {
 
 func NewCreator(log zerolog.Logger, start uint64, template jobs.Parsing, persist creator.Persister, check creator.Checker, limit uint) *Creator {
 
+	log = log.With().
+		Str("component", "jobs_creater").
+		Str("address", template.Address).
+		Str("standard", template.Standard).
+		Str("event", template.Event).
+		Logger()
+
 	c := Creator{
-		log:      log.With().Str("component", "jobs_creator").Logger(),
+		log:      log,
 		start:    start,
 		last:     0,
 		template: template,
