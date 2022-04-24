@@ -9,11 +9,11 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog"
-	"github.com/spf13/pflag"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog"
+	"github.com/spf13/pflag"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -32,13 +32,12 @@ const (
 func main() {
 	err := run()
 	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
 		log.Fatalln(err)
 	}
 }
 
 func run() error {
+
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -72,6 +71,7 @@ func run() error {
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
+
 	pflag.Parse()
 
 	// Logger initialization.
