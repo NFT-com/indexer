@@ -56,6 +56,7 @@ func run() error {
 		flagRedisURL               string
 		flagRegion                 string
 		flagRMQTag                 string
+		flagDryRun                 bool
 	)
 
 	// TODO: remove batch size and instead use time-based dispatching
@@ -71,6 +72,7 @@ func run() error {
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
+	pflag.BoolVar(&flagDryRun, "dry-run", false, "when in dry run mode, no lambdas are invoked")
 
 	pflag.Parse()
 
@@ -144,7 +146,7 @@ func run() error {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := parsing.NewConsumer(log, dispatcher, jobStore, eventStore, dataStore, flagRateLimit)
+	consumer := parsing.NewConsumer(log, dispatcher, jobStore, eventStore, dataStore, flagRateLimit, flagDryRun)
 	consumerName, err := queue.AddBatchConsumer(flagRMQTag, flagBatchSize, 100*time.Millisecond, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)

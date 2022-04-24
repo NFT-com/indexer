@@ -31,9 +31,10 @@ type Parsing struct {
 	limit         ratelimit.Limiter
 	consumerQueue chan [][]byte
 	close         chan struct{}
+	dryRun        bool
 }
 
-func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store, eventStore Store, dataStore Store, rateLimit int) *Parsing {
+func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store, eventStore Store, dataStore Store, rateLimit int, dryRun bool) *Parsing {
 
 	c := Parsing{
 		log:           log,
@@ -44,6 +45,7 @@ func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store
 		limit:         ratelimit.New(rateLimit),
 		consumerQueue: make(chan [][]byte, concurrentConsumers),
 		close:         make(chan struct{}),
+		dryRun:        dryRun,
 	}
 
 	return &c
@@ -170,6 +172,10 @@ func (d *Parsing) consume(payloads [][]byte) {
 	}
 
 	d.log.Debug().Int("jobs", len(payloads)).Int("batches", len(inputs)).Msg("batched jobs for processing")
+
+	if d.dryRun {
+		return
+	}
 
 	for _, input := range inputs {
 		payload, err := json.Marshal(input)
