@@ -9,7 +9,7 @@ import (
 )
 
 // CreateAdditionJob creates a new addition job and returns it.
-func (c *Handler) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
+func (c *Handler) CreateAdditionJob(job *jobs.Addition) (*jobs.Addition, error) {
 	job.ID = uuid.New().String()
 	job.Status = jobs.StatusCreated
 
@@ -18,11 +18,11 @@ func (c *Handler) CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error) {
 		return nil, fmt.Errorf("could not create addition job: %w", err)
 	}
 
-	return &job, nil
+	return job, nil
 }
 
 // CreateAdditionJobs creates a new addition jobs.
-func (c *Handler) CreateAdditionJobs(jobList []jobs.Addition) error {
+func (c *Handler) CreateAdditionJobs(jobList []*jobs.Addition) error {
 	for i := range jobList {
 		jobList[i].ID = uuid.New().String()
 		jobList[i].Status = jobs.StatusCreated
@@ -37,7 +37,7 @@ func (c *Handler) CreateAdditionJobs(jobList []jobs.Addition) error {
 }
 
 // ListAdditionJobs returns a list of addition jobs given the status. Empty string status returns all jobs.
-func (c *Handler) ListAdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
+func (c *Handler) ListAdditionJobs(status jobs.Status) ([]*jobs.Addition, error) {
 	jobs, err := c.store.AdditionJobs(status)
 	if err != nil {
 		return nil, fmt.Errorf("could not get addition jobs: %w", err)

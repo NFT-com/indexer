@@ -27,7 +27,7 @@ func NewHandler(log zerolog.Logger) *Handler {
 func (h *Handler) Handle(ctx context.Context, job jobs.Addition) (*chain.NFT, error) {
 	h.log.Debug().
 		Str("block", job.BlockNumber).
-		Str("event", job.EventType).
+		Str("event", job.Event).
 		Str("contract", job.Address).
 		Msg("processing job")
 

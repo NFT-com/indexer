@@ -8,7 +8,7 @@ import (
 )
 
 // CreateAdditionJob creates a new addition job.
-func (s *Store) CreateAdditionJob(job jobs.Addition) error {
+func (s *Store) CreateAdditionJob(job *jobs.Addition) error {
 
 	_, err := s.build.
 		Insert(additionJobsTableName).
@@ -23,7 +23,7 @@ func (s *Store) CreateAdditionJob(job jobs.Addition) error {
 }
 
 // CreateAdditionJobs creates a batch of addition jobs.
-func (s *Store) CreateAdditionJobs(jobs []jobs.Addition) error {
+func (s *Store) CreateAdditionJobs(jobs []*jobs.Addition) error {
 
 	query := s.build.
 		Insert(additionJobsTableName).
@@ -42,7 +42,7 @@ func (s *Store) CreateAdditionJobs(jobs []jobs.Addition) error {
 }
 
 // AdditionJobs returns a list of addition jobs filtered by status. Empty string status returns every job.
-func (s *Store) AdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
+func (s *Store) AdditionJobs(status jobs.Status) ([]*jobs.Addition, error) {
 
 	query := s.build.
 		Select(additionJobsTableColumns...).
@@ -57,7 +57,7 @@ func (s *Store) AdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
 	}
 	defer result.Close()
 
-	jobList := make([]jobs.Addition, 0)
+	jobList := make([]*jobs.Addition, 0)
 	for result.Next() && result.Err() == nil {
 		var job jobs.Addition
 		err = result.Scan(
@@ -75,7 +75,7 @@ func (s *Store) AdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
 			return nil, fmt.Errorf("could not retrieve addition job list: %w", err)
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, &job)
 	}
 
 	return jobList, nil

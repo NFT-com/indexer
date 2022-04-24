@@ -13,9 +13,9 @@ type JobsHandler interface {
 
 // DiscoveryJobHandler represent the business layer of the discovery jobs api.
 type DiscoveryJobHandler interface {
-	CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error)
-	CreateDiscoveryJobs(jobs []jobs.Discovery) error
-	ListDiscoveryJobs(status jobs.Status) ([]jobs.Discovery, error)
+	CreateDiscoveryJob(job *jobs.Discovery) (*jobs.Discovery, error)
+	CreateDiscoveryJobs(jobs []*jobs.Discovery) error
+	ListDiscoveryJobs(status jobs.Status) ([]*jobs.Discovery, error)
 	GetDiscoveryJob(id string) (*jobs.Discovery, error)
 	GetHighestBlockNumberDiscoveryJob(chainURL, chainType string, addresses []string, standardType, eventType string) (*jobs.Discovery, error)
 	UpdateDiscoveryJobStatus(id string, status jobs.Status) error
@@ -23,9 +23,9 @@ type DiscoveryJobHandler interface {
 
 // ParsingJobHandler represent the business layer of the parsing jobs api.
 type ParsingJobHandler interface {
-	CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error)
-	CreateParsingJobs(jobs []jobs.Parsing) error
-	ListParsingJobs(status jobs.Status) ([]jobs.Parsing, error)
+	CreateParsingJob(job *jobs.Parsing) (*jobs.Parsing, error)
+	CreateParsingJobs(jobs []*jobs.Parsing) error
+	ListParsingJobs(status jobs.Status) ([]*jobs.Parsing, error)
 	GetParsingJob(id string) (*jobs.Parsing, error)
 	GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error)
 	UpdateParsingJobStatus(id string, status jobs.Status) error
@@ -33,9 +33,9 @@ type ParsingJobHandler interface {
 
 // AdditionJobHandler represent the business layer of the addition jobs api.
 type AdditionJobHandler interface {
-	CreateAdditionJob(job jobs.Addition) (*jobs.Addition, error)
-	CreateAdditionJobs(jobs []jobs.Addition) error
-	ListAdditionJobs(status jobs.Status) ([]jobs.Addition, error)
+	CreateAdditionJob(job *jobs.Addition) (*jobs.Addition, error)
+	CreateAdditionJobs(jobs []*jobs.Addition) error
+	ListAdditionJobs(status jobs.Status) ([]*jobs.Addition, error)
 	GetAdditionJob(id string) (*jobs.Addition, error)
 	UpdateAdditionJobStatus(id string, status jobs.Status) error
 }

@@ -53,6 +53,8 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]*jobs.Parsing, error) {
 		query = query.Where("status = ?", status)
 	}
 
+	query.OrderBy("block_number ASC")
+
 	result, err := query.Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)

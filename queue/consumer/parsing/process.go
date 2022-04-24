@@ -3,6 +3,8 @@ package parsing
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
@@ -17,15 +19,17 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 		}
 
 		if l.NeedsAdditionJob {
-			_, err := d.apiClient.CreateAdditionJob(jobs.Addition{
-				ChainURL:     input.ChainURL,
-				ChainID:      input.ChainID,
-				ChainType:    input.ChainType,
-				BlockNumber:  l.Block,
-				Address:      l.Contract,
-				StandardType: l.Standard,
-				EventType:    l.Event,
-				TokenID:      l.NftID,
+			err := d.jobStore.CreateAdditionJob(&jobs.Addition{
+				ID:          uuid.New().String(),
+				ChainURL:    input.ChainURL,
+				ChainID:     input.ChainID,
+				ChainType:   input.ChainType,
+				BlockNumber: l.Block,
+				Address:     l.Contract,
+				Standard:    l.Standard,
+				Event:       l.Event,
+				TokenID:     l.NftID,
+				Status:      jobs.StatusCreated,
 			})
 			if err != nil {
 				return fmt.Errorf("could not create addition job: %w", err)

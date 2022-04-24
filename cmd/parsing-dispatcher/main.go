@@ -4,17 +4,16 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog"
-	"github.com/spf13/pflag"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog"
+	"github.com/spf13/pflag"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,44 +21,31 @@ import (
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/queue/consumer/parsing"
-	"github.com/NFT-com/indexer/service/client"
 	"github.com/NFT-com/indexer/service/postgres"
 )
 
 const (
-	databaseDriver = "postgres"
-
-	defaultHTTPTimeout = 30 * time.Second
-
-	defaultPollDuration = time.Second
-	defaultPrefetch     = 1000
-	defaultBatchTimeout = 30 * time.Second
-	defaultBatchSize    = 500
-
+	databaseDriver          = "postgres"
 	defaultParsingQueueName = "parsing"
 )
 
 func main() {
 	err := run()
 	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
 		log.Fatalln(err)
 	}
 }
 
 func run() error {
+
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
 	// Command line parameter initialization.
 	var (
-		flagAPIEndpoint            string
 		flagBatchSize              int64
-		flagBatchTimeout           time.Duration
-		flagConsumerPollDuration   time.Duration
-		flagConsumerPrefetch       int64
+		flagDBJobsConnectionInfo   string
 		flagDBDataConnectionInfo   string
 		flagDBEventsConnectionInfo string
 		flagLogLevel               string
@@ -70,23 +56,24 @@ func run() error {
 		flagRedisURL               string
 		flagRegion                 string
 		flagRMQTag                 string
+		flagDryRun                 bool
 	)
 
-	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base hostname and port")
-	pflag.Int64VarP(&flagBatchSize, "batch", "b", defaultBatchSize, "batch size to process")
-	pflag.DurationVar(&flagBatchTimeout, "batch-timeout", defaultBatchTimeout, "batch timeout to process")
-	pflag.DurationVarP(&flagConsumerPollDuration, "poll-duration", "i", defaultPollDuration, "time for each consumer poll")
-	pflag.Int64VarP(&flagConsumerPrefetch, "prefetch", "p", defaultPrefetch, "amount of message to prefetch in the consumer")
+	// TODO: remove batch size and instead use time-based dispatching
+	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
+	pflag.StringVarP(&flagDBJobsConnectionInfo, "job-database", "j", "", "jobs database connection string")
 	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
-	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 500, "maximum amount of jobs that can be invoked per second")
+	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
+	pflag.BoolVar(&flagDryRun, "dry-run", false, "when in dry run mode, no lambdas are invoked")
+
 	pflag.Parse()
 
 	// Logger initialization.
@@ -107,13 +94,15 @@ func run() error {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	cli := http.DefaultClient
-	cli.Timeout = defaultHTTPTimeout
+	jobDB, err := sql.Open(databaseDriver, flagDBJobsConnectionInfo)
+	if err != nil {
+		return fmt.Errorf("could not open jobs SQL connection: %w", err)
+	}
 
-	api := client.New(log,
-		client.WithHTTPClient(cli),
-		client.WithHost(flagAPIEndpoint),
-	)
+	jobStore, err := postgres.NewStore(jobDB)
+	if err != nil {
+		return fmt.Errorf("could not create job store: %w", err)
+	}
 
 	eventDB, err := sql.Open(databaseDriver, flagDBEventsConnectionInfo)
 	if err != nil {
@@ -152,13 +141,13 @@ func run() error {
 		return fmt.Errorf("could not open redis queue: %w", err)
 	}
 
-	err = queue.StartConsuming(flagConsumerPrefetch, flagConsumerPollDuration)
+	err = queue.StartConsuming(2*flagBatchSize, 100*time.Millisecond)
 	if err != nil {
 		return fmt.Errorf("could not start consuming process: %w", err)
 	}
 
-	consumer := parsing.NewConsumer(log, api, dispatcher, eventStore, dataStore, flagRateLimit)
-	consumerName, err := queue.AddBatchConsumer(flagRMQTag, flagBatchSize, flagBatchTimeout, consumer)
+	consumer := parsing.NewConsumer(log, dispatcher, jobStore, eventStore, dataStore, flagRateLimit, flagDryRun)
+	consumerName, err := queue.AddBatchConsumer(flagRMQTag, flagBatchSize, 100*time.Millisecond, consumer)
 	if err != nil {
 		return fmt.Errorf("could not add parsing consumer: %w", err)
 	}

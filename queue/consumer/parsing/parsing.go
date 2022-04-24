@@ -12,45 +12,49 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
+	"go.uber.org/ratelimit"
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/log"
-	"github.com/NFT-com/indexer/service/client"
 )
 
-const concurrentConsumers = 4096
+const concurrentConsumers = 1000
 
 type Parsing struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
-	apiClient     *client.Client
+	jobStore      Store
 	eventStore    Store
 	dataStore     Store
-	rateLimiter   <-chan time.Time
+	limit         ratelimit.Limiter
 	consumerQueue chan [][]byte
 	close         chan struct{}
+	dryRun        bool
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, eventStore Store, dataStore Store, rateLimit int) *Parsing {
-	limiter := time.Tick(time.Second / time.Duration(rateLimit))
+func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store, eventStore Store, dataStore Store, rateLimit int, dryRun bool) *Parsing {
 
 	c := Parsing{
 		log:           log,
 		dispatcher:    dispatcher,
-		apiClient:     apiClient,
+		jobStore:      jobStore,
 		eventStore:    eventStore,
 		dataStore:     dataStore,
-		rateLimiter:   limiter,
+		limit:         ratelimit.New(rateLimit),
 		consumerQueue: make(chan [][]byte, concurrentConsumers),
 		close:         make(chan struct{}),
+		dryRun:        dryRun,
 	}
 
 	return &c
 }
 
 func (d *Parsing) Consume(batch rmq.Deliveries) {
+
+	d.log.Debug().Int("jobs", len(batch)).Msg("received batch for consuming")
+
 	payloads := make([][]byte, 0, len(batch))
 
 	for _, delivery := range batch {
@@ -109,8 +113,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 		if ok {
 			input.IDs = append(input.IDs, job.ID)
 			input.Addresses = append(input.Addresses, job.Address)
-			input.EventTypes = append(input.EventTypes, job.EventType)
-			input.Standards[job.EventType] = job.StandardType
+			input.EventTypes = append(input.EventTypes, job.Event)
+			input.Standards[job.Event] = job.Standard
 
 			inputMap[currentBlock] = input
 			continue
@@ -126,8 +130,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 			StartBlock: job.BlockNumber,
 			EndBlock:   job.BlockNumber,
 			Addresses:  []string{job.Address},
-			Standards:  map[string]string{job.EventType: job.StandardType},
-			EventTypes: []string{job.EventType},
+			Standards:  map[string]string{job.Event: job.Standard},
+			EventTypes: []string{job.Event},
 		}
 
 		if lowestBlock > currentBlock {
@@ -167,6 +171,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 		inputs = append(inputs, input)
 	}
 
+	d.log.Debug().Int("jobs", len(payloads)).Int("batches", len(inputs)).Msg("batched jobs for processing")
+
 	for _, input := range inputs {
 		payload, err := json.Marshal(input)
 		if err != nil {
@@ -175,50 +181,60 @@ func (d *Parsing) consume(payloads [][]byte) {
 		}
 
 		// Wait for rate limiter to have available spots.
-		<-d.rateLimiter
+		d.limit.Take()
+
+		d.log.Debug().
+			Int("collections", len(input.IDs)).
+			Int("standards", len(input.Standards)).
+			Int("events", len(input.EventTypes)).
+			Str("start", input.StartBlock).
+			Str("end", input.EndBlock).Msg("dispatching job batch")
 
 		name := functionName(input)
 
-		notify := func(err error, dur time.Duration) {
-			d.log.Error().
-				Err(err).
-				Dur("retry_in", dur).
-				Str("name", name).
-				Int("payload_len", len(payload)).
-				Msg("could not invoke lambda")
-		}
-		var output []byte
-		_ = backoff.RetryNotify(func() error {
-			output, err = d.dispatcher.Invoke(name, payload)
-			if err != nil {
-				return err
+		if !d.dryRun {
+			notify := func(err error, dur time.Duration) {
+				d.log.Error().
+					Err(err).
+					Dur("retry_in", dur).
+					Str("name", name).
+					Int("payload_len", len(payload)).
+					Msg("could not invoke lambda")
 			}
-			return nil
-		}, backoff.NewExponentialBackOff(), notify)
+			var output []byte
+			_ = backoff.RetryNotify(func() error {
 
-		var logs []log.Log
-		err = json.Unmarshal(output, &logs)
-		if err != nil {
-			d.handleError(err, "could not unmarshal output logs", input.IDs...)
-			return
-		}
+				output, err = d.dispatcher.Invoke(name, payload)
+				if err != nil {
+					return err
+				}
+				return nil
+			}, backoff.NewExponentialBackOff(), notify)
 
-		d.log.Debug().
-			Str("start", input.StartBlock).
-			Str("end", input.EndBlock).
-			Int("collections", len(input.Addresses)).
-			Int("events", len(input.EventTypes)).
-			Int("occurences", len(logs)).
-			Msg("processing job batch")
+			var logs []log.Log
+			err = json.Unmarshal(output, &logs)
+			if err != nil {
+				d.handleError(err, "could not unmarshal output logs", input.IDs...)
+				return
+			}
 
-		err = d.processLogs(input, logs)
-		if err != nil {
-			d.handleError(err, "could not handle output logs", input.IDs...)
-			return
+			d.log.Debug().
+				Str("start", input.StartBlock).
+				Str("end", input.EndBlock).
+				Int("collections", len(input.Addresses)).
+				Int("events", len(input.EventTypes)).
+				Int("occurences", len(logs)).
+				Msg("processing results")
+
+			err = d.processLogs(input, logs)
+			if err != nil {
+				d.handleError(err, "could not handle output logs", input.IDs...)
+				return
+			}
 		}
 
 		for _, id := range input.IDs {
-			err = d.apiClient.UpdateParsingJobStatus(id, jobs.StatusFinished)
+			err = d.dataStore.UpdateParsingJobStatus(id, jobs.StatusFinished)
 			if err != nil {
 				d.handleError(err, "could not update job status", id)
 				continue
@@ -260,8 +276,8 @@ func (d *Parsing) fillInput(base, part parsing.Input) parsing.Input {
 	return base
 }
 
-func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
-	jobList := make([]jobs.Parsing, 0, len(payloads))
+func (d *Parsing) unmarshalJobs(payloads [][]byte) []*jobs.Parsing {
+	jobList := make([]*jobs.Parsing, 0, len(payloads))
 
 	for _, payload := range payloads {
 		var job jobs.Parsing
@@ -271,7 +287,7 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 			continue
 		}
 
-		storedJob, err := d.apiClient.GetParsingJob(job.ID)
+		storedJob, err := d.jobStore.ParsingJob(job.ID)
 		if err != nil {
 			d.handleError(err, "could not retrieve parsing job", job.ID)
 			continue
@@ -282,13 +298,13 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 			continue
 		}
 
-		err = d.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
+		err = d.jobStore.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
 		if err != nil {
 			d.handleError(err, "could not update job status", job.ID)
 			continue
 		}
 
-		jobList = append(jobList, job)
+		jobList = append(jobList, &job)
 	}
 
 	return jobList
@@ -296,7 +312,7 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []jobs.Parsing {
 
 func (d *Parsing) handleError(err error, message string, ids ...string) {
 	for _, id := range ids {
-		updateErr := d.apiClient.UpdateParsingJobStatus(id, jobs.StatusFailed)
+		updateErr := d.jobStore.UpdateParsingJobStatus(id, jobs.StatusFailed)
 		if updateErr != nil {
 			d.log.Error().Err(updateErr).Msg("could not update job status")
 		}

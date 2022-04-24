@@ -1,5 +1,3 @@
-\connect chains
-
 INSERT INTO public.marketplaces(id, name, description, WEBSITE)
 VALUES ('df87df1d-f0a1-4e53-b2c3-77e794a76cf2', 'OpenSea',
         'Discover, collect, and sell extraordinary NFTs on the world''s first & largest NFT marketplace.',

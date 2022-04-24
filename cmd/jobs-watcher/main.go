@@ -23,7 +23,7 @@ const (
 	databaseDriver = "postgres"
 
 	defaultHTTPTimeout       = 30 * time.Second
-	defaultReadDelay         = 200 * time.Millisecond
+	defaultReadDelay         = 100 * time.Millisecond
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
 	defaultAdditionQueueName = "addition"

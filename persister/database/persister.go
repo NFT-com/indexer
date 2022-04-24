@@ -29,8 +29,8 @@ func NewPersister(log zerolog.Logger, ctx context.Context, store persister.Store
 		ctx:       ctx,
 		tick:      time.NewTicker(delay),
 		store:     store,
-		jobs:      []*jobs.Parsing{},
-		watermark: 1000,
+		jobs:      make([]*jobs.Parsing, 0, watermark),
+		watermark: watermark,
 	}
 
 	go p.process()
@@ -48,16 +48,21 @@ func (p *Persister) Store(job *jobs.Parsing) {
 		return
 	}
 
-	go p.execute()
+	p.execute()
 }
 
-func (p *Persister) execute() {
+func (p *Persister) check() {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
 	if len(p.jobs) == 0 {
 		return
 	}
+
+	p.execute()
+}
+
+func (p *Persister) execute() {
 
 	err := p.store.CreateParsingJobs(p.jobs)
 	if err != nil {
@@ -66,7 +71,7 @@ func (p *Persister) execute() {
 
 	p.log.Info().Int("jobs", len(p.jobs)).Msg("persisted parsing jobs")
 
-	p.jobs = []*jobs.Parsing{}
+	p.jobs = make([]*jobs.Parsing, 0, p.watermark)
 }
 
 func (p *Persister) process() {
@@ -84,7 +89,7 @@ ProcessLoop:
 
 		case <-p.tick.C:
 
-			p.execute()
+			p.check()
 		}
 	}
 

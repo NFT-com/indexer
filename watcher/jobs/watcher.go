@@ -92,7 +92,7 @@ func (j *Job) watchAdditions() {
 	}
 }
 
-func (j *Job) handleDiscoveryJobs(jobsList []jobs.Discovery) {
+func (j *Job) handleDiscoveryJobs(jobsList []*jobs.Discovery) {
 	for _, job := range jobsList {
 		err := j.publishDiscoveryJob(job)
 		if err != nil {
@@ -107,7 +107,7 @@ func (j *Job) handleDiscoveryJobs(jobsList []jobs.Discovery) {
 	}
 }
 
-func (j *Job) publishDiscoveryJob(job jobs.Discovery) error {
+func (j *Job) publishDiscoveryJob(job *jobs.Discovery) error {
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}
@@ -125,7 +125,7 @@ func (j *Job) publishDiscoveryJob(job jobs.Discovery) error {
 	return nil
 }
 
-func (j *Job) handleParsingJobs(jobsList []jobs.Parsing) {
+func (j *Job) handleParsingJobs(jobsList []*jobs.Parsing) {
 	for _, job := range jobsList {
 		err := j.publishParsingJob(job)
 		if err != nil {
@@ -140,7 +140,7 @@ func (j *Job) handleParsingJobs(jobsList []jobs.Parsing) {
 	}
 }
 
-func (j *Job) publishParsingJob(job jobs.Parsing) error {
+func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}
@@ -158,7 +158,7 @@ func (j *Job) publishParsingJob(job jobs.Parsing) error {
 	return nil
 }
 
-func (j *Job) handleAdditionJobs(jobsList []jobs.Addition) {
+func (j *Job) handleAdditionJobs(jobsList []*jobs.Addition) {
 	for _, job := range jobsList {
 		err := j.publishAdditionJob(job)
 		if err != nil {
@@ -173,7 +173,7 @@ func (j *Job) handleAdditionJobs(jobsList []jobs.Addition) {
 	}
 }
 
-func (j *Job) publishAdditionJob(job jobs.Addition) error {
+func (j *Job) publishAdditionJob(job *jobs.Addition) error {
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}

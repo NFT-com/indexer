@@ -10,11 +10,11 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog"
-	"github.com/spf13/pflag"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog"
+	"github.com/spf13/pflag"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

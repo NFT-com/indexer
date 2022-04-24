@@ -51,6 +51,8 @@ func run() error {
 		flagDBConnectionInfo string
 		flagLogLevel         string
 		flagStartHeight      uint64
+		flagJobLimit         uint
+		flagNotifyPeriod     time.Duration
 	)
 
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
@@ -59,6 +61,8 @@ func run() error {
 	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
+	pflag.UintVarP(&flagJobLimit, "job-limit", "j", 1000, "maximum number of pending jobs per combination")
+	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", time.Second, "how often to notify watchers to create new jobs")
 
 	pflag.Parse()
 
@@ -141,14 +145,14 @@ func run() error {
 
 				// initialize a job creator that will be notified of heights and
 				// create jobs accordingly
-				create := job.NewCreator(log, flagStartHeight, template, persist, store, 100)
+				create := job.NewCreator(log, flagStartHeight, template, persist, store, flagJobLimit)
 				listens = append(listens, create)
 
 				// TODO: introduce jitter so not all DB requests hit it at the same second
 
 				// initialize a ticker that will notify of the latest height at
 				// regular intervals, to stay live when no blocks happen
-				live, err := ticker.NewNotifier(log, ctx, time.Second, latest, create)
+				live, err := ticker.NewNotifier(log, ctx, flagNotifyPeriod, latest, create)
 				if err != nil {
 					return fmt.Errorf("could not create live notifier: %w", err)
 				}

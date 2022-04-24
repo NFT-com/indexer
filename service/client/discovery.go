@@ -13,7 +13,7 @@ import (
 	"github.com/NFT-com/indexer/service/request"
 )
 
-func (c *Client) CreateDiscoveryJob(job jobs.Discovery) (*jobs.Discovery, error) {
+func (c *Client) CreateDiscoveryJob(job *jobs.Discovery) (*jobs.Discovery, error) {
 	req := request.Discovery{
 		ChainURL:     job.ChainURL,
 		ChainID:      job.ChainID,
