@@ -176,15 +176,13 @@ func run() error {
 		return fmt.Errorf("could not start watcher: mismatch between chain ID and chain URL")
 	}
 
-	go func() {
-		select {
+	select {
 
-		case <-ctx.Done():
+	case <-ctx.Done():
 
-		case <-sig:
-			cancel()
-		}
-	}()
+	case <-sig:
+		cancel()
+	}
 
 	return nil
 }
