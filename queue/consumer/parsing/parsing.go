@@ -49,6 +49,9 @@ func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store
 }
 
 func (d *Parsing) Consume(batch rmq.Deliveries) {
+
+	d.log.Debug().Int("jobs", len(batch)).Msg("received batch for consuming")
+
 	payloads := make([][]byte, 0, len(batch))
 
 	for _, delivery := range batch {
@@ -165,6 +168,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 		inputs = append(inputs, input)
 	}
 
+	d.log.Debug().Int("jobs", len(payloads)).Int("batches", len(inputs)).Msg("batched jobs for processing")
+
 	for _, input := range inputs {
 		payload, err := json.Marshal(input)
 		if err != nil {
@@ -174,6 +179,13 @@ func (d *Parsing) consume(payloads [][]byte) {
 
 		// Wait for rate limiter to have available spots.
 		d.limit.Take()
+
+		d.log.Debug().
+			Int("collections", len(input.IDs)).
+			Int("standards", len(input.Standards)).
+			Int("events", len(input.EventTypes)).
+			Str("start", input.StartBlock).
+			Str("end", input.EndBlock).Msg("dispatching job batch")
 
 		name := functionName(input)
 
@@ -207,7 +219,7 @@ func (d *Parsing) consume(payloads [][]byte) {
 			Int("collections", len(input.Addresses)).
 			Int("events", len(input.EventTypes)).
 			Int("occurences", len(logs)).
-			Msg("processing job batch")
+			Msg("processing results")
 
 		err = d.processLogs(input, logs)
 		if err != nil {
