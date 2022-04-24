@@ -5,37 +5,32 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"math/big"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	models "github.com/NFT-com/indexer/models/chain"
+	"github.com/NFT-com/indexer/creator/job"
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/networks/web3"
-	"github.com/NFT-com/indexer/service/client"
+	"github.com/NFT-com/indexer/notifier"
+	"github.com/NFT-com/indexer/notifier/heads"
+	"github.com/NFT-com/indexer/notifier/multiplex"
+	"github.com/NFT-com/indexer/notifier/ticker"
+	"github.com/NFT-com/indexer/persister/database"
 	"github.com/NFT-com/indexer/service/postgres"
-	"github.com/NFT-com/indexer/watcher/chain"
 )
 
 const (
 	databaseDriver = "postgres"
-
-	defaultHTTPTimeout = time.Second * 30
-
-	// This defaults the batch of historic data to 200 messages per request each second
-	defaultBatchDelay = time.Second
-	defaultBatch      = 200
 )
 
 func main() {
 	err := run()
 	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
 		log.Fatal(err)
 	}
 }
@@ -45,12 +40,11 @@ func run() error {
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Command line parameter initialization.
 	var (
-		flagAPIEndpoint      string
-		flagBatch            int64
-		flagBatchDelay       time.Duration
 		flagChainID          string
 		flagChainURL         string
 		flagChainType        string
@@ -59,9 +53,6 @@ func run() error {
 		flagStartHeight      uint64
 	)
 
-	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
-	pflag.Int64VarP(&flagBatch, "batch", "b", defaultBatch, "number of jobs to publish each batch")
-	pflag.DurationVar(&flagBatchDelay, "batch-delay", defaultBatchDelay, "delay between each batch request")
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
@@ -80,14 +71,103 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	failed := make(chan error)
+	// Open the SQL database connection.
+	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	if err != nil {
+		return fmt.Errorf("could not open SQL connection: %w", err)
+	}
 
-	network, err := web3.New(context.TODO(), flagChainURL)
+	// Initialize the Ethereum node client and get the latest height to initialize
+	// the watchers properly.
+	client, err := ethclient.DialContext(ctx, flagChainURL)
+	if err != nil {
+		return fmt.Errorf("could not connect to node: %w", err)
+	}
+	latest, err := client.BlockNumber(ctx)
+	if err != nil {
+		return fmt.Errorf("could not get latest block number: %w", err)
+	}
+
+	// Get the collections for the configured chain ID from the database and initialize
+	// the persister that will store jobs to the DB.
+	store, err := postgres.NewStore(db)
+	if err != nil {
+		return fmt.Errorf("could not create store: %w", err)
+	}
+	chain, err := store.Chain(flagChainID)
+	if err != nil {
+		return fmt.Errorf("could not get chain: %w", err)
+	}
+	collections, err := store.Collections(chain.ID)
+	if err != nil {
+		return fmt.Errorf("could not get collections from store (chain: %s): %w", flagChainID, err)
+	}
+	persist := database.NewPersister(log, ctx, store, 100*time.Millisecond, 1000)
+
+	// For every collection and event type combination, initialize a ticker notifier
+	// that will notify regularly of the latest height.
+	var listens []notifier.Listener
+	for _, collection := range collections {
+
+		standards, err := store.Standards(collection.ID)
+		if err != nil {
+			return fmt.Errorf("could not get standards (collection: %s)", collection.ID)
+		}
+
+		for _, standard := range standards {
+
+			events, err := store.EventTypes(standard.ID)
+			if err != nil {
+				return fmt.Errorf("could not get event types: %w", err)
+			}
+
+			for _, event := range events {
+
+				// TODO: retrieve starting height from latest completed job table
+				// TODO: fix block number to be integer and rest of parsing job fields
+
+				// create the job template for this combination
+				template := jobs.Parsing{
+					ID:          "",
+					ChainURL:    flagChainURL,
+					ChainID:     flagChainID,
+					ChainType:   flagChainType,
+					BlockNumber: "",
+					Address:     collection.Address,
+					Standard:    standard.Name,
+					Event:       event.ID,
+					Status:      jobs.StatusCreated,
+				}
+
+				// initialize a job creator that will be notified of heights and
+				// create jobs accordingly
+				create := job.NewCreator(log, flagStartHeight, template, persist, store, 100)
+				listens = append(listens, create)
+
+				// TODO: introduce jitter so not all DB requests hit it at the same second
+
+				// initialize a ticker that will notify of the latest height at
+				// regular intervals, to stay live when no blocks happen
+				live, err := ticker.NewNotifier(log, ctx, time.Second, latest, create)
+				if err != nil {
+					return fmt.Errorf("could not create live notifier: %w", err)
+				}
+				listens = append(listens, live)
+			}
+		}
+	}
+	multi := multiplex.NewNotifier(listens...)
+	_, err = heads.NewNotifier(log, ctx, client, multi)
+	if err != nil {
+		return fmt.Errorf("could not initialize heads notifier: %w", err)
+	}
+
+	network, err := web3.New(ctx, flagChainURL)
 	if err != nil {
 		return fmt.Errorf("could not create web3 network: %w", err)
 	}
 
-	chainID, err := network.ChainID(context.TODO())
+	chainID, err := network.ChainID(ctx)
 	if err != nil {
 		return fmt.Errorf("could not get chain ID from network: %w", err)
 	}
@@ -95,220 +175,13 @@ func run() error {
 		return fmt.Errorf("could not start watcher: mismatch between chain ID and chain URL")
 	}
 
-	cli := http.DefaultClient
-	cli.Timeout = defaultHTTPTimeout
-
-	api := client.New(log,
-		client.WithHTTPClient(cli),
-		client.WithHost(flagAPIEndpoint),
-	)
-
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
-	if err != nil {
-		return fmt.Errorf("could not open SQL connection: %w", err)
-	}
-
-	store, err := postgres.NewStore(db)
-	if err != nil {
-		return fmt.Errorf("could not create store: %w", err)
-	}
-
-	storedChain, err := store.Chain(chainID)
-	if err != nil {
-		return fmt.Errorf("could not get chain from database: %w", err)
-	}
-
-	collections, contracts, err := getCollections(store, storedChain.ID)
-	if err != nil {
-		return fmt.Errorf("could not get collections: %w", err)
-	}
-
-	log.Info().Int("collections", len(collections)).Msg("loaded collections")
-
-	standards, contractStandards, err := getStandards(store, collections)
-	if err != nil {
-		return fmt.Errorf("could not get standards: %w", err)
-	}
-
-	log.Info().Int("standards", len(standards)).Msg("loaded standards")
-
-	standardsEventTypes, err := getEventTypes(store, standards)
-	if err != nil {
-		return fmt.Errorf("could not get event types: %w", err)
-	}
-
-	log.Info().Int("events", len(standardsEventTypes)).Msg("loaded events")
-
-	startingHeight := big.NewInt(0).SetUint64(flagStartHeight)
-	highestJobIndexes, startingBlock := getHighestJobBlockNumberForCollections(api, flagChainURL, flagChainType, startingHeight, contracts, contractStandards, standardsEventTypes)
-
-	cfg := chain.Config{
-		ChainURL:      flagChainURL,
-		ChainID:       chainID,
-		ChainType:     flagChainType,
-		Contracts:     contracts,
-		Standards:     contractStandards,
-		EventTypes:    standardsEventTypes,
-		StartingBlock: startingBlock,
-		StartIndexes:  highestJobIndexes,
-		Batch:         flagBatch,
-		BatchDelay:    flagBatchDelay,
-	}
-
-	watcher, err := chain.NewWatcher(log, context.TODO(), api, network, cfg)
-	if err != nil {
-		return fmt.Errorf("could not create watcher: %w", err)
-	}
-
-	go func() {
-		log.Info().Msg("chain watcher starting")
-
-		err = watcher.Watch(context.TODO())
-		if err != nil {
-			failed <- fmt.Errorf("could not watch chain: %w", err)
-		}
-
-		log.Info().Msg("chain watcher done")
-	}()
-
 	select {
-	case <-sig:
-		log.Info().Msg("chain watcher stopping")
-		network.Close()
-		watcher.Close()
-		api.Close()
-	case err = <-failed:
-		log.Error().Err(err).Msg("chain watcher aborted")
-		return err
-	}
 
-	go func() {
-		<-sig
-		log.Warn().Msg("forcing exit")
-		os.Exit(1)
-	}()
+	case <-ctx.Done():
+
+	case <-sig:
+		cancel()
+	}
 
 	return nil
-}
-
-func getCollections(store *postgres.Store, chainID string) ([]models.Collection, []string, error) {
-	collections, err := store.Collections(chainID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not get collections from database: %w", err)
-	}
-
-	contracts := make([]string, 0, len(collections))
-	for _, collection := range collections {
-		contracts = append(contracts, collection.Address)
-	}
-
-	return collections, contracts, nil
-}
-
-func getStandards(store *postgres.Store, collections []models.Collection) ([]models.Standard, map[string][]string, error) {
-	standards := make([]models.Standard, 0, len(collections))
-	contractStandards := make(map[string][]string, len(collections))
-	for _, collection := range collections {
-		var err error
-		storedStandards, err := store.Standards(collection.ID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not get standards from database: %w", err)
-		}
-
-		names := make([]string, 0, len(storedStandards))
-		for _, standard := range storedStandards {
-			names = append(names, standard.Name)
-		}
-
-		standards = append(standards, storedStandards...)
-		contractStandards[collection.Address] = names
-	}
-
-	return standards, contractStandards, nil
-}
-
-func getEventTypes(store *postgres.Store, standards []models.Standard) (map[string][]string, error) {
-	eventTypes := make(map[string][]string, len(standards))
-
-	for _, standard := range standards {
-		types, err := store.EventTypes(standard.ID)
-		if err != nil {
-			return nil, fmt.Errorf("could not get event types from database: %w", err)
-		}
-
-		ids := make([]string, 0, len(types))
-		for _, eventType := range types {
-			ids = append(ids, eventType.ID)
-		}
-
-		eventTypes[standard.Name] = ids
-	}
-
-	return eventTypes, nil
-}
-
-func getHighestJobBlockNumberForCollections(api *client.Client, chainURL string, chainType string, startingHeight *big.Int, contracts []string, standards map[string][]string, eventTypes map[string][]string) (chain.Indexes, *big.Int) {
-
-	startingBlock := startingHeight
-
-	highestJobIndexes := make(chain.Indexes, len(contracts))
-	for _, contract := range contracts {
-		stands := standards[contract]
-
-		collectionIndexes, lowestBlock := getHighestJobNumberForStandards(api, chainURL, chainType, contract, startingBlock, stands, eventTypes)
-		if len(collectionIndexes) == 0 {
-			continue
-		}
-
-		if lowestBlock.Cmp(startingBlock) > 0 {
-			startingBlock.Set(lowestBlock)
-		}
-
-		highestJobIndexes[contract] = collectionIndexes
-	}
-
-	return highestJobIndexes, startingBlock
-}
-
-func getHighestJobNumberForStandards(api *client.Client, chainURL, chainType, contract string, startingHeight *big.Int, standards []string, eventTypes map[string][]string) (chain.CollectionIndexes, *big.Int) {
-	startingBlock := big.NewInt(0)
-
-	collectionIndexes := make(chain.CollectionIndexes, len(standards))
-	for _, standard := range standards {
-		eTypes := eventTypes[standard]
-
-		eventTypesIndexes, lowestBlock := getHighestJobNumberForEventTypes(api, chainURL, chainType, contract, standard, eTypes)
-		if len(eventTypesIndexes) == 0 {
-			continue
-		}
-
-		if lowestBlock.Cmp(startingBlock) > 0 {
-			startingBlock.Set(lowestBlock)
-		}
-
-		collectionIndexes[standard] = eventTypesIndexes
-	}
-
-	return collectionIndexes, startingBlock
-}
-
-func getHighestJobNumberForEventTypes(api *client.Client, chainURL, chainType, contract, standard string, eTypes []string) (chain.EventTypesIndexes, *big.Int) {
-	startingBlock := big.NewInt(0)
-
-	eventTypesIndexes := make(chain.EventTypesIndexes, len(eTypes))
-	for _, eType := range eTypes {
-		highestJobIndex := big.NewInt(1)
-		highestJob, err := api.GetHighestBlockNumberParsingJob(chainURL, chainType, contract, standard, eType)
-		if err == nil {
-			highestJobIndex.SetString(highestJob.BlockNumber, 0)
-		}
-
-		if highestJobIndex.Cmp(startingBlock) > 0 {
-			startingBlock.Set(highestJobIndex)
-		}
-
-		eventTypesIndexes[eType] = highestJobIndex
-	}
-
-	return eventTypesIndexes, startingBlock
 }

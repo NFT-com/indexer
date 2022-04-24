@@ -69,7 +69,7 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*chai
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve collection: %w", errResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve collection: %w", ErrResourceNotFound)
 	}
 
 	var (

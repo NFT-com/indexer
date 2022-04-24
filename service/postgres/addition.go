@@ -13,7 +13,7 @@ func (s *Store) CreateAdditionJob(job jobs.Addition) error {
 	_, err := s.build.
 		Insert(additionJobsTableName).
 		Columns(additionJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.TokenID, job.Status).
+		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.Standard, job.TokenID, job.Status).
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not create addition job: %w", err)
@@ -30,7 +30,7 @@ func (s *Store) CreateAdditionJobs(jobs []jobs.Addition) error {
 		Columns(additionJobsTableColumns...)
 
 	for _, job := range jobs {
-		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.StandardType, job.TokenID, job.Status)
+		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.Standard, job.TokenID, job.Status)
 	}
 
 	_, err := query.Exec()
@@ -67,7 +67,7 @@ func (s *Store) AdditionJobs(status jobs.Status) ([]jobs.Addition, error) {
 			&job.ChainType,
 			&job.BlockNumber,
 			&job.Address,
-			&job.StandardType,
+			&job.Standard,
 			&job.TokenID,
 			&job.Status,
 		)
@@ -95,7 +95,7 @@ func (s *Store) AdditionJob(id string) (*jobs.Addition, error) {
 	defer result.Close()
 
 	if !result.Next() || result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve addition job: %w", errResourceNotFound)
+		return nil, fmt.Errorf("could not retrieve addition job: %w", ErrResourceNotFound)
 	}
 
 	var job jobs.Addition
@@ -106,7 +106,7 @@ func (s *Store) AdditionJob(id string) (*jobs.Addition, error) {
 		&job.ChainType,
 		&job.BlockNumber,
 		&job.Address,
-		&job.StandardType,
+		&job.Standard,
 		&job.TokenID,
 		&job.Status,
 	)
@@ -136,7 +136,7 @@ func (s *Store) UpdateAdditionJobStatus(id string, status jobs.Status) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("could not update addition job state: %w", errResourceNotFound)
+		return fmt.Errorf("could not update addition job state: %w", ErrResourceNotFound)
 	}
 
 	return nil

@@ -15,13 +15,13 @@ import (
 
 func (c *Client) CreateParsingJob(job jobs.Parsing) (*jobs.Parsing, error) {
 	req := request.Parsing{
-		ChainURL:     job.ChainURL,
-		ChainID:      job.ChainID,
-		ChainType:    job.ChainType,
-		BlockNumber:  job.BlockNumber,
-		Address:      job.Address,
-		StandardType: job.StandardType,
-		EventType:    job.EventType,
+		ChainURL:    job.ChainURL,
+		ChainID:     job.ChainID,
+		ChainType:   job.ChainType,
+		BlockNumber: job.BlockNumber,
+		Address:     job.Address,
+		Standard:    job.Standard,
+		Event:       job.Event,
 	}
 
 	body, err := json.Marshal(req)
@@ -60,13 +60,13 @@ func (c *Client) CreateParsingJobs(jobList []jobs.Parsing) error {
 	requestJobs := make([]request.Parsing, 0, len(jobList))
 	for _, job := range jobList {
 		requestJob := request.Parsing{
-			ChainURL:     job.ChainURL,
-			ChainID:      job.ChainID,
-			ChainType:    job.ChainType,
-			BlockNumber:  job.BlockNumber,
-			Address:      job.Address,
-			StandardType: job.StandardType,
-			EventType:    job.EventType,
+			ChainURL:    job.ChainURL,
+			ChainID:     job.ChainID,
+			ChainType:   job.ChainType,
+			BlockNumber: job.BlockNumber,
+			Address:     job.Address,
+			Standard:    job.Standard,
+			Event:       job.Event,
 		}
 
 		requestJobs = append(requestJobs, requestJob)

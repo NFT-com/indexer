@@ -124,13 +124,13 @@ func (j *Watcher) createJobsForContract(contract string, block *big.Int) []jobs.
 			}
 
 			jobsList = append(jobsList, jobs.Parsing{
-				ChainURL:     j.config.ChainURL,
-				ChainID:      j.config.ChainID,
-				ChainType:    j.config.ChainType,
-				BlockNumber:  block.String(),
-				Address:      contract,
-				StandardType: standard,
-				EventType:    eType,
+				ChainURL:    j.config.ChainURL,
+				ChainID:     j.config.ChainID,
+				ChainType:   j.config.ChainType,
+				BlockNumber: block.String(),
+				Address:     contract,
+				Standard:    standard,
+				Event:       eType,
 			})
 		}
 	}
