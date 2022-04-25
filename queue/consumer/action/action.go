@@ -112,7 +112,7 @@ func (d *Action) consume(payload []byte) {
 		return
 	}
 
-	err = d.processNFT(nft)
+	err = d.processNFT(job.ActionType, nft)
 	if err != nil {
 		d.handleError(job.ID, err, "could not process nft")
 		return
