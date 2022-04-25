@@ -1,6 +1,10 @@
 # Action Dispatcher
 
-Action Dispatcher consumes messages from the queue and launches jobs.
+This pipeline allows the dispatcher to deploy several actions.
+
+Actions:
+* Addition: Gets the information from networks.
+* OwnerChange: Updates the nft's owner with the new owner.
 
 ## Usage
 
