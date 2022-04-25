@@ -26,7 +26,7 @@ type ParsingStore interface {
 	CreateParsingJob(job *jobs.Parsing) error
 	CreateParsingJobs(jobs []*jobs.Parsing) error
 	ParsingJobs(status jobs.Status) ([]*jobs.Parsing, error)
-	HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error)
+	LastParsingJob(chainID string, address string, eventType string) (*jobs.Parsing, error)
 	ParsingJob(id string) (*jobs.Parsing, error)
 	UpdateParsingJobStatus(id string, status jobs.Status) error
 }

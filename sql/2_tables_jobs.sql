@@ -47,11 +47,3 @@ CREATE TABLE IF NOT EXISTS action_jobs
     updated_at     TIMESTAMP,
     deleted_at     TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS archived_jobs
-(
-    id           UUID PRIMARY KEY,
-    address      VARCHAR(128) NOT NULL,
-    block_number NUMERIC      NOT NULL,
-    event_type   VARCHAR(256) NOT NULL
-);

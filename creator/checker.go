@@ -6,5 +6,5 @@ import (
 
 type Checker interface {
 	CountPendingParsingJobs(chainURL, chainType, address, Standard, eventType string) (uint, error)
-	HighestBlockNumberParsingJob(chainURL, chainType, address, Standard, eventType string) (*jobs.Parsing, error)
+	LastParsingJob(chainID string, address string, eventType string) (*jobs.Parsing, error)
 }

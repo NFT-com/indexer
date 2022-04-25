@@ -27,7 +27,7 @@ type ParsingJobHandler interface {
 	CreateParsingJobs(jobs []*jobs.Parsing) error
 	ListParsingJobs(status jobs.Status) ([]*jobs.Parsing, error)
 	GetParsingJob(id string) (*jobs.Parsing, error)
-	GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error)
+	LastParsingJob(chainID string, address string, eventType string) (*jobs.Parsing, error)
 	UpdateParsingJobStatus(id string, status jobs.Status) error
 }
 

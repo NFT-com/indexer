@@ -17,7 +17,6 @@ func (s *Store) CreateParsingJob(job *jobs.Parsing) error {
 		Columns(parsingJobsTableColumns...).
 		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.Standard, job.Event, job.Status).
 		Exec()
-
 	if err != nil {
 		return fmt.Errorf("could not create parsing job: %w", err)
 	}
@@ -77,7 +76,6 @@ func (s *Store) ParsingJobs(status jobs.Status) ([]*jobs.Parsing, error) {
 			&job.Event,
 			&job.Status,
 		)
-
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve parsing job list: %w", err)
 		}
@@ -117,56 +115,8 @@ func (s *Store) ParsingJob(id string) (*jobs.Parsing, error) {
 		&job.Event,
 		&job.Status,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
-	}
-
-	return &job, nil
-}
-
-// HighestBlockNumberParsingJob returns the highest block number parsing job.
-func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, Standard, eventType string) (*jobs.Parsing, error) {
-
-	result, err := s.build.
-		Select(parsingJobsTableColumns...).
-		From(parsingJobsTableName).
-		Where("chain_url = ?", chainURL).
-		Where("chain_type = ?", chainType).
-		Where("address = ?", address).
-		Where("interface_type = ?", Standard).
-		Where("event_type = ?", eventType).
-		OrderBy("block_number DESC").
-		Limit(1).
-		Query()
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", err)
-	}
-	defer result.Close()
-
-	if !result.Next() {
-		return nil, ErrResourceNotFound
-	}
-
-	if result.Err() != nil {
-		return nil, fmt.Errorf("could not retrieve highest block number parsing job: %w", result.Err())
-	}
-
-	var job jobs.Parsing
-	err = result.Scan(
-		&job.ID,
-		&job.ChainURL,
-		&job.ChainID,
-		&job.ChainType,
-		&job.BlockNumber,
-		&job.Address,
-		&job.Standard,
-		&job.Event,
-		&job.Status,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("could not scan highest block number parsing job: %w", err)
 	}
 
 	return &job, nil
@@ -209,18 +159,17 @@ func (s *Store) CountPendingParsingJobs(chainURL, chainType, address, Standard, 
 
 // UpdateParsingJobStatus updates a parsing job status.
 func (s *Store) UpdateParsingJobStatus(id string, status jobs.Status) error {
-	res, err := s.build.
+	result, err := s.build.
 		Update(parsingJobsTableName).
 		Where("id = ?", id).
 		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
-
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
 
-	rowsAffected, err := res.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
@@ -257,25 +206,65 @@ func (s *Store) UpdateParsingJobsStatus(ids []string, status jobs.Status) error 
 	return nil
 }
 
-// ArchiveParsingJob creates an archived parsing job and deletes the original parsing
-// job from its table.
-func (s *Store) ArchiveParsingJob(job *jobs.Parsing) error {
-	_, err := s.build.
-		Insert(archivedParsingJobsTableName).
-		Columns(archivedParsingJobsTableColumns...).
-		Values(job.ID, job.Address, job.BlockNumber, job.Event).
-		Exec()
-	if err != nil {
-		return fmt.Errorf("could not create archived parsing job: %w", err)
-	}
+// CleanupParsingJobs removes all finished parsing jobs from the DB, except the last one for
+// each chain, collection and event type combination.
+func (s *Store) CleanupParsingJobs() error {
+	query := s.build.Delete(parsingJobsTableName).
+		Where(
+			s.build.Select("id").
+				FromSelect(
+					s.build.Select("id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY block_number DESC) as n").
+						From(parsingJobsTableName),
+					"groups",
+				).
+				Where("groups.n > ?", s.parsingJobLimit),
+		)
 
-	_, err = s.build.
-		Delete(parsingJobsTableName).
-		Where("id = ?", job.ID).
-		Exec()
+	_, err := query.Exec()
 	if err != nil {
-		return fmt.Errorf("could not drop finished parsing job after archival: %w", err)
+		return fmt.Errorf("could not drop parsing jobs: %w", err)
 	}
 
 	return nil
+}
+
+func (s *Store) LastParsingJob(chainID string, address string, eventType string) (*jobs.Parsing, error) {
+	query := s.build.Select(parsingJobsTableColumns...).
+		FromSelect(
+			s.build.Select("id, ROW_NUMBER() OVER (PARTITION BY id ORDER BY block_number DESC) as n").
+				From(parsingJobsTableName).
+				Where("chain_id = ?", chainID).
+				Where("address = ?", address).
+				Where("event_type = ?", eventType),
+			"groups",
+		).
+		Where("groups.n = ?", 1)
+
+	result, err := query.Query()
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve last parsing job: %w", err)
+	}
+	defer result.Close()
+
+	if !result.Next() || result.Err() != nil {
+		return nil, fmt.Errorf("could not retrieve last parsing job: %w", ErrResourceNotFound)
+	}
+
+	var job jobs.Parsing
+	err = result.Scan(
+		&job.ID,
+		&job.ChainURL,
+		&job.ChainID,
+		&job.ChainType,
+		&job.BlockNumber,
+		&job.Address,
+		&job.Standard,
+		&job.Event,
+		&job.Status,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve last parsing job: %w", err)
+	}
+
+	return &job, nil
 }

@@ -56,11 +56,11 @@ func (c *Handler) GetParsingJob(id string) (*jobs.Parsing, error) {
 	return job, nil
 }
 
-// GetHighestBlockNumberParsingJob returns the latest parsing block with the specified elements.
-func (c *Handler) GetHighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType string) (*jobs.Parsing, error) {
-	job, err := c.store.HighestBlockNumberParsingJob(chainURL, chainType, address, standardType, eventType)
+// LastParsingJob returns the last parsing job with the specified chain ID, address and event type.
+func (c *Handler) LastParsingJob(chainID string, address string, eventType string) (*jobs.Parsing, error) {
+	job, err := c.store.LastParsingJob(chainID, address, eventType)
 	if err != nil {
-		return nil, fmt.Errorf("could not get highest block number parsing job: %w", err)
+		return nil, fmt.Errorf("could not get last parsing job: %w", err)
 	}
 
 	return job, nil

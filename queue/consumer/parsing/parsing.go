@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"math/big"
 	"strings"
 	"time"
 
@@ -311,16 +310,6 @@ func (d *Parsing) handleError(err error, message string, ids ...string) {
 	}
 
 	d.log.Error().Err(err).Strs("job_ids", ids).Msg(message)
-}
-
-func blockToUint64(block string) (uint64, error) {
-	number := big.NewInt(0)
-	_, ok := number.SetString(block, 0)
-	if !ok {
-		return 0, fmt.Errorf("could not parse block into big.Int")
-	}
-
-	return number.Uint64(), nil
 }
 
 func functionName(input parsing.Input) string {

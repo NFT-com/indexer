@@ -72,6 +72,7 @@ func (j *Job) watchParsings() {
 
 		case <-time.After(j.delay):
 
+			// Handle new parsing jobs.
 			created, err := j.store.ParsingJobs(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve created parsing jobs")
@@ -87,10 +88,12 @@ func (j *Job) watchParsings() {
 				j.log.Error().Err(err).Msg("could not retrieve finished parsing jobs")
 				continue
 			}
-
-			if len(finished) > 0 {
-				j.archiveParsingJobs(finished)
+			if len(finished) == 0 {
+				continue
 			}
+
+			// After new jobs have been handled, clean up the table.
+			j.cleanupParsingJobs()
 
 		case <-j.close:
 			return
@@ -175,23 +178,6 @@ func (j *Job) handleParsingJobs(jobs []*jobs.Parsing) {
 	}
 }
 
-func (j *Job) archiveParsingJobs(jobs []*jobs.Parsing) {
-	for _, job := range jobs {
-		err := j.archiveParsingJob(job)
-		if err != nil {
-			j.log.Error().
-				Err(err).
-				Str("id", job.ID).
-				Uint64("block", job.BlockNumber).
-				Str("collection", job.Address).
-				Msg("could not publish finished parsing job")
-			continue
-		}
-	}
-
-	j.log.Info().Int("jobs", len(jobs)).Msg("queued parsing jobs")
-}
-
 func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 
 	if job.Status != jobs.StatusCreated {
@@ -206,19 +192,6 @@ func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 	err = j.store.UpdateParsingJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
-	}
-
-	return nil
-}
-
-func (j *Job) archiveParsingJob(job *jobs.Parsing) error {
-	if job.Status != jobs.StatusFinished {
-		return nil
-	}
-
-	err := j.store.ArchiveParsingJob(job)
-	if err != nil {
-		return fmt.Errorf("could not archive finished parsing job: %w", err)
 	}
 
 	return nil
@@ -259,4 +232,12 @@ func (j *Job) publishActionJob(job *jobs.Action) error {
 	}
 
 	return nil
+}
+
+func (j *Job) cleanupParsingJobs() {
+	err := j.store.CleanupParsingJobs()
+	if err != nil {
+		j.log.Error().Err(err).Msg("could not clean up finished parsing jobs")
+		return
+	}
 }

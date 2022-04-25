@@ -74,7 +74,7 @@ func (c *Creator) Notify(height uint64) {
 
 	// If we have an existing job, we start at the height just above.
 	start := uint64(0)
-	existing, err := c.check.HighestBlockNumberParsingJob(c.template.ChainURL, c.template.ChainType, c.template.Address, c.template.Standard, c.template.Event)
+	existing, err := c.check.LastParsingJob(c.template.ChainID, c.template.Address, c.template.Event)
 	if err != nil && !errors.Is(err, postgres.ErrResourceNotFound) {
 		c.log.Error().Err(err).Msg("could not check on most recent job")
 		return

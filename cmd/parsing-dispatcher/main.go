@@ -25,6 +25,10 @@ import (
 	"github.com/NFT-com/indexer/service/postgres"
 )
 
+const (
+	defaultParsingJobLimit = 100
+)
+
 func main() {
 	err := run()
 	if err != nil {
@@ -45,6 +49,7 @@ func run() error {
 		flagDataDB          string
 		flagEventsDB        string
 		flagLogLevel        string
+		flagParsingJobLimit int
 		flagParsingQueue    string
 		flagRateLimit       int
 		flagRedisDatabase   int
@@ -63,6 +68,7 @@ func run() error {
 	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.IntVarP(&flagParsingJobLimit, "parsing-job-limit", "p", defaultParsingJobLimit, "amount of parsing jobs to keep in DB per topic")
 	pflag.StringVarP(&flagParsingQueue, "parsing-queue", "q", constants.QueueParsing, "name of the queue for parsing")
 	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
@@ -125,7 +131,7 @@ func run() error {
 	dataDB.SetMaxOpenConns(int(flagOpenConnections))
 	dataDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	dataStore, err := postgres.NewStore(dataDB)
+	dataStore, err := postgres.NewStore(dataDB, postgres.WithParsingJobLimit(flagParsingJobLimit))
 	if err != nil {
 		return fmt.Errorf("could not create data store: %w", err)
 	}

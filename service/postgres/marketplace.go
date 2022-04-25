@@ -6,7 +6,7 @@ import (
 	"github.com/NFT-com/indexer/models/chain"
 )
 
-func (s *Store) Marketplace(chainID, address string) (*chain.Marketplace, error) {
+func (s *Store) Marketplace(chainID string, address string) (*chain.Marketplace, error) {
 
 	result, err := s.build.
 		Select("marketplaces.id", "marketplaces.name", "marketplaces.description", "marketplaces.website").

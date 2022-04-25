@@ -51,7 +51,7 @@ func (s *Store) Collections(chainID string) ([]chain.Collection, error) {
 	return collections, nil
 }
 
-func (s *Store) Collection(chainID, address, contractCollectionID string) (*chain.Collection, error) {
+func (s *Store) Collection(chainID string, address string, contractCollectionID string) (*chain.Collection, error) {
 	query := s.build.
 		Select(collectionTableColumns...).
 		From(collectionTableName).

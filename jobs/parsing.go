@@ -1,5 +1,9 @@
 package jobs
 
+import (
+	"strconv"
+)
+
 // Parsing is a job that parses an NFT's data from block data.
 type Parsing struct {
 	ID          string `json:"id"`
@@ -13,10 +17,6 @@ type Parsing struct {
 	Status      Status `json:"status"`
 }
 
-// ArchivedParsing is a successful parsing job that was archived and dropped from the Parsing table.
-type ArchivedParsing struct {
-	ID          string `json:"id"`
-	Address     string `json:"address"`
-	BlockNumber string `json:"block_number"`
-	EventType   string `json:"event_type"`
+func BlockToUint64(block string) (uint64, error) {
+	return strconv.ParseUint(block, 10, 64)
 }

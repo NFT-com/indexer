@@ -8,6 +8,7 @@ const (
 	jobIDParamKey = "id"
 
 	statusQueryKey       = "status"
+	chainIDQueryKey      = "chain_id"
 	chainURLQueryKey     = "chain_url"
 	chainTypeQueryKey    = "chain_type"
 	addressQueryKey      = "address"
@@ -46,7 +47,6 @@ func (h *Handler) ApplyRoutes(server *echo.Echo) {
 	parsings.POST("", h.CreateParsingJob)
 	parsings.POST("/batch", h.CreateParsingJobs)
 	parsings.GET("", h.ListParsingJobs)
-	parsings.GET("/highest", h.GetHighestBlockNumberParsingJob)
 	parsings.GET("/:id", h.GetParsingJob)
 	parsings.PATCH("/:id", h.UpdateParsingJobStatus)
 
