@@ -142,10 +142,11 @@ func (p *Processor) Process(ctx context.Context, job jobs.Action) (*chain.NFT, e
 		Contract:    job.Address,
 		TokenID:     job.TokenID,
 		Name:        info.Name,
+		URI:         uri,
 		Image:       info.Image,
 		Description: info.Description,
-		Traits:      traits,
 		Owner:       owner,
+		Traits:      traits,
 	}
 
 	return &nft, nil
