@@ -49,7 +49,7 @@ func (h *Handler) Handle(ctx context.Context, job jobs.Action) (*chain.NFT, erro
 	}
 	defer network.Close()
 
-	processor, err := h.getProcessor(network, job.ActionType, job.Standard)
+	processor, err := h.getProcessor(network, job.Type, job.Standard)
 	if err != nil {
 		return nil, fmt.Errorf("could not get processor: %w", err)
 	}

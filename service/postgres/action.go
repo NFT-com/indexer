@@ -13,7 +13,18 @@ func (s *Store) CreateActionJob(job *jobs.Action) error {
 	_, err := s.build.
 		Insert(actionJobsTableName).
 		Columns(actionJobsTableColumns...).
-		Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.Standard, job.TokenID, job.Status).
+		Values(
+			job.ID,
+			job.ChainURL,
+			job.ChainID,
+			job.ChainType,
+			job.BlockNumber,
+			job.Address,
+			job.Standard,
+			job.TokenID,
+			job.Type,
+			job.Status,
+		).
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not create action job: %w", err)
@@ -30,7 +41,18 @@ func (s *Store) CreateActionJobs(jobs []*jobs.Action) error {
 		Columns(actionJobsTableColumns...)
 
 	for _, job := range jobs {
-		query = query.Values(job.ID, job.ChainURL, job.ChainID, job.ChainType, job.BlockNumber, job.Address, job.Standard, job.TokenID, job.Status)
+		query = query.Values(
+			job.ID,
+			job.ChainURL,
+			job.ChainID,
+			job.ChainType,
+			job.BlockNumber,
+			job.Address,
+			job.Standard,
+			job.TokenID,
+			job.Type,
+			job.Status,
+		)
 	}
 
 	_, err := query.Exec()
@@ -69,6 +91,7 @@ func (s *Store) ActionJobs(status jobs.Status) ([]*jobs.Action, error) {
 			&job.Address,
 			&job.Standard,
 			&job.TokenID,
+			&job.Type,
 			&job.Status,
 		)
 		if err != nil {
@@ -108,6 +131,7 @@ func (s *Store) ActionJob(id string) (*jobs.Action, error) {
 		&job.Address,
 		&job.Standard,
 		&job.TokenID,
+		&job.Type,
 		&job.Status,
 	)
 	if err != nil {

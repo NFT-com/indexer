@@ -1,6 +1,6 @@
 package jobs
 
-// Action is a job that handles different type of actions.
+// Action is a job that handles different types of actions.
 type Action struct {
 	ID          string `json:"id"`
 	ChainURL    string `json:"chain_url"`
@@ -11,6 +11,6 @@ type Action struct {
 	Standard    string `json:"standard_type"`
 	Event       string `json:"event_type"`
 	TokenID     string `json:"token_id"`
-	ActionType  string `json:"action_type"`
+	Type        string `json:"type"`
 	Status      Status `json:"status"`
 }

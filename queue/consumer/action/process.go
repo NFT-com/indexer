@@ -19,6 +19,7 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 	}
 
 	switch actionType {
+
 	case action.Addition:
 		err = d.dataStore.UpsertNFT(nft, collection.ID)
 		if err != nil {
@@ -31,6 +32,7 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 				return fmt.Errorf("could not store trait: %w", err)
 			}
 		}
+
 	case action.OwnerChange:
 		err = d.dataStore.UpdateNFTOwner(collection.ID, nft.ID, nft.Owner)
 		if err != nil {

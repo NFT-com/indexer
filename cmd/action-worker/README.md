@@ -4,5 +4,5 @@ Action Workers are invoked with new action jobs to perform different types of ta
 
 ## Usage
 
-Can't be used as CLI command.
+Cannot be used as CLI command.
 Must be deployed as AWS Lambda functions.
