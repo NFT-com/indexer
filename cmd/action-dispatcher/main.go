@@ -29,8 +29,8 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout     = time.Second * 30
-	defaultPollDuration    = time.Second * 20
+	defaultHTTPTimeout     = 30 * time.Second
+	defaultPollDuration    = 20 * time.Second
 	defaultActionQueueName = "action"
 )
 

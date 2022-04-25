@@ -1,6 +1,6 @@
 # Action Worker
 
-Action Workers get invoked with new action jobs to perform different type of tasks.
+Action Workers are invoked with new action jobs to perform different types of tasks.
 
 ## Usage
 
