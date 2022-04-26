@@ -75,12 +75,12 @@ func (h *Handler) Handle(ctx context.Context, input Input) (interface{}, error) 
 			return nil, fmt.Errorf("could not get parser: %w", err)
 		}
 
-		log, err := parser.ParseRawLog(rawLog, input.Standards)
+		parsedLogs, err := parser.ParseRawLog(rawLog, input.Standards)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse raw event: %w", err)
 		}
 
-		logs = append(logs, *log)
+		logs = append(logs, parsedLogs...)
 	}
 
 	return logs, nil

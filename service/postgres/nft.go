@@ -35,7 +35,7 @@ func (s *Store) UpdateNFTOwner(collectionID, nft, owner string) error {
 	_, err := s.build.
 		Update(nftTableName).
 		Set("owner", owner).
-		Where("token_id = ?", nft).
+		Where("id = ?", nft).
 		Where("collection = ?", collectionID).
 		Exec()
 	if err != nil {

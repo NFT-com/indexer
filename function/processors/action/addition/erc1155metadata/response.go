@@ -1,4 +1,4 @@
-package addition
+package erc1155metadata
 
 type TokenMetadata struct {
 	Name        string  `json:"name"`

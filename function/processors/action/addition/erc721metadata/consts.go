@@ -1,4 +1,4 @@
-package addition
+package erc721metadata
 
 const (
 	// represents what type of the processor action this is

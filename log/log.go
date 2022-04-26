@@ -11,6 +11,7 @@ const (
 	Transfer
 	Burn
 	Sale
+	URI
 )
 
 func (e EventType) String() string {
@@ -23,6 +24,8 @@ func (e EventType) String() string {
 		return "burn"
 	case Sale:
 		return "sale"
+	case URI:
+		return "uri"
 	default:
 		return ""
 	}
@@ -63,6 +66,7 @@ type Log struct {
 	FromAddress          string     `json:"from_address"`
 	ToAddress            string     `json:"to_address"`
 	Price                string     `json:"price"`
+	URI                  string     `json:"uri"`
 	EmittedAt            time.Time  `json:"emitted_at"`
 }
 

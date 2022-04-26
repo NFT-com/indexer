@@ -1,9 +1,12 @@
 INSERT INTO standards (id, name)
-VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'ERC721');
+VALUES ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', 'ERC721'),
+       ('f7d4c503-3a75-49c8-b72b-e18b30e14d6b', 'ERC1155');
 
 INSERT INTO event_types (id, name, standard)
 VALUES ('0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', 'Transfer(address,address,uint64)',
-        'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
+        'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
+       ('0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62', 'TransferSingle(address,address,address,uint256,uint256)',
+        'f7d4c503-3a75-49c8-b72b-e18b30e14d6b');
 
 -- Collections scraped from Defillama
 INSERT INTO collections (chain_id, id, contract_collection_id, address, name, description, symbol, slug, website, image_url) VALUES
@@ -20789,3 +20792,11 @@ WHERE address IN (
 	'0x94b6f3978b0a32f7fa0b15243e86af1aec23deb5',
 	'0x23581767a106ae21c074b2276d25e5c3e136a68b'
 	);
+
+INSERT INTO collections (chain_id, id, contract_collection_id, address, name, description, symbol, slug, website, image_url) VALUES
+( '94c754fe-e06c-4d2b-bb76-2faa240b5bb8', 'c2c8a249-89cc-4231-ad63-3b4eaa57e0b1', '0', '0x9940bb667f64fca06fc4127861855696def7c69d', 'Elysium Code', 'Transform yourself into Elysium Shell. Embark on an exciting journey to the new world. It’s a collection of 9999 pieces of fine 3D artwork presented by the Elysium production team. The genesis drop represents the singular point that triggers all excitement and possibilities.', 'Elysium', 'elysiumcode', 'https://www.elysiumshell.xyz/', '' );
+
+INSERT INTO standards_collections(standard, collection)
+SELECT 'f7d4c503-3a75-49c8-b72b-e18b30e14d6b', coll.id
+FROM collections coll
+WHERE address IN ('0x000001e1b2b5f9825f4d50bd4906aff2f298af4e');

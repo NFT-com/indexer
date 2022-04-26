@@ -12,6 +12,9 @@ import (
 
 	handler "github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/function/processors/parsing"
+	"github.com/NFT-com/indexer/function/processors/parsing/erc1155/transfer_batch"
+	singletransfer "github.com/NFT-com/indexer/function/processors/parsing/erc1155/transfer_single"
+	"github.com/NFT-com/indexer/function/processors/parsing/erc1155/uri"
 	"github.com/NFT-com/indexer/function/processors/parsing/erc721"
 	"github.com/NFT-com/indexer/function/processors/parsing/opensea"
 	"github.com/NFT-com/indexer/networks"
@@ -55,6 +58,24 @@ func run() error {
 			return nil, fmt.Errorf("could not create opensea parser: %w", err)
 		}
 		parsers = append(parsers, openseaParser)
+
+		transferSingleParser, err := singletransfer.NewParser()
+		if err != nil {
+			return nil, fmt.Errorf("could not create erc1155 transfer single parser: %w", err)
+		}
+		parsers = append(parsers, transferSingleParser)
+
+		transferBatchParser, err := batchtransfer.NewParser()
+		if err != nil {
+			return nil, fmt.Errorf("could not create erc1155 transfer batch parser: %w", err)
+		}
+		parsers = append(parsers, transferBatchParser)
+
+		uriParser, err := uri.NewParser()
+		if err != nil {
+			return nil, fmt.Errorf("could not create erc1155 uri parser: %w", err)
+		}
+		parsers = append(parsers, uriParser)
 
 		return parsers, nil
 	})

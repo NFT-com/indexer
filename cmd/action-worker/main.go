@@ -11,8 +11,9 @@ import (
 
 	"github.com/NFT-com/indexer/function/handlers/action"
 	processor "github.com/NFT-com/indexer/function/processors/action"
-	ownerchange "github.com/NFT-com/indexer/function/processors/action/erc721/owner_change"
-	"github.com/NFT-com/indexer/function/processors/action/erc721metadata/addition"
+	"github.com/NFT-com/indexer/function/processors/action/addition/erc1155metadata"
+	"github.com/NFT-com/indexer/function/processors/action/addition/erc721metadata"
+	ownerchange "github.com/NFT-com/indexer/function/processors/action/owner_change"
 	"github.com/NFT-com/indexer/networks"
 )
 
@@ -48,11 +49,17 @@ func run() error {
 	handler := action.NewHandler(log, func(client networks.Network) ([]processor.Processor, error) {
 		processors := []processor.Processor{}
 
-		erc721Processor, err := addition.NewProcessor(log, client)
+		erc721Processor, err := erc721metadata.NewProcessor(log, client)
 		if err != nil {
 			return nil, fmt.Errorf("could not create addition erc721 metadata processor: %w", err)
 		}
 		processors = append(processors, erc721Processor)
+
+		erc1155Processor, err := erc1155metadata.NewProcessor(log, client)
+		if err != nil {
+			return nil, fmt.Errorf("could not create addition erc1155 metadata processor: %w", err)
+		}
+		processors = append(processors, erc1155Processor)
 
 		ownerChangeProcessor, err := ownerchange.NewProcessor(log, client)
 		if err != nil {
