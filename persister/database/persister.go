@@ -75,23 +75,18 @@ func (p *Persister) execute() {
 }
 
 func (p *Persister) process() {
+	defer p.tick.Stop()
 
-ProcessLoop:
 	for {
-
 		select {
 
 		case <-p.ctx.Done():
-
 			p.log.Debug().Msg("terminating jobs persister")
-
-			break ProcessLoop
+			return
 
 		case <-p.tick.C:
 
 			p.check()
 		}
 	}
-
-	p.tick.Stop()
 }
