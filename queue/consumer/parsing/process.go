@@ -29,7 +29,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 				Standard:    l.Standard,
 				Event:       l.Event,
 				TokenID:     l.NftID,
-				Type:        l.ActionJobType,
+				Type:        l.ActionType.String(),
 				Status:      jobs.StatusCreated,
 			})
 			if err != nil {
