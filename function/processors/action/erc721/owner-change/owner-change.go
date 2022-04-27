@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/rs/zerolog"
 
@@ -13,6 +14,10 @@ import (
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/models/chain"
 	"github.com/NFT-com/indexer/networks"
+)
+
+const (
+	hexadecimalBase = 16
 )
 
 var (
@@ -47,7 +52,12 @@ func (p *Processor) Process(ctx context.Context, job jobs.Action) (*chain.NFT, e
 		return nil, fmt.Errorf("could not get chain id: %w", err)
 	}
 
-	owner, err := p.getOwner(ctx, job)
+	tokenID, ok := big.NewInt(0).SetString(job.TokenID, 0)
+	if !ok {
+		return nil, fmt.Errorf("could not parse token id to big int")
+	}
+
+	owner, err := p.getOwner(ctx, tokenID, job)
 	if err != nil {
 		return nil, fmt.Errorf("could not get owner: %w", err)
 	}
@@ -66,19 +76,29 @@ func (p *Processor) Process(ctx context.Context, job jobs.Action) (*chain.NFT, e
 	return &nft, nil
 }
 
-func (p *Processor) getOwner(ctx context.Context, job jobs.Action) (string, error) {
+func (p *Processor) getOwner(ctx context.Context, nftID *big.Int, job jobs.Action) (string, error) {
 	logs, err := p.network.BlockEvents(ctx, job.BlockNumber, job.BlockNumber, []string{job.Event}, []string{job.Address})
 	if err != nil {
 		return "", fmt.Errorf("could not get block events: %w", err)
 	}
 
+	owner := ""
 	for _, log := range logs {
 		if len(log.IndexData) != defaultIndexDataLen {
 			return "", fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(log.IndexData), defaultIndexDataLen)
 		}
 
-		return common.HexToAddress(log.IndexData[1]).String(), nil
+		// If is not the same nft if just ignore.
+		if common.HexToHash(nftID.Text(hexadecimalBase)) != common.HexToHash(log.IndexData[2]) {
+			continue
+		}
+
+		owner = common.HexToAddress(log.IndexData[1]).String()
 	}
 
-	return "", errNoOwnerFound
+	if owner == "" {
+		return "", errNoOwnerFound
+	}
+
+	return owner, nil
 }

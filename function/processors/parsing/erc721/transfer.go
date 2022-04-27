@@ -42,6 +42,7 @@ func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) (*log.
 		Event:           raw.EventType,
 		Index:           raw.Index,
 		TransactionHash: raw.TransactionHash,
+		NeedsActionJob:  true,
 		NftID:           nftID,
 		FromAddress:     fromAddress,
 		ToAddress:       toAddress,
@@ -51,15 +52,12 @@ func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) (*log.
 	switch zeroValueAddress {
 	case fromAddress:
 		l.Type = log.Mint
-		l.NeedsActionJob = true
 		l.ActionJobType = action.Addition
 	case toAddress:
 		l.Type = log.Burn
-		l.NeedsActionJob = true
 		l.ActionJobType = action.OwnerChange
 	default:
 		l.Type = log.Transfer
-		l.NeedsActionJob = true
 		l.ActionJobType = action.OwnerChange
 	}
 

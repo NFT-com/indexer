@@ -29,7 +29,9 @@ func (h *Handler) CreateActionJob(ctx echo.Context) error {
 		BlockNumber: req.BlockNumber,
 		Address:     req.Address,
 		Standard:    req.Standard,
+		Event:       req.Event,
 		TokenID:     req.TokenID,
+		Type:        req.Type,
 	}
 
 	newJob, err := h.jobs.CreateActionJob(&job)
@@ -62,7 +64,9 @@ func (h *Handler) CreateActionJobs(ctx echo.Context) error {
 			BlockNumber: j.BlockNumber,
 			Address:     j.Address,
 			Standard:    j.Standard,
+			Event:       j.Event,
 			TokenID:     j.TokenID,
+			Type:        j.Type,
 		}
 
 		jobList = append(jobList, &job)

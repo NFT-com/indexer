@@ -16902,10 +16902,10 @@ We advise not to purchase any NFTs from the v2 collection. Follow the offical 0x
 -- ERC-721 contracts scraped from Etherscan.io
 
 
-insert into standards_collections( standard, collection)
-select 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a', coll.id
-from collections coll
-where address in (
+INSERT INTO standards_collections( standard, collection)
+SELECT 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a', coll.id
+FROM collections coll
+WHERE address IN (
 	'0x000001e1b2b5f9825f4d50bd4906aff2f298af4e',
 	'0x00000633df1228868270badb2b812e12e13fdb91',
 	'0x000e49c87d2874431567d38ff9548890ab39baac',

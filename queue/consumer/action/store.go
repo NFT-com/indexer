@@ -1,6 +1,7 @@
 package action
 
 import (
+	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/models/chain"
 )
 
@@ -12,4 +13,7 @@ type Store interface {
 
 	Chain(chainID string) (*chain.Chain, error)
 	Collection(chainID, address, contractCollectionID string) (*chain.Collection, error)
+
+	ActionJob(id string) (*jobs.Action, error)
+	UpdateActionJobStatus(id string, status jobs.Status) error
 }

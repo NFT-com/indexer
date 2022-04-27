@@ -45,7 +45,8 @@ type Action struct {
 	Address     string `json:"address" validate:"required,eth_addr"`
 	Standard    string `json:"standard_type" validate:"required"`
 	TokenID     string `json:"token_id" validate:"required"`
-	ActionType  string `json:"action_type" validate:"required"`
+	Event       string `json:"event_type" validate:"required"`
+	Type        string `json:"type" validate:"required"`
 }
 
 // Status represents the status API change request.

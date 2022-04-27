@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS action_jobs
     block_number   NUMERIC      NOT NULL,
     address        VARCHAR(128) NOT NULL,
     interface_type VARCHAR(256) NOT NULL,
+    event_type     VARCHAR(256) NOT NULL,
     token_id       VARCHAR(256) NOT NULL,
     action_type    VARCHAR(256) NOT NULL,
     status         VARCHAR(64)  NOT NULL,

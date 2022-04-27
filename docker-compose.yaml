@@ -11,16 +11,6 @@ services:
       - ./sql/:/docker-entrypoint-initdb.d/
     ports:
       - '5432:5432'
-  pgadmin:
-    image: dpage/pgadmin4
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - '5050:80'
   redis:
     image: redis:alpine
     restart: always
@@ -31,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile.api
     restart: always
-    entrypoint: '/api -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
+    entrypoint: '/api -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     ports:
       - '8081:8081'
     depends_on:
@@ -41,19 +31,19 @@ services:
       context: .
       dockerfile: Dockerfile.jobwatcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=jobs sslmode=disable"'
+    entrypoint: '/watcher -a api:8081 -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - api
+      - postgres
       - redis
   chain-watcher:
     build:
       context: .
       dockerfile: Dockerfile.chainwatcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -d "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable"'
+    entrypoint: '/watcher -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
-      - api
-      - jobs-watcher
+      - postgres
   parsing-dispatcher:
     environment:
       - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
@@ -63,10 +53,9 @@ services:
       context: .
       dockerfile: Dockerfile.parsingdispatcher
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -a api:8081 -d "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable"'
+    entrypoint: '/dispatcher -u redis:6379 -b 10 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
-      - api
       - redis
   action-dispatcher:
     environment:
@@ -77,8 +66,8 @@ services:
       context: .
       dockerfile: Dockerfile.actiondispatcher
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -a api:8081 -d "host=postgres port=5432 user=postgres password=postgres dbname=chains sslmode=disable"'
+    entrypoint: '/dispatcher -u redis:6379 -a api:8081 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
-      - api
+      - api # FIXME: REMOVE THIS DEPENDENCY
       - redis

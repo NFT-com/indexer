@@ -8,31 +8,33 @@ import (
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
+	"go.uber.org/ratelimit"
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/models/chain"
-	"github.com/NFT-com/indexer/service/client"
 )
+
+const concurrentConsumers = 1000
 
 type Action struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
-	apiClient     *client.Client
+	jobStore      Store
 	dataStore     Store
-	jobCount      int
+	limit         ratelimit.Limiter
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, dataStore Store, jobCount int) *Action {
+func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store, dataStore Store, rateLimit int) *Action {
 	c := Action{
 		log:           log,
 		dispatcher:    dispatcher,
-		apiClient:     apiClient,
+		jobStore:      jobStore,
 		dataStore:     dataStore,
-		jobCount:      jobCount,
-		consumerQueue: make(chan []byte, jobCount),
+		limit:         ratelimit.New(rateLimit),
+		consumerQueue: make(chan []byte, concurrentConsumers),
 		close:         make(chan struct{}),
 	}
 
@@ -40,6 +42,9 @@ func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher functi
 }
 
 func (d *Action) Consume(delivery rmq.Delivery) {
+
+	d.log.Debug().Msg("received message to consume")
+
 	payload := []byte(delivery.Payload())
 	d.consumerQueue <- payload
 
@@ -51,7 +56,7 @@ func (d *Action) Consume(delivery rmq.Delivery) {
 }
 
 func (d *Action) Run() {
-	for i := 0; i < d.jobCount; i++ {
+	for i := 0; i < concurrentConsumers; i++ {
 		go func() {
 			for {
 				select {
@@ -82,7 +87,7 @@ func (d *Action) consume(payload []byte) {
 		return
 	}
 
-	storedJob, err := d.apiClient.GetActionJob(job.ID)
+	storedJob, err := d.jobStore.ActionJob(job.ID)
 	if err != nil {
 		d.handleError(job.ID, err, "could not retrieve action job")
 		return
@@ -92,11 +97,20 @@ func (d *Action) consume(payload []byte) {
 		return
 	}
 
-	err = d.apiClient.UpdateActionJobStatus(job.ID, jobs.StatusProcessing)
+	err = d.jobStore.UpdateActionJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		d.handleError(job.ID, err, "could not update job status")
 		return
 	}
+
+	d.log.Debug().
+		Str("block", job.BlockNumber).
+		Str("collection", job.Address).
+		Str("standard", job.Standard).
+		Str("event", job.Event).
+		Str("token_id", job.TokenID).
+		Str("action", job.Type).
+		Msg("invoking function")
 
 	name := functionName(job)
 	output, err := d.dispatcher.Invoke(name, payload)
@@ -118,7 +132,7 @@ func (d *Action) consume(payload []byte) {
 		return
 	}
 
-	err = d.apiClient.UpdateActionJobStatus(job.ID, jobs.StatusFinished)
+	err = d.jobStore.UpdateActionJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
 		d.handleError(job.ID, err, "could not update job status")
 		return
@@ -126,7 +140,7 @@ func (d *Action) consume(payload []byte) {
 }
 
 func (d *Action) handleError(id string, err error, message string) {
-	updateErr := d.apiClient.UpdateActionJobStatus(id, jobs.StatusFailed)
+	updateErr := d.jobStore.UpdateActionJobStatus(id, jobs.StatusFailed)
 	if updateErr != nil {
 		d.log.Error().Err(updateErr).Msg("could not update job status")
 	}
