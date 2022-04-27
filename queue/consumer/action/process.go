@@ -3,7 +3,7 @@ package action
 import (
 	"fmt"
 
-	"github.com/NFT-com/indexer/action"
+	"github.com/NFT-com/indexer/log"
 	"github.com/NFT-com/indexer/models/chain"
 )
 
@@ -20,7 +20,7 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 
 	switch actionType {
 
-	case action.Addition:
+	case log.Addition.String():
 		err = d.dataStore.UpsertNFT(nft, collection.ID)
 		if err != nil {
 			return fmt.Errorf("could not store nft: %w", err)
@@ -33,7 +33,7 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 			}
 		}
 
-	case action.OwnerChange:
+	case log.OwnerChange.String():
 		err = d.dataStore.UpdateNFTOwner(collection.ID, nft.ID, nft.Owner)
 		if err != nil {
 			return fmt.Errorf("could not update nft owner (nft %s): %w", nft.ID, err)

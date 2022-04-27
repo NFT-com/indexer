@@ -5,4 +5,4 @@ VALUES ('df87df1d-f0a1-4e53-b2c3-77e794a76cf2', 'OpenSea',
 
 INSERT INTO public.chains_marketplaces(marketplace_id, chain_id, address)
 VALUES ('df87df1d-f0a1-4e53-b2c3-77e794a76cf2', '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
-        '0x7f268357a8c2552623316e2562d90e642bb538e5');
+        '0x7f268357A8c2552623316e2562D90e642bB538E5');
