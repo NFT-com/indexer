@@ -82,13 +82,13 @@ func (p *Processor) getOwner(ctx context.Context, nftID *big.Int, job jobs.Actio
 		return "", fmt.Errorf("could not get block events: %w", err)
 	}
 
-	owner := ""
+	var owner string
 	for _, log := range logs {
 		if len(log.IndexData) != defaultIndexDataLen {
 			return "", fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(log.IndexData), defaultIndexDataLen)
 		}
 
-		// If is not the same nft if just ignore.
+		// If it is not the same NFT, ignore it.
 		if common.HexToHash(nftID.Text(hexadecimalBase)) != common.HexToHash(log.IndexData[2]) {
 			continue
 		}
