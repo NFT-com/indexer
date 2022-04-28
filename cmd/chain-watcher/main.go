@@ -45,23 +45,25 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagChainID          string
-		flagChainURL         string
-		flagChainType        string
-		flagDBConnectionInfo string
-		flagLogLevel         string
-		flagStartHeight      uint64
-		flagJobLimit         uint
-		flagNotifyPeriod     time.Duration
+		flagChainID              string
+		flagChainURL             string
+		flagChainType            string
+		flagDBDataConnectionInfo string
+		flagDBJobsConnectionInfo string
+		flagLogLevel             string
+		flagStartHeight          uint64
+		flagJobLimit             uint
+		flagNotifyPeriod         time.Duration
 	)
 
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
-	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
+	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
+	pflag.StringVarP(&flagDBJobsConnectionInfo, "job-database", "j", "", "jobs database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
-	pflag.UintVarP(&flagJobLimit, "job-limit", "j", 1000, "maximum number of pending jobs per combination")
+	pflag.UintVarP(&flagJobLimit, "job-limit", "b", 1000, "maximum number of pending jobs per combination")
 	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", time.Second, "how often to notify watchers to create new jobs")
 
 	pflag.Parse()
@@ -75,11 +77,14 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	// Open the SQL database connection.
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	// Open the jobs SQL database connection.
+	dataDB, err := sql.Open(databaseDriver, flagDBDataConnectionInfo)
 	if err != nil {
 		return fmt.Errorf("could not open SQL connection: %w", err)
 	}
+
+	// Initialize the persister that will store jobs to the DB.
+	dataStore, err := postgres.NewStore(dataDB)
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.
@@ -92,35 +97,42 @@ func run() error {
 		return fmt.Errorf("could not get latest block number: %w", err)
 	}
 
-	// Get the collections for the configured chain ID from the database and initialize
-	// the persister that will store jobs to the DB.
-	store, err := postgres.NewStore(db)
-	if err != nil {
-		return fmt.Errorf("could not create store: %w", err)
-	}
-	chain, err := store.Chain(flagChainID)
+	// Get the collections for the configured chain ID from the database.
+	chain, err := dataStore.Chain(flagChainID)
 	if err != nil {
 		return fmt.Errorf("could not get chain: %w", err)
 	}
-	collections, err := store.Collections(chain.ID)
+	collections, err := dataStore.Collections(chain.ID)
 	if err != nil {
 		return fmt.Errorf("could not get collections from store (chain: %s): %w", flagChainID, err)
 	}
-	persist := database.NewPersister(log, ctx, store, 100*time.Millisecond, 1000)
+
+	// Open the jobs SQL database connection.
+	jobDB, err := sql.Open(databaseDriver, flagDBJobsConnectionInfo)
+	if err != nil {
+		return fmt.Errorf("could not open SQL connection: %w", err)
+	}
+
+	// Initialize the persister that will store jobs to the DB.
+	jobStore, err := postgres.NewStore(jobDB)
+	if err != nil {
+		return fmt.Errorf("could not create store: %w", err)
+	}
+	persist := database.NewPersister(log, ctx, jobStore, 100*time.Millisecond, 1000)
 
 	// For every collection and event type combination, initialize a ticker notifier
 	// that will notify regularly of the latest height.
 	var listens []notifier.Listener
 	for _, collection := range collections {
 
-		standards, err := store.Standards(collection.ID)
+		standards, err := dataStore.Standards(collection.ID)
 		if err != nil {
 			return fmt.Errorf("could not get standards (collection: %s)", collection.ID)
 		}
 
 		for _, standard := range standards {
 
-			events, err := store.EventTypes(standard.ID)
+			events, err := dataStore.EventTypes(standard.ID)
 			if err != nil {
 				return fmt.Errorf("could not get event types: %w", err)
 			}
@@ -145,7 +157,7 @@ func run() error {
 
 				// initialize a job creator that will be notified of heights and
 				// create jobs accordingly
-				create := job.NewCreator(log, flagStartHeight, template, persist, store, flagJobLimit)
+				create := job.NewCreator(log, flagStartHeight, template, persist, jobStore, flagJobLimit)
 				listens = append(listens, create)
 
 				// TODO: introduce jitter so not all DB requests hit it at the same second

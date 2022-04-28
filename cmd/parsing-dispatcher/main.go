@@ -45,9 +45,9 @@ func run() error {
 	// Command line parameter initialization.
 	var (
 		flagBatchSize              int64
-		flagDBJobsConnectionInfo   string
 		flagDBDataConnectionInfo   string
 		flagDBEventsConnectionInfo string
+		flagDBJobsConnectionInfo   string
 		flagLogLevel               string
 		flagParsingQueueName       string
 		flagRateLimit              int
@@ -61,9 +61,9 @@ func run() error {
 
 	// TODO: remove batch size and instead use time-based dispatching
 	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
-	pflag.StringVarP(&flagDBJobsConnectionInfo, "job-database", "j", "", "jobs database connection string")
 	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
+	pflag.StringVarP(&flagDBJobsConnectionInfo, "job-database", "j", "", "jobs database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")

@@ -123,7 +123,7 @@ See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more
 #### Starting the Container
 
 ```console
-docker run indexer-chainwatcher:1.0.0 -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
+docker run indexer-chainwatcher:1.0.0 -u <web3_node_url> -i <web3_chain_id> -t web3 -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
 
 Here is an example where the watcher is configured to watch for:
@@ -133,11 +133,8 @@ Here is an example where the watcher is configured to watch for:
 * With the `ERC721` standard type.
 
 ```console
-docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721
+docker run indexer-chainwatcher:1.0.0 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
 ```
-
-> 🚧
-> The Chain Watcher will no longer need an event type, contract and standard type.
 
 ### Functions
 
