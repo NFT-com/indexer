@@ -11,7 +11,7 @@ func (s *Store) Marketplace(chainID, address string) (*chain.Marketplace, error)
 	result, err := s.build.
 		Select("marketplaces.id", "marketplaces.name", "marketplaces.description", "marketplaces.website").
 		From("marketplaces, chains_marketplaces").
-		Where("chains_marketplaces.address = ?", address).
+		Where("chains_marketplaces.address ILIKE ?", address).
 		Where("chains_marketplaces.chain_id = ?", chainID).
 		Where("chains_marketplaces.marketplace_id = marketplaces.id").
 		Query()

@@ -129,11 +129,11 @@ func (s *Store) HighestBlockNumberParsingJob(chainURL, chainType, address, Stand
 	result, err := s.build.
 		Select(parsingJobsTableColumns...).
 		From(parsingJobsTableName).
-		Where("chain_url = ?", chainURL).
+		Where("chain_url ILIKE ?", chainURL).
 		Where("chain_type = ?", chainType).
-		Where("address = ?", address).
+		Where("address ILIKE ?", address).
 		Where("interface_type = ?", Standard).
-		Where("event_type = ?", eventType).
+		Where("event_type ILIKE ?", eventType).
 		OrderBy("block_number DESC").
 		Limit(1).
 		Query()
@@ -176,11 +176,11 @@ func (s *Store) CountPendingParsingJobs(chainURL, chainType, address, Standard, 
 	result, err := s.build.
 		Select("COUNT(*)").
 		From(parsingJobsTableName).
-		Where("chain_url = ?", chainURL).
+		Where("chain_url ILIKE ?", chainURL).
 		Where("chain_type = ?", chainType).
-		Where("address = ?", address).
+		Where("address ILIKE ?", address).
 		Where("interface_type = ?", Standard).
-		Where("event_type = ?", eventType).
+		Where("event_type ILIKE ?", eventType).
 		Where("status IN (?, ?, ?)", jobs.StatusCreated, jobs.StatusProcessing, jobs.StatusQueued).
 		Query()
 	if err != nil {

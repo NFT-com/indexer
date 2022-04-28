@@ -128,7 +128,7 @@ func (s *Store) HighestBlockNumberDiscoveryJob(chainURL, chainType string, addre
 		Where("chain_type = ?", chainType).
 		Where("addresses <@ ? AND ? <@ addresses", pq.Array(addresses), pq.Array(addresses)).
 		Where("standard_type = ?", standardType).
-		Where("event_type = ?", eventType).
+		Where("event_type ILIKE ?", eventType).
 		OrderBy("block_number DESC").
 		Query()
 	if err != nil {
