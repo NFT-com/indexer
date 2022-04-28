@@ -31,9 +31,8 @@ services:
       context: .
       dockerfile: Dockerfile.jobwatcher
     restart: always
-    entrypoint: '/watcher -a api:8081 -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/watcher -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
-      - api
       - postgres
       - redis
   chain-watcher:
@@ -66,8 +65,7 @@ services:
       context: .
       dockerfile: Dockerfile.actiondispatcher
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -a api:8081 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
-      - api # FIXME: REMOVE THIS DEPENDENCY
       - redis

@@ -8,23 +8,20 @@ import (
 
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/queue/producer"
-	"github.com/NFT-com/indexer/service/client"
 	"github.com/NFT-com/indexer/service/postgres"
 )
 
 type Job struct {
 	log             zerolog.Logger
-	apiClient       *client.Client
 	messageProducer *producer.Producer
 	store           *postgres.Store
 	delay           time.Duration
 	close           chan struct{}
 }
 
-func New(log zerolog.Logger, apiClient *client.Client, messageProducer *producer.Producer, store *postgres.Store, delay time.Duration) *Job {
+func New(log zerolog.Logger, messageProducer *producer.Producer, store *postgres.Store, delay time.Duration) *Job {
 	j := Job{
 		log:             log.With().Str("component", "watcher").Logger(),
-		apiClient:       apiClient,
 		messageProducer: messageProducer,
 		store:           store,
 		delay:           delay,
@@ -117,7 +114,7 @@ func (j *Job) publishDiscoveryJob(job *jobs.Discovery) error {
 		return fmt.Errorf("could not get publish discovery job: %w", err)
 	}
 
-	err = j.apiClient.UpdateDiscoveryJobStatus(job.ID, jobs.StatusQueued)
+	err = j.store.UpdateDiscoveryJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update discovery job status: %w", err)
 	}
@@ -150,7 +147,7 @@ func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 		return fmt.Errorf("could not get publish parsing job: %w", err)
 	}
 
-	err = j.apiClient.UpdateParsingJobStatus(job.ID, jobs.StatusQueued)
+	err = j.store.UpdateParsingJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
@@ -183,7 +180,7 @@ func (j *Job) publishActionJob(job *jobs.Action) error {
 		return fmt.Errorf("could not publish action job: %w", err)
 	}
 
-	err = j.apiClient.UpdateActionJobStatus(job.ID, jobs.StatusQueued)
+	err = j.store.UpdateActionJobStatus(job.ID, jobs.StatusQueued)
 	if err != nil {
 		return fmt.Errorf("could not update action job status: %w", err)
 	}
