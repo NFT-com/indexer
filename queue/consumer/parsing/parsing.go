@@ -180,6 +180,12 @@ func (d *Parsing) consume(payloads [][]byte) {
 			return
 		}
 
+		err = d.dataStore.UpdateParsingJobsStatus(input.IDs, jobs.StatusProcessing)
+		if err != nil {
+			d.handleError(err, "could not update jobs statuses")
+			return
+		}
+
 		// Wait for rate limiter to have available spots.
 		d.limit.Take()
 
@@ -223,7 +229,7 @@ func (d *Parsing) consume(payloads [][]byte) {
 				Str("end", input.EndBlock).
 				Int("collections", len(input.Addresses)).
 				Int("events", len(input.EventTypes)).
-				Int("occurences", len(logs)).
+				Int("occurrences", len(logs)).
 				Msg("processing results")
 
 			err = d.processLogs(input, logs)
@@ -233,12 +239,10 @@ func (d *Parsing) consume(payloads [][]byte) {
 			}
 		}
 
-		for _, id := range input.IDs {
-			err = d.dataStore.UpdateParsingJobStatus(id, jobs.StatusFinished)
-			if err != nil {
-				d.handleError(err, "could not update job status", id)
-				continue
-			}
+		err = d.dataStore.UpdateParsingJobsStatus(input.IDs, jobs.StatusFinished)
+		if err != nil {
+			d.handleError(err, "could not update jobs statuses")
+			return
 		}
 	}
 }
@@ -298,12 +302,6 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []*jobs.Parsing {
 			continue
 		}
 
-		err = d.jobStore.UpdateParsingJobStatus(job.ID, jobs.StatusProcessing)
-		if err != nil {
-			d.handleError(err, "could not update job status", job.ID)
-			continue
-		}
-
 		jobList = append(jobList, &job)
 	}
 
@@ -311,14 +309,12 @@ func (d *Parsing) unmarshalJobs(payloads [][]byte) []*jobs.Parsing {
 }
 
 func (d *Parsing) handleError(err error, message string, ids ...string) {
-	for _, id := range ids {
-		updateErr := d.jobStore.UpdateParsingJobStatus(id, jobs.StatusFailed)
-		if updateErr != nil {
-			d.log.Error().Err(updateErr).Msg("could not update job status")
-		}
+	updateErr := d.jobStore.UpdateParsingJobsStatus(ids, jobs.StatusFailed)
+	if updateErr != nil {
+		d.log.Error().Err(updateErr).Msg("could not update jobs statuses")
 	}
 
-	d.log.Error().Err(err).Strs("job_id", ids).Msg(message)
+	d.log.Error().Err(err).Strs("job_ids", ids).Msg(message)
 }
 
 func blockToUint64(block string) (uint64, error) {
