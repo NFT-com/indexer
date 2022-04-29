@@ -57,6 +57,8 @@ func run() error {
 		flagRegion                 string
 		flagRMQTag                 string
 		flagDryRun                 bool
+		flagDBConnections          uint
+		flagDBIdleConnections      uint
 	)
 
 	// TODO: remove batch size and instead use time-based dispatching
@@ -73,6 +75,8 @@ func run() error {
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "when in dry run mode, no lambdas are invoked")
+	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -98,6 +102,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
+	jobDB.SetMaxOpenConns(int(flagDBConnections))
+	jobDB.SetMaxIdleConns(int(flagDBIdleConnections))
 
 	jobStore, err := postgres.NewStore(jobDB)
 	if err != nil {
@@ -108,6 +114,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open events SQL connection: %w", err)
 	}
+	eventDB.SetMaxOpenConns(int(flagDBConnections))
+	eventDB.SetMaxIdleConns(int(flagDBIdleConnections))
 
 	eventStore, err := postgres.NewStore(eventDB)
 	if err != nil {
@@ -118,6 +126,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}
+	dataDB.SetMaxOpenConns(int(flagDBConnections))
+	dataDB.SetMaxIdleConns(int(flagDBIdleConnections))
 
 	dataStore, err := postgres.NewStore(dataDB)
 	if err != nil {

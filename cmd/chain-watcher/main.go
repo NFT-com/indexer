@@ -52,7 +52,8 @@ func run() error {
 		flagChainID           string
 		flagChainURL          string
 		flagChainType         string
-		flagDBConnectionInfo  string
+		flagDataDB            string
+		flagJobsDB            string
 		flagLogLevel          string
 		flagStartHeight       uint64
 		flagJobLimit          uint
@@ -64,10 +65,11 @@ func run() error {
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
-	pflag.StringVarP(&flagDBConnectionInfo, "db", "d", "", "database connection string")
+	pflag.StringVarP(&flagDataDB, "data-db", "d", "", "connection details for data DB")
+	pflag.StringVarP(&flagJobsDB, "jobs-db", "j", "", "connection details for jobs DB")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
-	pflag.UintVarP(&flagJobLimit, "job-limit", "j", 1000, "maximum number of pending jobs per combination")
+	pflag.UintVar(&flagJobLimit, "job-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", 100*time.Millisecond, "how often to notify watchers to create new jobs")
 	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
@@ -83,15 +85,19 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	// Open the SQL database connection.
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	dataDB, err := sql.Open(databaseDriver, flagDataDB)
 	if err != nil {
-		return fmt.Errorf("could not open SQL connection: %w", err)
+		return fmt.Errorf("could not open data DB: %w", err)
 	}
+	dataDB.SetMaxOpenConns(int(flagDBConnections))
+	dataDB.SetMaxIdleConns(int(flagDBIdleConnections))
 
-	// Limit the number of database connections.
-	db.SetMaxOpenConns(int(flagDBConnections))
-	db.SetMaxIdleConns(int(flagDBIdleConnections))
+	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
+	if err != nil {
+		return fmt.Errorf("could not open jobs DB: %w", err)
+	}
+	jobsDB.SetMaxOpenConns(int(flagDBConnections))
+	jobsDB.SetMaxIdleConns(int(flagDBIdleConnections))
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.
@@ -106,33 +112,38 @@ func run() error {
 
 	// Get the collections for the configured chain ID from the database and initialize
 	// the persister that will store jobs to the DB.
-	store, err := postgres.NewStore(db)
+	dataStore, err := postgres.NewStore(dataDB)
 	if err != nil {
-		return fmt.Errorf("could not create store: %w", err)
+		return fmt.Errorf("could not create data store: %w", err)
 	}
-	chain, err := store.Chain(flagChainID)
+	chain, err := dataStore.Chain(flagChainID)
 	if err != nil {
 		return fmt.Errorf("could not get chain: %w", err)
 	}
-	collections, err := store.Collections(chain.ID)
+	collections, err := dataStore.Collections(chain.ID)
 	if err != nil {
 		return fmt.Errorf("could not get collections from store (chain: %s): %w", flagChainID, err)
 	}
-	persist := database.NewPersister(log, ctx, store, 100*time.Millisecond, 1000)
+
+	jobsStore, err := postgres.NewStore(jobsDB)
+	if err != nil {
+		return fmt.Errorf("could not create jobs store: %w", err)
+	}
+	persist := database.NewPersister(log, ctx, jobsStore, 100*time.Millisecond, 1000)
 
 	// For every collection and event type combination, initialize a ticker notifier
 	// that will notify regularly of the latest height.
 	var listens []notifier.Listener
 	for _, collection := range collections {
 
-		standards, err := store.Standards(collection.ID)
+		standards, err := dataStore.Standards(collection.ID)
 		if err != nil {
 			return fmt.Errorf("could not get standards (collection: %s)", collection.ID)
 		}
 
 		for _, standard := range standards {
 
-			events, err := store.EventTypes(standard.ID)
+			events, err := dataStore.EventTypes(standard.ID)
 			if err != nil {
 				return fmt.Errorf("could not get event types: %w", err)
 			}
@@ -156,7 +167,7 @@ func run() error {
 
 				// initialize a job creator that will be notified of heights and
 				// create jobs accordingly
-				create := job.NewCreator(log, flagStartHeight, template, persist, store, flagJobLimit)
+				create := job.NewCreator(log, flagStartHeight, template, persist, jobsStore, flagJobLimit)
 				listens = append(listens, create)
 
 				// initialize a ticker that will notify of the latest height at
