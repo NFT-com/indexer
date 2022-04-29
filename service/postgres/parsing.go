@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lib/pq"
+
 	"github.com/NFT-com/indexer/jobs"
 )
 
@@ -225,6 +227,31 @@ func (s *Store) UpdateParsingJobStatus(id string, status jobs.Status) error {
 
 	if rowsAffected == 0 {
 		return fmt.Errorf("could not update parsing job status: %w", ErrResourceNotFound)
+	}
+
+	return nil
+}
+
+// UpdateParsingJobsStatus updates parsing jobs statuses.
+func (s *Store) UpdateParsingJobsStatus(ids []string, status jobs.Status) error {
+	res, err := s.build.
+		Update(parsingJobsTableName).
+		Where("id IN (?)", pq.Array(ids)).
+		Set("status", status).
+		Set("updated_at", time.Now()).
+		Exec()
+
+	if err != nil {
+		return fmt.Errorf("could not update parsing jobs status: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not update parsing jobs status: %w", err)
+	}
+
+	if rowsAffected != int64(len(ids)) {
+		return fmt.Errorf("could not update parsing jobs status: %w", ErrResourceNotFound)
 	}
 
 	return nil

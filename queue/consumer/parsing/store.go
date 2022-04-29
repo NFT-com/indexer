@@ -20,5 +20,5 @@ type Store interface {
 
 	CreateActionJob(job *jobs.Action) error
 	ParsingJob(id string) (*jobs.Parsing, error)
-	UpdateParsingJobStatus(id string, status jobs.Status) error
+	UpdateParsingJobsStatus(ids []string, status jobs.Status) error
 }
