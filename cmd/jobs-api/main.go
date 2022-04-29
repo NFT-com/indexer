@@ -54,8 +54,8 @@ func run() error {
 	pflag.StringVarP(&flagBind, "bind", "b", "127.0.0.1:8081", "host and port for jobs API endpoint")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "d", "", "server details for Postgres database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "output level for logging")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle connections")
 
 	pflag.Parse()
 

@@ -67,8 +67,8 @@ func run() error {
 	pflag.StringVar(&flagDeliveryQueue, "delivery-queue", defaultDeliveryQueue, "name of the queue for delivery queue")
 	pflag.StringVar(&flagParsingQueue, "parsing-queue", defaultParsingQueue, "name of the queue for parsing queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle connections")
 
 	pflag.Parse()
 
