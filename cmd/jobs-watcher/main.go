@@ -58,7 +58,7 @@ func run() error {
 	)
 
 	pflag.StringVar(&flagActionQueueName, "action-queue", defaultActionQueue, "name of the queue for action queue")
-	pflag.StringVarP(&flagJobsDB, "database", "d", "", "data source name for database connection")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "data source name for database connection")
 	pflag.DurationVar(&flagReadInterval, "read-interval", defaultReadInterval, "data read for new jobs delay")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")

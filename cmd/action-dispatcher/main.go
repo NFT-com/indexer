@@ -94,12 +94,14 @@ func run() error {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	jobDB, err := sql.Open(databaseDriver, flagJobsDB)
+	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	jobStore, err := postgres.NewStore(jobDB)
+	jobStore, err := postgres.NewStore(jobsDB)
 	if err != nil {
 		return fmt.Errorf("could not create job store: %w", err)
 	}
@@ -108,6 +110,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}
+	dataDB.SetMaxOpenConns(int(flagOpenConnections))
+	dataDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	dataStore, err := postgres.NewStore(dataDB)
 	if err != nil {

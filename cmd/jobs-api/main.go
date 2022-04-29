@@ -44,14 +44,18 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagBind             string
-		flagDBConnectionInfo string
-		flagLogLevel         string
+		flagBind            string
+		flagJobsDB          string
+		flagLogLevel        string
+		flagOpenConnections uint
+		flagIdleConnections uint
 	)
 
 	pflag.StringVarP(&flagBind, "bind", "b", "127.0.0.1:8081", "host and port for jobs API endpoint")
-	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "server details for Postgres database")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "d", "", "server details for Postgres database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "output level for logging")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -74,21 +78,23 @@ func run() error {
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
 	// Open database connection.
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
 	}
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	// Create the database store.
-	store, err := postgres.NewStore(db)
+	jobsStore, err := postgres.NewStore(jobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create store")
 		return err
 	}
 
 	// Business logic handler.
-	handler := handler.New(store)
+	handler := handler.New(jobsStore)
 
 	// Request validator.
 	validator := validator.New()
