@@ -36,6 +36,7 @@ func main() {
 }
 
 func run() error {
+
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)

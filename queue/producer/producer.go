@@ -17,6 +17,7 @@ type Producer struct {
 }
 
 func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue string, actionQueue string) (*Producer, error) {
+
 	p := Producer{
 		connection:     connection,
 		discoveryQueue: discoveryQueue,
@@ -28,6 +29,7 @@ func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue 
 }
 
 func (p *Producer) PublishDiscoveryJob(job *jobs.Discovery) error {
+
 	q, err := p.connection.OpenQueue(p.discoveryQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)
@@ -47,6 +49,7 @@ func (p *Producer) PublishDiscoveryJob(job *jobs.Discovery) error {
 }
 
 func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
+
 	q, err := p.connection.OpenQueue(p.parsingQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)
@@ -66,6 +69,7 @@ func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 }
 
 func (p *Producer) PublishActionJob(job *jobs.Action) error {
+
 	q, err := p.connection.OpenQueue(p.actionQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)

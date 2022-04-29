@@ -42,15 +42,20 @@ func (j *Job) Close() {
 }
 
 func (j *Job) watchDiscoveries() {
+
 	for {
 		select {
+
 		case <-time.After(j.delay):
+
 			jobs, err := j.store.DiscoveryJobs(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve discovery jobs")
 				continue
 			}
+
 			j.handleDiscoveryJobs(jobs)
+
 		case <-j.close:
 			return
 		}
@@ -58,15 +63,20 @@ func (j *Job) watchDiscoveries() {
 }
 
 func (j *Job) watchParsings() {
+
 	for {
 		select {
+
 		case <-time.After(j.delay):
+
 			jobs, err := j.store.ParsingJobs(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
 				continue
 			}
+
 			j.handleParsingJobs(jobs)
+
 		case <-j.close:
 			return
 		}
@@ -74,23 +84,30 @@ func (j *Job) watchParsings() {
 }
 
 func (j *Job) watchActions() {
+
 	for {
 		select {
+
 		case <-time.After(j.delay):
+
 			jobs, err := j.store.ActionJobs(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve action jobs")
 				continue
 			}
+
 			j.handleActionJobs(jobs)
+
 		case <-j.close:
 			return
 		}
 	}
 }
 
-func (j *Job) handleDiscoveryJobs(jobsList []*jobs.Discovery) {
-	for _, job := range jobsList {
+func (j *Job) handleDiscoveryJobs(jobs []*jobs.Discovery) {
+
+	for _, job := range jobs {
+
 		err := j.publishDiscoveryJob(job)
 		if err != nil {
 			j.log.Error().
@@ -102,9 +119,12 @@ func (j *Job) handleDiscoveryJobs(jobsList []*jobs.Discovery) {
 			continue
 		}
 	}
+
+	j.log.Info().Int("jobs", len(jobs)).Msg("queued discovery jobs")
 }
 
 func (j *Job) publishDiscoveryJob(job *jobs.Discovery) error {
+
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}
@@ -122,8 +142,9 @@ func (j *Job) publishDiscoveryJob(job *jobs.Discovery) error {
 	return nil
 }
 
-func (j *Job) handleParsingJobs(jobsList []*jobs.Parsing) {
-	for _, job := range jobsList {
+func (j *Job) handleParsingJobs(jobs []*jobs.Parsing) {
+
+	for _, job := range jobs {
 		err := j.publishParsingJob(job)
 		if err != nil {
 			j.log.Error().
@@ -135,9 +156,12 @@ func (j *Job) handleParsingJobs(jobsList []*jobs.Parsing) {
 			continue
 		}
 	}
+
+	j.log.Info().Int("jobs", len(jobs)).Msg("queued parsing jobs")
 }
 
 func (j *Job) publishParsingJob(job *jobs.Parsing) error {
+
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}
@@ -155,8 +179,9 @@ func (j *Job) publishParsingJob(job *jobs.Parsing) error {
 	return nil
 }
 
-func (j *Job) handleActionJobs(jobsList []*jobs.Action) {
-	for _, job := range jobsList {
+func (j *Job) handleActionJobs(jobs []*jobs.Action) {
+
+	for _, job := range jobs {
 		err := j.publishActionJob(job)
 		if err != nil {
 			j.log.Error().
@@ -168,9 +193,12 @@ func (j *Job) handleActionJobs(jobsList []*jobs.Action) {
 			continue
 		}
 	}
+
+	j.log.Info().Int("jobs", len(jobs)).Msg("queued action jobs")
 }
 
 func (j *Job) publishActionJob(job *jobs.Action) error {
+
 	if job.Status != jobs.StatusCreated {
 		return nil
 	}
