@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NFT-com/indexer/jobs"
 	"github.com/lib/pq"
+
+	"github.com/NFT-com/indexer/jobs"
 )
 
 // CreateParsingJob creates a new parsing job.

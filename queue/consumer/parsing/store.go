@@ -18,6 +18,5 @@ type Store interface {
 
 	CreateAdditionJob(job *jobs.Addition) error
 	ParsingJob(id string) (*jobs.Parsing, error)
-	UpdateParsingJobStatus(id string, status jobs.Status) error
 	UpdateParsingJobsStatus(ids []string, status jobs.Status) error
 }
