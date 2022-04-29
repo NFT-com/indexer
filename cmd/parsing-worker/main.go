@@ -18,8 +18,7 @@ import (
 )
 
 const (
-	envVarLogLevel = "LOG_LEVEL"
-
+	envVarLogLevel  = "LOG_LEVEL"
 	defaultLogLevel = "info"
 )
 

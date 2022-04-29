@@ -20,13 +20,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 
 	"github.com/NFT-com/indexer/function"
+	"github.com/NFT-com/indexer/models/constants"
 	"github.com/NFT-com/indexer/queue/consumer/action"
 	"github.com/NFT-com/indexer/service/postgres"
-)
-
-const (
-	databaseDriver     = "postgres"
-	defaultActionQueue = "action"
 )
 
 func main() {
@@ -60,7 +56,7 @@ func run() error {
 		flagIdleConnections uint
 	)
 
-	pflag.StringVarP(&flagActionQueue, "action-queue", "q", defaultActionQueue, "name of the queue for action jobs")
+	pflag.StringVarP(&flagActionQueue, "action-queue", "q", constants.QueueAction, "name of the queue for action jobs")
 	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
 	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
@@ -94,7 +90,7 @@ func run() error {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
+	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
@@ -106,7 +102,7 @@ func run() error {
 		return fmt.Errorf("could not create job store: %w", err)
 	}
 
-	dataDB, err := sql.Open(databaseDriver, flagDataDB)
+	dataDB, err := sql.Open(constants.DialectPostgres, flagDataDB)
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}

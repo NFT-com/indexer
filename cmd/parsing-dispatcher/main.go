@@ -20,13 +20,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 
 	"github.com/NFT-com/indexer/function"
+	"github.com/NFT-com/indexer/models/constants"
 	"github.com/NFT-com/indexer/queue/consumer/parsing"
 	"github.com/NFT-com/indexer/service/postgres"
-)
-
-const (
-	databaseDriver          = "postgres"
-	defaultParsingQueueName = "parsing"
 )
 
 func main() {
@@ -67,7 +63,7 @@ func run() error {
 	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagParsingQueue, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
+	pflag.StringVarP(&flagParsingQueue, "parsing-queue", "q", constants.QueueParsing, "name of the queue for parsing")
 	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
@@ -98,7 +94,7 @@ func run() error {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	jobDB, err := sql.Open(databaseDriver, flagJobsDB)
+	jobDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
@@ -110,7 +106,7 @@ func run() error {
 		return fmt.Errorf("could not create job store: %w", err)
 	}
 
-	eventDB, err := sql.Open(databaseDriver, flagEventsDB)
+	eventDB, err := sql.Open(constants.DialectPostgres, flagEventsDB)
 	if err != nil {
 		return fmt.Errorf("could not open events SQL connection: %w", err)
 	}
@@ -122,7 +118,7 @@ func run() error {
 		return fmt.Errorf("could not create event store: %w", err)
 	}
 
-	dataDB, err := sql.Open(databaseDriver, flagDataDB)
+	dataDB, err := sql.Open(constants.DialectPostgres, flagDataDB)
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}

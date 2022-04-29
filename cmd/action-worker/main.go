@@ -11,14 +11,13 @@ import (
 
 	"github.com/NFT-com/indexer/function/handlers/action"
 	processor "github.com/NFT-com/indexer/function/processors/action"
-	"github.com/NFT-com/indexer/function/processors/action/erc721/owner_change"
+	ownerchange "github.com/NFT-com/indexer/function/processors/action/erc721/owner_change"
 	"github.com/NFT-com/indexer/function/processors/action/erc721metadata/addition"
 	"github.com/NFT-com/indexer/networks"
 )
 
 const (
-	envVarLogLevel = "LOG_LEVEL"
-
+	envVarLogLevel  = "LOG_LEVEL"
 	defaultLogLevel = "info"
 )
 
@@ -47,7 +46,7 @@ func run() error {
 	log = log.Level(level)
 
 	handler := action.NewHandler(log, func(client networks.Network) ([]processor.Processor, error) {
-		processors := make([]processor.Processor, 0, 0)
+		processors := []processor.Processor{}
 
 		erc721Processor, err := addition.NewProcessor(log, client)
 		if err != nil {

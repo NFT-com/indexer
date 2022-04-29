@@ -16,6 +16,7 @@ import (
 
 	"github.com/NFT-com/indexer/creator/job"
 	"github.com/NFT-com/indexer/jobs"
+	"github.com/NFT-com/indexer/models/constants"
 	"github.com/NFT-com/indexer/networks/web3"
 	"github.com/NFT-com/indexer/notifier"
 	"github.com/NFT-com/indexer/notifier/heads"
@@ -23,10 +24,6 @@ import (
 	"github.com/NFT-com/indexer/notifier/ticker"
 	"github.com/NFT-com/indexer/persister/database"
 	"github.com/NFT-com/indexer/service/postgres"
-)
-
-const (
-	databaseDriver = "postgres"
 )
 
 func main() {
@@ -85,14 +82,14 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	dataDB, err := sql.Open(databaseDriver, flagDataDB)
+	dataDB, err := sql.Open(constants.DialectPostgres, flagDataDB)
 	if err != nil {
 		return fmt.Errorf("could not open data DB: %w", err)
 	}
 	dataDB.SetMaxOpenConns(int(flagOpenConnections))
 	dataDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
+	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs DB: %w", err)
 	}

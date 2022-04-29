@@ -16,14 +16,11 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
 
+	"github.com/NFT-com/indexer/models/constants"
 	"github.com/NFT-com/indexer/service/api"
 	"github.com/NFT-com/indexer/service/handler"
 	"github.com/NFT-com/indexer/service/postgres"
 	"github.com/NFT-com/indexer/service/validator"
-)
-
-const (
-	databaseDriver = "postgres"
 )
 
 func main() {
@@ -78,7 +75,7 @@ func run() error {
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
 	// Open database connection.
-	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
+	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
