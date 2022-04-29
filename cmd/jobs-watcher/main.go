@@ -52,6 +52,8 @@ func run() error {
 		flagDeliveryQueueName string
 		flagParsingQueueName  string
 		flagLogLevel          string
+		flagDBConnections     uint
+		flagDBIdleConnections uint
 	)
 
 	pflag.StringVar(&flagActionQueueName, "action-queue", defaultActionQueueName, "name of the queue for action queue")
@@ -64,6 +66,9 @@ func run() error {
 	pflag.StringVar(&flagDeliveryQueueName, "delivery-queue", defaultDeliveryQueueName, "name of the queue for delivery queue")
 	pflag.StringVar(&flagParsingQueueName, "parsing-queue", defaultParsingQueueName, "name of the queue for parsing queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
+
 	pflag.Parse()
 
 	// Logger initialization.
@@ -92,6 +97,8 @@ func run() error {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
 	}
+	db.SetMaxOpenConns(int(flagDBConnections))
+	db.SetMaxIdleConns(int(flagDBIdleConnections))
 
 	// Create the database store.
 	store, err := postgres.NewStore(db)
