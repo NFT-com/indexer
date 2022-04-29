@@ -75,6 +75,7 @@ func (d *Action) Close() {
 }
 
 func (d *Action) consume(payload []byte) {
+
 	var job jobs.Action
 	err := json.Unmarshal(payload, &job)
 	if err != nil {

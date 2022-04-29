@@ -44,28 +44,28 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagBatchSize              int64
-		flagDBJobsConnectionInfo   string
-		flagDBDataConnectionInfo   string
-		flagDBEventsConnectionInfo string
-		flagLogLevel               string
-		flagParsingQueueName       string
-		flagRateLimit              int
-		flagRedisDatabase          int
-		flagRedisNetwork           string
-		flagRedisURL               string
-		flagRegion                 string
-		flagRMQTag                 string
-		flagDryRun                 bool
-		flagDBConnections          uint
-		flagDBIdleConnections      uint
+		flagBatchSize         int64
+		flagJobsDB            string
+		flagDataDB            string
+		flagEventsDB          string
+		flagLogLevel          string
+		flagParsingQueueName  string
+		flagRateLimit         int
+		flagRedisDatabase     int
+		flagRedisNetwork      string
+		flagRedisURL          string
+		flagRegion            string
+		flagRMQTag            string
+		flagDryRun            bool
+		flagDBConnections     uint
+		flagDBIdleConnections uint
 	)
 
 	// TODO: remove batch size and instead use time-based dispatching
 	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
-	pflag.StringVarP(&flagDBJobsConnectionInfo, "job-database", "j", "", "jobs database connection string")
-	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
-	pflag.StringVarP(&flagDBEventsConnectionInfo, "events-database", "e", "", "events database connection string")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
+	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
+	pflag.StringVarP(&flagEventsDB, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
@@ -98,7 +98,7 @@ func run() error {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	jobDB, err := sql.Open(databaseDriver, flagDBJobsConnectionInfo)
+	jobDB, err := sql.Open(databaseDriver, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
@@ -110,7 +110,7 @@ func run() error {
 		return fmt.Errorf("could not create job store: %w", err)
 	}
 
-	eventDB, err := sql.Open(databaseDriver, flagDBEventsConnectionInfo)
+	eventDB, err := sql.Open(databaseDriver, flagEventsDB)
 	if err != nil {
 		return fmt.Errorf("could not open events SQL connection: %w", err)
 	}
@@ -122,7 +122,7 @@ func run() error {
 		return fmt.Errorf("could not create event store: %w", err)
 	}
 
-	dataDB, err := sql.Open(databaseDriver, flagDBDataConnectionInfo)
+	dataDB, err := sql.Open(databaseDriver, flagDataDB)
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}

@@ -8,6 +8,7 @@ import (
 )
 
 func (d *Action) processNFT(actionType string, nft chain.NFT) error {
+
 	chain, err := d.dataStore.Chain(nft.ChainID)
 	if err != nil {
 		return fmt.Errorf("could not get chain: %w", err)
@@ -21,6 +22,7 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 	switch actionType {
 
 	case log.Addition.String():
+
 		err = d.dataStore.UpsertNFT(nft, collection.ID)
 		if err != nil {
 			return fmt.Errorf("could not store nft: %w", err)
@@ -33,11 +35,27 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 			}
 		}
 
+		d.log.Info().
+			Str("collection", collection.ID).
+			Str("nft", nft.ID).
+			Str("name", nft.Name).
+			Str("uri", nft.URI).
+			Str("image", nft.Image).
+			Int("traits", len(nft.Traits)).
+			Msg("NFT details added")
+
 	case log.OwnerChange.String():
+
 		err = d.dataStore.UpdateNFTOwner(collection.ID, nft.ID, nft.Owner)
 		if err != nil {
 			return fmt.Errorf("could not update nft owner (nft %s): %w", nft.ID, err)
 		}
+
+		d.log.Info().
+			Str("collection", collection.ID).
+			Str("nft", nft.ID).
+			Str("owner", nft.Owner).
+			Msg("NFT owner updated")
 	}
 
 	return nil

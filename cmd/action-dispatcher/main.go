@@ -45,23 +45,23 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagActionQueueName      string
-		flagBatchSize            int64
-		flagDBJobsConnectionInfo string
-		flagDBDataConnectionInfo string
-		flagLogLevel             string
-		flagRateLimit            int
-		flagRedisDatabase        int
-		flagRedisNetwork         string
-		flagRedisURL             string
-		flagRegion               string
-		flagRMQTag               string
+		flagActionQueueName string
+		flagBatchSize       int64
+		flagJobsDB          string
+		flagDataDB          string
+		flagLogLevel        string
+		flagRateLimit       int
+		flagRedisDatabase   int
+		flagRedisNetwork    string
+		flagRedisURL        string
+		flagRegion          string
+		flagRMQTag          string
 	)
 
 	pflag.StringVarP(&flagActionQueueName, "action-queue", "q", defaultActionQueueName, "name of the queue for action jobs")
 	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
-	pflag.StringVarP(&flagDBJobsConnectionInfo, "job-database", "j", "", "jobs database connection string")
-	pflag.StringVarP(&flagDBDataConnectionInfo, "data-database", "d", "", "data database connection string")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
+	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
 	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
@@ -90,7 +90,7 @@ func run() error {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}
 
-	jobDB, err := sql.Open(databaseDriver, flagDBJobsConnectionInfo)
+	jobDB, err := sql.Open(databaseDriver, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
@@ -100,7 +100,7 @@ func run() error {
 		return fmt.Errorf("could not create job store: %w", err)
 	}
 
-	dataDB, err := sql.Open(databaseDriver, flagDBDataConnectionInfo)
+	dataDB, err := sql.Open(databaseDriver, flagDataDB)
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}
