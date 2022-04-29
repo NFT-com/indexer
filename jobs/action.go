@@ -11,6 +11,7 @@ type Action struct {
 	Standard    string `json:"standard_type"`
 	Event       string `json:"event_type"`
 	TokenID     string `json:"token_id"`
+	ToAddress   string `json:"to_address"`
 	Type        string `json:"type"`
 	Status      Status `json:"status"`
 }

@@ -23,6 +23,7 @@ func (s *Store) CreateActionJob(job *jobs.Action) error {
 			job.Standard,
 			job.Event,
 			job.TokenID,
+			job.ToAddress,
 			job.Type,
 			job.Status,
 		).
@@ -52,6 +53,7 @@ func (s *Store) CreateActionJobs(jobs []*jobs.Action) error {
 			job.Standard,
 			job.Event,
 			job.TokenID,
+			job.ToAddress,
 			job.Type,
 			job.Status,
 		)
@@ -94,6 +96,7 @@ func (s *Store) ActionJobs(status jobs.Status) ([]*jobs.Action, error) {
 			&job.Standard,
 			&job.Event,
 			&job.TokenID,
+			&job.ToAddress,
 			&job.Type,
 			&job.Status,
 		)
@@ -135,6 +138,7 @@ func (s *Store) ActionJob(id string) (*jobs.Action, error) {
 		&job.Standard,
 		&job.Event,
 		&job.TokenID,
+		&job.ToAddress,
 		&job.Type,
 		&job.Status,
 	)

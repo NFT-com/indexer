@@ -6,8 +6,6 @@ const (
 	// represents the type of standard the processor is able to parse
 	processorStandard = "ERC721"
 
-	defaultIndexDataLen = 3
-
 	dateDisplayType = "date"
 
 	// callSender represents the address that will be set as signer of the get request to the node.

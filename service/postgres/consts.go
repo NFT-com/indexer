@@ -23,7 +23,7 @@ var (
 	// jobs table columns
 	discoveryJobsTableColumns = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "addresses", "interface_type", "status"}
 	parsingJobsTableColumns   = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "event_type", "status"}
-	actionJobsTableColumns    = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "event_type", "token_id", "action_type", "status"}
+	actionJobsTableColumns    = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "event_type", "token_id", "to_address", "action_type", "status"}
 
 	// events table columns
 	mintEventTableColumns     = []string{"id", "block", "event_index", "transaction_hash", "collection", "token_id", "owner", "emitted_at"}

@@ -6,13 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/function/handlers/action"
 	processor "github.com/NFT-com/indexer/function/processors/action"
-	"github.com/NFT-com/indexer/function/processors/action/erc721/owner-change"
+	"github.com/NFT-com/indexer/function/processors/action/erc721/owner_change"
 	"github.com/NFT-com/indexer/function/processors/action/erc721metadata/addition"
 	"github.com/NFT-com/indexer/networks"
 )
@@ -56,7 +55,7 @@ func run() error {
 		}
 		processors = append(processors, erc721Processor)
 
-		ownerChangeProcessor, err := owner_change.NewProcessor(log, client)
+		ownerChangeProcessor, err := ownerchange.NewProcessor(log, client)
 		if err != nil {
 			return nil, fmt.Errorf("could not create owner change erc721 processor: %w", err)
 		}

@@ -31,6 +31,7 @@ func (h *Handler) CreateActionJob(ctx echo.Context) error {
 		Standard:    req.Standard,
 		Event:       req.Event,
 		TokenID:     req.TokenID,
+		ToAddress:   req.ToAddress,
 		Type:        req.Type,
 	}
 
@@ -66,6 +67,7 @@ func (h *Handler) CreateActionJobs(ctx echo.Context) error {
 			Standard:    j.Standard,
 			Event:       j.Event,
 			TokenID:     j.TokenID,
+			ToAddress:   j.ToAddress,
 			Type:        j.Type,
 		}
 

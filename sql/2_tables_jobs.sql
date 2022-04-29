@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS action_jobs
     interface_type VARCHAR(256) NOT NULL,
     event_type     VARCHAR(256) NOT NULL,
     token_id       VARCHAR(256) NOT NULL,
+    to_address     VARCHAR(256) NOT NULL,
     action_type    VARCHAR(256) NOT NULL,
     status         VARCHAR(64)  NOT NULL,
     created_at     TIMESTAMP DEFAULT NOW(),

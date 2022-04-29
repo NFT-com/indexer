@@ -140,11 +140,6 @@ func (p *Processor) Process(ctx context.Context, job jobs.Action) (*chain.NFT, e
 		})
 	}
 
-	owner, err := p.getOwner(ctx, tokenID, job)
-	if err != nil {
-		return nil, fmt.Errorf("could not get owner: %w", err)
-	}
-
 	nft := chain.NFT{
 		ID:          nftID,
 		ChainID:     chainID,
@@ -154,7 +149,7 @@ func (p *Processor) Process(ctx context.Context, job jobs.Action) (*chain.NFT, e
 		URI:         uri,
 		Image:       info.Image,
 		Description: info.Description,
-		Owner:       owner,
+		Owner:       job.ToAddress,
 		Traits:      traits,
 	}
 
@@ -187,31 +182,4 @@ func (p *Processor) getURI(ctx context.Context, tokenID *big.Int, job jobs.Actio
 	}
 
 	return uri, nil
-}
-
-func (p *Processor) getOwner(ctx context.Context, nftID *big.Int, job jobs.Action) (string, error) {
-	logs, err := p.network.BlockEvents(ctx, job.BlockNumber, job.BlockNumber, []string{job.Event}, []string{job.Address})
-	if err != nil {
-		return "", fmt.Errorf("could not get block events: %w", err)
-	}
-
-	var owner string
-	for _, log := range logs {
-		if len(log.IndexData) != defaultIndexDataLen {
-			return "", fmt.Errorf("unexpected index data length (have: %d, want: %d)", len(log.IndexData), defaultIndexDataLen)
-		}
-
-		// If it is not the same NFT, ignore it.
-		if common.HexToHash(nftID.Text(hexadecimalBase)) != common.HexToHash(log.IndexData[2]) {
-			continue
-		}
-
-		owner = common.HexToAddress(log.IndexData[1]).String()
-	}
-
-	if owner == "" {
-		return "", errNoOwnerFound
-	}
-
-	return owner, nil
 }
