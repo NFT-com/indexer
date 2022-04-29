@@ -218,7 +218,7 @@ func (d *Parsing) consume(payloads [][]byte) {
 				return
 			}
 
-			d.log.Debug().
+			d.log.Info().
 				Str("start", input.StartBlock).
 				Str("end", input.EndBlock).
 				Int("collections", len(input.Addresses)).

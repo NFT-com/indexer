@@ -116,7 +116,7 @@ func run() error {
 
 	watcher := watcher.New(log, api, producer, store, flagDatabaseReadDelay)
 
-	log.Info().Msg("jobs watcher starting")
+	log.Info().Msg("jobs watcher started")
 	watcher.Watch()
 
 	select {

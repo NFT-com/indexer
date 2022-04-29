@@ -29,5 +29,11 @@ func (d *Addition) processNFT(nft chain.NFT) error {
 		}
 	}
 
+	d.log.Info().
+		Str("nft", nft.ID).
+		Str("chain", nft.ChainID).
+		Str("name", nft.Name).
+		Msg("processed NFT")
+
 	return nil
 }

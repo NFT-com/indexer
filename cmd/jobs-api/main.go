@@ -100,7 +100,7 @@ func run() error {
 	failed := make(chan error)
 
 	go func() {
-		log.Info().Msg("jobs api server starting")
+		log.Info().Msg("jobs api server started")
 
 		err = server.Start(flagBind)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {

@@ -89,7 +89,7 @@ func run() error {
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	dispatcher, err := function.New(lambdaClient)
+	dispatcher, err := function.New(log, lambdaClient)
 	if err != nil {
 		return fmt.Errorf("could not create function client dispatcher: %w", err)
 	}

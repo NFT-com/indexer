@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/rs/zerolog"
 )
 
 type Lambda interface {
@@ -19,15 +20,17 @@ type LambdaError struct {
 }
 
 type Client struct {
+	log          zerolog.Logger
 	lambdaClient Lambda
 }
 
-func New(lambdaClient Lambda) (*Client, error) {
+func New(log zerolog.Logger, lambdaClient Lambda) (*Client, error) {
 	if lambdaClient == nil {
 		return nil, errors.New("invalid lambda client")
 	}
 
 	d := Client{
+		log:          log,
 		lambdaClient: lambdaClient,
 	}
 
@@ -62,6 +65,10 @@ func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
 	if lambdaError.ErrorMessage != "" {
 		return nil, fmt.Errorf("got an error from the lambda function: %s (error_type: %s)", lambdaError.ErrorMessage, lambdaError.ErrorType)
 	}
+
+	d.log.Info().
+		Str("function", functionName).
+		Msg("lambda function executed successfully")
 
 	return output.Payload, nil
 }

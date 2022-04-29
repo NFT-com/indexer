@@ -41,7 +41,7 @@ func New(ctx context.Context, url string) (*Web3, error) {
 	return &w, nil
 }
 
-func (w *Web3) ChainID(ctx context.Context) (string, error) {
+func (w *Web3) ChainID(_ context.Context) (string, error) {
 	return w.chainID, nil
 }
 
