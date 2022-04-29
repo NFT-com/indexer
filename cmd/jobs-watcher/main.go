@@ -20,7 +20,6 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout       = 30 * time.Second
 	defaultReadDelay         = 100 * time.Millisecond
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"

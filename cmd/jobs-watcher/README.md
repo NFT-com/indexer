@@ -7,7 +7,6 @@ Job Watcher watches the dispatcher and parsing websockets for new updates and pu
 ```
 Usage of jobs-watcher:
   --action-queue string         action queue name (default "action")
-  -a, --api string              jobs api base endpoint
   -t, --tag string              rmq producer tag (default "jobs-watcher")
   -n, --network string          redis network type (default "tcp")
   -u, --url string              redis server connection url
