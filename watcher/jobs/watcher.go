@@ -53,6 +53,9 @@ func (j *Job) watchDiscoveries() {
 				j.log.Error().Err(err).Msg("could not retrieve discovery jobs")
 				continue
 			}
+			if len(jobs) == 0 {
+				continue
+			}
 
 			j.handleDiscoveryJobs(jobs)
 
@@ -74,6 +77,9 @@ func (j *Job) watchParsings() {
 				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
 				continue
 			}
+			if len(jobs) == 0 {
+				continue
+			}
 
 			j.handleParsingJobs(jobs)
 
@@ -93,6 +99,9 @@ func (j *Job) watchActions() {
 			jobs, err := j.store.ActionJobs(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve action jobs")
+				continue
+			}
+			if len(jobs) == 0 {
 				continue
 			}
 
