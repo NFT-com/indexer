@@ -7,7 +7,7 @@ import (
 type Mint struct {
 	ID              string    `json:"id"`
 	CollectionID    string    `json:"collection_id"`
-	Block           string    `json:"block"`
+	Block           uint64    `json:"block"`
 	EventIndex      uint      `json:"event_index"`
 	TransactionHash string    `json:"transaction_hash"`
 	TokenID         string    `json:"token_id"`

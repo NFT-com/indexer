@@ -101,28 +101,22 @@ func (d *Parsing) consume(payloads [][]byte) {
 	lowestBlock := uint64(math.MaxUint64)
 	highestBlock := uint64(0)
 	for _, job := range jobList {
-		// gets the current block height
-		currentBlock, err := blockToUint64(job.BlockNumber)
-		if err != nil {
-			d.handleError(err, "could not parse block into uint64", job.ID)
-			continue
-		}
-
+		block := job.BlockNumber
 		// checks if there is already an entry, if so joins the ids, addresses, event_types and maps the standard.
-		input, ok := inputMap[currentBlock]
+		input, ok := inputMap[block]
 		if ok {
 			input.IDs = append(input.IDs, job.ID)
 			input.Addresses = append(input.Addresses, job.Address)
 			input.EventTypes = append(input.EventTypes, job.Event)
 			input.Standards[job.Event] = job.Standard
 
-			inputMap[currentBlock] = input
+			inputMap[block] = input
 			continue
 		}
 
 		// if there is no entry just create a new one and check if this is lower that
 		// the current lowest height or upper than the highest height.
-		inputMap[currentBlock] = parsing.Input{
+		inputMap[block] = parsing.Input{
 			IDs:        []string{job.ID},
 			ChainURL:   job.ChainURL,
 			ChainID:    job.ChainID,
@@ -134,12 +128,12 @@ func (d *Parsing) consume(payloads [][]byte) {
 			EventTypes: []string{job.Event},
 		}
 
-		if lowestBlock > currentBlock {
-			lowestBlock = currentBlock
+		if lowestBlock > block {
+			lowestBlock = block
 		}
 
-		if highestBlock < currentBlock {
-			highestBlock = currentBlock
+		if highestBlock < block {
+			highestBlock = block
 		}
 	}
 
@@ -190,8 +184,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 		d.limit.Take()
 
 		d.log.Debug().
-			Str("start", input.StartBlock).
-			Str("end", input.EndBlock).
+			Uint64("start", input.StartBlock).
+			Uint64("end", input.EndBlock).
 			Int("collections", len(input.Addresses)).
 			Int("standards", len(input.Standards)).
 			Int("events", len(input.EventTypes)).
@@ -226,8 +220,8 @@ func (d *Parsing) consume(payloads [][]byte) {
 			}
 
 			d.log.Debug().
-				Str("start", input.StartBlock).
-				Str("end", input.EndBlock).
+				Uint64("start", input.StartBlock).
+				Uint64("end", input.EndBlock).
 				Int("collections", len(input.Addresses)).
 				Int("standards", len(input.Standards)).
 				Int("events", len(input.EventTypes)).

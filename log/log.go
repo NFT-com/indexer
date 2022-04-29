@@ -70,7 +70,7 @@ type RawLog struct {
 	ID              string    `json:"id"`
 	ChainID         string    `json:"chain_id"`
 	Index           uint      `json:"index"`
-	BlockNumber     string    `json:"block_number"`
+	BlockNumber     uint64    `json:"block_number"`
 	BlockHash       string    `json:"block_hash"`
 	Address         string    `json:"address"`
 	TransactionHash string    `json:"transaction_hash"`

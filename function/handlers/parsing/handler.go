@@ -23,8 +23,8 @@ type Input struct {
 	ChainURL   string            `json:"chain_url"`
 	ChainID    string            `json:"chain_id"`
 	ChainType  string            `json:"chain_type"`
-	StartBlock string            `json:"starting_block"`
-	EndBlock   string            `json:"end_block"`
+	StartBlock uint64            `json:"starting_block"`
+	EndBlock   uint64            `json:"end_block"`
 	Addresses  []string          `json:"addresses"`
 	Standards  map[string]string `json:"standards"`
 	EventTypes []string          `json:"event_types"`
@@ -51,8 +51,8 @@ func NewHandler(log zerolog.Logger, initializer Initializer) *Handler {
 
 func (h *Handler) Handle(ctx context.Context, input Input) (interface{}, error) {
 	h.log.Debug().
-		Str("start_block", input.StartBlock).
-		Str("end_block", input.EndBlock).
+		Uint64("start_block", input.StartBlock).
+		Uint64("end_block", input.EndBlock).
 		Strs("events", input.EventTypes).
 		Strs("contracts", input.Addresses).
 		Msg("processing job")

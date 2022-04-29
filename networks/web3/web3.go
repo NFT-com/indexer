@@ -75,15 +75,9 @@ func (w *Web3) GetLatestBlockHeight(ctx context.Context) (*big.Int, error) {
 	return header.Number, nil
 }
 
-func (w *Web3) BlockEvents(ctx context.Context, startBlock, endBlock string, eventTypes, contracts []string) ([]log.RawLog, error) {
-	start, ok := big.NewInt(0).SetString(startBlock, 0)
-	if !ok {
-		return nil, fmt.Errorf("could not parse start block number into big.Int")
-	}
-	end, ok := big.NewInt(0).SetString(endBlock, 0)
-	if !ok {
-		return nil, fmt.Errorf("could not parse end block number into big.Int")
-	}
+func (w *Web3) BlockEvents(ctx context.Context, startBlock uint64, endBlock uint64, eventTypes []string, contracts []string) ([]log.RawLog, error) {
+	start := big.NewInt(0).SetUint64(startBlock)
+	end := big.NewInt(0).SetUint64(endBlock)
 
 	addresses := make([]common.Address, 0, len(contracts))
 	for _, contract := range contracts {
@@ -136,7 +130,7 @@ func (w *Web3) BlockEvents(ctx context.Context, startBlock, endBlock string, eve
 		l := log.RawLog{
 			ID:              common.Bytes2Hex(hash[:]),
 			ChainID:         w.chainID,
-			BlockNumber:     header.Number.String(),
+			BlockNumber:     header.Number.Uint64(),
 			Index:           web3Log.Index,
 			BlockHash:       web3Log.BlockHash.String(),
 			Address:         web3Log.Address.String(),

@@ -155,7 +155,7 @@ func run() error {
 					ChainURL:    flagChainURL,
 					ChainID:     flagChainID,
 					ChainType:   flagChainType,
-					BlockNumber: "",
+					BlockNumber: 0,
 					Address:     collection.Address,
 					Standard:    standard.Name,
 					Event:       event.ID,

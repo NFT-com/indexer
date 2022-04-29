@@ -6,7 +6,7 @@ type Parsing struct {
 	ChainURL    string `json:"chain_url"`
 	ChainID     string `json:"chain_id"`
 	ChainType   string `json:"chain_type"`
-	BlockNumber string `json:"block_number"`
+	BlockNumber uint64 `json:"block_number"`
 	Address     string `json:"address"`
 	Standard    string `json:"standard_type"`
 	Event       string `json:"event_type"`
