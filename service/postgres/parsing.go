@@ -236,7 +236,7 @@ func (s *Store) UpdateParsingJobStatus(id string, status jobs.Status) error {
 func (s *Store) UpdateParsingJobsStatus(ids []string, status jobs.Status) error {
 	res, err := s.build.
 		Update(parsingJobsTableName).
-		Where("id IN (?)", pq.Array(ids)).
+		Where("id = any(?)", pq.Array(ids)).
 		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
