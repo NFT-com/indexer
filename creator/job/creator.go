@@ -96,7 +96,7 @@ func (c *Creator) Notify(height uint64) {
 		return
 	}
 
-	created := 0
+	created := uint(0)
 	maximum := c.limit - count
 	for index := start; index < start+uint64(maximum) && index <= height; index++ {
 		job := c.template
@@ -107,5 +107,5 @@ func (c *Creator) Notify(height uint64) {
 		c.last = index
 	}
 
-	c.log.Info().Int("jobs", created).Uint64("start", start).Uint64("end", c.last).Msg("created parsing jobs")
+	c.log.Info().Uint("jobs", created).Uint64("start", start).Uint64("end", c.last).Msg("created parsing jobs")
 }

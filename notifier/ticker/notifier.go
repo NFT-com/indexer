@@ -3,6 +3,7 @@ package ticker
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/NFT-com/indexer/notifier"
@@ -12,7 +13,7 @@ import (
 type Notifier struct {
 	log     zerolog.Logger
 	ctx     context.Context
-	ticker  *time.Ticker
+	period  time.Duration
 	heights chan uint64
 	latest  uint64
 	listen  notifier.Listener
@@ -27,7 +28,7 @@ func NewNotifier(log zerolog.Logger, ctx context.Context, period time.Duration, 
 	n := Notifier{
 		log:     log,
 		ctx:     ctx,
-		ticker:  time.NewTicker(period),
+		period:  period,
 		heights: make(chan uint64, 1),
 		latest:  latest,
 		listen:  listen,
@@ -44,6 +45,14 @@ func (n *Notifier) Notify(height uint64) {
 }
 
 func (n *Notifier) process() {
+
+	// Introduce a random jitter from [0-n.period) so that we don't hit the DB
+	// for all combinations at the exact same time.
+	delay := time.Duration(rand.Uint64() % uint64(n.period))
+	time.Sleep(delay)
+
+	// Initialize the ticker with the given period after jitter delay.
+	ticker := time.NewTicker(n.period)
 
 ProcessLoop:
 	for {
@@ -62,7 +71,7 @@ ProcessLoop:
 
 			n.latest = height
 
-		case <-n.ticker.C:
+		case <-ticker.C:
 
 			n.log.Debug().Uint64("height", n.latest).Msg("notifying ticker height")
 
@@ -70,6 +79,6 @@ ProcessLoop:
 		}
 	}
 
-	n.ticker.Stop()
+	ticker.Stop()
 	close(n.heights)
 }

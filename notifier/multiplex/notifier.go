@@ -19,6 +19,6 @@ func NewNotifier(listens ...notifier.Listener) *Notifier {
 
 func (n *Notifier) Notify(height uint64) {
 	for _, listen := range n.listens {
-		listen.Notify(height)
+		go listen.Notify(height)
 	}
 }

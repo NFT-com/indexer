@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"time"
@@ -37,6 +38,9 @@ func main() {
 
 func run() error {
 
+	// Seed random generator for jitter.
+	rand.Seed(time.Now().UnixNano())
+
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -45,14 +49,16 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagChainID          string
-		flagChainURL         string
-		flagChainType        string
-		flagDBConnectionInfo string
-		flagLogLevel         string
-		flagStartHeight      uint64
-		flagJobLimit         uint
-		flagNotifyPeriod     time.Duration
+		flagChainID           string
+		flagChainURL          string
+		flagChainType         string
+		flagDBConnectionInfo  string
+		flagLogLevel          string
+		flagStartHeight       uint64
+		flagJobLimit          uint
+		flagNotifyPeriod      time.Duration
+		flagDBConnections     uint
+		flagDBIdleConnections uint
 	)
 
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
@@ -62,7 +68,9 @@ func run() error {
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
 	pflag.UintVarP(&flagJobLimit, "job-limit", "j", 1000, "maximum number of pending jobs per combination")
-	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", time.Second, "how often to notify watchers to create new jobs")
+	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", 100*time.Millisecond, "how often to notify watchers to create new jobs")
+	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -80,6 +88,10 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open SQL connection: %w", err)
 	}
+
+	// Limit the number of database connections.
+	db.SetMaxOpenConns(int(flagDBConnections))
+	db.SetMaxIdleConns(int(flagDBIdleConnections))
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.
@@ -127,8 +139,7 @@ func run() error {
 
 			for _, event := range events {
 
-				// TODO: retrieve starting height from latest completed job table
-				// TODO: fix block number to be integer and rest of parsing job fields
+				// TODO: fix block number to be integer
 
 				// create the job template for this combination
 				template := jobs.Parsing{
@@ -148,8 +159,6 @@ func run() error {
 				create := job.NewCreator(log, flagStartHeight, template, persist, store, flagJobLimit)
 				listens = append(listens, create)
 
-				// TODO: introduce jitter so not all DB requests hit it at the same second
-
 				// initialize a ticker that will notify of the latest height at
 				// regular intervals, to stay live when no blocks happen
 				live, err := ticker.NewNotifier(log, ctx, flagNotifyPeriod, latest, create)
@@ -160,6 +169,7 @@ func run() error {
 			}
 		}
 	}
+
 	multi := multiplex.NewNotifier(listens...)
 	_, err = heads.NewNotifier(log, ctx, client, multi)
 	if err != nil {
