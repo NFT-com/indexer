@@ -49,17 +49,17 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagChainID           string
-		flagChainURL          string
-		flagChainType         string
-		flagDataDB            string
-		flagJobsDB            string
-		flagLogLevel          string
-		flagStartHeight       uint64
-		flagJobLimit          uint
-		flagNotifyPeriod      time.Duration
-		flagDBConnections     uint
-		flagDBIdleConnections uint
+		flagChainID         string
+		flagChainURL        string
+		flagChainType       string
+		flagDataDB          string
+		flagJobsDB          string
+		flagLogLevel        string
+		flagStartHeight     uint64
+		flagJobLimit        uint
+		flagNotifyPeriod    time.Duration
+		flagOpenConnections uint
+		flagIdleConnections uint
 	)
 
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
@@ -71,8 +71,8 @@ func run() error {
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
 	pflag.UintVar(&flagJobLimit, "job-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", 100*time.Millisecond, "how often to notify watchers to create new jobs")
-	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -89,15 +89,15 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open data DB: %w", err)
 	}
-	dataDB.SetMaxOpenConns(int(flagDBConnections))
-	dataDB.SetMaxIdleConns(int(flagDBIdleConnections))
+	dataDB.SetMaxOpenConns(int(flagOpenConnections))
+	dataDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	jobsDB, err := sql.Open(databaseDriver, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs DB: %w", err)
 	}
-	jobsDB.SetMaxOpenConns(int(flagDBConnections))
-	jobsDB.SetMaxIdleConns(int(flagDBIdleConnections))
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.

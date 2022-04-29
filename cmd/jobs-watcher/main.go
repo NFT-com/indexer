@@ -20,10 +20,10 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultReadDelay         = 100 * time.Millisecond
-	defaultDeliveryQueueName = "discovery"
-	defaultParsingQueueName  = "parsing"
-	defaultActionQueueName   = "action"
+	defaultReadInterval  = 100 * time.Millisecond
+	defaultDeliveryQueue = "discovery"
+	defaultParsingQueue  = "parsing"
+	defaultActionQueue   = "action"
 )
 
 func main() {
@@ -43,32 +43,32 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagActionQueueName   string
-		flagDBConnectionInfo  string
-		flagDatabaseReadDelay time.Duration
-		flagRMQTag            string
-		flagRedisNetwork      string
-		flagRedisURL          string
-		flagRedisDatabase     int
-		flagDeliveryQueueName string
-		flagParsingQueueName  string
-		flagLogLevel          string
-		flagDBConnections     uint
-		flagDBIdleConnections uint
+		flagActionQueueName string
+		flagJobsDB          string
+		flagReadInterval    time.Duration
+		flagRMQTag          string
+		flagRedisNetwork    string
+		flagRedisURL        string
+		flagRedisDatabase   int
+		flagDeliveryQueue   string
+		flagParsingQueue    string
+		flagLogLevel        string
+		flagOpenConnections uint
+		flagIdleConnections uint
 	)
 
-	pflag.StringVar(&flagActionQueueName, "action-queue", defaultActionQueueName, "name of the queue for action queue")
-	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
-	pflag.DurationVar(&flagDatabaseReadDelay, "read-delay", defaultReadDelay, "data read for new jobs delay")
+	pflag.StringVar(&flagActionQueueName, "action-queue", defaultActionQueue, "name of the queue for action queue")
+	pflag.StringVarP(&flagJobsDB, "database", "d", "", "data source name for database connection")
+	pflag.DurationVar(&flagReadInterval, "read-interval", defaultReadInterval, "data read for new jobs delay")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
-	pflag.StringVar(&flagDeliveryQueueName, "delivery-queue", defaultDeliveryQueueName, "name of the queue for delivery queue")
-	pflag.StringVar(&flagParsingQueueName, "parsing-queue", defaultParsingQueueName, "name of the queue for parsing queue")
+	pflag.StringVar(&flagDeliveryQueue, "delivery-queue", defaultDeliveryQueue, "name of the queue for delivery queue")
+	pflag.StringVar(&flagParsingQueue, "parsing-queue", defaultParsingQueue, "name of the queue for parsing queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -87,19 +87,19 @@ func run() error {
 		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
-	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagActionQueueName)
+	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueue, flagParsingQueue, flagActionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
 
 	// Open database connection.
-	db, err := sql.Open(databaseDriver, flagDBConnectionInfo)
+	db, err := sql.Open(databaseDriver, flagJobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
 	}
-	db.SetMaxOpenConns(int(flagDBConnections))
-	db.SetMaxIdleConns(int(flagDBIdleConnections))
+	db.SetMaxOpenConns(int(flagOpenConnections))
+	db.SetMaxIdleConns(int(flagIdleConnections))
 
 	// Create the database store.
 	store, err := postgres.NewStore(db)
@@ -108,7 +108,7 @@ func run() error {
 		return err
 	}
 
-	watcher := watcher.New(log, producer, store, flagDatabaseReadDelay)
+	watcher := watcher.New(log, producer, store, flagReadInterval)
 
 	log.Info().Msg("jobs watcher starting")
 	watcher.Watch()

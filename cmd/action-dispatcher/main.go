@@ -25,8 +25,8 @@ import (
 )
 
 const (
-	databaseDriver         = "postgres"
-	defaultActionQueueName = "action"
+	databaseDriver     = "postgres"
+	defaultActionQueue = "action"
 )
 
 func main() {
@@ -45,7 +45,7 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagActionQueueName string
+		flagActionQueue     string
 		flagBatchSize       int64
 		flagJobsDB          string
 		flagDataDB          string
@@ -56,9 +56,11 @@ func run() error {
 		flagRedisURL        string
 		flagRegion          string
 		flagRMQTag          string
+		flagOpenConnections uint
+		flagIdleConnections uint
 	)
 
-	pflag.StringVarP(&flagActionQueueName, "action-queue", "q", defaultActionQueueName, "name of the queue for action jobs")
+	pflag.StringVarP(&flagActionQueue, "action-queue", "q", defaultActionQueue, "name of the queue for action jobs")
 	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
 	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
@@ -69,6 +71,8 @@ func run() error {
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "dispatcher-agent", "rmq consumer tag")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -122,7 +126,7 @@ func run() error {
 		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
-	queue, err := rmqConnection.OpenQueue(flagActionQueueName)
+	queue, err := rmqConnection.OpenQueue(flagActionQueue)
 	if err != nil {
 		return fmt.Errorf("could not open redis queue: %w", err)
 	}

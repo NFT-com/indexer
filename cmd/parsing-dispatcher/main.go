@@ -44,21 +44,21 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagBatchSize         int64
-		flagJobsDB            string
-		flagDataDB            string
-		flagEventsDB          string
-		flagLogLevel          string
-		flagParsingQueueName  string
-		flagRateLimit         int
-		flagRedisDatabase     int
-		flagRedisNetwork      string
-		flagRedisURL          string
-		flagRegion            string
-		flagRMQTag            string
-		flagDryRun            bool
-		flagDBConnections     uint
-		flagDBIdleConnections uint
+		flagBatchSize       int64
+		flagJobsDB          string
+		flagDataDB          string
+		flagEventsDB        string
+		flagLogLevel        string
+		flagParsingQueue    string
+		flagRateLimit       int
+		flagRedisDatabase   int
+		flagRedisNetwork    string
+		flagRedisURL        string
+		flagRegion          string
+		flagRMQTag          string
+		flagDryRun          bool
+		flagOpenConnections uint
+		flagIdleConnections uint
 	)
 
 	// TODO: remove batch size and instead use time-based dispatching
@@ -67,7 +67,7 @@ func run() error {
 	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagParsingQueueName, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
+	pflag.StringVarP(&flagParsingQueue, "parsing-queue", "q", defaultParsingQueueName, "name of the queue for parsing")
 	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
@@ -75,8 +75,8 @@ func run() error {
 	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
 	pflag.StringVarP(&flagRMQTag, "tag", "c", "parsing-agent", "rmq consumer tag")
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "when in dry run mode, no lambdas are invoked")
-	pflag.UintVar(&flagDBConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagDBIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 70, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 20, "maximum number of idle connections")
 
 	pflag.Parse()
 
@@ -102,8 +102,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open jobs SQL connection: %w", err)
 	}
-	jobDB.SetMaxOpenConns(int(flagDBConnections))
-	jobDB.SetMaxIdleConns(int(flagDBIdleConnections))
+	jobDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	jobStore, err := postgres.NewStore(jobDB)
 	if err != nil {
@@ -114,8 +114,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open events SQL connection: %w", err)
 	}
-	eventDB.SetMaxOpenConns(int(flagDBConnections))
-	eventDB.SetMaxIdleConns(int(flagDBIdleConnections))
+	eventDB.SetMaxOpenConns(int(flagOpenConnections))
+	eventDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	eventStore, err := postgres.NewStore(eventDB)
 	if err != nil {
@@ -126,8 +126,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not open data SQL connection: %w", err)
 	}
-	dataDB.SetMaxOpenConns(int(flagDBConnections))
-	dataDB.SetMaxIdleConns(int(flagDBIdleConnections))
+	dataDB.SetMaxOpenConns(int(flagOpenConnections))
+	dataDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	dataStore, err := postgres.NewStore(dataDB)
 	if err != nil {
@@ -146,7 +146,7 @@ func run() error {
 		return fmt.Errorf("could not open redis connection: %w", err)
 	}
 
-	queue, err := rmqConnection.OpenQueue(flagParsingQueueName)
+	queue, err := rmqConnection.OpenQueue(flagParsingQueue)
 	if err != nil {
 		return fmt.Errorf("could not open redis queue: %w", err)
 	}
