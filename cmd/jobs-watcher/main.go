@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/NFT-com/indexer/queue/producer"
-	"github.com/NFT-com/indexer/service/client"
 	"github.com/NFT-com/indexer/service/postgres"
 	watcher "github.com/NFT-com/indexer/watcher/jobs"
 )
@@ -22,11 +20,10 @@ import (
 const (
 	databaseDriver = "postgres"
 
-	defaultHTTPTimeout       = 30 * time.Second
 	defaultReadDelay         = 100 * time.Millisecond
 	defaultDeliveryQueueName = "discovery"
 	defaultParsingQueueName  = "parsing"
-	defaultAdditionQueueName = "addition"
+	defaultActionQueueName   = "action"
 )
 
 func main() {
@@ -45,8 +42,7 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagAdditionQueueName string
-		flagAPIEndpoint       string
+		flagActionQueueName   string
 		flagDBConnectionInfo  string
 		flagDatabaseReadDelay time.Duration
 		flagRMQTag            string
@@ -58,8 +54,7 @@ func run() error {
 		flagLogLevel          string
 	)
 
-	pflag.StringVar(&flagAdditionQueueName, "addition-queue", defaultAdditionQueueName, "name of the queue for addition queue")
-	pflag.StringVarP(&flagAPIEndpoint, "api", "a", "", "jobs api base endpoint")
+	pflag.StringVar(&flagActionQueueName, "action-queue", defaultActionQueueName, "name of the queue for action queue")
 	pflag.StringVarP(&flagDBConnectionInfo, "database", "d", "", "data source name for database connection")
 	pflag.DurationVar(&flagDatabaseReadDelay, "read-delay", defaultReadDelay, "data read for new jobs delay")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
@@ -81,21 +76,12 @@ func run() error {
 	log = log.Level(level)
 
 	failed := make(chan error)
-
-	cli := http.DefaultClient
-	cli.Timeout = defaultHTTPTimeout
-
 	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
 	if err != nil {
 		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
-	api := client.New(log,
-		client.WithHTTPClient(cli),
-		client.WithHost(flagAPIEndpoint),
-	)
-
-	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagAdditionQueueName)
+	producer, err := producer.NewProducer(redisConnection, flagDeliveryQueueName, flagParsingQueueName, flagActionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
@@ -114,7 +100,7 @@ func run() error {
 		return err
 	}
 
-	watcher := watcher.New(log, api, producer, store, flagDatabaseReadDelay)
+	watcher := watcher.New(log, producer, store, flagDatabaseReadDelay)
 
 	log.Info().Msg("jobs watcher starting")
 	watcher.Watch()
@@ -123,7 +109,6 @@ func run() error {
 	case <-sig:
 		log.Info().Msg("jobs watcher stopping")
 		watcher.Close()
-		api.Close()
 	case err = <-failed:
 		log.Error().Err(err).Msg("jobs watcher aborted")
 		return err

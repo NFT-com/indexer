@@ -1,7 +1,7 @@
 /cmd/jobs-api/jobs-api
 /cmd/jobs-watcher/jobs-watcher
 /cmd/parsing-dispatcher/parsing-dispatcher
-/cmd/addition-dispatcher/addition-dispatcher
+/cmd/action-dispatcher/action-dispatcher
 /cmd/chain-watcher/chain-watcher
 /cmd/chain-boostrapper/chain-boostrapper
 /parsers/web3/erc721/transfer/transfer

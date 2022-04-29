@@ -184,11 +184,12 @@ func (d *Parsing) consume(payloads [][]byte) {
 		d.limit.Take()
 
 		d.log.Debug().
-			Int("collections", len(input.IDs)).
+			Str("start", input.StartBlock).
+			Str("end", input.EndBlock).
+			Int("collections", len(input.Addresses)).
 			Int("standards", len(input.Standards)).
 			Int("events", len(input.EventTypes)).
-			Str("start", input.StartBlock).
-			Str("end", input.EndBlock).Msg("dispatching job batch")
+			Msg("dispatching job batch")
 
 		name := functionName(input)
 
@@ -222,8 +223,9 @@ func (d *Parsing) consume(payloads [][]byte) {
 				Str("start", input.StartBlock).
 				Str("end", input.EndBlock).
 				Int("collections", len(input.Addresses)).
+				Int("standards", len(input.Standards)).
 				Int("events", len(input.EventTypes)).
-				Int("occurences", len(logs)).
+				Int("occurrences", len(logs)).
 				Msg("processing results")
 
 			err = d.processLogs(input, logs)

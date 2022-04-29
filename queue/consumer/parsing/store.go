@@ -16,7 +16,9 @@ type Store interface {
 	Collection(chainID, address, contractCollectionID string) (*chain.Collection, error)
 	Marketplace(chainID, address string) (*chain.Marketplace, error)
 
-	CreateAdditionJob(job *jobs.Addition) error
+	UpdateNFTOwner(collectionID, nft, owner string) error
+
+	CreateActionJob(job *jobs.Action) error
 	ParsingJob(id string) (*jobs.Parsing, error)
 	UpdateParsingJobStatus(id string, status jobs.Status) error
 }

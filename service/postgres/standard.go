@@ -27,7 +27,7 @@ func (s *Store) Standards(collectionID string) ([]chain.Standard, error) {
 			&standard.Name,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("could not retrieve addition job list: %w", err)
+			return nil, fmt.Errorf("could not retrieve standards list: %w", err)
 		}
 
 		standards = append(standards, standard)

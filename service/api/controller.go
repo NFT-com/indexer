@@ -8,7 +8,7 @@ import (
 type JobsHandler interface {
 	DiscoveryJobHandler
 	ParsingJobHandler
-	AdditionJobHandler
+	ActionJobHandler
 }
 
 // DiscoveryJobHandler represent the business layer of the discovery jobs api.
@@ -31,11 +31,11 @@ type ParsingJobHandler interface {
 	UpdateParsingJobStatus(id string, status jobs.Status) error
 }
 
-// AdditionJobHandler represent the business layer of the addition jobs api.
-type AdditionJobHandler interface {
-	CreateAdditionJob(job *jobs.Addition) (*jobs.Addition, error)
-	CreateAdditionJobs(jobs []*jobs.Addition) error
-	ListAdditionJobs(status jobs.Status) ([]*jobs.Addition, error)
-	GetAdditionJob(id string) (*jobs.Addition, error)
-	UpdateAdditionJobStatus(id string, status jobs.Status) error
+// ActionJobHandler represent the business layer of the action jobs api.
+type ActionJobHandler interface {
+	CreateActionJob(job *jobs.Action) (*jobs.Action, error)
+	CreateActionJobs(jobs []*jobs.Action) error
+	ListActionJobs(status jobs.Status) ([]*jobs.Action, error)
+	GetActionJob(id string) (*jobs.Action, error)
+	UpdateActionJobStatus(id string, status jobs.Status) error
 }

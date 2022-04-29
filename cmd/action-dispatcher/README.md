@@ -1,12 +1,16 @@
-# Addition Dispatcher
+# Action Dispatcher
 
-Addition Dispatcher consumes messages from the queue and launches jobs.
+This pipeline allows the dispatcher to deploy several actions.
+
+Actions:
+* Addition: Gets the information from networks.
+* OwnerChange: Updates the nft's owner with the new owner.
 
 ## Usage
 
 ```
-Usage of parsing-dispatcher:
-  -q, --addition-queue string   addition queue name (default "addition")
+Usage of action-dispatcher:
+  -q, --action-queue string     action queue name (default "action")
   -a, --api string              jobs api base endpoint
   -j, --jobs int                amount of concurrent lambda calls (default 4)
   -p, --prefetch int            amount of queued messages to prefetch on init (default 5)

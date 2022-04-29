@@ -18,8 +18,8 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 			return fmt.Errorf("could not get chain: %w", err)
 		}
 
-		if l.NeedsAdditionJob {
-			err := d.jobStore.CreateAdditionJob(&jobs.Addition{
+		if l.NeedsActionJob {
+			err := d.jobStore.CreateActionJob(&jobs.Action{
 				ID:          uuid.New().String(),
 				ChainURL:    input.ChainURL,
 				ChainID:     input.ChainID,
@@ -29,10 +29,12 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 				Standard:    l.Standard,
 				Event:       l.Event,
 				TokenID:     l.NftID,
+				ToAddress:   l.ToAddress,
+				Type:        l.ActionType.String(),
 				Status:      jobs.StatusCreated,
 			})
 			if err != nil {
-				return fmt.Errorf("could not create addition job: %w", err)
+				return fmt.Errorf("could not create action job: %w", err)
 			}
 		}
 

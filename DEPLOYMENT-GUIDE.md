@@ -6,7 +6,7 @@
     1. [Job API](#job-api)
     2. [Job Watcher](#job-watcher)
     3. [Parsing Dispatcher](#parsing-dispatcher)
-    3. [Addition Dispatcher](#addition-dispatcher)
+    3. [Action Dispatcher](#action-dispatcher)
     4. [Chain Watcher](#chain-watcher)
     5. [Functions](#functions)
 
@@ -27,7 +27,7 @@ For this the command below allows building and tagging the containers. Replace `
 * api
 * jobwatcher
 * parsingdispatcher
-* additiondispatcher
+* actiondispatcher
 * chainwatcher
 
 ```console
@@ -62,13 +62,13 @@ See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more de
 
 #### Requirements
 
-* Jobs API
+* Postgres
 * Redis
 
 #### Starting the Container
 
 ```console
-docker run indexer-jobwatcher:1.0.0 -a <jobs_api_url> -u <redis_url>
+docker run indexer-jobwatcher:1.0.0 -u <redis_url> -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Parsing Dispatcher
@@ -79,7 +79,6 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Requirements
 
 * Postgres
-* Jobs API
 * Redis
 * [AWS Credentials in Environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 * [Deployed Functions to AWS](#functions)
@@ -87,18 +86,17 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsingdispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
+docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsingdispatcher:1.0.0 -u <redis_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -j -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>" -e -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
-### Addition Dispatcher
+### Action Dispatcher
 
-Addition Dispatcher consumes messages from the queue and launches jobs.
+Action Dispatcher consumes messages from the queue and launches jobs.
 See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 #### Requirements
 
 * Postgres
-* Jobs API
 * Redis
 * [AWS Credentials in Environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html)
 * [Deployed Functions in AWS](#functions)
@@ -106,7 +104,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-additiondispatcher:1.0.0 -u <redis_url> -a <jobs_api_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>"
+docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-actiondispatcher:1.0.0 -u <redis_url> -d "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -j -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Chain Watcher
@@ -118,12 +116,12 @@ See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more
 #### Requirements
 
 * Ethereum Node
-* Jobs API
+* Postgres
 
 #### Starting the Container
 
 ```console
-docker run indexer-chainwatcher:1.0.0 -a <api_url> -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type>"
+docker run indexer-chainwatcher:1.0.0 -u <web3_node_url> -i <web3_chain_id> -t web3 -c <contract> -e <event_type> --standard-type <standard_type> -d -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 Here is an example where the watcher is configured to watch for:
@@ -133,7 +131,7 @@ Here is an example where the watcher is configured to watch for:
 * With the `ERC721` standard type.
 
 ```console
-docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721
+docker run indexer-chainwatcher:1.0.0 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 > 🚧
@@ -150,8 +148,8 @@ docker run indexer-chainwatcher:1.0.0 -a api:8081 -u wss://mainnet.infura.io/ws/
 > 
 > * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/parsing-worker `
 > * ` zip parsing.zip worker `
-> * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/addition-worker `
-> * ` zip addition.zip worker `
+> * ` GOOS=linux GOARCH=amd64 go build -o worker ../cmd/action-worker `
+> * ` zip action.zip worker `
 >
 > After this, with the functions already zipped.
 > There is two options for deployment:

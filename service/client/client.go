@@ -7,7 +7,7 @@ import (
 const (
 	discoveryBasePath = "discoveries"
 	parsingBasePath   = "parsings"
-	additionBasePath  = "additions"
+	actionBasePath    = "actions"
 
 	contentTypeHeaderName = "content-type"
 	jsonContentType       = "application/json"

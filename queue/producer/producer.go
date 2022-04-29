@@ -13,15 +13,15 @@ type Producer struct {
 	connection     rmq.Connection
 	discoveryQueue string
 	parsingQueue   string
-	additionQueue  string
+	actionQueue    string
 }
 
-func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue string, additionQueue string) (*Producer, error) {
+func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue string, actionQueue string) (*Producer, error) {
 	p := Producer{
 		connection:     connection,
 		discoveryQueue: discoveryQueue,
 		parsingQueue:   parsingQueue,
-		additionQueue:  additionQueue,
+		actionQueue:    actionQueue,
 	}
 
 	return &p, nil
@@ -65,8 +65,8 @@ func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 	return nil
 }
 
-func (p *Producer) PublishAdditionJob(job *jobs.Addition) error {
-	q, err := p.connection.OpenQueue(p.additionQueue)
+func (p *Producer) PublishActionJob(job *jobs.Action) error {
+	q, err := p.connection.OpenQueue(p.actionQueue)
 	if err != nil {
 		return fmt.Errorf("could not open connection with queue: %w", err)
 	}

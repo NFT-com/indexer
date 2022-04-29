@@ -1,4 +1,4 @@
-package addition
+package action
 
 import (
 	"crypto/sha256"
@@ -8,38 +8,43 @@ import (
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
+	"go.uber.org/ratelimit"
 
 	"github.com/NFT-com/indexer/function"
 	"github.com/NFT-com/indexer/jobs"
 	"github.com/NFT-com/indexer/models/chain"
-	"github.com/NFT-com/indexer/service/client"
 )
 
-type Addition struct {
+const concurrentConsumers = 1000
+
+type Action struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
-	apiClient     *client.Client
+	jobStore      Store
 	dataStore     Store
-	jobCount      int
+	limit         ratelimit.Limiter
 	consumerQueue chan []byte
 	close         chan struct{}
 }
 
-func NewConsumer(log zerolog.Logger, apiClient *client.Client, dispatcher function.Invoker, dataStore Store, jobCount int) *Addition {
-	c := Addition{
+func NewConsumer(log zerolog.Logger, dispatcher function.Invoker, jobStore Store, dataStore Store, rateLimit int) *Action {
+	c := Action{
 		log:           log,
 		dispatcher:    dispatcher,
-		apiClient:     apiClient,
+		jobStore:      jobStore,
 		dataStore:     dataStore,
-		jobCount:      jobCount,
-		consumerQueue: make(chan []byte, jobCount),
+		limit:         ratelimit.New(rateLimit),
+		consumerQueue: make(chan []byte, concurrentConsumers),
 		close:         make(chan struct{}),
 	}
 
 	return &c
 }
 
-func (d *Addition) Consume(delivery rmq.Delivery) {
+func (d *Action) Consume(delivery rmq.Delivery) {
+
+	d.log.Debug().Msg("received message to consume")
+
 	payload := []byte(delivery.Payload())
 	d.consumerQueue <- payload
 
@@ -50,8 +55,8 @@ func (d *Addition) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (d *Addition) Run() {
-	for i := 0; i < d.jobCount; i++ {
+func (d *Action) Run() {
+	for i := 0; i < concurrentConsumers; i++ {
 		go func() {
 			for {
 				select {
@@ -65,12 +70,12 @@ func (d *Addition) Run() {
 	}
 }
 
-func (d *Addition) Close() {
+func (d *Action) Close() {
 	close(d.close)
 }
 
-func (d *Addition) consume(payload []byte) {
-	var job jobs.Addition
+func (d *Action) consume(payload []byte) {
+	var job jobs.Action
 	err := json.Unmarshal(payload, &job)
 	if err != nil {
 		d.log.Error().Err(err).Msg("could not unmarshal message")
@@ -82,9 +87,9 @@ func (d *Addition) consume(payload []byte) {
 		return
 	}
 
-	storedJob, err := d.apiClient.GetAdditionJob(job.ID)
+	storedJob, err := d.jobStore.ActionJob(job.ID)
 	if err != nil {
-		d.handleError(job.ID, err, "could not retrieve addition job")
+		d.handleError(job.ID, err, "could not retrieve action job")
 		return
 	}
 
@@ -92,11 +97,20 @@ func (d *Addition) consume(payload []byte) {
 		return
 	}
 
-	err = d.apiClient.UpdateAdditionJobStatus(job.ID, jobs.StatusProcessing)
+	err = d.jobStore.UpdateActionJobStatus(job.ID, jobs.StatusProcessing)
 	if err != nil {
 		d.handleError(job.ID, err, "could not update job status")
 		return
 	}
+
+	d.log.Debug().
+		Str("block", job.BlockNumber).
+		Str("collection", job.Address).
+		Str("standard", job.Standard).
+		Str("event", job.Event).
+		Str("token_id", job.TokenID).
+		Str("action", job.Type).
+		Msg("invoking function")
 
 	name := functionName(job)
 	output, err := d.dispatcher.Invoke(name, payload)
@@ -112,21 +126,21 @@ func (d *Addition) consume(payload []byte) {
 		return
 	}
 
-	err = d.processNFT(nft)
+	err = d.processNFT(job.Type, nft)
 	if err != nil {
 		d.handleError(job.ID, err, "could not process nft")
 		return
 	}
 
-	err = d.apiClient.UpdateAdditionJobStatus(job.ID, jobs.StatusFinished)
+	err = d.jobStore.UpdateActionJobStatus(job.ID, jobs.StatusFinished)
 	if err != nil {
 		d.handleError(job.ID, err, "could not update job status")
 		return
 	}
 }
 
-func (d *Addition) handleError(id string, err error, message string) {
-	updateErr := d.apiClient.UpdateAdditionJobStatus(id, jobs.StatusFailed)
+func (d *Action) handleError(id string, err error, message string) {
+	updateErr := d.jobStore.UpdateActionJobStatus(id, jobs.StatusFailed)
 	if updateErr != nil {
 		d.log.Error().Err(updateErr).Msg("could not update job status")
 	}
@@ -134,12 +148,12 @@ func (d *Addition) handleError(id string, err error, message string) {
 	d.log.Error().Err(err).Str("job_id", id).Msg(message)
 }
 
-func functionName(job jobs.Addition) string {
+func functionName(job jobs.Action) string {
 	h := sha256.New()
 
 	s := strings.Join(
 		[]string{
-			"addition",
+			"action",
 			strings.ToLower(job.ChainType),
 		},
 		"-",

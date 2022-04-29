@@ -29,3 +29,18 @@ func (s *Store) UpsertNFT(nft chain.NFT, collectionID string) error {
 
 	return nil
 }
+
+func (s *Store) UpdateNFTOwner(collectionID, nft, owner string) error {
+
+	_, err := s.build.
+		Update(nftTableName).
+		Set("owner", owner).
+		Where("token_id = ?", nft).
+		Where("collection = ?", collectionID).
+		Exec()
+	if err != nil {
+		return fmt.Errorf("could not upsert nft: %w", err)
+	}
+
+	return nil
+}
