@@ -105,7 +105,7 @@ func (d *Action) consume(payload []byte) {
 	}
 
 	d.log.Debug().
-		Str("block", job.BlockNumber).
+		Uint64("block", job.BlockNumber).
 		Str("collection", job.Address).
 		Str("standard", job.Standard).
 		Str("event", job.Event).

@@ -50,7 +50,7 @@ type Log struct {
 	ID                   string     `json:"id"`
 	ChainID              string     `json:"chain_id"`
 	Contract             string     `json:"contract"`
-	Block                string     `json:"block"`
+	Block                uint64     `json:"block"`
 	Standard             string     `json:"standard"`
 	Event                string     `json:"event"`
 	Index                uint       `json:"index"`
