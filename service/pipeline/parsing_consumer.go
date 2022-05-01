@@ -16,9 +16,7 @@ import (
 	"go.uber.org/ratelimit"
 
 	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/function/handlers/parsing"
 	"github.com/NFT-com/indexer/models/events"
-	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/logs"
 )
@@ -27,10 +25,14 @@ type ParsingConsumer struct {
 	log           zerolog.Logger
 	dispatcher    function.Invoker
 	parsings      ParsingStore
+	actions       ActionStore
 	mints         MintStore
 	transfers     TransferStore
 	sales         SaleStore
 	burns         BurnStore
+	chains        ChainStore
+	collections   CollectionStore
+	marketplaces  MarketplaceStore
 	limit         ratelimit.Limiter
 	consumerQueue chan [][]byte
 	close         chan struct{}
@@ -41,10 +43,14 @@ func NewParsingConsumer(
 	log zerolog.Logger,
 	dispatcher function.Invoker,
 	parsings ParsingStore,
+	actions ActionStore,
 	mints MintStore,
 	transfers TransferStore,
 	sales SaleStore,
 	burns BurnStore,
+	chains ChainStore,
+	collections CollectionStore,
+	marketplaces MarketplaceStore,
 	rateLimit int,
 	dryRun bool,
 ) *ParsingConsumer {
@@ -53,10 +59,14 @@ func NewParsingConsumer(
 		log:           log,
 		dispatcher:    dispatcher,
 		parsings:      parsings,
+		actions:       actions,
 		mints:         mints,
 		transfers:     transfers,
 		sales:         sales,
 		burns:         burns,
+		chains:        chains,
+		collections:   collections,
+		marketplaces:  marketplaces,
 		limit:         ratelimit.New(rateLimit),
 		consumerQueue: make(chan [][]byte, concurrentConsumers),
 		close:         make(chan struct{}),
@@ -191,7 +201,7 @@ func (p *ParsingConsumer) consume(payloads [][]byte) {
 			return
 		}
 
-		err = p.parsings.Update(input.IDs, jobs.StatusProcessing)
+		err = p.parsings.UpdateStatus(input.IDs, jobs.StatusProcessing)
 		if err != nil {
 			p.handleError(err, "could not update jobs statuses")
 			return
@@ -208,7 +218,7 @@ func (p *ParsingConsumer) consume(payloads [][]byte) {
 			Int("events", len(input.EventTypes)).
 			Msg("dispatching job batch")
 
-		name := functionName(input)
+		name := parsingName(input)
 
 		if !p.dryRun {
 			notify := func(err error, dur time.Duration) {
@@ -252,7 +262,7 @@ func (p *ParsingConsumer) consume(payloads [][]byte) {
 			}
 		}
 
-		err = p.dataStore.UpdateParsingJobsStatus(input.IDs, jobs.StatusFinished)
+		err = p.parsings.UpdateStatus(input.IDs, jobs.StatusFinished)
 		if err != nil {
 			p.handleError(err, "could not update jobs statuses")
 			return
@@ -311,7 +321,7 @@ func (p *ParsingConsumer) unmarshalParsings(payloads [][]byte) []*jobs.Parsing {
 }
 
 func (p *ParsingConsumer) handleError(err error, message string, ids ...string) {
-	updateErr := p.jobStore.UpdateParsingJobsStatus(ids, jobs.StatusFailed)
+	updateErr := p.parsings.UpdateStatus(ids, jobs.StatusFailed)
 	if updateErr != nil {
 		p.log.Error().Err(updateErr).Msg("could not update jobs statuses")
 	}
@@ -329,7 +339,7 @@ func blockToUint64(block string) (uint64, error) {
 	return number.Uint64(), nil
 }
 
-func functionName(input parsing.Input) string {
+func parsingName(input jobs.Input) string {
 	h := sha256.New()
 
 	s := strings.Join(
@@ -349,13 +359,13 @@ func functionName(input parsing.Input) string {
 func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry) error {
 	for _, entry := range entries {
 
-		chain, err := p.dataStore.Chain(entry.ChainID)
+		chain, err := p.chains.Retrieve(entry.ChainID)
 		if err != nil {
 			return fmt.Errorf("could not get chain: %w", err)
 		}
 
 		if entry.NeedsActionJob {
-			err := p.jobStore.CreateActionJob(&jobs.Action{
+			err := p.actions.Insert(&jobs.Action{
 				ID:          uuid.New().String(),
 				ChainURL:    input.ChainURL,
 				ChainID:     input.ChainID,
@@ -378,12 +388,12 @@ func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry)
 
 		case logs.TypeMint:
 
-			collection, err := p.dataStore.Collection(chain.ID, entry.Contract, entry.ContractCollectionID)
+			collection, err := p.collections.RetrieveByAddress(chain.ID, entry.Contract, entry.ContractCollectionID)
 			if err != nil {
 				return fmt.Errorf("could not get collection (chainID: %s contract: %s): %w", chain.ChainID, entry.Contract, err)
 			}
 
-			event := events.Mint{
+			mint := events.Mint{
 				ID:              entry.ID,
 				CollectionID:    collection.ID,
 				Block:           entry.Block,
@@ -394,19 +404,19 @@ func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry)
 				EmittedAt:       entry.EmittedAt,
 			}
 
-			err = p.eventStore.UpsertMintEvent(event)
+			err = p.mints.Upsert(mint)
 			if err != nil {
 				return fmt.Errorf("could not upsert mint event: %w", err)
 			}
 
 		case logs.TypeSale:
 
-			marketplace, err := p.dataStore.Marketplace(chain.ID, entry.Contract)
+			marketplace, err := p.marketplaces.RetrieveByAddress(chain.ID, entry.Contract)
 			if err != nil {
 				return fmt.Errorf("could not get marketplace: %w", err)
 			}
 
-			event := events.Sale{
+			sale := events.Sale{
 				ID:              entry.ID,
 				MarketplaceID:   marketplace.ID,
 				Block:           entry.Block,
@@ -418,19 +428,19 @@ func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry)
 				EmittedAt:       entry.EmittedAt,
 			}
 
-			err = p.eventStore.UpsertSaleEvent(event)
+			err = p.sales.Upsert(sale)
 			if err != nil {
 				return fmt.Errorf("could not upsert sale event: %w", err)
 			}
 
 		case logs.TypeTransfer:
 
-			collection, err := p.dataStore.Collection(chain.ID, entry.Contract, entry.ContractCollectionID)
+			collection, err := p.collections.RetrieveByAddress(chain.ID, entry.Contract, entry.ContractCollectionID)
 			if err != nil {
 				return fmt.Errorf("could not get collection (chainID: %s contract: %s): %w", chain.ChainID, entry.Contract, err)
 			}
 
-			event := events.Transfer{
+			transfer := events.Transfer{
 				ID:              entry.ID,
 				CollectionID:    collection.ID,
 				Block:           entry.Block,
@@ -442,19 +452,19 @@ func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry)
 				EmittedAt:       entry.EmittedAt,
 			}
 
-			err = p.eventStore.UpsertTransferEvent(event)
+			err = p.transfers.Upsert(transfer)
 			if err != nil {
 				return fmt.Errorf("could not upsert transfer event: %w", err)
 			}
 
 		case logs.TypeBurn:
 
-			collection, err := p.dataStore.Collection(chain.ID, entry.Contract, entry.ContractCollectionID)
+			collection, err := p.collections.RetrieveByAddress(chain.ID, entry.Contract, entry.ContractCollectionID)
 			if err != nil {
 				return fmt.Errorf("could not get collection (chainID: %s contract: %s): %w", chain.ChainID, entry.Contract, err)
 			}
 
-			event := events.Burn{
+			burn := events.Burn{
 				ID:              entry.ID,
 				CollectionID:    collection.ID,
 				Block:           entry.Block,
@@ -464,7 +474,7 @@ func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry)
 				EmittedAt:       entry.EmittedAt,
 			}
 
-			err = p.eventStore.UpsertBurnEvent(event)
+			err = p.burns.Upsert(burn)
 			if err != nil {
 				return fmt.Errorf("could not upsert burn event: %w", err)
 			}
@@ -475,21 +485,4 @@ func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry)
 	}
 
 	return nil
-}
-
-type EventStore interface {
-	UpsertMintEvent(event events.Mint) error
-	UpsertSaleEvent(event events.Sale) error
-	UpsertTransferEvent(event events.Transfer) error
-	UpsertBurnEvent(event events.Burn) error
-
-	Chain(chainID string) (*graph.Chain, error)
-	Collection(chainID, address, contractCollectionID string) (*graph.Collection, error)
-	Marketplace(chainID, address string) (*graph.Marketplace, error)
-
-	UpdateNFTOwner(collectionID, nft, owner string) error
-
-	CreateActionJob(job *jobs.Action) error
-	ParsingJob(id string) (*jobs.Parsing, error)
-	UpdateParsingJobsStatus(ids []string, status string) error
 }

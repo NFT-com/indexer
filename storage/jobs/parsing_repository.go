@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/lib/pq"
 
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/storage/filters"
@@ -87,13 +88,12 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 	return &job, nil
 }
 
-func (p *ParsingRepository) Update(parsing *jobs.Parsing) error {
+func (p *ParsingRepository) UpdateStatus(parsingIDs []string, status string) error {
 
-	// TODO: update all columns once we have a better SQL library
 	_, err := p.build.
 		Update(TableParsingJobs).
-		Where("id = ?", parsing.ID).
-		Set("status", parsing.Status).
+		Where("id IN (?)", pq.Array(parsingIDs)).
+		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {
