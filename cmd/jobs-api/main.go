@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,24 +15,22 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/ziflex/lecho/v2"
 
-	"github.com/NFT-com/indexer/models/constants"
-	"github.com/NFT-com/indexer/service/api"
-	"github.com/NFT-com/indexer/service/handler"
-	"github.com/NFT-com/indexer/service/postgres"
-	"github.com/NFT-com/indexer/service/validator"
+	"github.com/NFT-com/indexer/api/controller"
+	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/storage/jobs"
+)
+
+const (
+	success = 0
+	failure = 1
 )
 
 func main() {
-	err := run()
-	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
-		log.Fatal(err)
-	}
+	os.Exit(run())
 }
 
 // run has the server startup code.
-func run() error {
+func run() int {
 
 	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
@@ -41,18 +38,18 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagBind            string
-		flagJobsDB          string
 		flagLogLevel        string
+		flagBindAPI         string
+		flagJobsDatabase    string
 		flagOpenConnections uint
 		flagIdleConnections uint
 	)
 
-	pflag.StringVarP(&flagBind, "bind", "b", "127.0.0.1:8081", "host and port for jobs API endpoint")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "d", "", "server details for Postgres database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "output level for logging")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle connections")
+	pflag.StringVarP(&flagBindAPI, "bind-api", "b", "127.0.0.1:8081", "host and port for jobs API endpoint")
+	pflag.StringVarP(&flagJobsDatabase, "jobs-database", "d", "", "PostgreSQL server details for jobs database")
+	pflag.UintVar(&flagOpenConnections, "open-connections", 16, "limit for open database connections")
+	pflag.UintVar(&flagIdleConnections, "idle-connections", 4, "limit for idle database connections")
 
 	pflag.Parse()
 
@@ -62,7 +59,7 @@ func run() error {
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
 		log.Error().Err(err).Msg("could not parse log level")
-		return err
+		return failure
 	}
 	log = log.Level(level)
 	eLog := lecho.From(log)
@@ -75,37 +72,40 @@ func run() error {
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
 	// Open database connection.
-	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDatabase)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
-		return err
+		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	// Create the database store.
-	jobsStore, err := postgres.NewStore(jobsDB)
-	if err != nil {
-		log.Error().Err(err).Msg("could not create store")
-		return err
-	}
+	parsingRepo := jobs.NewParsingRepository(jobsDB)
+	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	// Business logic handler.
-	handler := handler.New(jobsStore)
+	// Initialize the REST API controllers.
+	parsings := controller.NewParsings(parsingRepo)
+	actions := controller.NewActions(actionRepo)
 
-	// Request validator.
-	validator := validator.New()
+	// Declare the parsing jobs REST API routes.
+	server.POST("/parsings/", parsings.Create)
+	server.GET("/parsings/:parsing_id", parsings.Read)
+	server.PATCH("/parsings/:parsing_id", parsings.Update)
+	server.GET("/parsings/", parsings.Index)
 
-	// REST API Handler.
-	apiHandler := api.NewHandler(handler, validator)
-	apiHandler.ApplyRoutes(server)
+	// Declare the action jobs REST API routes.
+	server.POST("/actions/", actions.Create)
+	server.GET("/actions/:action_id", actions.Read)
+	server.PATCH("/actions/:action_id", actions.Update)
+	server.GET("/actions/", actions.Index)
 
 	failed := make(chan error)
 
 	go func() {
 		log.Info().Msg("jobs api server starting")
 
-		err = server.Start(flagBind)
+		err = server.Start(flagBindAPI)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Warn().Err(err).Msg("jobs api server failed")
 			failed <- err
@@ -120,7 +120,7 @@ func run() error {
 		log.Info().Msg("jobs api server stopping")
 	case err = <-failed:
 		log.Error().Err(err).Msg("jobs api server aborted")
-		return err
+		return failure
 	}
 	go func() {
 		<-sig
@@ -135,8 +135,8 @@ func run() error {
 	err = server.Shutdown(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("could not shut down jobs api")
-		return err
+		return failure
 	}
 
-	return nil
+	return success
 }
