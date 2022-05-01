@@ -5,9 +5,10 @@ import (
 )
 
 type ParsingStore interface {
-	UpdateStatus(parsingIDs []string, status string) error
+	UpdateStatus(status string, parsingIDs ...string) error
 }
 
 type ActionStore interface {
 	Insert(action *jobs.Action) error
+	UpdateStatus(status string, actionIDs ...string) error
 }

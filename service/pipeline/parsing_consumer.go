@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"math/big"
 	"strings"
 	"time"
 
@@ -201,7 +200,7 @@ func (p *ParsingConsumer) consume(payloads [][]byte) {
 			return
 		}
 
-		err = p.parsings.UpdateStatus(input.IDs, jobs.StatusProcessing)
+		err = p.parsings.UpdateStatus(jobs.StatusProcessing, input.IDs...)
 		if err != nil {
 			p.handleError(err, "could not update jobs statuses")
 			return
@@ -262,7 +261,7 @@ func (p *ParsingConsumer) consume(payloads [][]byte) {
 			}
 		}
 
-		err = p.parsings.UpdateStatus(input.IDs, jobs.StatusFinished)
+		err = p.parsings.UpdateStatus(jobs.StatusFinished, input.IDs...)
 		if err != nil {
 			p.handleError(err, "could not update jobs statuses")
 			return
@@ -320,23 +319,13 @@ func (p *ParsingConsumer) unmarshalParsings(payloads [][]byte) []*jobs.Parsing {
 	return parsings
 }
 
-func (p *ParsingConsumer) handleError(err error, message string, ids ...string) {
-	updateErr := p.parsings.UpdateStatus(ids, jobs.StatusFailed)
+func (p *ParsingConsumer) handleError(err error, message string, parsingIDs ...string) {
+	updateErr := p.parsings.UpdateStatus(jobs.StatusFailed, parsingIDs...)
 	if updateErr != nil {
 		p.log.Error().Err(updateErr).Msg("could not update jobs statuses")
 	}
 
-	p.log.Error().Err(err).Strs("job_ids", ids).Msg(message)
-}
-
-func blockToUint64(block string) (uint64, error) {
-	number := big.NewInt(0)
-	_, ok := number.SetString(block, 0)
-	if !ok {
-		return 0, fmt.Errorf("could not parse block into big.Int")
-	}
-
-	return number.Uint64(), nil
+	p.log.Error().Err(err).Strs("parsing_ids", parsingIDs).Msg(message)
 }
 
 func parsingName(input jobs.Input) string {

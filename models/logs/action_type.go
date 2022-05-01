@@ -3,15 +3,15 @@ package logs
 type ActionType int
 
 const (
-	Addition ActionType = iota + 1
-	OwnerChange
+	ActionAddition ActionType = iota + 1
+	ActionOwnerChange
 )
 
 func (e ActionType) String() string {
 	switch e {
-	case Addition:
+	case ActionAddition:
 		return "addition"
-	case OwnerChange:
+	case ActionOwnerChange:
 		return "owner_change"
 	default:
 		return ""
