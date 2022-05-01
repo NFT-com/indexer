@@ -122,7 +122,7 @@ func (j *Job) handleDiscoveryJobs(jobs []*jobs.Discovery) {
 			j.log.Error().
 				Err(err).
 				Str("id", job.ID).
-				Str("block", job.BlockNumber).
+				Uint64("block", job.BlockNumber).
 				Str("status", string(job.Status)).
 				Msg("could not publish discovery job")
 			continue
@@ -159,7 +159,7 @@ func (j *Job) handleParsingJobs(jobs []*jobs.Parsing) {
 			j.log.Error().
 				Err(err).
 				Str("id", job.ID).
-				Str("block", job.BlockNumber).
+				Uint64("block", job.BlockNumber).
 				Str("status", string(job.Status)).
 				Msg("could not publish parsing job")
 			continue
@@ -196,7 +196,7 @@ func (j *Job) handleActionJobs(jobs []*jobs.Action) {
 			j.log.Error().
 				Err(err).
 				Str("id", job.ID).
-				Str("block", job.BlockNumber).
+				Uint64("block", job.BlockNumber).
 				Str("status", string(job.Status)).
 				Msg("could not publish action job")
 			continue

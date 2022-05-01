@@ -2,7 +2,6 @@ package job
 
 import (
 	"errors"
-	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
@@ -81,12 +80,7 @@ func (c *Creator) Notify(height uint64) {
 		return
 	}
 	if err == nil {
-		number, err := strconv.ParseUint(existing.BlockNumber, 10, 64)
-		if err != nil {
-			c.log.Error().Err(err).Str("number", existing.BlockNumber).Msg("could not parse block number")
-			return
-		}
-		start = number + 1
+		start = existing.BlockNumber + 1
 	}
 	if start < c.start {
 		start = c.start
@@ -101,7 +95,7 @@ func (c *Creator) Notify(height uint64) {
 	for index := start; index < start+uint64(maximum) && index <= height; index++ {
 		job := c.template
 		job.ID = uuid.New().String()
-		job.BlockNumber = strconv.FormatUint(index, 10)
+		job.BlockNumber = index
 		c.persist.Store(&job)
 		created++
 		c.last = index

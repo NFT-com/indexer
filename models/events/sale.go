@@ -7,7 +7,7 @@ import (
 type Sale struct {
 	ID              string    `json:"id"`
 	MarketplaceID   string    `json:"marketplace_id"`
-	Block           string    `json:"block"`
+	Block           uint64    `json:"block"`
 	EventIndex      uint      `json:"event_index"`
 	TransactionHash string    `json:"transaction_hash"`
 	Seller          string    `json:"seller"`
