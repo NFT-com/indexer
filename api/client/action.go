@@ -13,62 +13,17 @@ import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
-func (c *Client) CreateActionJob(action *jobs.Action) (*jobs.Action, error) {
-
-	req := api.CreateActionJob{
-		ChainURL:    action.ChainURL,
-		ChainID:     action.ChainID,
-		ChainType:   action.ChainType,
-		BlockNumber: action.BlockNumber,
-		Address:     action.Address,
-		Standard:    action.Standard,
-		TokenID:     action.TokenID,
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal request: %w", err)
-	}
-
-	url := *c.url
-	url.Path = actionBasePath
-
-	res, err := c.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("could not perform request: %w", err)
-	}
-
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not create job: got status code %d", res.StatusCode)
-	}
-
-	responseBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read body: %w", err)
-	}
-	defer res.Body.Close()
-
-	var newJob jobs.Action
-	err = json.Unmarshal(responseBody, &newJob)
-	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
-	}
-
-	return &newJob, nil
-}
-
 func (c *Client) CreateActionJobs(actions []*jobs.Action) error {
 
 	reqs := make([]api.CreateActionJob, 0, len(actions))
 	for _, action := range actions {
 		req := api.CreateActionJob{
-			ChainURL:    action.ChainURL,
-			ChainID:     action.ChainID,
-			ChainType:   action.ChainType,
-			BlockNumber: action.BlockNumber,
-			Address:     action.Address,
-			Standard:    action.Standard,
-			TokenID:     action.TokenID,
+			ChainID:    action.ChainID,
+			Address:    action.Address,
+			TokenID:    action.TokenID,
+			ActionType: action.ActionType,
+			Height:     action.Height,
+			Data:       action.Data,
 		}
 		reqs = append(reqs, req)
 	}

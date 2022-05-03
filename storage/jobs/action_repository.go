@@ -8,7 +8,6 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	"github.com/NFT-com/indexer/models/jobs"
-	"github.com/NFT-com/indexer/storage/filters"
 )
 
 type ActionRepository struct {
@@ -32,16 +31,11 @@ func (a *ActionRepository) Insert(action *jobs.Action) error {
 		Columns(ColumnsActionJobs...).
 		Values(
 			action.ID,
-			action.ChainURL,
 			action.ChainID,
-			action.ChainType,
-			action.BlockNumber,
 			action.Address,
-			action.Standard,
-			action.Event,
 			action.TokenID,
-			action.ToAddress,
-			action.Type,
+			action.ActionType,
+			action.Height,
 			action.Status,
 		).
 		Exec()
@@ -71,34 +65,29 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 		return nil, sql.ErrNoRows
 	}
 
-	var job jobs.Action
+	var action jobs.Action
 	err = result.Scan(
-		&job.ID,
-		&job.ChainURL,
-		&job.ChainID,
-		&job.ChainType,
-		&job.BlockNumber,
-		&job.Address,
-		&job.Standard,
-		&job.Event,
-		&job.TokenID,
-		&job.ToAddress,
-		&job.Type,
-		&job.Status,
+		&action.ID,
+		&action.ChainID,
+		&action.Address,
+		&action.TokenID,
+		&action.ActionType,
+		&action.Height,
+		&action.Status,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve action job: %w", err)
 	}
 
-	return &job, nil
+	return &action, nil
 }
 
-func (a *ActionRepository) Update(action *jobs.Action) error {
+func (a *ActionRepository) UpdateStatus(actionID string, status string) error {
 
 	_, err := a.build.
 		Update(TableActionJobs).
-		Where("id = ?", action.ID).
-		Set("status", action.Status).
+		Where("id = ?", actionID).
+		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {
@@ -108,7 +97,7 @@ func (a *ActionRepository) Update(action *jobs.Action) error {
 	return nil
 }
 
-func (a *ActionRepository) Find(wheres ...filters.Where) ([]*jobs.Action, error) {
+func (a *ActionRepository) Find(wheres ...string) ([]*jobs.Action, error) {
 
 	query := a.build.
 		Select(ColumnsActionJobs...).
@@ -116,7 +105,7 @@ func (a *ActionRepository) Find(wheres ...filters.Where) ([]*jobs.Action, error)
 		OrderBy("block_number ASC")
 
 	for _, where := range wheres {
-		query = query.Where(where())
+		query = query.Where(where)
 	}
 
 	result, err := query.Query()
@@ -135,16 +124,11 @@ func (a *ActionRepository) Find(wheres ...filters.Where) ([]*jobs.Action, error)
 		var action jobs.Action
 		err = result.Scan(
 			&action.ID,
-			&action.ChainURL,
 			&action.ChainID,
-			&action.ChainType,
-			&action.BlockNumber,
 			&action.Address,
-			&action.Standard,
-			&action.Event,
 			&action.TokenID,
-			&action.ToAddress,
-			&action.Type,
+			&action.ActionType,
+			&action.Height,
 			&action.Status,
 		)
 		if err != nil {

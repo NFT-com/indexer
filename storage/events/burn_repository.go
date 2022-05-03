@@ -22,7 +22,7 @@ func NewBurnRepository(db *sql.DB) *BurnRepository {
 	return &b
 }
 
-func (b *BurnRepository) Upsert(event events.Burn) error {
+func (b *BurnRepository) Upsert(event *events.Burn) error {
 
 	_, err := b.build.
 		Insert(TableBurnEvents).

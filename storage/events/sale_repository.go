@@ -22,7 +22,7 @@ func NewSaleRepository(db *sql.DB) *SaleRepository {
 	return &s
 }
 
-func (s *SaleRepository) Upsert(sale events.Sale) error {
+func (s *SaleRepository) Upsert(sale *events.Sale) error {
 
 	_, err := s.build.
 		Insert(TableSaleEvents).

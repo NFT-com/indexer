@@ -8,7 +8,6 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	"github.com/NFT-com/indexer/models/graph"
-	"github.com/NFT-com/indexer/storage/filters"
 )
 
 type CollectionRepository struct {
@@ -71,14 +70,14 @@ func (c *CollectionRepository) RetrieveByAddress(chainID string, address string,
 	return &collection, nil
 }
 
-func (c *CollectionRepository) Find(wheres ...filters.Where) ([]*graph.Collection, error) {
+func (c *CollectionRepository) Find(wheres ...string) ([]*graph.Collection, error) {
 
 	statement := c.build.
 		Select(ColumnsCollections...).
 		From(TableCollections)
 
 	for _, where := range wheres {
-		statement = statement.Where(where())
+		statement = statement.Where(where)
 	}
 
 	result, err := statement.Query()

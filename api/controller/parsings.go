@@ -19,7 +19,7 @@ type ParsingRepository interface {
 	Insert(parsing *jobs.Parsing) (string, error)
 	Update(parsing *jobs.Parsing) error
 	Retrieve(parsingID string) (*jobs.Parsing, error)
-	Find(wheres ...filters.Where) ([]*jobs.Parsing, error)
+	Find(wheres ...string) ([]*jobs.Parsing, error)
 }
 
 type Parsings struct {
@@ -54,14 +54,13 @@ func (p *Parsings) Create(ctx echo.Context) error {
 	for _, r := range req {
 		parsing := jobs.Parsing{
 			ID:          uuid.New().String(),
-			ChainURL:    r.ChainURL,
 			ChainID:     r.ChainID,
-			ChainType:   r.ChainType,
-			BlockNumber: r.BlockNumber,
-			Address:     r.Address,
-			Standard:    r.Standard,
-			Event:       r.Event,
+			Addresses:   r.Addresses,
+			EventTypes:  r.EventTypes,
+			StartHeight: r.StartHeight,
+			EndHeight:   r.EndHeight,
 			Status:      jobs.StatusCreated,
+			Data:        r.Data,
 		}
 		parsingID, err := p.parsings.Insert(&parsing)
 		if err != nil {
@@ -135,7 +134,7 @@ func (p *Parsings) Update(ctx echo.Context) error {
 
 func (p *Parsings) Index(ctx echo.Context) error {
 
-	var wheres []filters.Where
+	var wheres []string
 
 	status := ctx.QueryParam("status")
 	if status != "" && !jobs.StatusValid(status) {

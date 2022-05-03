@@ -9,7 +9,6 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/NFT-com/indexer/models/jobs"
-	"github.com/NFT-com/indexer/storage/filters"
 )
 
 type ParsingRepository struct {
@@ -26,21 +25,19 @@ func NewParsingRepository(db *sql.DB) *ParsingRepository {
 	return &p
 }
 
-func (p *ParsingRepository) Insert(job *jobs.Parsing) error {
+func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 
 	_, err := p.build.
 		Insert(TableParsingJobs).
 		Columns(ColumnsParsingJobs...).
 		Values(
-			job.ID,
-			job.ChainURL,
-			job.ChainID,
-			job.ChainType,
-			job.BlockNumber,
-			job.Address,
-			job.Standard,
-			job.Event,
-			job.Status,
+			parsing.ID,
+			parsing.ChainID,
+			parsing.Addresses,
+			parsing.EventTypes,
+			parsing.StartHeight,
+			parsing.EndHeight,
+			parsing.Status,
 		).
 		Exec()
 	if err != nil {
@@ -69,23 +66,21 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 		return nil, sql.ErrNoRows
 	}
 
-	var job jobs.Parsing
+	var parsing jobs.Parsing
 	err = result.Scan(
-		&job.ID,
-		&job.ChainURL,
-		&job.ChainID,
-		&job.ChainType,
-		&job.BlockNumber,
-		&job.Address,
-		&job.Standard,
-		&job.Event,
-		&job.Status,
+		&parsing.ID,
+		&parsing.ChainID,
+		&parsing.Addresses,
+		&parsing.EventTypes,
+		&parsing.StartHeight,
+		&parsing.EndHeight,
+		&parsing.Status,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
 	}
 
-	return &job, nil
+	return &parsing, nil
 }
 
 func (p *ParsingRepository) UpdateStatus(parsingIDs []string, status string) error {
@@ -103,7 +98,7 @@ func (p *ParsingRepository) UpdateStatus(parsingIDs []string, status string) err
 	return nil
 }
 
-func (p *ParsingRepository) Find(wheres ...filters.Where) ([]*jobs.Parsing, error) {
+func (p *ParsingRepository) Find(wheres ...string) ([]*jobs.Parsing, error) {
 
 	query := p.build.
 		Select(ColumnsParsingJobs...).
@@ -111,7 +106,7 @@ func (p *ParsingRepository) Find(wheres ...filters.Where) ([]*jobs.Parsing, erro
 		OrderBy("block_number ASC")
 
 	for _, where := range wheres {
-		query = query.Where(where())
+		query = query.Where(where)
 	}
 
 	result, err := query.Query()
@@ -124,22 +119,19 @@ func (p *ParsingRepository) Find(wheres ...filters.Where) ([]*jobs.Parsing, erro
 	for result.Next() {
 
 		if result.Err() != nil {
-			return nil, fmt.Errorf("could not load next row: %w", err)
+			return nil, fmt.Errorf("could not get next row: %w", err)
 		}
 
 		var parsing jobs.Parsing
 		err = result.Scan(
 			&parsing.ID,
-			&parsing.ChainURL,
 			&parsing.ChainID,
-			&parsing.ChainType,
-			&parsing.BlockNumber,
-			&parsing.Address,
-			&parsing.Standard,
-			&parsing.Event,
+			&parsing.Addresses,
+			&parsing.EventTypes,
+			&parsing.StartHeight,
+			&parsing.EndHeight,
 			&parsing.Status,
 		)
-
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)
 		}

@@ -22,7 +22,7 @@ func NewMintRepository(db *sql.DB) *MintRepository {
 	return &m
 }
 
-func (m *MintRepository) Upsert(mint events.Mint) error {
+func (m *MintRepository) Upsert(mint *events.Mint) error {
 
 	_, err := m.build.
 		Insert(TableMintEvents).

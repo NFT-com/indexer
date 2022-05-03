@@ -1,13 +1,12 @@
 package api
 
 type CreateParsingJob struct {
-	ChainURL    string `json:"chain_url" validate:"required"`
-	ChainID     string `json:"chain_id" validate:"required"`
-	ChainType   string `json:"chain_type" validate:"required"`
-	BlockNumber uint64 `json:"block_number" validate:"required,numeric"`
-	Address     string `json:"address" validate:"required,eth_addr"`
-	Standard    string `json:"standard_type" validate:"required"`
-	Event       string `json:"event_type" validate:"required"`
+	ChainID     string   `json:"chain_id" validate:"required"`
+	Addresses   []string `json:"addresses" validate:"required"`
+	EventTypes  []string `json:"event_types" validate:"required"`
+	StartHeight uint64   `json:"start_height" validate:"numeric"`
+	EndHeight   uint64   `json:"end_height" validate:"numeric"`
+	Data        []byte   `json:"data" validate:"required"`
 }
 
 type UpdateParsingJob struct {

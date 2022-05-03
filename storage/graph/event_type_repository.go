@@ -7,7 +7,6 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	"github.com/NFT-com/indexer/models/graph"
-	"github.com/NFT-com/indexer/storage/filters"
 )
 
 type EventTypeRepository struct {
@@ -24,14 +23,14 @@ func NewEventTypeRepository(db *sql.DB) *EventTypeRepository {
 	return &c
 }
 
-func (e *EventTypeRepository) EventTypes(wheres ...filters.Where) ([]*graph.EventType, error) {
+func (e *EventTypeRepository) EventTypes(wheres ...string) ([]*graph.EventType, error) {
 
 	statement := e.build.
 		Select(ColumnsEventTypes...).
 		From(TableEventTypes)
 
 	for _, where := range wheres {
-		statement = statement.Where(where())
+		statement = statement.Where(where)
 	}
 
 	result, err := statement.Query()

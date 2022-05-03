@@ -1,6 +1,6 @@
 package jobs
 
 var (
-	ColumnsParsingJobs = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "event_type", "status"}
-	ColumnsActionJobs  = []string{"id", "chain_url", "chain_id", "chain_type", "block_number", "address", "interface_type", "event_type", "token_id", "to_address", "action_type", "status"}
+	ColumnsParsingJobs = []string{"id", "chain_id", "address", "event_type", "start_height", "end_height", "data", "status"}
+	ColumnsActionJobs  = []string{"id", "chain_id", "address", "token_id", "height", "action_type", "data", "status"}
 )

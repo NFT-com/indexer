@@ -13,62 +13,17 @@ import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
-func (c *Client) CreateParsingJob(job *jobs.Parsing) (*jobs.Parsing, error) {
-
-	req := api.CreateParsingJob{
-		ChainURL:    job.ChainURL,
-		ChainID:     job.ChainID,
-		ChainType:   job.ChainType,
-		BlockNumber: job.BlockNumber,
-		Address:     job.Address,
-		Standard:    job.Standard,
-		Event:       job.Event,
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal request: %w", err)
-	}
-
-	url := *c.url
-	url.Path = parsingBasePath
-
-	res, err := c.client.Post(url.String(), jsonContentType, bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("could not perform request: %w", err)
-	}
-
-	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return nil, fmt.Errorf("could not create job: got status code %d", res.StatusCode)
-	}
-
-	responseBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read body: %w", err)
-	}
-	defer res.Body.Close()
-
-	var newJob jobs.Parsing
-	err = json.Unmarshal(responseBody, &newJob)
-	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal response body: %w", err)
-	}
-
-	return &newJob, nil
-}
-
 func (c *Client) CreateParsingJobs(parsings []*jobs.Parsing) error {
 
 	reqs := make([]*api.CreateParsingJob, 0, len(parsings))
 	for _, parsing := range parsings {
 		req := api.CreateParsingJob{
-			ChainURL:    parsing.ChainURL,
 			ChainID:     parsing.ChainID,
-			ChainType:   parsing.ChainType,
-			BlockNumber: parsing.BlockNumber,
-			Address:     parsing.Address,
-			Standard:    parsing.Standard,
-			Event:       parsing.Event,
+			Addresses:   parsing.Addresses,
+			EventTypes:  parsing.EventTypes,
+			StartHeight: parsing.StartHeight,
+			EndHeight:   parsing.EndHeight,
+			Data:        parsing.Data,
 		}
 
 		reqs = append(reqs, &req)

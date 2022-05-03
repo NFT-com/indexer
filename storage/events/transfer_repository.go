@@ -22,7 +22,7 @@ func NewTransferRepository(db *sql.DB) *TransferRepository {
 	return &t
 }
 
-func (t *TransferRepository) UpsertTransferEvent(transfer events.Transfer) error {
+func (t *TransferRepository) UpsertTransferEvent(transfer *events.Transfer) error {
 
 	_, err := t.build.
 		Insert(TableTransferEvents).

@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-
-	"github.com/go-playground/validator/v10"
 
 	"github.com/NFT-com/indexer/models/api"
 	"github.com/NFT-com/indexer/models/jobs"
@@ -20,7 +19,7 @@ type ActionRepository interface {
 	Insert(action *jobs.Action) (string, error)
 	Update(action *jobs.Action) error
 	Retrieve(actionID string) (*jobs.Action, error)
-	Find(wheres ...filters.Where) ([]*jobs.Action, error)
+	Find(wheres ...string) ([]*jobs.Action, error)
 }
 
 type Actions struct {
@@ -54,18 +53,14 @@ func (a *Actions) Create(ctx echo.Context) error {
 	var actions []*jobs.Action
 	for _, r := range req {
 		action := jobs.Action{
-			ID:          uuid.New().String(),
-			ChainURL:    r.ChainURL,
-			ChainID:     r.ChainID,
-			ChainType:   r.ChainType,
-			BlockNumber: r.BlockNumber,
-			Address:     r.Address,
-			Standard:    r.Standard,
-			Event:       r.Event,
-			TokenID:     r.TokenID,
-			ToAddress:   r.ToAddress,
-			Type:        r.Type,
-			Status:      jobs.StatusCreated,
+			ID:         uuid.New().String(),
+			ChainID:    r.ChainID,
+			Address:    r.Address,
+			TokenID:    r.TokenID,
+			ActionType: r.ActionType,
+			Height:     r.Height,
+			Data:       r.Data,
+			Status:     jobs.StatusCreated,
 		}
 		actionID, err := a.actions.Insert(&action)
 		if err != nil {
@@ -139,7 +134,7 @@ func (a *Actions) Update(ctx echo.Context) error {
 
 func (a *Actions) Index(ctx echo.Context) error {
 
-	var wheres []filters.Where
+	var wheres []string
 
 	status := ctx.QueryParam("status")
 	if status != "" && !jobs.StatusValid(status) {

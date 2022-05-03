@@ -105,12 +105,9 @@ func (a *ActionConsumer) consume(payload []byte) {
 	}
 
 	a.log.Debug().
-		Uint64("block", action.BlockNumber).
-		Str("collection", action.Address).
-		Str("standard", action.Standard).
-		Str("event", action.Event).
-		Str("token_id", action.TokenID).
-		Str("action", action.Type).
+		Uint64("height", action.Height).
+		Str("address", action.Address).
+		Str("action_type", action.ActionType).
 		Msg("invoking function")
 
 	name := actionName(&action)
@@ -127,7 +124,7 @@ func (a *ActionConsumer) consume(payload []byte) {
 		return
 	}
 
-	err = a.processNFT(action.Type, &nft)
+	err = a.processNFT(action.ActionType, &nft)
 	if err != nil {
 		a.handleError(action.ID, err, "could not process nft")
 		return
