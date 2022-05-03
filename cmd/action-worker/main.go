@@ -1,75 +1,37 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/rs/zerolog"
 
-	"github.com/NFT-com/indexer/function/handlers/action"
-	processor "github.com/NFT-com/indexer/function/processors/action"
-	"github.com/NFT-com/indexer/function/processors/action/addition/erc1155metadata"
-	"github.com/NFT-com/indexer/function/processors/action/addition/erc721metadata"
-	ownerchange "github.com/NFT-com/indexer/function/processors/action/owner_change"
-	"github.com/NFT-com/indexer/networks"
+	"github.com/NFT-com/indexer/service/lambdas"
 )
 
 const (
-	envVarLogLevel  = "LOG_LEVEL"
-	defaultLogLevel = "info"
+	defaultLevel = "info"
+	envLevel     = "LOG_LEVEL"
 )
 
 func main() {
-	err := run()
-	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
-		log.Fatalln(err)
-	}
-}
 
-func run() error {
-	logLevel, ok := os.LookupEnv(envVarLogLevel)
+	level, ok := os.LookupEnv(envLevel)
 	if !ok {
-		logLevel = defaultLogLevel
+		level = defaultLevel
 	}
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
-	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
-	level, err := zerolog.ParseLevel(logLevel)
+	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	lvl, err := zerolog.ParseLevel(level)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Fatal().Err(err).Msg("could not parse log level")
 	}
-	log = log.Level(level)
+	log = log.Level(lvl)
 
-	handler := action.NewHandler(log, func(client networks.Network) ([]processor.Processor, error) {
-		processors := []processor.Processor{}
-
-		erc721Processor, err := erc721metadata.NewProcessor(log, client)
-		if err != nil {
-			return nil, fmt.Errorf("could not create addition erc721 metadata processor: %w", err)
-		}
-		processors = append(processors, erc721Processor)
-
-		erc1155Processor, err := erc1155metadata.NewProcessor(log, client)
-		if err != nil {
-			return nil, fmt.Errorf("could not create addition erc1155 metadata processor: %w", err)
-		}
-		processors = append(processors, erc1155Processor)
-
-		ownerChangeProcessor, err := ownerchange.NewProcessor(log, client)
-		if err != nil {
-			return nil, fmt.Errorf("could not create owner change erc721 processor: %w", err)
-		}
-		processors = append(processors, ownerChangeProcessor)
-
-		return processors, nil
-	})
+	handler := lambdas.NewAdditionHandler(log)
 	lambda.Start(handler.Handle)
 
-	return nil
+	os.Exit(0)
 }

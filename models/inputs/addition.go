@@ -1,5 +1,7 @@
 package inputs
 
 type Addition struct {
-	ToAddress string `json:"to_address"`
+	NodeURL   string `json:"node_url"`
+	EventType string `json:"event_type"`
+	Owner     string `json:"owner"`
 }

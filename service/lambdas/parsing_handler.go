@@ -2,37 +2,53 @@ package lambdas
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	"github.com/NFT-com/indexer/network/web3"
 	"github.com/NFT-com/indexer/service/parsers"
 )
 
 type ParsingHandler struct {
-	client ethclient.Client
-	fetch  LogsFetcher
+	log zerolog.Logger
 }
 
-func NewParsingHandler(client ethclient.Client, fetch LogsFetcher) *ParsingHandler {
+func NewParsingHandler(log zerolog.Logger) *ParsingHandler {
 
-	p := ParsingHandler{
-		client: client,
-		fetch:  fetch,
+	e := ParsingHandler{
+		log: log,
 	}
 
-	return &p
+	return &e
 }
 
 func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*results.Parsing, error) {
 
+	var inputs inputs.Parsing
+	err := json.Unmarshal(job.Data, &inputs)
+	if err != nil {
+		return nil, fmt.Errorf("could not decode parsing inputs: %w", err)
+	}
+
+	client, err := ethclient.DialContext(ctx, inputs.NodeURL)
+	if err != nil {
+		return nil, fmt.Errorf("could not connect to node: %w", err)
+	}
+	defer client.Close()
+
+	fetch := web3.NewLogsFetcher(client)
+
 	// Retrieve the logs for all of the addresses and event types for the given block range.
-	logs, err := p.fetch.Logs(job.Addresses, job.EventTypes, job.StartHeight, job.EndHeight)
+	logs, err := fetch.Logs(ctx, job.Addresses, job.EventTypes, job.StartHeight, job.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -91,7 +107,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	// Get all of the headers to assign timestamps to the events.
 	for height := range timestamps {
 
-		header, err := p.client.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
+		header, err := client.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
 		if err != nil {
 			return nil, fmt.Errorf("could not get header for height (%d): %w", height, err)
 		}

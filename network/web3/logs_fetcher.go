@@ -12,10 +12,10 @@ import (
 )
 
 type LogsFetcher struct {
-	client ethclient.Client
+	client *ethclient.Client
 }
 
-func NewLogsFetcher(client ethclient.Client) *LogsFetcher {
+func NewLogsFetcher(client *ethclient.Client) *LogsFetcher {
 
 	l := LogsFetcher{
 		client: client,
@@ -24,7 +24,7 @@ func NewLogsFetcher(client ethclient.Client) *LogsFetcher {
 	return &l
 }
 
-func (l *LogsFetcher) Fetch(addresses []string, eventTypes []string, from uint64, to uint64) ([]types.Log, error) {
+func (l *LogsFetcher) Logs(ctx context.Context, addresses []string, eventTypes []string, from uint64, to uint64) ([]types.Log, error) {
 
 	ethAddresses := make([]common.Address, 0, len(addresses))
 	for _, address := range addresses {
@@ -43,7 +43,7 @@ func (l *LogsFetcher) Fetch(addresses []string, eventTypes []string, from uint64
 		Topics:    [][]common.Hash{topics},
 	}
 
-	logs, err := l.client.FilterLogs(context.TODO(), query)
+	logs, err := l.client.FilterLogs(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("could not filter logs: %w", err)
 	}
