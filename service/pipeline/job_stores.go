@@ -9,6 +9,6 @@ type ParsingStore interface {
 }
 
 type ActionStore interface {
-	Insert(action *jobs.Action) error
+	Insert(action ...*jobs.Action) error
 	UpdateStatus(status string, actionIDs ...string) error
 }

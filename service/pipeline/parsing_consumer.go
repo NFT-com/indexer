@@ -1,477 +1,184 @@
 package pipeline
 
 import (
-	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"go.uber.org/ratelimit"
 
-	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/models/events"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lambda"
+
 	"github.com/NFT-com/indexer/models/jobs"
-	"github.com/NFT-com/indexer/models/logs"
+	"github.com/NFT-com/indexer/models/results"
 )
 
 type ParsingConsumer struct {
-	log           zerolog.Logger
-	dispatcher    function.Invoker
-	parsings      ParsingStore
-	actions       ActionStore
-	mints         MintStore
-	transfers     TransferStore
-	sales         SaleStore
-	burns         BurnStore
-	chains        ChainStore
-	collections   CollectionStore
-	marketplaces  MarketplaceStore
-	limit         ratelimit.Limiter
-	consumerQueue chan [][]byte
-	close         chan struct{}
-	dryRun        bool
+	log       zerolog.Logger
+	lambda    *lambda.Lambda
+	parsings  ParsingStore
+	actions   ActionStore
+	mints     MintStore
+	transfers TransferStore
+	sales     SaleStore
+	burns     BurnStore
+	limit     ratelimit.Limiter
+	dryRun    bool
 }
 
 func NewParsingConsumer(
 	log zerolog.Logger,
-	dispatcher function.Invoker,
+	lambda *lambda.Lambda,
 	parsings ParsingStore,
 	actions ActionStore,
 	mints MintStore,
 	transfers TransferStore,
 	sales SaleStore,
 	burns BurnStore,
-	chains ChainStore,
-	collections CollectionStore,
-	marketplaces MarketplaceStore,
 	rateLimit int,
 	dryRun bool,
 ) *ParsingConsumer {
 
 	p := ParsingConsumer{
-		log:           log,
-		dispatcher:    dispatcher,
-		parsings:      parsings,
-		actions:       actions,
-		mints:         mints,
-		transfers:     transfers,
-		sales:         sales,
-		burns:         burns,
-		chains:        chains,
-		collections:   collections,
-		marketplaces:  marketplaces,
-		limit:         ratelimit.New(rateLimit),
-		consumerQueue: make(chan [][]byte, concurrentConsumers),
-		close:         make(chan struct{}),
-		dryRun:        dryRun,
+		log:       log,
+		lambda:    lambda,
+		parsings:  parsings,
+		actions:   actions,
+		mints:     mints,
+		transfers: transfers,
+		sales:     sales,
+		burns:     burns,
+		limit:     ratelimit.New(rateLimit),
+		dryRun:    dryRun,
 	}
 
 	return &p
 }
 
-func (p *ParsingConsumer) Consume(batch rmq.Deliveries) {
+func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 
-	p.log.Debug().Int("jobs", len(batch)).Msg("received batch for consuming")
+	log := p.log
 
-	payloads := make([][]byte, 0, len(batch))
-
-	for _, delivery := range batch {
-		payload := []byte(delivery.Payload())
-		payloads = append(payloads, payload)
-
-		err := delivery.Ack()
-		if err != nil {
-			p.log.Error().Err(err).Msg("could not acknowledge message")
-			return
-		}
+	payload := []byte(delivery.Payload())
+	err := delivery.Ack()
+	if err != nil {
+		log.Error().Err(err).Msg("could not acknowledge delivery")
+		return
 	}
 
-	p.consumerQueue <- payloads
+	var parsing jobs.Parsing
+	err = json.Unmarshal(payload, &parsing)
+	if err != nil {
+		log.Error().Err(err).Msg("could not decode payload")
+		return
+	}
+
+	log = log.With().
+		Str("chain_id", parsing.ChainID).
+		Strs("addresses", parsing.Addresses).
+		Strs("events_types", parsing.EventTypes).
+		Uint64("start_height", parsing.StartHeight).
+		Uint64("end_height", parsing.EndHeight).
+		Logger()
+
+	err = p.parsings.UpdateStatus(jobs.StatusProcessing, parsing.ID)
+	if err != nil {
+		p.log.Error().Err(err).Msg("could not update parsing job status")
+		return
+	}
+
+	notify := func(err error, dur time.Duration) {
+		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
+	}
+
+	err = p.process(notify, payload)
+	if err != nil {
+		log.Error().Err(err).Msg("could not process parsing job")
+		err = p.parsings.UpdateStatus(jobs.StatusFailed, parsing.ID)
+	} else {
+		log.Info().Msg("parsing job successfully processed")
+		err = p.parsings.UpdateStatus(jobs.StatusFinished, parsing.ID)
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msg("could not update parsing job status")
+		return
+	}
 }
 
-func (p *ParsingConsumer) Run() {
-	for i := 0; i < concurrentConsumers; i++ {
-		go func() {
-			for {
-				select {
-				case <-p.close:
-					return
-				case payload := <-p.consumerQueue:
-					p.consume(payload)
-				}
-			}
-		}()
-	}
-}
+func (p *ParsingConsumer) process(notify func(error, time.Duration), input []byte) error {
 
-func (p *ParsingConsumer) Close() {
-	close(p.close)
-}
-
-func (p *ParsingConsumer) consume(payloads [][]byte) {
-
-	parsings := p.unmarshalParsings(payloads)
-
-	inputMap := make(map[uint64]jobs.Input, len(parsings))
-
-	// Job List is unordered, in order to group them in a continuous way,
-	// first the next loop basically maps the height to an input that could group jobs
-	// from the same height. It also gets the highest and lowest heights in the list.
-	lowestBlock := uint64(math.MaxUint64)
-	highestBlock := uint64(0)
-	for _, parsing := range parsings {
-		block := parsing.BlockNumber
-		// checks if there is already an entry, if so joins the ids, addresses, event_types and maps the standard.
-		input, ok := inputMap[block]
-		if ok {
-			input.IDs = append(input.IDs, parsing.ID)
-			input.Addresses = append(input.Addresses, parsing.Address)
-			input.EventTypes = append(input.EventTypes, parsing.Event)
-			input.Standards[parsing.Event] = parsing.Standard
-
-			inputMap[block] = input
-			continue
-		}
-
-		// if there is no entry just create a new one and check if this is lower that
-		// the current lowest height or upper than the highest height.
-		inputMap[block] = jobs.Input{
-			IDs:        []string{parsing.ID},
-			ChainURL:   parsing.ChainURL,
-			ChainID:    parsing.ChainID,
-			ChainType:  parsing.ChainType,
-			StartBlock: parsing.BlockNumber,
-			EndBlock:   parsing.BlockNumber,
-			Addresses:  []string{parsing.Address},
-			Standards:  map[string]string{parsing.Event: parsing.Standard},
-			EventTypes: []string{parsing.Event},
-		}
-
-		if lowestBlock > block {
-			lowestBlock = block
-		}
-
-		if highestBlock < block {
-			highestBlock = block
-		}
+	if p.dryRun {
+		return nil
 	}
 
-	inputs := make([]jobs.Input, 0)
+	var output []byte
+	err := backoff.RetryNotify(func() error {
 
-	// Merges all the continuous inputs heights into a single one.
-	input := jobs.Input{}
-	for i := lowestBlock; i <= highestBlock; i++ {
-		part, ok := inputMap[i]
-		if !ok {
-			if len(input.IDs) != 0 {
-				inputs = append(inputs, input)
-			}
-
-			input = jobs.Input{}
-			continue
-		}
-
-		// If current input ids len is 0, it means it does not have a current input
-		if len(input.IDs) == 0 {
-			input = part
-			continue
-		}
-
-		input = p.fillInput(input, part)
-	}
-
-	if len(input.IDs) != 0 {
-		inputs = append(inputs, input)
-	}
-
-	p.log.Debug().Int("jobs", len(payloads)).Int("batches", len(inputs)).Msg("batched jobs for processing")
-
-	for _, input := range inputs {
-
-		payload, err := json.Marshal(input)
-		if err != nil {
-			p.handleError(err, "could not marshal input payload", input.IDs...)
-			return
-		}
-
-		err = p.parsings.UpdateStatus(jobs.StatusProcessing, input.IDs...)
-		if err != nil {
-			p.handleError(err, "could not update jobs statuses")
-			return
-		}
-
-		// Wait for rate limiter to have available spots.
 		p.limit.Take()
 
-		p.log.Debug().
-			Uint64("start", input.StartBlock).
-			Uint64("end", input.EndBlock).
-			Int("collections", len(input.Addresses)).
-			Int("standards", len(input.Standards)).
-			Int("events", len(input.EventTypes)).
-			Msg("dispatching job batch")
+		input := &lambda.InvokeInput{
+			FunctionName: aws.String("parsing_worker"),
+			Payload:      input,
+		}
+		result, err := p.lambda.Invoke(input)
+		var reqErr *lambda.TooManyRequestsException
 
-		name := parsingName(input)
-
-		if !p.dryRun {
-			notify := func(err error, dur time.Duration) {
-				p.log.Error().
-					Err(err).
-					Dur("retry_in", dur).
-					Str("name", name).
-					Int("payload_len", len(payload)).
-					Msg("could not invoke lambda")
-			}
-			var output []byte
-			_ = backoff.RetryNotify(func() error {
-
-				output, err = p.dispatcher.Invoke(name, payload)
-				if err != nil {
-					return err
-				}
-				return nil
-			}, backoff.NewExponentialBackOff(), notify)
-
-			var entries []logs.Entry
-			err = json.Unmarshal(output, &entries)
-			if err != nil {
-				p.handleError(err, "could not unmarshal output log entries", input.IDs...)
-				return
-			}
-
-			p.log.Debug().
-				Uint64("start", input.StartBlock).
-				Uint64("end", input.EndBlock).
-				Int("collections", len(input.Addresses)).
-				Int("standards", len(input.Standards)).
-				Int("events", len(input.EventTypes)).
-				Int("entries", len(entries)).
-				Msg("processing results")
-
-			err = p.processEntries(input, entries)
-			if err != nil {
-				p.handleError(err, "could not handle output logs", input.IDs...)
-				return
-			}
+		// retry if we ran out of concurrent lambdas
+		if errors.As(err, &reqErr) {
+			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
 
-		err = p.parsings.UpdateStatus(jobs.StatusFinished, input.IDs...)
+		// retry if we ran out of requests on the Ethereum API
+		if strings.Contains(err.Error(), "Too Many Requests") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// don't retry on any other error, for now
 		if err != nil {
-			p.handleError(err, "could not update jobs statuses")
-			return
-		}
-	}
-}
-
-func (p *ParsingConsumer) fillInput(base, part jobs.Input) jobs.Input {
-	base.EndBlock = part.EndBlock
-	base.IDs = append(base.IDs, part.IDs...)
-
-	addresses := make(map[string]struct{}, len(base.Addresses))
-	for _, address := range base.Addresses {
-		addresses[address] = struct{}{}
-	}
-
-	for _, address := range part.Addresses {
-		if _, ok := addresses[address]; ok {
-			continue
+			return backoff.Permanent(fmt.Errorf("could not execute lambda: %w", err))
 		}
 
-		base.Addresses = append(base.Addresses, address)
+		output = result.Payload
+		return nil
+	}, backoff.NewExponentialBackOff(), notify)
+	if err != nil {
+		return fmt.Errorf("could not successfully invoke parser: %w", err)
 	}
 
-	eventTypes := make(map[string]struct{}, len(base.EventTypes))
-	for _, eventType := range base.EventTypes {
-		eventTypes[eventType] = struct{}{}
+	var result results.Parsing
+	err = json.Unmarshal(output, &result)
+	if err != nil {
+		return fmt.Errorf("could not decode parsing result: %w", err)
 	}
 
-	for _, eventType := range part.EventTypes {
-		if _, ok := eventTypes[eventType]; ok {
-			continue
-		}
-
-		base.EventTypes = append(base.EventTypes, eventType)
+	err = p.mints.Upsert(result.Mints...)
+	if err != nil {
+		return fmt.Errorf("could not upsert mints: %w", err)
 	}
 
-	return base
-}
-
-func (p *ParsingConsumer) unmarshalParsings(payloads [][]byte) []*jobs.Parsing {
-	parsings := make([]*jobs.Parsing, 0, len(payloads))
-
-	for _, payload := range payloads {
-		var job jobs.Parsing
-		err := json.Unmarshal(payload, &job)
-		if err != nil {
-			p.log.Error().Err(err).Msg("could not unmarshal message")
-			continue
-		}
-
-		parsings = append(parsings, &job)
+	err = p.transfers.Upsert(result.Transfers...)
+	if err != nil {
+		return fmt.Errorf("could not upsert transfers: %w", err)
 	}
 
-	return parsings
-}
-
-func (p *ParsingConsumer) handleError(err error, message string, parsingIDs ...string) {
-	updateErr := p.parsings.UpdateStatus(jobs.StatusFailed, parsingIDs...)
-	if updateErr != nil {
-		p.log.Error().Err(updateErr).Msg("could not update jobs statuses")
+	err = p.sales.Upsert(result.Sales...)
+	if err != nil {
+		return fmt.Errorf("could not upsert sales: %w", err)
 	}
 
-	p.log.Error().Err(err).Strs("parsing_ids", parsingIDs).Msg(message)
-}
-
-func parsingName(input jobs.Input) string {
-	h := sha256.New()
-
-	s := strings.Join(
-		[]string{
-			"parsing",
-			strings.ToLower(input.ChainType),
-		},
-		"-",
-	)
-	h.Write([]byte(s))
-
-	name := fmt.Sprintf("%x", h.Sum(nil))
-
-	return name
-}
-
-func (p *ParsingConsumer) processEntries(input jobs.Input, entries []logs.Entry) error {
-	for _, entry := range entries {
-
-		chain, err := p.chains.Retrieve(entry.ChainID)
-		if err != nil {
-			return fmt.Errorf("could not get chain: %w", err)
-		}
-
-		if entry.NeedsActionJob {
-			err := p.actions.Insert(&jobs.Action{
-				ID:          uuid.New().String(),
-				ChainURL:    input.ChainURL,
-				ChainID:     input.ChainID,
-				ChainType:   input.ChainType,
-				BlockNumber: entry.Block,
-				Address:     entry.Contract,
-				Standard:    entry.Standard,
-				Event:       entry.Event,
-				TokenID:     entry.NftID,
-				ToAddress:   entry.ToAddress,
-				Type:        entry.ActionType.String(),
-				Status:      jobs.StatusCreated,
-			})
-			if err != nil {
-				return fmt.Errorf("could not create action job: %w", err)
-			}
-		}
-
-		switch entry.Type {
-
-		case logs.TypeMint:
-
-			collection, err := p.collections.RetrieveByAddress(chain.ID, entry.Contract, entry.ContractCollectionID)
-			if err != nil {
-				return fmt.Errorf("could not get collection (chainID: %s contract: %s): %w", chain.ChainID, entry.Contract, err)
-			}
-
-			mint := events.Mint{
-				ID:              entry.ID,
-				CollectionID:    collection.ID,
-				Block:           entry.Block,
-				EventIndex:      entry.Index,
-				TransactionHash: entry.TransactionHash,
-				TokenID:         entry.NftID,
-				Owner:           entry.ToAddress,
-				EmittedAt:       entry.EmittedAt,
-			}
-
-			err = p.mints.Upsert(mint)
-			if err != nil {
-				return fmt.Errorf("could not upsert mint event: %w", err)
-			}
-
-		case logs.TypeSale:
-
-			marketplace, err := p.marketplaces.RetrieveByAddress(chain.ID, entry.Contract)
-			if err != nil {
-				return fmt.Errorf("could not get marketplace: %w", err)
-			}
-
-			sale := events.Sale{
-				ID:              entry.ID,
-				MarketplaceID:   marketplace.ID,
-				Block:           entry.Block,
-				EventIndex:      entry.Index,
-				TransactionHash: entry.TransactionHash,
-				Seller:          entry.ToAddress,
-				Buyer:           entry.FromAddress,
-				Price:           entry.Price,
-				EmittedAt:       entry.EmittedAt,
-			}
-
-			err = p.sales.Upsert(sale)
-			if err != nil {
-				return fmt.Errorf("could not upsert sale event: %w", err)
-			}
-
-		case logs.TypeTransfer:
-
-			collection, err := p.collections.RetrieveByAddress(chain.ID, entry.Contract, entry.ContractCollectionID)
-			if err != nil {
-				return fmt.Errorf("could not get collection (chainID: %s contract: %s): %w", chain.ChainID, entry.Contract, err)
-			}
-
-			transfer := events.Transfer{
-				ID:              entry.ID,
-				CollectionID:    collection.ID,
-				Block:           entry.Block,
-				EventIndex:      entry.Index,
-				TransactionHash: entry.TransactionHash,
-				TokenID:         entry.NftID,
-				FromAddress:     entry.FromAddress,
-				ToAddress:       entry.ToAddress,
-				EmittedAt:       entry.EmittedAt,
-			}
-
-			err = p.transfers.Upsert(transfer)
-			if err != nil {
-				return fmt.Errorf("could not upsert transfer event: %w", err)
-			}
-
-		case logs.TypeBurn:
-
-			collection, err := p.collections.RetrieveByAddress(chain.ID, entry.Contract, entry.ContractCollectionID)
-			if err != nil {
-				return fmt.Errorf("could not get collection (chainID: %s contract: %s): %w", chain.ChainID, entry.Contract, err)
-			}
-
-			burn := events.Burn{
-				ID:              entry.ID,
-				CollectionID:    collection.ID,
-				Block:           entry.Block,
-				EventIndex:      entry.Index,
-				TransactionHash: entry.TransactionHash,
-				TokenID:         entry.NftID,
-				EmittedAt:       entry.EmittedAt,
-			}
-
-			err = p.burns.Upsert(burn)
-			if err != nil {
-				return fmt.Errorf("could not upsert burn event: %w", err)
-			}
-
-		default:
-			p.log.Error().Str("type", entry.Type.String()).Msg("got unexpected log type")
-		}
+	err = p.burns.Upsert(result.Burns...)
+	if err != nil {
+		return fmt.Errorf("could not upsert burns: %w", err)
 	}
+
+	// TODO: create addition and owner change jobs where needed
 
 	return nil
 }

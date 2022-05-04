@@ -25,12 +25,14 @@ func NewParsingRepository(db *sql.DB) *ParsingRepository {
 	return &p
 }
 
-func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
+func (p *ParsingRepository) Insert(parsings ...*jobs.Parsing) error {
 
-	_, err := p.build.
+	query := p.build.
 		Insert(TableParsingJobs).
-		Columns(ColumnsParsingJobs...).
-		Values(
+		Columns(ColumnsParsingJobs...)
+
+	for _, parsing := range parsings {
+		query = query.Values(
 			parsing.ID,
 			parsing.ChainID,
 			parsing.Addresses,
@@ -38,8 +40,10 @@ func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 			parsing.StartHeight,
 			parsing.EndHeight,
 			parsing.Status,
-		).
-		Exec()
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not create parsing job: %w", err)
 	}
@@ -83,7 +87,7 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 	return &parsing, nil
 }
 
-func (p *ParsingRepository) UpdateStatus(parsingIDs []string, status string) error {
+func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) error {
 
 	_, err := p.build.
 		Update(TableParsingJobs).

@@ -16,7 +16,7 @@ import (
 )
 
 type ParsingRepository interface {
-	Insert(parsing *jobs.Parsing) (string, error)
+	Insert(parsings ...*jobs.Parsing) error
 	Update(parsing *jobs.Parsing) error
 	Retrieve(parsingID string) (*jobs.Parsing, error)
 	Find(wheres ...string) ([]*jobs.Parsing, error)
@@ -62,11 +62,10 @@ func (p *Parsings) Create(ctx echo.Context) error {
 			Status:      jobs.StatusCreated,
 			Data:        r.Data,
 		}
-		parsingID, err := p.parsings.Insert(&parsing)
+		err := p.parsings.Insert(&parsing)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
-		parsing.ID = parsingID
 		parsings = append(parsings, &parsing)
 	}
 

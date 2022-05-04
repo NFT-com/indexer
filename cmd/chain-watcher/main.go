@@ -49,7 +49,7 @@ func run() error {
 		flagChainID         string
 		flagChainURL        string
 		flagChainType       string
-		flagDataDB          string
+		flagGraphDB         string
 		flagJobsDB          string
 		flagLogLevel        string
 		flagStartHeight     uint64
@@ -62,7 +62,7 @@ func run() error {
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
 	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
-	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "connection details for data DB")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "", "connection details for data DB")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "connection details for jobs DB")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
@@ -82,12 +82,12 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	dataDB, err := sql.Open(constants.DialectPostgres, flagDataDB)
+	graphDB, err := sql.Open(constants.DialectPostgres, flagGraphDB)
 	if err != nil {
 		return fmt.Errorf("could not open data DB: %w", err)
 	}
-	dataDB.SetMaxOpenConns(int(flagOpenConnections))
-	dataDB.SetMaxIdleConns(int(flagIdleConnections))
+	graphDB.SetMaxOpenConns(int(flagOpenConnections))
+	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
 	if err != nil {
@@ -109,7 +109,7 @@ func run() error {
 
 	// Get the collections for the configured chain ID from the database and initialize
 	// the persister that will store jobs to the DB.
-	dataStore, err := postgres.NewStore(dataDB)
+	dataStore, err := postgres.NewStore(graphDB)
 	if err != nil {
 		return fmt.Errorf("could not create data store: %w", err)
 	}

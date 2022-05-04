@@ -22,23 +22,26 @@ func NewMintRepository(db *sql.DB) *MintRepository {
 	return &m
 }
 
-func (m *MintRepository) Upsert(mint *events.Mint) error {
+func (m *MintRepository) Upsert(mints ...*events.Mint) error {
 
-	_, err := m.build.
+	query := m.build.
 		Insert(TableMintEvents).
 		Columns(ColumnsMintEvents...).
-		Values(
+		Suffix(ConflictMintEvents)
+
+	for _, mint := range mints {
+		query = query.Values(
 			mint.ID,
-			mint.Block,
+			mint.BlockNumber,
 			mint.EventIndex,
+			mint.CollectionAddress,
 			mint.TransactionHash,
-			mint.CollectionID,
 			mint.TokenID,
-			mint.Owner,
 			mint.EmittedAt,
-		).
-		Suffix(ConflictMintEvents).
-		Exec()
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert mint event: %w",
 			err)

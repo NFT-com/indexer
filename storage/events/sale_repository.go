@@ -22,24 +22,28 @@ func NewSaleRepository(db *sql.DB) *SaleRepository {
 	return &s
 }
 
-func (s *SaleRepository) Upsert(sale *events.Sale) error {
+func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 
-	_, err := s.build.
+	query := s.build.
 		Insert(TableSaleEvents).
 		Columns(ColumnsSaleEvents...).
-		Values(
+		Suffix(ConflictSaleEvents)
+
+	for _, sale := range sales {
+		query = query.Values(
 			sale.ID,
-			sale.Block,
+			sale.BlockNumber,
 			sale.EventIndex,
 			sale.TransactionHash,
-			sale.MarketplaceID,
-			sale.Seller,
-			sale.Buyer,
-			sale.Price,
+			sale.MarketplaceAddress,
+			sale.SellerAddress,
+			sale.BuyerAddress,
+			sale.TradePrice,
 			sale.EmittedAt,
-		).
-		Suffix(ConflictSaleEvents).
-		Exec()
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert sale event: %w",
 			err)

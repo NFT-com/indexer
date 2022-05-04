@@ -18,29 +18,29 @@ type LambdaError struct {
 	ErrorType    string `json:"errorType"`
 }
 
-type Client struct {
-	lambdaClient Lambda
+type AWS struct {
+	client Lambda
 }
 
-func New(lambdaClient Lambda) (*Client, error) {
-	if lambdaClient == nil {
+func NewAWS(client Lambda) (*AWS, error) {
+	if client == nil {
 		return nil, errors.New("invalid lambda client")
 	}
 
-	d := Client{
-		lambdaClient: lambdaClient,
+	d := AWS{
+		client: client,
 	}
 
 	return &d, nil
 }
 
-func (d *Client) Invoke(functionName string, payload []byte) ([]byte, error) {
+func (d *AWS) Invoke(functionName string, payload []byte) ([]byte, error) {
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(functionName),
 		Payload:      payload,
 	}
 
-	output, err := d.lambdaClient.Invoke(input)
+	output, err := d.client.Invoke(input)
 	if err != nil {
 		return nil, fmt.Errorf("could not invoke lambda: %w", err)
 	}

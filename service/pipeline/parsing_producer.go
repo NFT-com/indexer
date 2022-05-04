@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/adjust/rmq/v4"
+
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type Producer struct {

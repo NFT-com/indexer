@@ -16,7 +16,7 @@ import (
 )
 
 type ActionRepository interface {
-	Insert(action *jobs.Action) (string, error)
+	Insert(actions ...*jobs.Action) error
 	Update(action *jobs.Action) error
 	Retrieve(actionID string) (*jobs.Action, error)
 	Find(wheres ...string) ([]*jobs.Action, error)
@@ -62,11 +62,10 @@ func (a *Actions) Create(ctx echo.Context) error {
 			Data:       r.Data,
 			Status:     jobs.StatusCreated,
 		}
-		actionID, err := a.actions.Insert(&action)
+		err := a.actions.Insert(&action)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
-		action.ID = actionID
 		actions = append(actions, &action)
 	}
 

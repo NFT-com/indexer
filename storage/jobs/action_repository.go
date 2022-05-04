@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/lib/pq"
 
 	"github.com/NFT-com/indexer/models/jobs"
 )
@@ -24,12 +25,14 @@ func NewActionRepository(db *sql.DB) *ActionRepository {
 	return &a
 }
 
-func (a *ActionRepository) Insert(action *jobs.Action) error {
+func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 
-	_, err := a.build.
+	query := a.build.
 		Insert(TableActionJobs).
-		Columns(ColumnsActionJobs...).
-		Values(
+		Columns(ColumnsActionJobs...)
+
+	for _, action := range actions {
+		query = query.Values(
 			action.ID,
 			action.ChainID,
 			action.Address,
@@ -37,8 +40,10 @@ func (a *ActionRepository) Insert(action *jobs.Action) error {
 			action.ActionType,
 			action.Height,
 			action.Status,
-		).
-		Exec()
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not create action job: %w", err)
 	}
@@ -82,11 +87,11 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	return &action, nil
 }
 
-func (a *ActionRepository) UpdateStatus(actionID string, status string) error {
+func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) error {
 
 	_, err := a.build.
 		Update(TableActionJobs).
-		Where("id = ?", actionID).
+		Where("id IN (?)", pq.Array(actionIDs)).
 		Set("status", status).
 		Set("updated_at", time.Now()).
 		Exec()

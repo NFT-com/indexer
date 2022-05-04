@@ -1,56 +1,55 @@
 package pipeline
 
 import (
-	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/adjust/rmq/v4"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
-	"go.uber.org/ratelimit"
 
-	"github.com/NFT-com/indexer/function"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lambda"
+
 	"github.com/NFT-com/indexer/models/graph"
+	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
-	"github.com/NFT-com/indexer/models/logs"
 )
 
 type ActionConsumer struct {
-	log           zerolog.Logger
-	dispatcher    function.Invoker
-	actions       ActionStore
-	chains        ChainStore
-	collections   CollectionStore
-	nfts          NFTStore
-	traits        TraitStore
-	limit         ratelimit.Limiter
-	consumerQueue chan []byte
-	close         chan struct{}
+	log         zerolog.Logger
+	lambda      *lambda.Lambda
+	actions     ActionStore
+	chains      ChainStore
+	collections CollectionStore
+	nfts        NFTStore
+	traits      TraitStore
+	dryRun      bool
 }
 
 func NewActionConsumer(
 	log zerolog.Logger,
-	dispatcher function.Invoker,
+	lambda *lambda.Lambda,
 	actions ActionStore,
 	chains ChainStore,
 	collections CollectionStore,
 	nfts NFTStore,
 	traits TraitStore,
-	rateLimit int,
+	dryRun bool,
 ) *ActionConsumer {
 
 	a := ActionConsumer{
-		log:           log,
-		dispatcher:    dispatcher,
-		actions:       actions,
-		chains:        chains,
-		collections:   collections,
-		nfts:          nfts,
-		traits:        traits,
-		limit:         ratelimit.New(rateLimit),
-		consumerQueue: make(chan []byte, concurrentConsumers),
-		close:         make(chan struct{}),
+		log:         log,
+		lambda:      lambda,
+		actions:     actions,
+		chains:      chains,
+		collections: collections,
+		nfts:        nfts,
+		traits:      traits,
+		dryRun:      dryRun,
 	}
 
 	return &a
@@ -58,116 +57,103 @@ func NewActionConsumer(
 
 func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
 
-	a.log.Debug().Msg("received message to consume")
+	log := a.log
 
 	payload := []byte(delivery.Payload())
-	a.consumerQueue <- payload
-
 	err := delivery.Ack()
 	if err != nil {
-		a.log.Error().Err(err).Msg("could not acknowledge message")
+		log.Error().Err(err).Msg("could not acknowledge delivery")
 		return
 	}
-}
-
-func (a *ActionConsumer) Run() {
-	for i := 0; i < concurrentConsumers; i++ {
-		go func() {
-			for {
-				select {
-				case <-a.close:
-					return
-				case payload := <-a.consumerQueue:
-					a.consume(payload)
-				}
-			}
-		}()
-	}
-}
-
-func (a *ActionConsumer) Close() {
-	close(a.close)
-}
-
-func (a *ActionConsumer) consume(payload []byte) {
 
 	var action jobs.Action
-	err := json.Unmarshal(payload, &action)
+	err = json.Unmarshal(payload, &action)
 	if err != nil {
-		a.log.Error().Err(err).Msg("could not unmarshal message")
+		log.Error().Err(err).Msg("could not decode payload")
 		return
 	}
+
+	log = log.With().
+		Str("chain_id", action.ChainID).
+		Str("address", action.Address).
+		Str("token_id", action.TokenID).
+		Str("action_type", action.ActionType).
+		Uint64("height", action.Height).
+		Logger()
 
 	err = a.actions.UpdateStatus(jobs.StatusProcessing, action.ID)
 	if err != nil {
-		a.handleError(action.ID, err, "could not update job status")
+		a.log.Error().Err(err).Msg("could not update action job status")
 		return
 	}
 
-	a.log.Debug().
-		Uint64("height", action.Height).
-		Str("address", action.Address).
-		Str("action_type", action.ActionType).
-		Msg("invoking function")
+	notify := func(err error, dur time.Duration) {
+		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
+	}
 
-	name := actionName(&action)
-	output, err := a.dispatcher.Invoke(name, payload)
+	switch action.ActionType {
+	case jobs.ActionAddition:
+		err = a.processAddition(notify, payload)
+	case jobs.ActionOwnerChange:
+		err = a.processOwnerChange(&action)
+	}
+
 	if err != nil {
-		a.handleError(action.ID, err, "could not dispatch message")
+		log.Error().Err(err).Msg("could not process action job")
+		err = a.actions.UpdateStatus(jobs.StatusFailed, action.ID)
+	} else {
+		log.Info().Msg("action job successfully processed")
+		err = a.actions.UpdateStatus(jobs.StatusFinished, action.ID)
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msg("could not update action job status")
 		return
+	}
+}
+
+func (a *ActionConsumer) processAddition(notify func(error, time.Duration), input []byte) error {
+
+	if a.dryRun {
+		return nil
+	}
+
+	var output []byte
+	err := backoff.RetryNotify(func() error {
+
+		input := &lambda.InvokeInput{
+			FunctionName: aws.String("action_worker"),
+			Payload:      input,
+		}
+		result, err := a.lambda.Invoke(input)
+		var reqErr *lambda.TooManyRequestsException
+
+		// retry if we ran out of concurrent lambdas
+		if errors.As(err, &reqErr) {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// retry if we ran out of requests on the Ethereum API
+		if strings.Contains(err.Error(), "Too Many Requests") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// don't retry on any other error, for now
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("could not execute lambda: %w", err))
+		}
+
+		output = result.Payload
+		return nil
+	}, backoff.NewExponentialBackOff(), notify)
+	if err != nil {
+		return fmt.Errorf("could not successfully invoke parser: %w", err)
 	}
 
 	var nft graph.NFT
 	err = json.Unmarshal(output, &nft)
 	if err != nil {
-		a.handleError(action.ID, err, "could not unmarshal output nft")
-		return
-	}
-
-	err = a.processNFT(action.ActionType, &nft)
-	if err != nil {
-		a.handleError(action.ID, err, "could not process nft")
-		return
-	}
-
-	err = a.actions.UpdateStatus(action.ID, jobs.StatusFinished)
-	if err != nil {
-		a.handleError(action.ID, err, "could not update job status")
-		return
-	}
-}
-
-func (a *ActionConsumer) handleError(actionID string, err error, message string) {
-	updateErr := a.actions.UpdateStatus(actionID, jobs.StatusFailed)
-	if updateErr != nil {
-		a.log.Error().Err(updateErr).Msg("could not update job status")
-	}
-
-	a.log.Error().Err(err).Str("action_id", actionID).Msg(message)
-}
-
-func actionName(action *jobs.Action) string {
-	h := sha256.New()
-
-	s := strings.Join(
-		[]string{
-			"action",
-			strings.ToLower(action.ChainType),
-		},
-		"-",
-	)
-	h.Write([]byte(s))
-
-	name := fmt.Sprintf("%x", h.Sum(nil))
-
-	return name
-}
-
-func (a *ActionConsumer) processNFT(actionType string, nft *graph.NFT) error {
-
-	chain, err := a.chains.Retrieve(nft.ChainID)
-	if err != nil {
-		return fmt.Errorf("could not get chain: %w", err)
+		return fmt.Errorf("could not decode NFT: %w", err)
 	}
 
 	collection, err := a.collections.RetrieveByAddress(chain.ID, nft.Contract, nft.ContractCollectionID)
@@ -175,43 +161,35 @@ func (a *ActionConsumer) processNFT(actionType string, nft *graph.NFT) error {
 		return fmt.Errorf("could not get collection: %w", err)
 	}
 
-	switch actionType {
+	err = a.nfts.Upsert(&nft, collection.ID)
+	if err != nil {
+		return fmt.Errorf("could not store nft: %w", err)
+	}
 
-	case logs.ActionAddition.String():
-
-		err = a.nfts.Upsert(nft, collection.ID)
+	for _, trait := range nft.Traits {
+		err = a.traits.Upsert(trait)
 		if err != nil {
-			return fmt.Errorf("could not store nft: %w", err)
+			return fmt.Errorf("could not store trait: %w", err)
 		}
+	}
 
-		for _, trait := range nft.Traits {
-			err = a.traits.Upsert(&trait)
-			if err != nil {
-				return fmt.Errorf("could not store trait: %w", err)
-			}
-		}
+	return nil
+}
 
-		a.log.Info().
-			Str("collection", collection.ID).
-			Str("nft", nft.ID).
-			Str("name", nft.Name).
-			Str("uri", nft.URI).
-			Str("image", nft.Image).
-			Int("traits", len(nft.Traits)).
-			Msg("NFT details added")
+func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 
-	case logs.ActionOwnerChange.String():
+	// TODO: check and sleep if there are any pending addition or owner change
+	// jobs before this one for the same NFT
 
-		err = a.nfts.ChangeOwner(nft.ID, nft.Owner)
-		if err != nil {
-			return fmt.Errorf("could not update nft owner (nft %s): %w", nft.ID, err)
-		}
+	var inputs inputs.OwnerChange
+	err := json.Unmarshal(action.Data, &inputs)
+	if err != nil {
+		return fmt.Errorf("could not decode owner change inputs: %w", err)
+	}
 
-		a.log.Info().
-			Str("collection", collection.ID).
-			Str("nft", nft.ID).
-			Str("owner", nft.Owner).
-			Msg("NFT owner updated")
+	err = a.nfts.ChangeOwner(inputs.NFTID, inputs.NewOwner)
+	if err != nil {
+		return fmt.Errorf("could not change owner: %w", err)
 	}
 
 	return nil

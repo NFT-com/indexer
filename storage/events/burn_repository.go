@@ -22,22 +22,26 @@ func NewBurnRepository(db *sql.DB) *BurnRepository {
 	return &b
 }
 
-func (b *BurnRepository) Upsert(event *events.Burn) error {
+func (b *BurnRepository) Upsert(burns ...*events.Burn) error {
 
-	_, err := b.build.
+	query := b.build.
 		Insert(TableBurnEvents).
 		Columns(ColumnsBurnEvents...).
-		Values(
-			event.ID,
-			event.Block,
-			event.EventIndex,
-			event.TransactionHash,
-			event.CollectionID,
-			event.TokenID,
-			event.EmittedAt,
-		).
-		Suffix(ConflictBurnEvents).
-		Exec()
+		Suffix(ConflictBurnEvents)
+
+	for _, burn := range burns {
+		query = query.Values(
+			burn.ID,
+			burn.BlockNumber,
+			burn.EventIndex,
+			burn.CollectionAddress,
+			burn.TransactionHash,
+			burn.TokenID,
+			burn.EmittedAt,
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert burn event: %w",
 			err)

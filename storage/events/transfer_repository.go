@@ -22,24 +22,28 @@ func NewTransferRepository(db *sql.DB) *TransferRepository {
 	return &t
 }
 
-func (t *TransferRepository) UpsertTransferEvent(transfer *events.Transfer) error {
+func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 
-	_, err := t.build.
+	query := t.build.
 		Insert(TableTransferEvents).
 		Columns(ColumnsTransferEvents...).
-		Values(
+		Suffix(ConflictTransferEvents)
+
+	for _, transfer := range transfers {
+		query = query.Values(
 			transfer.ID,
-			transfer.Block,
+			transfer.BlockNumber,
 			transfer.EventIndex,
+			transfer.CollectionAddress,
 			transfer.TransactionHash,
-			transfer.CollectionID,
 			transfer.TokenID,
 			transfer.FromAddress,
 			transfer.ToAddress,
 			transfer.EmittedAt,
-		).
-		Suffix(ConflictTransferEvents).
-		Exec()
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert transfer event: %w",
 			err)
