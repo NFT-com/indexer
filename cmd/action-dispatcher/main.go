@@ -134,7 +134,7 @@ func run() int {
 
 	for i := uint(0); i < flagConsumerCount; i++ {
 		consumer := pipeline.NewActionConsumer(log, lambdaClient, actionRepo, collectionRepo, nftRepo, traitRepo, flagRateLimit, flagDryRun)
-		_, err = queue.AddConsumer("action_consumer", consumer)
+		_, err = queue.AddConsumer("action-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
 			return failure

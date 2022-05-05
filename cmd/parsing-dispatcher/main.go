@@ -138,7 +138,7 @@ func run() int {
 
 	for i := uint(0); i < flagConsumerCount; i++ {
 		consumer := pipeline.NewParsingConsumer(log, lambdaClient, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
-		_, err := queue.AddConsumer("parsing_consumer", consumer)
+		_, err := queue.AddConsumer("parsing-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
 			return failure
