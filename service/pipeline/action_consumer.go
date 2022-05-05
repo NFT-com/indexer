@@ -177,7 +177,12 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	err = a.nfts.ChangeOwner(action.ChainID, action.Address, action.TokenID, inputs.NewOwner)
+	collection, err := a.collections.One(action.ChainID, action.Address)
+	if err != nil {
+		return fmt.Errorf("could not get collection: %w", err)
+	}
+
+	err = a.nfts.ChangeOwner(collection.ID, action.TokenID, inputs.NewOwner)
 	if err != nil {
 		return fmt.Errorf("could not change owner: %w", err)
 	}

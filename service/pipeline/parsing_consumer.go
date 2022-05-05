@@ -10,6 +10,7 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -57,8 +58,6 @@ func NewParsingConsumer(
 
 func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 
-	log := p.log
-
 	payload := []byte(delivery.Payload())
 	err := delivery.Ack()
 	if err != nil {
@@ -66,14 +65,22 @@ func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	var parsing jobs.Parsing
-	err = json.Unmarshal(payload, &parsing)
+	err = p.process(payload)
 	if err != nil {
-		log.Error().Err(err).Msg("could not decode payload")
+		log.Error().Err(err).Msg("could not process payload")
 		return
 	}
+}
 
-	log = log.With().
+func (p *ParsingConsumer) process(payload []byte) error {
+
+	var parsing jobs.Parsing
+	err := json.Unmarshal(payload, &parsing)
+	if err != nil {
+		return fmt.Errorf("could not unmarshal parsing job: %w", err)
+	}
+
+	log := p.log.With().
 		Str("chain_id", parsing.ChainID).
 		Strs("addresses", parsing.Addresses).
 		Strs("events_types", parsing.EventTypes).
@@ -83,15 +90,10 @@ func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 
 	err = p.parsings.UpdateStatus(jobs.StatusProcessing, parsing.ID)
 	if err != nil {
-		p.log.Error().Err(err).Msg("could not update parsing job status")
-		return
+		return fmt.Errorf("could not update job status: %w", err)
 	}
 
-	notify := func(err error, dur time.Duration) {
-		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
-	}
-
-	err = p.process(notify, &parsing, payload)
+	err = p.processParsing(payload, &parsing)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process parsing job")
 		err = p.parsings.UpdateStatus(jobs.StatusFailed, parsing.ID)
@@ -101,15 +103,20 @@ func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("could not update parsing job status")
-		return
+		return fmt.Errorf("could not update job status: %w", err)
 	}
+
+	return nil
 }
 
-func (p *ParsingConsumer) process(notify func(error, time.Duration), parsing *jobs.Parsing, input []byte) error {
+func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) error {
 
 	if p.dryRun {
 		return nil
+	}
+
+	notify := func(err error, dur time.Duration) {
+		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
 	}
 
 	var output []byte
@@ -119,7 +126,7 @@ func (p *ParsingConsumer) process(notify func(error, time.Duration), parsing *jo
 
 		input := &lambda.InvokeInput{
 			FunctionName: aws.String("parsing_worker"),
-			Payload:      input,
+			Payload:      payload,
 		}
 		result, err := p.lambda.Invoke(input)
 		var reqErr *lambda.TooManyRequestsException

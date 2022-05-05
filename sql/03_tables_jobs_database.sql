@@ -8,8 +8,7 @@ CREATE TABLE IF NOT EXISTS parsing_jobs
     end_height     NUMERIC        NOT NULL,
     status         VARCHAR(64)    NOT NULL,
     created_at     TIMESTAMP DEFAULT NOW(),
-    updated_at     TIMESTAMP,
-    deleted_at     TIMESTAMP
+    updated_at     TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS action_jobs
@@ -22,6 +21,5 @@ CREATE TABLE IF NOT EXISTS action_jobs
     height         NUMERIC      NOT NULL,
     status         VARCHAR(64)  NOT NULL,
     created_at     TIMESTAMP DEFAULT NOW(),
-    updated_at     TIMESTAMP,
-    deleted_at     TIMESTAMP
+    updated_at     TIMESTAMP
 );

@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/service/notifier"
 	"github.com/NFT-com/indexer/service/notifier/heads"
@@ -48,12 +49,10 @@ func run() error {
 	// Command line parameter initialization.
 	var (
 		flagChainID         string
-		flagChainURL        string
-		flagChainType       string
+		flagNodeURL         string
 		flagGraphDB         string
 		flagJobsDB          string
 		flagLogLevel        string
-		flagStartHeight     uint64
 		flagJobLimit        uint
 		flagNotifyPeriod    time.Duration
 		flagOpenConnections uint
@@ -61,12 +60,10 @@ func run() error {
 	)
 
 	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
-	pflag.StringVarP(&flagChainURL, "chain-url", "u", "", "url of the chain to connect")
-	pflag.StringVarP(&flagChainType, "chain-type", "t", "", "type of chain")
+	pflag.StringVarP(&flagNodeURL, "node-url", "u", "", "url of the chain to connect")
 	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "", "connection details for data DB")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "connection details for jobs DB")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.Uint64VarP(&flagStartHeight, "start-height", "s", 0, "default start height when no jobs found")
 	pflag.UintVar(&flagJobLimit, "job-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", 100*time.Millisecond, "how often to notify watchers to create new jobs")
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
@@ -105,7 +102,7 @@ func run() error {
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.
-	client, err := ethclient.DialContext(ctx, flagChainURL)
+	client, err := ethclient.DialContext(ctx, flagNodeURL)
 	if err != nil {
 		return fmt.Errorf("could not connect to node: %w", err)
 	}
@@ -140,14 +137,14 @@ func run() error {
 
 			for _, event := range events {
 
-				// TODO: fix block number to be integer
+				inputs := inputs.Parsing{
+					NodeURL: flagNodeURL,
+				}
 
 				// create the job template for this combination
 				template := jobs.Parsing{
 					ID:          "",
-					ChainURL:    flagChainURL,
 					ChainID:     flagChainID,
-					ChainType:   flagChainType,
 					BlockNumber: 0,
 					Address:     collection.Address,
 					Standard:    standard.Name,
@@ -177,7 +174,7 @@ func run() error {
 		return fmt.Errorf("could not initialize heads notifier: %w", err)
 	}
 
-	network, err := web3.New(ctx, flagChainURL)
+	network, err := web3.New(ctx, flagNodeURL)
 	if err != nil {
 		return fmt.Errorf("could not create web3 network: %w", err)
 	}

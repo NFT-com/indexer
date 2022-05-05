@@ -10,7 +10,7 @@ type CollectionStore interface {
 
 type NFTStore interface {
 	Upsert(nft *graph.NFT) error
-	ChangeOwner(chainID string, address string, tokenID string, owner string) error
+	ChangeOwner(collectionID string, tokenID string, owner string) error
 }
 
 type TraitStore interface {

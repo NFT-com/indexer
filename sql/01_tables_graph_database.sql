@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS networks
 (
     id          UUID PRIMARY KEY,
-    chain_id    VARCHAR(128) NOT NULL,
+    chain_id    NUMERIC      NOT NULL,
     name        TEXT         NOT NULL,
     description TEXT         NOT NULL,
     symbol      VARCHAR(16)  NOT NULL,
@@ -22,8 +22,9 @@ CREATE TABLE IF NOT EXISTS marketplaces
 CREATE TABLE IF NOT EXISTS collections
 (
     id                  UUID PRIMARY KEY,
-    network_id          UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    network_id          UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     contract_address    VARCHAR(128) NOT NULL,
+    start_height        NUMERIC      NOT NULL,
     name                TEXT         NOT NULL,
     description         TEXT         NOT NULL,
     symbol              VARCHAR(16)  NOT NULL,
@@ -50,11 +51,11 @@ CREATE TABLE IF NOT EXISTS nfts
 
 CREATE TABLE IF NOT EXISTS traits
 (
-    id         UUID         PRIMARY KEY,
-    nft_id     UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
-    name       TEXT         NOT NULL,
-    type       TEXT         NOT NULL,
-    value      TEXT         NOT NULL,
+    id         UUID PRIMARY KEY,
+    nft_id     UUID NOT NULL REFERENCES nfts ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    type       TEXT NOT NULL,
+    value      TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
 );
@@ -67,11 +68,11 @@ CREATE TABLE IF NOT EXISTS standards
     updated_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS event_types
+CREATE TABLE IF NOT EXISTS events
 (
-    id         TEXT         PRIMARY KEY,
-    name       TEXT         NOT NULL,
+    id         UUID         PRIMARY KEY,
     event_hash VARCHAR(128) NOT NULL,
+    name       TEXT         NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
 );
@@ -83,7 +84,7 @@ CREATE TABLE IF NOT EXISTS networks_marketplaces
     contract_address    VARCHAR(128) NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW(),
     updated_at          TIMESTAMP,
-    PRIMARY KEY (marketplace_id, chain_id)
+    PRIMARY KEY (chain_id, marketplace_id)
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_collections
@@ -97,15 +98,18 @@ CREATE TABLE IF NOT EXISTS marketplaces_collections
 
 CREATE TABLE IF NOT EXISTS standards_collections
 (
-    standard_id     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     collection_id   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
+    standard_id     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     created_at      TIMESTAMP DEFAULT NOW(),
     updated_at      TIMESTAMP,
-    PRIMARY KEY(standard, collection)
+    PRIMARY KEY(collection_id, standard_id)
 );
 
-CREATE TABLE IF NOT EXISTS standards_event_types
+CREATE TABLE IF NOT EXISTS standards_events
 (
-    standard_id     UUID    NOT NULL REFERENCES standards ON DELETE CASCADE,
-    event_type_id   TEXT    NOT NULL REFERENCES event_types ON DELETE CASCADE
+    standard_id UUID    NOT NULL REFERENCES standards ON DELETE CASCADE,
+    event_id    TEXT    NOT NULL REFERENCES events ON DELETE CASCADE,
+    created_at  TIMESTAMP DEFAULT NOW(),
+    updated_at  TIMESTAMP,
+    PRIMARY KEY(standard_id, event_id)
 );
