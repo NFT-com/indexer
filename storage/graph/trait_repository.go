@@ -28,7 +28,7 @@ func (t *TraitRepository) UpsertTrait(trait *graph.Trait) error {
 	_, err := t.build.
 		Insert(TableTraits).
 		Columns(ColumnsTraits...).
-		Values(trait.ID, trait.Name, trait.Value, trait.NftID).
+		Values(trait.ID, trait.NFTID, trait.Name, trait.Value).
 		Suffix(ConflictTraits).
 		Exec()
 	if err != nil {

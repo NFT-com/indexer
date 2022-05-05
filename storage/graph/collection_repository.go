@@ -49,12 +49,10 @@ func (c *CollectionRepository) RetrieveByAddress(chainID string, address string,
 	}
 
 	var collection graph.Collection
-	var ccID sql.NullString
 	err = result.Scan(
 		&collection.ID,
-		// &collection.CollectionID, // TODO: why did this field go away?
-		&ccID,
-		&collection.Address,
+		&collection.NetworkID,
+		&collection.BaseTokenID,
 		&collection.Name,
 		&collection.Description,
 		&collection.Symbol,
@@ -66,7 +64,6 @@ func (c *CollectionRepository) RetrieveByAddress(chainID string, address string,
 		return nil, fmt.Errorf("could not scan row: %w", err)
 	}
 
-	collection.ContractCollectionID = ccID.String
 	return &collection, nil
 }
 
@@ -94,12 +91,11 @@ func (c *CollectionRepository) Find(wheres ...string) ([]*graph.Collection, erro
 		}
 
 		var collection graph.Collection
-		var ccID sql.NullString
 		err = result.Scan(
 			&collection.ID,
-			&collection.ChainID,
-			&ccID,
-			&collection.Address,
+			&collection.NetworkID,
+			&collection.ContractAddress,
+			&collection.BaseTokenID,
 			&collection.Name,
 			&collection.Description,
 			&collection.Symbol,
@@ -111,7 +107,6 @@ func (c *CollectionRepository) Find(wheres ...string) ([]*graph.Collection, erro
 			return nil, fmt.Errorf("could not scan next row: %w", err)
 		}
 
-		collection.ContractCollectionID = ccID.String
 		collections = append(collections, &collection)
 	}
 

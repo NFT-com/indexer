@@ -4,8 +4,8 @@ import (
 	"github.com/NFT-com/indexer/models/graph"
 )
 
-type ChainStore interface {
-	Retrieve(chainID string) (*graph.Chain, error)
+type NetworkStore interface {
+	Retrieve(chainID string) (*graph.Network, error)
 }
 
 type CollectionStore interface {
@@ -17,10 +17,10 @@ type MarketplaceStore interface {
 }
 
 type NFTStore interface {
-	Upsert(nft *graph.NFT, collectionID string) error
+	Upsert(nft *graph.NFT) error
 	ChangeOwner(nftID string, owner string) error
 }
 
 type TraitStore interface {
-	Upsert(trait *graph.Trait) error
+	Upsert(traits ...*graph.Trait) error
 }

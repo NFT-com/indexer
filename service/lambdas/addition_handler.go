@@ -13,6 +13,7 @@ import (
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/models/results"
 	"github.com/NFT-com/indexer/network/web2"
 	"github.com/NFT-com/indexer/network/web3"
 )
@@ -30,7 +31,7 @@ func NewAdditionHandler(log zerolog.Logger) *AdditionHandler {
 	return &a
 }
 
-func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Addition) (*graph.NFT, error) {
+func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*results.Addition, error) {
 
 	var inputs inputs.Addition
 	err := json.Unmarshal(action.Data, &inputs)
@@ -73,33 +74,37 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Addition) (*g
 		return nil, fmt.Errorf("could not fetch metadata: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s", action.ChainID, action.Address, action.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s", action.NetworkID, action.Address, action.TokenID)))
 	nftID := hex.EncodeToString(nftHash[:])
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s-%d", action.ChainID, action.Address, action.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s-%d", action.NetworkID, action.Address, action.TokenID, i)))
 		trait := graph.Trait{
 			ID:    hex.EncodeToString(traitHash[:]),
+			NFTID: nftID,
 			Name:  att.TraitType,
+			Type:  att.DisplayType,
 			Value: fmt.Sprint(att.Value),
-			NftID: nftID,
 		}
 		traits = append(traits, &trait)
 	}
 
 	nft := graph.NFT{
-		ID:          nftID,
-		ChainID:     action.ChainID,
-		Contract:    action.Address,
-		TokenID:     action.TokenID,
-		Name:        token.Name,
-		URI:         uri,
-		Image:       token.Image,
-		Description: token.Description,
-		Owner:       inputs.Owner,
-		Traits:      traits,
+		ID:           nftID,
+		CollectionID: inputs.CollectionID,
+		TokenID:      action.TokenID,
+		Name:         token.Name,
+		URI:          uri,
+		Image:        token.Image,
+		Description:  token.Description,
+		Owner:        inputs.Owner,
 	}
 
-	return &nft, nil
+	result := results.Addition{
+		NFT:    &nft,
+		Traits: traits,
+	}
+
+	return &result, nil
 }

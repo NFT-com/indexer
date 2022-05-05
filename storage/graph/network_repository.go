@@ -9,25 +9,25 @@ import (
 	"github.com/NFT-com/indexer/models/graph"
 )
 
-type ChainRepository struct {
+type NetworkRepository struct {
 	build squirrel.StatementBuilderType
 }
 
-func NewChainRepository(db *sql.DB) *ChainRepository {
+func NewNetworkRepository(db *sql.DB) *NetworkRepository {
 
 	cache := squirrel.NewStmtCache(db)
-	c := ChainRepository{
+	c := NetworkRepository{
 		build: squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
 	}
 
 	return &c
 }
 
-func (c *ChainRepository) Retrieve(chainID string) (*graph.Chain, error) {
+func (n *NetworkRepository) Retrieve(chainID string) (*graph.Network, error) {
 
-	result, err := c.build.
-		Select(ColumnsChains...).
-		From(TableChains).
+	result, err := n.build.
+		Select(ColumnsNetworks...).
+		From(TableNetworks).
 		Where("chain_id = ?", chainID).
 		Query()
 	if err != nil {
@@ -42,17 +42,16 @@ func (c *ChainRepository) Retrieve(chainID string) (*graph.Chain, error) {
 		return nil, sql.ErrNoRows
 	}
 
-	var chain graph.Chain
+	var network graph.Network
 	err = result.Scan(
-		&chain.ID,
-		&chain.ChainID,
-		&chain.Name,
-		&chain.Description,
-		&chain.Symbol,
+		&network.ID,
+		&network.ChainID,
+		&network.Name,
+		&network.Description,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not scan row: %w", err)
 	}
 
-	return &chain, nil
+	return &network, nil
 }

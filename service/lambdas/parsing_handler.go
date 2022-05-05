@@ -150,15 +150,15 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			transfers[i] = transfers[len(transfers)-1]
 			transfers = transfers[:len(transfers)-1]
 			burn := events.Burn{
-				ID:                transfer.ID,
-				CollectionAddress: transfer.CollectionAddress,
-				BaseTokenID:       transfer.BaseTokenID,
-				TokenID:           transfer.TokenID,
-				BlockNumber:       transfer.BlockNumber,
-				EventIndex:        transfer.EventIndex,
-				TransactionHash:   transfer.TransactionHash,
-				FromAddress:       transfer.FromAddress,
-				EmittedAt:         transfer.EmittedAt,
+				ID:              transfer.ID,
+				NetworkID:       transfer.NetworkID,
+				CollectionID:    transfer.CollectionID,
+				TokenID:         transfer.TokenID,
+				BlockNumber:     transfer.BlockNumber,
+				EventIndex:      transfer.EventIndex,
+				TransactionHash: transfer.TransactionHash,
+				FromAddress:     transfer.FromAddress,
+				EmittedAt:       transfer.EmittedAt,
 			}
 			burns = append(burns, &burn)
 			continue

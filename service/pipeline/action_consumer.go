@@ -14,16 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
-	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/models/results"
 )
 
 type ActionConsumer struct {
 	log         zerolog.Logger
 	lambda      *lambda.Lambda
 	actions     ActionStore
-	chains      ChainStore
+	networks    NetworkStore
 	collections CollectionStore
 	nfts        NFTStore
 	traits      TraitStore
@@ -34,7 +34,7 @@ func NewActionConsumer(
 	log zerolog.Logger,
 	lambda *lambda.Lambda,
 	actions ActionStore,
-	chains ChainStore,
+	networks NetworkStore,
 	collections CollectionStore,
 	nfts NFTStore,
 	traits TraitStore,
@@ -45,7 +45,7 @@ func NewActionConsumer(
 		log:         log,
 		lambda:      lambda,
 		actions:     actions,
-		chains:      chains,
+		networks:    networks,
 		collections: collections,
 		nfts:        nfts,
 		traits:      traits,
@@ -74,7 +74,7 @@ func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
 	}
 
 	log = log.With().
-		Str("chain_id", action.ChainID).
+		Str("network_id", action.NetworkID).
 		Str("address", action.Address).
 		Str("token_id", action.TokenID).
 		Str("action_type", action.ActionType).
@@ -150,27 +150,10 @@ func (a *ActionConsumer) processAddition(notify func(error, time.Duration), inpu
 		return fmt.Errorf("could not successfully invoke parser: %w", err)
 	}
 
-	var nft graph.NFT
-	err = json.Unmarshal(output, &nft)
+	var result results.Addition
+	err = json.Unmarshal(output, &result)
 	if err != nil {
 		return fmt.Errorf("could not decode NFT: %w", err)
-	}
-
-	collection, err := a.collections.RetrieveByAddress(chain.ID, nft.Contract, nft.ContractCollectionID)
-	if err != nil {
-		return fmt.Errorf("could not get collection: %w", err)
-	}
-
-	err = a.nfts.Upsert(&nft, collection.ID)
-	if err != nil {
-		return fmt.Errorf("could not store nft: %w", err)
-	}
-
-	for _, trait := range nft.Traits {
-		err = a.traits.Upsert(trait)
-		if err != nil {
-			return fmt.Errorf("could not store trait: %w", err)
-		}
 	}
 
 	return nil

@@ -1,10 +1,11 @@
 package graph
 
 const (
-	TableChains       = "chains"
+	TableNetworks     = "networks"
+	TableMarketplaces = "marketplaces"
 	TableCollections  = "collections"
 	TableNFTs         = "nfts"
 	TableTraits       = "traits"
-	TableMarketplaces = "marketplaces"
+	TableStandards    = "standards"
 	TableEventTypes   = "event_types"
 )

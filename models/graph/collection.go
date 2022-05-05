@@ -1,7 +1,5 @@
 package graph
 
-// TODO: review all of the model relationships properly
-
 type Collection struct {
 	ID              string `json:"id"`
 	NetworkID       string `json:"network_id"`

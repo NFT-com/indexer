@@ -5,4 +5,5 @@ type Network struct {
 	ChainID     string `json:"chain_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Symbol      string `json:"symbol"`
 }

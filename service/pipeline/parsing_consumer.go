@@ -9,6 +9,7 @@ import (
 
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"go.uber.org/ratelimit"
 
@@ -178,7 +179,14 @@ func (p *ParsingConsumer) process(notify func(error, time.Duration), input []byt
 		return fmt.Errorf("could not upsert burns: %w", err)
 	}
 
-	// TODO: create addition and owner change jobs where needed
+	for _, mint := range result.Mints {
+		action := jobs.Action{
+			ID:        uuid.New().String(),
+			NetworkID: "", // TODO
+			Address:   "", // TODO
+			TokenID:   mint.TokenID,
+		}
+	}
 
 	return nil
 }
