@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS chains_marketplaces
 CREATE TABLE IF NOT EXISTS collections
 (
     id                     UUID PRIMARY KEY,
-    chain_id               UUID         NOT NULL REFERENCES chains ON DELETE CASCADE,
+    chain_id               UUID         NOT NULL REFERENCES chains ON DELETE CASCADE, -- Should be removed but first needs to removed from the insert statements.
     contract_collection_id VARCHAR(128) NULL,
     address                VARCHAR(128) NOT NULL,
     name                   TEXT         NOT NULL,
@@ -64,11 +64,11 @@ CREATE TABLE IF NOT EXISTS event_types
 
 CREATE TABLE IF NOT EXISTS standards_collections
 (
-    standard     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
-    collection   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
-    created_at   TIMESTAMP DEFAULT NOW(),
-    updated_at   TIMESTAMP,
-    PRIMARY KEY(standard, collection)
+    standard   UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
+    collection UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    PRIMARY KEY (standard, collection)
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_collections

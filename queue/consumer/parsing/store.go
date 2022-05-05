@@ -13,7 +13,7 @@ type Store interface {
 	UpsertBurnEvent(event events.Burn) error
 
 	Chain(chainID string) (*chain.Chain, error)
-	Collection(chainID, address, contractCollectionID string) (*chain.Collection, error)
+	Collection(chainID, address string) (*chain.Collection, error)
 	Marketplace(chainID, address string) (*chain.Marketplace, error)
 
 	UpdateNFTOwner(collectionID, nft, owner string) error

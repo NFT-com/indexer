@@ -43,7 +43,7 @@ var (
 
 	// data table columns
 	chainTableColumns      = []string{"id", "chain_id", "name", "description", "symbol"}
-	collectionTableColumns = []string{"id", "chain_id", "contract_collection_id", "address", "name", "description", "symbol", "slug", "image_url", "website"}
+	collectionTableColumns = []string{"id", "chain_id", "address", "name", "description", "symbol", "slug", "image_url", "website"}
 	nftTableColumns        = []string{"id", "token_id", "collection", "name", "uri", "image", "description", "owner"}
 	traitsTableColumns     = []string{"id", "name", "value", "nft"}
 )

@@ -43,6 +43,7 @@ func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) ([]log
 		TransactionHash: raw.TransactionHash,
 		NeedsActionJob:  true,
 		NftID:           nftID,
+		Amount:          1,
 		FromAddress:     fromAddress,
 		ToAddress:       toAddress,
 		EmittedAt:       raw.EmittedAt,

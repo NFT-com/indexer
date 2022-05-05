@@ -14,7 +14,7 @@ func (d *Action) processNFT(actionType string, nft chain.NFT) error {
 		return fmt.Errorf("could not get chain: %w", err)
 	}
 
-	collection, err := d.dataStore.Collection(chain.ID, nft.Contract, nft.ContractCollectionID)
+	collection, err := d.dataStore.Collection(chain.ID, nft.Contract)
 	if err != nil {
 		return fmt.Errorf("could not get collection: %w", err)
 	}

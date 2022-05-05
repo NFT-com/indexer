@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/NFT-com/indexer/function/processors/parsing/erc1155"
 	"github.com/NFT-com/indexer/log"
 )
 
@@ -55,6 +54,11 @@ func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) ([]log
 		return nil, fmt.Errorf("could not parse id: id is empty or not a big.Int pointer")
 	}
 
+	value, ok := data[valueFieldName].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("could not parse value: value is empty or not a big.Int pointer")
+	}
+
 	l := log.Log{
 		ID:              raw.ID,
 		ChainID:         raw.ChainID,
@@ -64,21 +68,12 @@ func (p *Parser) ParseRawLog(raw log.RawLog, standards map[string]string) ([]log
 		Event:           raw.EventType,
 		Index:           raw.Index,
 		TransactionHash: raw.TransactionHash,
+		NeedsActionJob:  true,
+		NftID:           id.String(),
+		Amount:          value.Uint64(),
 		FromAddress:     fromAddress,
 		ToAddress:       toAddress,
 		EmittedAt:       raw.EmittedAt,
-		NeedsActionJob:  true,
-	}
-
-	contractCollectionID, nftID := erc1155.ExtractIDs(id.Bytes())
-	l.NftID = nftID.String()
-
-	// If it found the contract collection id, set it to the correct amount,
-	// otherwise it was the contract collection 0.
-	if contractCollectionID != nil {
-		l.ContractCollectionID = contractCollectionID.String()
-	} else {
-		l.ContractCollectionID = "0"
 	}
 
 	switch zeroValueAddress {

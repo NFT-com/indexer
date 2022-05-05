@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 
@@ -24,13 +23,11 @@ func (s *Store) Collections(chainID string) ([]chain.Collection, error) {
 	for result.Next() && result.Err() == nil {
 		var (
 			collection chain.Collection
-			ccID       sql.NullString
 		)
 
 		err = result.Scan(
 			&collection.ID,
 			&collection.ChainID,
-			&ccID,
 			&collection.Address,
 			&collection.Name,
 			&collection.Description,
@@ -43,24 +40,18 @@ func (s *Store) Collections(chainID string) ([]chain.Collection, error) {
 			return nil, fmt.Errorf("could not scan collection: %w", err)
 		}
 
-		collection.ContractCollectionID = ccID.String
-
 		collections = append(collections, collection)
 	}
 
 	return collections, nil
 }
 
-func (s *Store) Collection(chainID, address, contractCollectionID string) (*chain.Collection, error) {
+func (s *Store) Collection(chainID, address string) (*chain.Collection, error) {
 	query := s.build.
 		Select(collectionTableColumns...).
 		From(collectionTableName).
 		Where("chain_id = ?", chainID).
 		Where("address = ?", strings.ToLower(address)) // FIXME: All addresses should be lowercased in all similar queries.
-
-	if contractCollectionID != "" {
-		query = query.Where("contract_collection_id = ?", contractCollectionID)
-	}
 
 	result, err := query.Query()
 	if err != nil {
@@ -74,13 +65,11 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*chai
 
 	var (
 		collection chain.Collection
-		ccID       sql.NullString
 	)
 
 	err = result.Scan(
 		&collection.ID,
 		&collection.ChainID,
-		&ccID,
 		&collection.Address,
 		&collection.Name,
 		&collection.Description,
@@ -93,6 +82,5 @@ func (s *Store) Collection(chainID, address, contractCollectionID string) (*chai
 		return nil, fmt.Errorf("could not scan collection: %w", err)
 	}
 
-	collection.ContractCollectionID = ccID.String
 	return &collection, nil
 }

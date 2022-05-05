@@ -7,6 +7,7 @@ CREATE TABLE mints
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
+    amount           NUMERIC      NOT NULL,
     owner            VARCHAR(128),
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
@@ -21,6 +22,7 @@ CREATE TABLE transfers
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
+    amount           NUMERIC      NOT NULL,
     from_address     VARCHAR(128) NOT NULL,
     to_address       VARCHAR(128) NOT NULL,
     emitted_at       TIMESTAMP    NOT NULL,
@@ -51,6 +53,7 @@ CREATE TABLE burns
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
+    amount           NUMERIC      NOT NULL,
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
 );

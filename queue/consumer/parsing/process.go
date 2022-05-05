@@ -40,7 +40,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 
 		switch l.Type {
 		case log.Mint:
-			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
+			collection, err := d.dataStore.Collection(chain.ID, l.Contract)
 			if err != nil {
 				return fmt.Errorf("could not get collection (chainID:%s contract:%s): %w", chain.ChainID, l.Contract, err)
 			}
@@ -52,6 +52,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 				EventIndex:      l.Index,
 				TransactionHash: l.TransactionHash,
 				TokenID:         l.NftID,
+				Amount:          l.Amount,
 				Owner:           l.ToAddress,
 				EmittedAt:       l.EmittedAt,
 			}
@@ -85,7 +86,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 			}
 
 		case log.Transfer:
-			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
+			collection, err := d.dataStore.Collection(chain.ID, l.Contract)
 			if err != nil {
 				return fmt.Errorf("could not get collection (chainID:%s contract:%s): %w", chain.ChainID, l.Contract, err)
 			}
@@ -97,6 +98,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 				EventIndex:      l.Index,
 				TransactionHash: l.TransactionHash,
 				TokenID:         l.NftID,
+				Amount:          l.Amount,
 				FromAddress:     l.FromAddress,
 				ToAddress:       l.ToAddress,
 				EmittedAt:       l.EmittedAt,
@@ -108,7 +110,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 			}
 
 		case log.Burn:
-			collection, err := d.dataStore.Collection(chain.ID, l.Contract, l.ContractCollectionID)
+			collection, err := d.dataStore.Collection(chain.ID, l.Contract)
 			if err != nil {
 				return fmt.Errorf("could not get collection (chainID:%s contract:%s): %w", chain.ChainID, l.Contract, err)
 			}
@@ -120,6 +122,7 @@ func (d *Parsing) processLogs(input parsing.Input, logs []log.Log) error {
 				EventIndex:      l.Index,
 				TransactionHash: l.TransactionHash,
 				TokenID:         l.NftID,
+				Amount:          l.Amount,
 				EmittedAt:       l.EmittedAt,
 			}
 

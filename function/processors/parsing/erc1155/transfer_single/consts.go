@@ -14,6 +14,8 @@ const (
 	eventName = "TransferSingle"
 	// ID field name in the event arguments.
 	idFieldName = "id"
+	// Value field name in the event arguments.
+	valueFieldName = "value"
 	// eventABI is extracted from the OpenSea marketplace contract ABI:
 	// See https://etherscan.io/address/0xc36cf0cfcb5d905b8b513860db0cfe63f6cf9f5c#code.
 	eventABI = `[{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"TransferSingle","type":"event"}]`
