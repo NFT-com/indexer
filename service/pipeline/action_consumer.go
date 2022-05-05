@@ -24,6 +24,7 @@ import (
 type ActionConsumer struct {
 	log         zerolog.Logger
 	lambda      *lambda.Lambda
+	name        string
 	actions     ActionStore
 	collections CollectionStore
 	nfts        NFTStore
@@ -35,6 +36,7 @@ type ActionConsumer struct {
 func NewActionConsumer(
 	log zerolog.Logger,
 	lambda *lambda.Lambda,
+	name string,
 	actions ActionStore,
 	collections CollectionStore,
 	nfts NFTStore,
@@ -46,6 +48,7 @@ func NewActionConsumer(
 	a := ActionConsumer{
 		log:         log,
 		lambda:      lambda,
+		name:        name,
 		actions:     actions,
 		collections: collections,
 		nfts:        nfts,
@@ -133,7 +136,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		a.limit.Take()
 
 		input := &lambda.InvokeInput{
-			FunctionName: aws.String("action_worker"),
+			FunctionName: aws.String(a.name),
 			Payload:      payload,
 		}
 		result, err := a.lambda.Invoke(input)

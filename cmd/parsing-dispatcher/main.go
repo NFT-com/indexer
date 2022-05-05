@@ -40,42 +40,40 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
+		flagLogLevel        string
 		flagJobsDB          string
 		flagEventsDB        string
-		flagLogLevel        string
-		flagParsingQueue    string
+		flagRedisDB         int
+		flagRedisURL        string
+		flagAWSRegion       string
 		flagRateLimit       uint
 		flagHeightRange     uint
-		flagRedisDatabase   int
-		flagRedisNetwork    string
-		flagRedisURL        string
-		flagRegion          string
-		flagRMQTag          string
+		flagLambdaName      string
 		flagDryRun          bool
 		flagConsumerCount   uint
 		flagOpenConnections uint
 		flagIdleConnections uint
 	)
 
-	// TODO: remove batch size and instead use time-based dispatching
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
-	pflag.StringVarP(&flagEventsDB, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.StringVarP(&flagParsingQueue, "parsing-queue", "q", params.QueueParsing, "name of the queue for parsing")
-	pflag.UintVarP(&flagRateLimit, "rate-limit", "t", 10, "maximum amount of lambdas that can be invoked per second")
-	pflag.UintVarP(&flagHeightRange, "height-range", "r", 10, "maximum heights per parsing job")
-	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.StringVar(&flagRegion, "aws-region", "eu-west-1", "aws lambda region")
-	pflag.BoolVar(&flagDryRun, "dry-run", false, "when in dry run mode, no lambdas are invoked")
-	pflag.UintVar(&flagConsumerCount, "consumer-count", 100, "number of concurrent consumers for the parsing queue")
+
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagEventsDB, "graph-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
+
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum amount of lambdas that can be invoked per second")
+	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights per parsing job")
+	pflag.UintVar(&flagConsumerCount, "consumer-count", 100, "number of concurrent consumers for the parsing queue")
+	pflag.StringVar(&flagLambdaName, "lambda-name", "parsing-worker", "name of the lambda function to invoke")
+
+	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
 	pflag.Parse()
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
@@ -85,7 +83,7 @@ func run() int {
 	}
 	log = log.Level(level)
 
-	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	sessionConfig := aws.Config{Region: aws.String(flagAWSRegion)}
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
@@ -112,19 +110,19 @@ func run() int {
 	saleRepo := events.NewSaleRepository(eventsDB)
 
 	redisClient := redis.NewClient(&redis.Options{
-		Network: flagRedisNetwork,
+		Network: "tcp",
 		Addr:    flagRedisURL,
-		DB:      flagRedisDatabase,
+		DB:      flagRedisDB,
 	})
 	failed := make(chan error)
-	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
+	rmqConnection, err := rmq.OpenConnectionWithRedisClient(params.PipelineIndexer, redisClient, failed)
 	if err != nil {
 		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to redis server")
 		return failure
 	}
 	defer rmqConnection.StopAllConsuming()
 
-	queue, err := rmqConnection.OpenQueue(flagParsingQueue)
+	queue, err := rmqConnection.OpenQueue(params.QueueParsing)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open queue")
 		return failure
@@ -137,7 +135,7 @@ func run() int {
 	}
 
 	for i := uint(0); i < flagConsumerCount; i++ {
-		consumer := pipeline.NewParsingConsumer(log, lambdaClient, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewParsingConsumer(log, lambdaClient, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
 		_, err := queue.AddConsumer("parsing-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")

@@ -38,16 +38,20 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
-		flagLogLevel        string
-		flagBindAPI         string
-		flagJobsDatabase    string
+		flagLogLevel string
+
+		flagJobsDB  string
+		flagBindAPI string
+
 		flagOpenConnections uint
 		flagIdleConnections uint
 	)
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "output level for logging")
-	pflag.StringVarP(&flagBindAPI, "bind-api", "b", "127.0.0.1:8081", "host and port for jobs API endpoint")
-	pflag.StringVarP(&flagJobsDatabase, "jobs-database", "d", "", "PostgreSQL server details for jobs database")
+
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagBindAPI, "bind-api", "a", "127.0.0.1:8080", "host and port to bind to jobs API endpoint")
+
 	pflag.UintVar(&flagOpenConnections, "open-connections", 16, "limit for open database connections")
 	pflag.UintVar(&flagIdleConnections, "idle-connections", 4, "limit for idle database connections")
 
@@ -72,7 +76,7 @@ func run() int {
 	server.Use(lecho.Middleware(lecho.Config{Logger: eLog}))
 
 	// Open database connection.
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDatabase)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return failure

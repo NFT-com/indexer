@@ -33,45 +33,45 @@ func main() {
 
 func run() int {
 
-	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
-	// Command line parameter initialization.
 	var (
-		flagActionQueue     string
-		flagJobsDB          string
-		flagGraphDB         string
-		flagLogLevel        string
-		flagRedisDatabase   int
-		flagRedisNetwork    string
-		flagRedisURL        string
-		flagRegion          string
-		flagRMQTag          string
-		flagConsumerCount   uint
-		flagRateLimit       uint
-		flagOpenConnections uint
-		flagIdleConnections uint
-		flagDryRun          bool
+		flagLogLevel string
+
+		flagGraphDB   string
+		flagJobsDB    string
+		flagRedisDB   int
+		flagRedisURL  string
+		flagAWSRegion string
+
+		flagOpenConnections   uint
+		flagIdleConnections   uint
+		flagLambdaName        string
+		flagLambdaConcurrency uint
+		flagRateLimit         uint
+
+		flagDryRun bool
 	)
 
-	pflag.StringVarP(&flagActionQueue, "action-queue", "q", params.QueueAction, "name of the queue for action jobs")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "", "data database connection string")
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.StringVar(&flagRegion, "aws-region", "eu-west-1", "aws lambda region")
-	pflag.UintVar(&flagConsumerCount, "consumer-count", 900, "number of concurrent consumers for the parsing queue")
-	pflag.UintVarP(&flagRateLimit, "rate-limit", "r", 100, "number of requests to the node per second")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.BoolVar(&flagDryRun, "dry-run", false, "whether to execute a dry run (don't invoke lambda)")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+
+	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
+	pflag.StringVar(&flagLambdaName, "lambda-name", "action-worker", "name of Lambda function for invocation")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 900, "maximum number of concurrent Lambda invocations")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests to Ethereum JSON RPC API")
+
+	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
 	pflag.Parse()
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
@@ -81,7 +81,7 @@ func run() int {
 	}
 	log = log.Level(level)
 
-	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	sessionConfig := aws.Config{Region: aws.String(flagAWSRegion)}
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
@@ -108,32 +108,32 @@ func run() int {
 	traitRepo := graph.NewTraitRepository(graphDB)
 
 	redisClient := redis.NewClient(&redis.Options{
-		Network: flagRedisNetwork,
+		Network: "tcp",
 		Addr:    flagRedisURL,
-		DB:      flagRedisDatabase,
+		DB:      flagRedisDB,
 	})
 	failed := make(chan error)
-	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
+	rmqConnection, err := rmq.OpenConnectionWithRedisClient(params.PipelineIndexer, redisClient, failed)
 	if err != nil {
 		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to redis server")
 		return failure
 	}
 	defer rmqConnection.StopAllConsuming()
 
-	queue, err := rmqConnection.OpenQueue(flagActionQueue)
+	queue, err := rmqConnection.OpenQueue(params.QueueAction)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open queue")
 		return failure
 	}
 
-	err = queue.StartConsuming(int64(flagConsumerCount), 200*time.Millisecond)
+	err = queue.StartConsuming(int64(flagLambdaConcurrency), 200*time.Millisecond)
 	if err != nil {
 		log.Error().Err(err).Msg("could not start consuming")
 		return failure
 	}
 
-	for i := uint(0); i < flagConsumerCount; i++ {
-		consumer := pipeline.NewActionConsumer(log, lambdaClient, actionRepo, collectionRepo, nftRepo, traitRepo, flagRateLimit, flagDryRun)
+	for i := uint(0); i < flagLambdaConcurrency; i++ {
+		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, traitRepo, flagRateLimit, flagDryRun)
 		_, err = queue.AddConsumer("action-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")

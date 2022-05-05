@@ -29,40 +29,34 @@ func main() {
 
 func run() error {
 
-	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
-	// Command line parameter initialization.
 	var (
-		flagActionQueueName string
-		flagJobsDB          string
-		flagReadInterval    time.Duration
-		flagRMQTag          string
-		flagRedisNetwork    string
-		flagRedisURL        string
-		flagRedisDatabase   int
-		flagParsingQueue    string
-		flagLogLevel        string
+		flagLogLevel string
+
+		flagJobsDB       string
+		flagRedisNetwork string
+		flagRedisURL     string
+		flagRedisDB      int
+
 		flagOpenConnections uint
 		flagIdleConnections uint
+		flagReadInterval    time.Duration
 	)
 
-	pflag.StringVar(&flagActionQueueName, "action-queue", params.QueueAction, "name of the queue for action queue")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "data source name for database connection")
-	pflag.DurationVar(&flagReadInterval, "read-interval", 200*time.Millisecond, "data read for new jobs delay")
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
-	pflag.StringVar(&flagParsingQueue, "parsing-queue", params.QueueParsing, "name of the queue for parsing queue")
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle connections")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
+	pflag.DurationVar(&flagReadInterval, "read-interval", 200*time.Millisecond, "interval between checks for job reading")
 
 	pflag.Parse()
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
@@ -72,17 +66,16 @@ func run() error {
 	log = log.Level(level)
 
 	failed := make(chan error)
-	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	redisConnection, err := rmq.OpenConnection(params.PipelineIndexer, flagRedisNetwork, flagRedisURL, flagRedisDB, failed)
 	if err != nil {
 		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
-	produce, err := pipeline.NewProducer(redisConnection, flagParsingQueue, flagActionQueueName)
+	produce, err := pipeline.NewProducer(redisConnection, params.QueueParsing, params.QueueAction)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
 
-	// Open database connection.
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
@@ -94,15 +87,15 @@ func run() error {
 	parsingRepo := jobs.NewParsingRepository(jobsDB)
 	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	watcher := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
+	watch := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
 
 	log.Info().Msg("jobs watcher starting")
-	watcher.Watch()
+	watch.Watch()
 
 	select {
 	case <-sig:
 		log.Info().Msg("jobs watcher stopping")
-		watcher.Close()
+		watch.Close()
 	case err = <-failed:
 		log.Error().Err(err).Msg("jobs watcher aborted")
 		return err

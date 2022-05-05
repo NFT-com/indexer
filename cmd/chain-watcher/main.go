@@ -48,26 +48,28 @@ func run() error {
 
 	// Command line parameter initialization.
 	var (
-		flagChainID         string
-		flagNodeURL         string
-		flagGraphDB         string
-		flagJobsDB          string
-		flagLogLevel        string
-		flagJobLimit        uint
-		flagNotifyPeriod    time.Duration
+		flagLogLevel string
+
+		flagGraphDB string
+		flagJobsDB  string
+		flagNodeURL string
+
 		flagOpenConnections uint
 		flagIdleConnections uint
+		flagJobLimit        uint
+		flagJobInterval     time.Duration
 	)
 
-	pflag.StringVarP(&flagChainID, "chain-id", "i", "", "id of the chain")
-	pflag.StringVarP(&flagNodeURL, "node-url", "u", "", "url of the chain to connect")
-	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "", "connection details for data DB")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "connection details for jobs DB")
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+
+	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagNodeURL, "node-url", "n", "ws://127.0.0.1:8545", "URL for Ethereum JSON RPC API connection")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
 	pflag.UintVar(&flagJobLimit, "job-limit", 1000, "maximum number of pending jobs per combination")
-	pflag.DurationVarP(&flagNotifyPeriod, "notify-period", "c", 100*time.Millisecond, "how often to notify watchers to create new jobs")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
+	pflag.DurationVar(&flagJobInterval, "write-interval", time.Second, "interval between checks for job writing")
 
 	pflag.Parse()
 
@@ -159,7 +161,7 @@ func run() error {
 
 				// initialize a ticker that will notify of the latest height at
 				// regular intervals, to stay live when no blocks happen
-				live, err := ticker.NewNotifier(log, ctx, flagNotifyPeriod, latest, create)
+				live, err := ticker.NewNotifier(log, ctx, flagJobInterval, latest, create)
 				if err != nil {
 					return fmt.Errorf("could not create live notifier: %w", err)
 				}

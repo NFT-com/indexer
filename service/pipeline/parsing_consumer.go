@@ -23,6 +23,7 @@ import (
 type ParsingConsumer struct {
 	log       zerolog.Logger
 	lambda    *lambda.Lambda
+	name      string
 	parsings  ParsingStore
 	actions   ActionStore
 	transfers TransferStore
@@ -34,6 +35,7 @@ type ParsingConsumer struct {
 func NewParsingConsumer(
 	log zerolog.Logger,
 	lambda *lambda.Lambda,
+	name string,
 	parsings ParsingStore,
 	actions ActionStore,
 	transfers TransferStore,
@@ -45,6 +47,7 @@ func NewParsingConsumer(
 	p := ParsingConsumer{
 		log:       log,
 		lambda:    lambda,
+		name:      name,
 		parsings:  parsings,
 		actions:   actions,
 		transfers: transfers,
@@ -125,7 +128,7 @@ func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) 
 		p.limit.Take()
 
 		input := &lambda.InvokeInput{
-			FunctionName: aws.String("parsing_worker"),
+			FunctionName: aws.String(p.name),
 			Payload:      payload,
 		}
 		result, err := p.lambda.Invoke(input)
