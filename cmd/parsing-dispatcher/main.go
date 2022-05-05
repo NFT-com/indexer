@@ -44,7 +44,8 @@ func run() int {
 		flagEventsDB        string
 		flagLogLevel        string
 		flagParsingQueue    string
-		flagRateLimit       int
+		flagRateLimit       uint
+		flagHeightRange     uint
 		flagRedisDatabase   int
 		flagRedisNetwork    string
 		flagRedisURL        string
@@ -61,11 +62,12 @@ func run() int {
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "", "events database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.StringVarP(&flagParsingQueue, "parsing-queue", "q", params.QueueParsing, "name of the queue for parsing")
-	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
+	pflag.UintVarP(&flagRateLimit, "rate-limit", "t", 10, "maximum amount of lambdas that can be invoked per second")
+	pflag.UintVarP(&flagHeightRange, "height-range", "r", 10, "maximum heights per parsing job")
 	pflag.IntVar(&flagRedisDatabase, "database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
+	pflag.StringVar(&flagRegion, "aws-region", "eu-west-1", "aws lambda region")
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "when in dry run mode, no lambdas are invoked")
 	pflag.UintVar(&flagConsumerCount, "consumer-count", 100, "number of concurrent consumers for the parsing queue")
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")

@@ -11,6 +11,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.uber.org/ratelimit"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -27,6 +28,7 @@ type ActionConsumer struct {
 	collections CollectionStore
 	nfts        NFTStore
 	traits      TraitStore
+	limit       ratelimit.Limiter
 	dryRun      bool
 }
 
@@ -37,6 +39,7 @@ func NewActionConsumer(
 	collections CollectionStore,
 	nfts NFTStore,
 	traits TraitStore,
+	rateLimit uint,
 	dryRun bool,
 ) *ActionConsumer {
 
@@ -47,6 +50,7 @@ func NewActionConsumer(
 		collections: collections,
 		nfts:        nfts,
 		traits:      traits,
+		limit:       ratelimit.New(int(rateLimit)),
 		dryRun:      dryRun,
 	}
 
@@ -125,6 +129,8 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 
 	var output []byte
 	err = backoff.RetryNotify(func() error {
+
+		a.limit.Take()
 
 		input := &lambda.InvokeInput{
 			FunctionName: aws.String("action_worker"),

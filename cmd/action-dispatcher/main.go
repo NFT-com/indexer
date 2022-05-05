@@ -49,6 +49,7 @@ func run() int {
 		flagRegion          string
 		flagRMQTag          string
 		flagConsumerCount   uint
+		flagRateLimit       uint
 		flagOpenConnections uint
 		flagIdleConnections uint
 		flagDryRun          bool
@@ -56,13 +57,14 @@ func run() int {
 
 	pflag.StringVarP(&flagActionQueue, "action-queue", "q", params.QueueAction, "name of the queue for action jobs")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
-	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "", "data database connection string")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "", "data database connection string")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
+	pflag.StringVar(&flagRegion, "aws-region", "eu-west-1", "aws lambda region")
 	pflag.UintVar(&flagConsumerCount, "consumer-count", 900, "number of concurrent consumers for the parsing queue")
+	pflag.UintVarP(&flagRateLimit, "rate-limit", "r", 100, "number of requests to the node per second")
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "whether to execute a dry run (don't invoke lambda)")
@@ -131,7 +133,7 @@ func run() int {
 	}
 
 	for i := uint(0); i < flagConsumerCount; i++ {
-		consumer := pipeline.NewActionConsumer(log, lambdaClient, actionRepo, collectionRepo, nftRepo, traitRepo, flagDryRun)
+		consumer := pipeline.NewActionConsumer(log, lambdaClient, actionRepo, collectionRepo, nftRepo, traitRepo, flagRateLimit, flagDryRun)
 		_, err = queue.AddConsumer("action_consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
