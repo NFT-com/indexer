@@ -48,16 +48,16 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 	fetchMetadata := web2.NewMetadataFetcher()
 
 	var uri string
-	switch inputs.EventType {
+	switch inputs.Standard {
 
-	case ERC721TransferHash:
+	case jobs.StandardERC721:
 
 		uri, err = fetchURI.ERC721(ctx, action.Address, action.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
 
-	case ERC1155TransferHash, ERC1155BatchHash:
+	case jobs.StandardERC1155:
 
 		uri, err = fetchURI.ERC1155(ctx, action.Address, action.TokenID)
 		if err != nil {
@@ -66,7 +66,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 
 	default:
 
-		return nil, fmt.Errorf("unknown addition event type (%s)", inputs.EventType)
+		return nil, fmt.Errorf("unknown addition standard (%s)", inputs.Standard)
 	}
 
 	token, err := fetchMetadata.Token(ctx, uri)
@@ -74,12 +74,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 		return nil, fmt.Errorf("could not fetch metadata: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s", action.NetworkID, action.Address, action.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s", action.ChainID, action.Address, action.TokenID)))
 	nftID := hex.EncodeToString(nftHash[:])
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s-%d", action.NetworkID, action.Address, action.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s-%d", action.ChainID, action.Address, action.TokenID, i)))
 		trait := graph.Trait{
 			ID:    hex.EncodeToString(traitHash[:]),
 			NFTID: nftID,
@@ -91,14 +91,13 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 	}
 
 	nft := graph.NFT{
-		ID:           nftID,
-		CollectionID: inputs.CollectionID,
-		TokenID:      action.TokenID,
-		Name:         token.Name,
-		URI:          uri,
-		Image:        token.Image,
-		Description:  token.Description,
-		Owner:        inputs.Owner,
+		ID:          nftID,
+		TokenID:     action.TokenID,
+		Name:        token.Name,
+		URI:         uri,
+		Image:       token.Image,
+		Description: token.Description,
+		Owner:       inputs.Owner,
 	}
 
 	result := results.Addition{

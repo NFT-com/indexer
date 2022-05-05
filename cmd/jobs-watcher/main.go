@@ -12,10 +12,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/models/constants"
-	"github.com/NFT-com/indexer/queue/producer"
-	"github.com/NFT-com/indexer/service/postgres"
-	watcher "github.com/NFT-com/indexer/watcher/jobs"
+	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/service/watcher"
+	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 func main() {
@@ -42,22 +42,20 @@ func run() error {
 		flagRedisNetwork    string
 		flagRedisURL        string
 		flagRedisDatabase   int
-		flagDiscoveryQueue  string
 		flagParsingQueue    string
 		flagLogLevel        string
 		flagOpenConnections uint
 		flagIdleConnections uint
 	)
 
-	pflag.StringVar(&flagActionQueueName, "action-queue", constants.QueueAction, "name of the queue for action queue")
+	pflag.StringVar(&flagActionQueueName, "action-queue", params.QueueAction, "name of the queue for action queue")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "data source name for database connection")
 	pflag.DurationVar(&flagReadInterval, "read-interval", 200*time.Millisecond, "data read for new jobs delay")
 	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
 	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
 	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
 	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
-	pflag.StringVar(&flagDiscoveryQueue, "delivery-queue", constants.QueueDiscovery, "name of the queue for delivery queue")
-	pflag.StringVar(&flagParsingQueue, "parsing-queue", constants.QueueParsing, "name of the queue for parsing queue")
+	pflag.StringVar(&flagParsingQueue, "parsing-queue", params.QueueParsing, "name of the queue for parsing queue")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle connections")
@@ -79,28 +77,24 @@ func run() error {
 		return fmt.Errorf("could not open connection with redis: %w", err)
 	}
 
-	producer, err := producer.NewProducer(redisConnection, flagDiscoveryQueue, flagParsingQueue, flagActionQueueName)
+	produce, err := pipeline.NewProducer(redisConnection, flagParsingQueue, flagActionQueueName)
 	if err != nil {
 		return fmt.Errorf("could not create message producer: %w", err)
 	}
 
 	// Open database connection.
-	db, err := sql.Open(constants.DialectPostgres, flagJobsDB)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open SQL connection")
 		return err
 	}
-	db.SetMaxOpenConns(int(flagOpenConnections))
-	db.SetMaxIdleConns(int(flagIdleConnections))
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	// Create the database store.
-	store, err := postgres.NewStore(db)
-	if err != nil {
-		log.Error().Err(err).Msg("could not create store")
-		return err
-	}
+	parsingRepo := jobs.NewParsingRepository(jobsDB)
+	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	watcher := watcher.New(log, producer, store, flagReadInterval)
+	watcher := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
 
 	log.Info().Msg("jobs watcher starting")
 	watcher.Watch()

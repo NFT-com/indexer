@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/models/jobs"
-	"github.com/NFT-com/indexer/persister"
 )
 
 type Persister struct {
@@ -16,19 +15,19 @@ type Persister struct {
 	log       zerolog.Logger
 	ctx       context.Context
 	tick      *time.Ticker
-	store     persister.Store
+	parsings  ParsingStore
 	jobs      []*jobs.Parsing
 	watermark uint
 }
 
-func New(log zerolog.Logger, ctx context.Context, store persister.Store, delay time.Duration, watermark uint) *Persister {
+func New(log zerolog.Logger, ctx context.Context, parsings ParsingStore, delay time.Duration, watermark uint) *Persister {
 
 	p := Persister{
 		mutex:     sync.Mutex{},
 		log:       log,
 		ctx:       ctx,
 		tick:      time.NewTicker(delay),
-		store:     store,
+		parsings:  parsings,
 		jobs:      make([]*jobs.Parsing, 0, watermark),
 		watermark: watermark,
 	}
@@ -64,7 +63,7 @@ func (p *Persister) check() {
 
 func (p *Persister) execute() {
 
-	err := p.store.CreateParsingJobs(p.jobs)
+	err := p.parsings.Insert(p.jobs...)
 	if err != nil {
 		p.log.Error().Err(err).Msg("could not create parsing jobs")
 	}

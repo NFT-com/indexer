@@ -10,6 +10,7 @@ import (
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -23,7 +24,6 @@ type ActionConsumer struct {
 	log         zerolog.Logger
 	lambda      *lambda.Lambda
 	actions     ActionStore
-	networks    NetworkStore
 	collections CollectionStore
 	nfts        NFTStore
 	traits      TraitStore
@@ -34,7 +34,6 @@ func NewActionConsumer(
 	log zerolog.Logger,
 	lambda *lambda.Lambda,
 	actions ActionStore,
-	networks NetworkStore,
 	collections CollectionStore,
 	nfts NFTStore,
 	traits TraitStore,
@@ -45,7 +44,6 @@ func NewActionConsumer(
 		log:         log,
 		lambda:      lambda,
 		actions:     actions,
-		networks:    networks,
 		collections: collections,
 		nfts:        nfts,
 		traits:      traits,
@@ -66,36 +64,33 @@ func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	var action jobs.Action
-	err = json.Unmarshal(payload, &action)
+	err = a.process(payload)
 	if err != nil {
-		log.Error().Err(err).Msg("could not decode payload")
+		log.Error().Err(err).Msg("could not process payload")
 		return
 	}
+}
 
-	log = log.With().
-		Str("network_id", action.NetworkID).
-		Str("address", action.Address).
-		Str("token_id", action.TokenID).
-		Str("action_type", action.ActionType).
-		Uint64("height", action.Height).
-		Logger()
+func (a *ActionConsumer) process(payload []byte) error {
+
+	var action jobs.Action
+	err := json.Unmarshal(payload, &action)
+	if err != nil {
+		return fmt.Errorf("could not decode action job: %w", err)
+	}
 
 	err = a.actions.UpdateStatus(jobs.StatusProcessing, action.ID)
 	if err != nil {
-		a.log.Error().Err(err).Msg("could not update action job status")
-		return
-	}
-
-	notify := func(err error, dur time.Duration) {
-		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
+		return fmt.Errorf("could not update job status: %w", err)
 	}
 
 	switch action.ActionType {
 	case jobs.ActionAddition:
-		err = a.processAddition(notify, payload)
+		err = a.processAddition(payload, &action)
 	case jobs.ActionOwnerChange:
 		err = a.processOwnerChange(&action)
+	default:
+		err = fmt.Errorf("unknown action type (%s)", action.ActionType)
 	}
 
 	if err != nil {
@@ -107,23 +102,33 @@ func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("could not update action job status")
-		return
+		return fmt.Errorf("could not update job status: %w", err)
 	}
+
+	return nil
 }
 
-func (a *ActionConsumer) processAddition(notify func(error, time.Duration), input []byte) error {
+func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) error {
 
 	if a.dryRun {
 		return nil
 	}
 
+	collection, err := a.collections.One(action.ChainID, action.Address)
+	if err != nil {
+		return fmt.Errorf("could not get collection: %w", err)
+	}
+
+	notify := func(err error, dur time.Duration) {
+		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
+	}
+
 	var output []byte
-	err := backoff.RetryNotify(func() error {
+	err = backoff.RetryNotify(func() error {
 
 		input := &lambda.InvokeInput{
 			FunctionName: aws.String("action_worker"),
-			Payload:      input,
+			Payload:      payload,
 		}
 		result, err := a.lambda.Invoke(input)
 		var reqErr *lambda.TooManyRequestsException
@@ -156,6 +161,8 @@ func (a *ActionConsumer) processAddition(notify func(error, time.Duration), inpu
 		return fmt.Errorf("could not decode NFT: %w", err)
 	}
 
+	result.NFT.CollectionID = collection.ID
+
 	return nil
 }
 
@@ -170,7 +177,7 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	err = a.nfts.ChangeOwner(inputs.NFTID, inputs.NewOwner)
+	err = a.nfts.ChangeOwner(action.ChainID, action.Address, action.TokenID, inputs.NewOwner)
 	if err != nil {
 		return fmt.Errorf("could not change owner: %w", err)
 	}

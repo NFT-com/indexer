@@ -10,19 +10,17 @@ import (
 )
 
 type Producer struct {
-	connection     rmq.Connection
-	discoveryQueue string
-	parsingQueue   string
-	actionQueue    string
+	connection   rmq.Connection
+	parsingQueue string
+	actionQueue  string
 }
 
-func NewProducer(connection rmq.Connection, discoveryQueue string, parsingQueue string, actionQueue string) (*Producer, error) {
+func NewProducer(connection rmq.Connection, parsingQueue string, actionQueue string) (*Producer, error) {
 
 	p := Producer{
-		connection:     connection,
-		discoveryQueue: discoveryQueue,
-		parsingQueue:   parsingQueue,
-		actionQueue:    actionQueue,
+		connection:   connection,
+		parsingQueue: parsingQueue,
+		actionQueue:  actionQueue,
 	}
 
 	return &p, nil

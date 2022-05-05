@@ -9,7 +9,6 @@ import (
 
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"go.uber.org/ratelimit"
 
@@ -25,10 +24,8 @@ type ParsingConsumer struct {
 	lambda    *lambda.Lambda
 	parsings  ParsingStore
 	actions   ActionStore
-	mints     MintStore
 	transfers TransferStore
 	sales     SaleStore
-	burns     BurnStore
 	limit     ratelimit.Limiter
 	dryRun    bool
 }
@@ -38,10 +35,8 @@ func NewParsingConsumer(
 	lambda *lambda.Lambda,
 	parsings ParsingStore,
 	actions ActionStore,
-	mints MintStore,
 	transfers TransferStore,
 	sales SaleStore,
-	burns BurnStore,
 	rateLimit int,
 	dryRun bool,
 ) *ParsingConsumer {
@@ -51,10 +46,8 @@ func NewParsingConsumer(
 		lambda:    lambda,
 		parsings:  parsings,
 		actions:   actions,
-		mints:     mints,
 		transfers: transfers,
 		sales:     sales,
-		burns:     burns,
 		limit:     ratelimit.New(rateLimit),
 		dryRun:    dryRun,
 	}
@@ -98,7 +91,7 @@ func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
 	}
 
-	err = p.process(notify, payload)
+	err = p.process(notify, &parsing, payload)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process parsing job")
 		err = p.parsings.UpdateStatus(jobs.StatusFailed, parsing.ID)
@@ -113,7 +106,7 @@ func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
 	}
 }
 
-func (p *ParsingConsumer) process(notify func(error, time.Duration), input []byte) error {
+func (p *ParsingConsumer) process(notify func(error, time.Duration), parsing *jobs.Parsing, input []byte) error {
 
 	if p.dryRun {
 		return nil
@@ -159,11 +152,6 @@ func (p *ParsingConsumer) process(notify func(error, time.Duration), input []byt
 		return fmt.Errorf("could not decode parsing result: %w", err)
 	}
 
-	err = p.mints.Upsert(result.Mints...)
-	if err != nil {
-		return fmt.Errorf("could not upsert mints: %w", err)
-	}
-
 	err = p.transfers.Upsert(result.Transfers...)
 	if err != nil {
 		return fmt.Errorf("could not upsert transfers: %w", err)
@@ -174,18 +162,9 @@ func (p *ParsingConsumer) process(notify func(error, time.Duration), input []byt
 		return fmt.Errorf("could not upsert sales: %w", err)
 	}
 
-	err = p.burns.Upsert(result.Burns...)
+	err = p.actions.Insert(result.Actions...)
 	if err != nil {
-		return fmt.Errorf("could not upsert burns: %w", err)
-	}
-
-	for _, mint := range result.Mints {
-		action := jobs.Action{
-			ID:        uuid.New().String(),
-			NetworkID: "", // TODO
-			Address:   "", // TODO
-			TokenID:   mint.TokenID,
-		}
+		return fmt.Errorf("could not upsert action jobs: %w", err)
 	}
 
 	return nil

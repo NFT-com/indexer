@@ -106,10 +106,8 @@ func run() int {
 	eventsDB.SetMaxOpenConns(int(flagOpenConnections))
 	eventsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	mintRepo := events.NewMintRepository(eventsDB)
 	transferRepo := events.NewTransferRepository(eventsDB)
 	saleRepo := events.NewSaleRepository(eventsDB)
-	burnRepo := events.NewBurnRepository(eventsDB)
 
 	redisClient := redis.NewClient(&redis.Options{
 		Network: flagRedisNetwork,
@@ -137,7 +135,7 @@ func run() int {
 	}
 
 	for i := uint(0); i < flagConsumerCount; i++ {
-		consumer := pipeline.NewParsingConsumer(log, lambdaClient, parsingRepo, actionRepo, mintRepo, transferRepo, saleRepo, burnRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewParsingConsumer(log, lambdaClient, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
 		_, err := queue.AddConsumer("parsing_consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
@@ -149,6 +147,7 @@ func run() int {
 	case <-sig:
 		log.Info().Msg("initialized shutdown")
 	case err = <-failed:
+		log.Error().Err(err).Msg("execution failed")
 		return failure
 	}
 

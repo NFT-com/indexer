@@ -2,12 +2,13 @@
 CREATE TABLE mints
 (
     id               VARCHAR(128) PRIMARY KEY,
-    contract_address     UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
-    block_number            NUMERIC      NOT NULL,
+    chain_id         VARCHAR(128) NOT NULL,
+    contract_address VARCHAR(128) NOT NULL,
+    block_number     NUMERIC      NOT NULL,
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
-    to_address            VARCHAR(128),
+    to_address       VARCHAR(128),
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
 );
@@ -16,8 +17,9 @@ CREATE TABLE mints
 CREATE TABLE transfers
 (
     id               VARCHAR(128) PRIMARY KEY,
-    contract_address UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
-    block_number            NUMERIC      NOT NULL,
+    chain_id         VARCHAR(128) NOT NULL,
+    contract_address VARCHAR(128) NOT NULL,
+    block_number     NUMERIC      NOT NULL,
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
@@ -31,13 +33,14 @@ CREATE TABLE transfers
 CREATE TABLE sales
 (
     id               VARCHAR(128) PRIMARY KEY,
-    contract_address UUID         NOT NULL,
-    block_number            NUMERIC      NOT NULL,
+    chain_id         VARCHAR(128) NOT NULL,
+    contract_address VARCHAR(128) NOT NULL,
+    block_number     NUMERIC      NOT NULL,
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
-    seller_address           VARCHAR(128) NOT NULL,
-    buyer_address            VARCHAR(128) NOT NULL,
-    trade_price            NUMERIC      NOT NULL,
+    seller_address   VARCHAR(128) NOT NULL,
+    buyer_address    VARCHAR(128) NOT NULL,
+    trade_price      NUMERIC      NOT NULL,
     emitted_at       TIMESTAMP    NOT NULL,
     created_at       TIMESTAMP DEFAULT NOW()
 );
@@ -46,8 +49,9 @@ CREATE TABLE sales
 CREATE TABLE burns
 (
     id               VARCHAR(128) PRIMARY KEY,
-    contract_address       UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
-    block_number            NUMERIC      NOT NULL,
+    chain_id         VARCHAR(128) NOT NULL,
+    contract_address VARCHAR(128) NOT NULL,
+    block_number     NUMERIC      NOT NULL,
     event_index      INTEGER      NOT NULL,
     transaction_hash VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,

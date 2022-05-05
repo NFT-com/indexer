@@ -6,5 +6,5 @@ import (
 
 type ParsingRepository interface {
 	Find(wheres ...string) ([]*jobs.Parsing, error)
-	UpdateStatus(parsingID string, status string) error
+	UpdateStatus(status string, parsingIDs ...string) error
 }

@@ -6,8 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/NFT-com/indexer/notifier"
 	"github.com/rs/zerolog"
+
+	"github.com/NFT-com/indexer/service/notifier"
 )
 
 type Notifier struct {

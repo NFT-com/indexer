@@ -21,7 +21,6 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 	transfer := events.Transfer{
 		ID:                hex.EncodeToString(hash[:]),
 		CollectionAddress: log.Address.Hex(),
-		BaseTokenID:       "",
 		TokenID:           log.Topics[3].Big().String(),
 		BlockNumber:       log.BlockNumber,
 		EventIndex:        log.Index,

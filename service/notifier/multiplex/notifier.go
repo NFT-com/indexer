@@ -1,7 +1,7 @@
 package multiplex
 
 import (
-	"github.com/NFT-com/indexer/notifier"
+	"github.com/NFT-com/indexer/service/notifier"
 )
 
 type Notifier struct {

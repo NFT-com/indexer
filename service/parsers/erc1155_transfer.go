@@ -20,7 +20,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	id, ok := fields["id"].(*big.Int)
+	tokenID, ok := fields["id"].(*big.Int)
 	if !ok {
 		return nil, fmt.Errorf("invalid type for \"id\" field (%T)", fields["id"])
 	}
@@ -31,16 +31,9 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
 	hash := sha3.Sum256(data)
 
-	buf := make([]byte, 64)
-	_ = id.FillBytes(buf)
-
-	baseTokenID := big.NewInt(0).SetBytes(buf[:32])
-	tokenID := big.NewInt(0).SetBytes(buf[32:])
-
 	transfer := events.Transfer{
 		ID:                hex.EncodeToString(hash[:]),
 		CollectionAddress: log.Address.Hex(),
-		BaseTokenID:       baseTokenID.String(),
 		TokenID:           tokenID.String(),
 		BlockNumber:       log.BlockNumber,
 		EventIndex:        log.Index,

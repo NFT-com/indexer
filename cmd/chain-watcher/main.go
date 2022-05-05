@@ -10,20 +10,21 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/creator/job"
-	"github.com/NFT-com/indexer/jobs"
-	"github.com/NFT-com/indexer/models/constants"
-	"github.com/NFT-com/indexer/networks/web3"
-	"github.com/NFT-com/indexer/notifier"
-	"github.com/NFT-com/indexer/notifier/heads"
-	"github.com/NFT-com/indexer/notifier/multiplex"
-	"github.com/NFT-com/indexer/notifier/ticker"
-	"github.com/NFT-com/indexer/persister/database"
-	"github.com/NFT-com/indexer/service/postgres"
+	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/service/notifier"
+	"github.com/NFT-com/indexer/service/notifier/heads"
+	"github.com/NFT-com/indexer/service/notifier/multiplex"
+	"github.com/NFT-com/indexer/service/notifier/ticker"
+	"github.com/NFT-com/indexer/service/persister"
+	"github.com/NFT-com/indexer/storage/filters"
+	"github.com/NFT-com/indexer/storage/graph"
+	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
 func main() {
@@ -82,19 +83,25 @@ func run() error {
 	}
 	log = log.Level(level)
 
-	graphDB, err := sql.Open(constants.DialectPostgres, flagGraphDB)
+	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
 		return fmt.Errorf("could not open data DB: %w", err)
 	}
 	graphDB.SetMaxOpenConns(int(flagOpenConnections))
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
+	collectionRepo := graph.NewCollectionRepository(graphDB)
+	standardRepo := graph.NewStandardRepository(graphDB)
+	eventTypeRepo := graph.NewEventTypeRepository(graphDB)
+
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
 		return fmt.Errorf("could not open jobs DB: %w", err)
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+
+	parsingRepo := storage.NewParsingRepository(jobsDB)
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.
@@ -107,40 +114,26 @@ func run() error {
 		return fmt.Errorf("could not get latest block number: %w", err)
 	}
 
-	// Get the collections for the configured chain ID from the database and initialize
-	// the persister that will store jobs to the DB.
-	dataStore, err := postgres.NewStore(graphDB)
+	collections, err := collectionRepo.Find()
 	if err != nil {
-		return fmt.Errorf("could not create data store: %w", err)
-	}
-	chain, err := dataStore.Chain(flagChainID)
-	if err != nil {
-		return fmt.Errorf("could not get chain: %w", err)
-	}
-	collections, err := dataStore.Collections(chain.ID)
-	if err != nil {
-		return fmt.Errorf("could not get collections from store (chain: %s): %w", flagChainID, err)
+		return fmt.Errorf("could not get collections: %w", err)
 	}
 
-	jobsStore, err := postgres.NewStore(jobsDB)
-	if err != nil {
-		return fmt.Errorf("could not create jobs store: %w", err)
-	}
-	persist := database.NewPersister(log, ctx, jobsStore, 100*time.Millisecond, 1000)
+	persist := persister.New(log, ctx, parsingRepo, 100*time.Millisecond, 1000)
 
 	// For every collection and event type combination, initialize a ticker notifier
 	// that will notify regularly of the latest height.
 	var listens []notifier.Listener
 	for _, collection := range collections {
 
-		standards, err := dataStore.Standards(collection.ID)
+		standards, err := standardRepo.Find(filters.Eq("collection_id", collection.ID))
 		if err != nil {
 			return fmt.Errorf("could not get standards (collection: %s)", collection.ID)
 		}
 
 		for _, standard := range standards {
 
-			events, err := dataStore.EventTypes(standard.ID)
+			events, err := eventTypeRepo.Find(filters.Eq("standard_id", standard.ID))
 			if err != nil {
 				return fmt.Errorf("could not get event types: %w", err)
 			}

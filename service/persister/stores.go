@@ -1,10 +1,11 @@
-package pipeline
+package persister
 
 import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type ParsingStore interface {
+	Insert(parsings ...*jobs.Parsing) error
 	UpdateStatus(status string, parsingIDs ...string) error
 }
 

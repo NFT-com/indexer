@@ -6,5 +6,5 @@ import (
 
 type ActionRepository interface {
 	Find(wheres ...string) ([]*jobs.Action, error)
-	UpdateStatus(actionID string, status string) error
+	UpdateStatus(status string, actionIDs ...string) error
 }

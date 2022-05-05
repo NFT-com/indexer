@@ -8,6 +8,8 @@ import (
 
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/storage/graph"
+	"github.com/NFT-com/indexer/storage/jobs"
 	_ "github.com/lib/pq"
 
 	"github.com/adjust/rmq/v4"
@@ -89,6 +91,8 @@ func run() int {
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
+	actionRepo := jobs.NewActionRepository(jobsDB)
+
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
 		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not connect to graph database")
@@ -96,6 +100,10 @@ func run() int {
 	}
 	graphDB.SetMaxOpenConns(int(flagOpenConnections))
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
+
+	collectionRepo := graph.NewCollectionRepository(graphDB)
+	nftRepo := graph.NewNFTRepository(graphDB)
+	traitRepo := graph.NewTraitRepository(graphDB)
 
 	redisClient := redis.NewClient(&redis.Options{
 		Network: flagRedisNetwork,
@@ -123,7 +131,7 @@ func run() int {
 	}
 
 	for i := uint(0); i < flagConsumerCount; i++ {
-		consumer := pipeline.NewActionConsumer(log, lambdaClient)
+		consumer := pipeline.NewActionConsumer(log, lambdaClient, actionRepo, collectionRepo, nftRepo, traitRepo, flagDryRun)
 		_, err = queue.AddConsumer("action_consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
@@ -135,6 +143,7 @@ func run() int {
 	case <-sig:
 		log.Info().Msg("initialized shutdown")
 	case err = <-failed:
+		log.Error().Err(err).Msg("execution failed")
 		return failure
 	}
 

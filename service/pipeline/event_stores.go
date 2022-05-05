@@ -4,14 +4,6 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 )
 
-type BurnStore interface {
-	Upsert(burns ...*events.Burn) error
-}
-
-type MintStore interface {
-	Upsert(mints ...*events.Mint) error
-}
-
 type TransferStore interface {
 	Upsert(transfers ...*events.Transfer) error
 }
