@@ -54,11 +54,17 @@ func (j *Job) watchParsings() {
 				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
 				continue
 			}
+
 			if len(parsings) == 0 {
+				j.log.Trace().Msg("skipping parsing jobs queuing (no parsing jobs left)")
 				continue
 			}
 
-			j.handleParsingJobs(parsings)
+			err = j.handleParsingJobs(parsings)
+			if err != nil {
+				j.log.Error().Err(err).Msg("could not handle parsing jobs")
+				continue
+			}
 
 		case <-j.close:
 			return
@@ -79,10 +85,15 @@ func (j *Job) watchActions() {
 				continue
 			}
 			if len(actions) == 0 {
+				j.log.Trace().Msg("skipping action jobs queuing (no action jobs left)")
 				continue
 			}
 
-			j.handleActionJobs(actions)
+			err = j.handleActionJobs(actions)
+			if err != nil {
+				j.log.Error().Err(err).Msg("could not handle action jobs")
+				continue
+			}
 
 		case <-j.close:
 			return
@@ -90,80 +101,65 @@ func (j *Job) watchActions() {
 	}
 }
 
-func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) {
+func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 
+	parsingIDs := make([]string, 0, len(parsings))
 	for _, parsing := range parsings {
-		err := j.publishParsingJob(parsing)
+
+		log := j.log.With().
+			Uint64("chain_id", parsing.ChainID).
+			Strs("contract_addresses", parsing.ContractAddresses).
+			Strs("event_hashes", parsing.EventHashes).
+			Uint64("start_height", parsing.StartHeight).
+			Uint64("end_height", parsing.EndHeight).
+			Str("job_status", string(parsing.JobStatus)).
+			Logger()
+
+		err := j.produce.PublishParsingJob(parsing)
 		if err != nil {
-			j.log.Error().
-				Err(err).
-				Str("parsing_id", parsing.ID).
-				Uint64("chain_id", parsing.ChainID).
-				Strs("contract_addresses", parsing.ContractAddresses).
-				Strs("event_hashes", parsing.EventHashes).
-				Str("job_status", string(parsing.JobStatus)).
-				Msg("could not publish parsing job")
-			continue
+			return fmt.Errorf("could not publish parsing job: %w", err)
 		}
+
+		parsingIDs = append(parsingIDs, parsing.ID)
+
+		log.Info().Msg("parsing job published")
 	}
 
-	j.log.Info().Int("parsings", len(parsings)).Msg("queued parsing jobs")
-}
-
-func (j *Job) publishParsingJob(parsing *jobs.Parsing) error {
-
-	if parsing.JobStatus != jobs.StatusCreated {
-		return nil
-	}
-
-	err := j.produce.PublishParsingJob(parsing)
+	err := j.parsings.UpdateStatus(jobs.StatusQueued, parsingIDs...)
 	if err != nil {
-		return fmt.Errorf("could not get publish parsing job: %w", err)
-	}
-
-	err = j.parsings.UpdateStatus(parsing.ID, jobs.StatusQueued)
-	if err != nil {
-		return fmt.Errorf("could not update parsing job status: %w", err)
+		return fmt.Errorf("could not update parsing jobs status: %w", err)
 	}
 
 	return nil
 }
 
-func (j *Job) handleActionJobs(actions []*jobs.Action) {
+func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 
+	actionIDs := make([]string, 0, len(actions))
 	for _, action := range actions {
-		err := j.publishActionJob(action)
+
+		log := j.log.With().
+			Uint64("chain_id", action.ChainID).
+			Str("contract_address", action.ContractAddress).
+			Str("token_id", action.TokenID).
+			Str("action_type", action.ActionType).
+			Uint64("block_height", action.BlockHeight).
+			Str("job_status", action.JobStatus).
+			Logger()
+
+		err := j.produce.PublishActionJob(action)
 		if err != nil {
-			j.log.Error().
-				Err(err).
-				Str("action_id", action.ID).
-				Uint64("chain_id", action.ChainID).
-				Str("contract_address", action.ContractAddress).
-				Str("token_id", action.TokenID).
-				Str("action_type", action.ActionType).
-				Str("job_status", action.JobStatus).
-				Msg("could not publish action job")
-			continue
+			return fmt.Errorf("could not publish action job: %w", err)
 		}
+
+		actionIDs = append(actionIDs, action.ID)
+
+		log.Info().Msg("action job published")
 	}
 
-	j.log.Info().Int("actions", len(actions)).Msg("queued action jobs")
-}
-
-func (j *Job) publishActionJob(action *jobs.Action) error {
-
-	if action.JobStatus != jobs.StatusCreated {
-		return nil
-	}
-
-	err := j.produce.PublishActionJob(action)
+	err := j.actions.UpdateStatus(jobs.StatusQueued, actionIDs...)
 	if err != nil {
-		return fmt.Errorf("could not publish action job: %w", err)
-	}
-
-	err = j.actions.UpdateStatus(action.ID, jobs.StatusQueued)
-	if err != nil {
-		return fmt.Errorf("could not update action job status: %w", err)
+		return fmt.Errorf("could not update action jobs status: %w", err)
 	}
 
 	return nil
