@@ -42,6 +42,7 @@ func New(log zerolog.Logger, collections CollectionStore, parsings ParsingStore,
 
 func (c *Creator) Notify(height uint64) {
 	if !c.mutex.TryLock(context.Background()) {
+		c.log.Debug().Msg("skipping job creation (already in progress)")
 		return
 	}
 	defer c.mutex.Unlock()
@@ -64,6 +65,7 @@ func (c *Creator) execute(height uint64) error {
 
 	// At this point, we can already bail if we have reached the limit of jobs.
 	if pending >= c.cfg.PendingLimit {
+		c.log.Debug().Uint("pending", pending).Uint("limit", c.cfg.PendingLimit).Msg("skipping job creation (pending limit reached)")
 		return nil
 	}
 
@@ -79,6 +81,12 @@ func (c *Creator) execute(height uint64) error {
 	for _, combination := range combinations {
 		latest, err := c.parsings.Latest(combination.ChainID, combination.ContractAddress, combination.EventHash)
 		if errors.Is(err, sql.ErrNoRows) {
+			c.log.Debug().
+				Uint64("chain_id", combination.ChainID).
+				Str("contract_address", combination.ContractAddress).
+				Str("event_hash", combination.EventHash).
+				Uint64("start_height", combination.StartHeight).
+				Msg("no latest job found, using start height")
 			continue
 		}
 		if err != nil {
@@ -86,6 +94,13 @@ func (c *Creator) execute(height uint64) error {
 		}
 		if latest >= combination.StartHeight {
 			combination.StartHeight = latest + 1
+			c.log.Debug().
+				Uint64("chain_id", combination.ChainID).
+				Str("contract_address", combination.ContractAddress).
+				Str("event_hash", combination.EventHash).
+				Uint64("start_height", combination.StartHeight).
+				Uint64("latest_height", latest).
+				Msg("updating start height with latest heigth")
 		}
 	}
 
@@ -108,7 +123,7 @@ func (c *Creator) execute(height uint64) error {
 			end = height
 		}
 		if end < start {
-			c.log.Debug().Uint64("start", start).Uint64("end", end).Msg("no jobs to be created")
+			c.log.Debug().Uint64("start", start).Uint64("end", end).Msg("skipping job creation (no jobs left)")
 			break
 		}
 
