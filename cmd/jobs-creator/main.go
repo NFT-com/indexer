@@ -124,7 +124,11 @@ func run() int {
 			creator.WithHeightRange(flagHeightRange),
 		)
 		creators = append(creators, creator)
-		log.Info().Uint64("chain_id", network.ChainID).Str("name", network.Name).Msg("launching job creator for network")
+
+		log.Info().
+			Str("network", network.Name).
+			Uint64("chain_id", network.ChainID).
+			Msg("launching job creator")
 	}
 
 	// Initialize a multiplex notifier that will notify all of our creators at the
