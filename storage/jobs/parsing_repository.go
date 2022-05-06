@@ -185,13 +185,11 @@ func (p *ParsingRepository) List(status string) ([]*jobs.Parsing, error) {
 		}
 
 		var parsing jobs.Parsing
-		addresses := pq.Array(parsing.ContractAddresses)
-		hashes := pq.Array(parsing.EventHashes)
 		err = result.Scan(
 			&parsing.ID,
 			&parsing.ChainID,
-			addresses,
-			hashes,
+			pq.Array(&parsing.ContractAddresses),
+			pq.Array(&parsing.EventHashes),
 			&parsing.StartHeight,
 			&parsing.EndHeight,
 			&parsing.JobStatus,
