@@ -57,7 +57,7 @@ func run() int {
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
-	pflag.StringVarP(&flagGraphDB, "graph-database", "d", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagNodeURL, "node-url", "n", "ws://127.0.0.1:8545", "URL for Ethereum JSON RPC API connection")
 
