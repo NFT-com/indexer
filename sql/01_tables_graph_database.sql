@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS marketplaces_collections
     PRIMARY KEY (marketplace_id, collection_id)
 );
 
-CREATE TABLE IF NOT EXISTS standards_collections
+CREATE TABLE IF NOT EXISTS collections_standards
 (
     collection_id   UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
     standard_id     UUID NOT NULL REFERENCES standards ON DELETE CASCADE,

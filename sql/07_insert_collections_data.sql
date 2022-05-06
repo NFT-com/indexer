@@ -17,7 +17,7 @@ VALUES
 
 
 -- ERC-721 contracts scraped from Etherscan.io
-INSERT INTO standards_collections
-  (standard_id, collection_id)
+INSERT INTO collections_standards
+  (collection_id, standard_id)
 VALUES
-  ('f7d4c503-3a75-49c8-b72b-e18b30e14d6a', '612ecc22-36ef-4ef7-bb0b-5b864b85d089');
+  ('612ecc22-36ef-4ef7-bb0b-5b864b85d089', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
