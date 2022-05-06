@@ -40,19 +40,22 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
-		flagLogLevel        string
-		flagJobsDB          string
-		flagEventsDB        string
-		flagRedisDB         int
-		flagRedisURL        string
-		flagAWSRegion       string
-		flagRateLimit       uint
-		flagHeightRange     uint
-		flagLambdaName      string
-		flagDryRun          bool
-		flagConsumerCount   uint
-		flagOpenConnections uint
-		flagIdleConnections uint
+		flagLogLevel string
+
+		flagJobsDB     string
+		flagEventsDB   string
+		flagRedisDB    int
+		flagRedisURL   string
+		flagAWSRegion  string
+		flagLambdaName string
+
+		flagOpenConnections   uint
+		flagIdleConnections   uint
+		flagHeightRange       uint
+		flagRateLimit         uint
+		flagLambdaConcurrency uint
+
+		flagDryRun bool
 	)
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
@@ -62,13 +65,13 @@ func run() int {
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
 	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
 	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum amount of lambdas that can be invoked per second")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights per parsing job")
-	pflag.UintVar(&flagConsumerCount, "consumer-count", 100, "number of concurrent consumers for the parsing queue")
-	pflag.StringVar(&flagLambdaName, "lambda-name", "parsing-worker", "name of the lambda function to invoke")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
@@ -128,13 +131,13 @@ func run() int {
 		return failure
 	}
 
-	err = queue.StartConsuming(int64(flagConsumerCount), 200*time.Millisecond)
+	err = queue.StartConsuming(int64(flagLambdaConcurrency), 200*time.Millisecond)
 	if err != nil {
 		log.Error().Err(err).Msg("could not start consuming queue")
 		return failure
 	}
 
-	for i := uint(0); i < flagConsumerCount; i++ {
+	for i := uint(0); i < flagLambdaConcurrency; i++ {
 		consumer := pipeline.NewParsingConsumer(log, lambdaClient, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
 		_, err := queue.AddConsumer("parsing-consumer", consumer)
 		if err != nil {

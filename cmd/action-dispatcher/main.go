@@ -40,17 +40,17 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagGraphDB   string
-		flagJobsDB    string
-		flagRedisDB   int
-		flagRedisURL  string
-		flagAWSRegion string
+		flagGraphDB    string
+		flagJobsDB     string
+		flagRedisDB    int
+		flagRedisURL   string
+		flagAWSRegion  string
+		flagLambdaName string
 
 		flagOpenConnections   uint
 		flagIdleConnections   uint
-		flagLambdaName        string
-		flagLambdaConcurrency uint
 		flagRateLimit         uint
+		flagLambdaConcurrency uint
 
 		flagDryRun bool
 	)
@@ -62,12 +62,12 @@ func run() int {
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
 	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
 	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of Lambda function for invocation")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
-	pflag.StringVar(&flagLambdaName, "lambda-name", "action-worker", "name of Lambda function for invocation")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests per second")
 	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 900, "maximum number of concurrent Lambda invocations")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests to Ethereum JSON RPC API")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
