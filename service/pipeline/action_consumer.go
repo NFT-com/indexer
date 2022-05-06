@@ -85,6 +85,13 @@ func (a *ActionConsumer) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not decode action job: %w", err)
 	}
+	log := a.log.With().
+		Uint64("chain_id", action.ChainID).
+		Str("contract_address", action.ContractAddress).
+		Str("token_id", action.TokenID).
+		Str("action_type", action.ActionType).
+		Uint64("block_height", action.BlockHeight).
+		Logger()
 
 	err = a.actions.UpdateStatus(jobs.StatusProcessing, action.ID)
 	if err != nil {
@@ -101,10 +108,10 @@ func (a *ActionConsumer) process(payload []byte) error {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("could not process action job")
+		log.Error().Err(err).Msg("action job failed")
 		err = a.actions.UpdateStatus(jobs.StatusFailed, action.ID)
 	} else {
-		log.Info().Msg("action job successfully processed")
+		log.Info().Msg("action job completed")
 		err = a.actions.UpdateStatus(jobs.StatusFinished, action.ID)
 	}
 

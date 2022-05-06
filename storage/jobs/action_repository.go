@@ -91,7 +91,7 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 
 func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) error {
 
-	_, err := a.build.
+	result, err := a.build.
 		Update("actions").
 		Where("id = ANY(?)", pq.Array(actionIDs)).
 		Set("job_status", status).
@@ -99,6 +99,14 @@ func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) erro
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not update action job status: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not count affected rows: %w", err)
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil

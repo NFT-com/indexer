@@ -152,7 +152,7 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 
 func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) error {
 
-	_, err := p.build.
+	result, err := p.build.
 		Update("parsings").
 		Where("id = ANY(?)", pq.Array(parsingIDs)).
 		Set("job_status", status).
@@ -160,6 +160,14 @@ func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) er
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not count affected rows: %w", err)
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil

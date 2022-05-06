@@ -96,12 +96,16 @@ func (p *ParsingConsumer) process(payload []byte) error {
 		return fmt.Errorf("could not update job status: %w", err)
 	}
 
-	err = p.processParsing(payload, &parsing)
+	result, err := p.processParsing(payload, &parsing)
 	if err != nil {
-		log.Error().Err(err).Msg("could not process parsing job")
+		log.Error().Err(err).Msg("parsing job failed")
 		err = p.parsings.UpdateStatus(jobs.StatusFailed, parsing.ID)
 	} else {
-		log.Info().Msg("parsing job successfully processed")
+		log.Info().
+			Int("transfers", len(result.Transfers)).
+			Int("sales", len(result.Sales)).
+			Int("actions", len(result.Actions)).
+			Msg("parsing job completed")
 		err = p.parsings.UpdateStatus(jobs.StatusFinished, parsing.ID)
 	}
 
@@ -112,10 +116,10 @@ func (p *ParsingConsumer) process(payload []byte) error {
 	return nil
 }
 
-func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) error {
+func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) (*results.Parsing, error) {
 
 	if p.dryRun {
-		return nil
+		return &results.Parsing{}, nil
 	}
 
 	notify := func(err error, dur time.Duration) {
@@ -153,29 +157,29 @@ func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) 
 		return nil
 	}, backoff.NewExponentialBackOff(), notify)
 	if err != nil {
-		return fmt.Errorf("could not successfully invoke parser: %w", err)
+		return nil, fmt.Errorf("could not successfully invoke parser: %w", err)
 	}
 
 	var result results.Parsing
 	err = json.Unmarshal(output, &result)
 	if err != nil {
-		return fmt.Errorf("could not decode parsing result: %w", err)
+		return nil, fmt.Errorf("could not decode parsing result: %w", err)
 	}
 
 	err = p.transfers.Upsert(result.Transfers...)
 	if err != nil {
-		return fmt.Errorf("could not upsert transfers: %w", err)
+		return nil, fmt.Errorf("could not upsert transfers: %w", err)
 	}
 
 	err = p.sales.Upsert(result.Sales...)
 	if err != nil {
-		return fmt.Errorf("could not upsert sales: %w", err)
+		return nil, fmt.Errorf("could not upsert sales: %w", err)
 	}
 
 	err = p.actions.Insert(result.Actions...)
 	if err != nil {
-		return fmt.Errorf("could not upsert action jobs: %w", err)
+		return nil, fmt.Errorf("could not upsert action jobs: %w", err)
 	}
 
-	return nil
+	return &result, nil
 }
