@@ -29,7 +29,7 @@ func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 
 	query := a.build.
 		Insert("actions").
-		Columns(ColumnsActionJobs...)
+		Columns("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data")
 
 	for _, action := range actions {
 		query = query.Values(
@@ -40,6 +40,7 @@ func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 			action.ActionType,
 			action.BlockHeight,
 			action.JobStatus,
+			action.InputData,
 		)
 	}
 
@@ -54,7 +55,7 @@ func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 
 	result, err := a.build.
-		Select(ColumnsActionJobs...).
+		Select("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data").
 		From("actions").
 		Where("id = ?", actionID).
 		Query()
@@ -79,6 +80,7 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 		&action.ActionType,
 		&action.BlockHeight,
 		&action.JobStatus,
+		&action.InputData,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve action job: %w", err)
@@ -105,7 +107,7 @@ func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) erro
 func (a *ActionRepository) Find(wheres ...string) ([]*jobs.Action, error) {
 
 	query := a.build.
-		Select(ColumnsActionJobs...).
+		Select("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data").
 		From("actions").
 		OrderBy("block_number ASC")
 
@@ -135,6 +137,7 @@ func (a *ActionRepository) Find(wheres ...string) ([]*jobs.Action, error) {
 			&action.ActionType,
 			&action.BlockHeight,
 			&action.JobStatus,
+			&action.InputData,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)

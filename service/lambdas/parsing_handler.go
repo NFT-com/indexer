@@ -39,7 +39,7 @@ func NewParsingHandler(log zerolog.Logger) *ParsingHandler {
 func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*results.Parsing, error) {
 
 	var parsing inputs.Parsing
-	err := json.Unmarshal(job.Data, &parsing)
+	err := json.Unmarshal(job.InputData, &parsing)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode parsing inputs: %w", err)
 	}
@@ -158,7 +158,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				ActionType:      jobs.ActionAddition,
 				BlockHeight:     transfer.BlockNumber,
 				JobStatus:       jobs.StatusCreated,
-				Data:            data,
+				InputData:       data,
 			}
 			actions = append(actions, &action)
 
@@ -179,7 +179,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				ActionType:      jobs.ActionOwnerChange,
 				BlockHeight:     transfer.BlockNumber,
 				JobStatus:       jobs.StatusCreated,
-				Data:            data,
+				InputData:       data,
 			}
 			actions = append(actions, &action)
 		}

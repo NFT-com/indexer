@@ -34,7 +34,7 @@ func NewAdditionHandler(log zerolog.Logger) *AdditionHandler {
 func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*results.Addition, error) {
 
 	var inputs inputs.Addition
-	err := json.Unmarshal(action.Data, &inputs)
+	err := json.Unmarshal(action.InputData, &inputs)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode addition inputs: %w", err)
 	}

@@ -8,5 +8,5 @@ type Action struct {
 	ActionType      string `json:"action_type"`
 	BlockHeight     uint64 `json:"block_height"`
 	JobStatus       string `json:"job_status"`
-	Data            []byte `json:"data"`
+	InputData       []byte `json:"input_data"`
 }

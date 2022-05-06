@@ -118,6 +118,7 @@ func run() int {
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
 		creator := creator.New(log, collectionRepo, parsingRepo,
+			creator.WithNodeURL(flagNodeURL),
 			creator.WithChainID(network.ChainID),
 			creator.WithPendingLimit(flagPendingLimit),
 			creator.WithHeightRange(flagHeightRange),

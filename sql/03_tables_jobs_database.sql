@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS parsings
     start_height        NUMERIC        NOT NULL,
     end_height          NUMERIC        NOT NULL,
     job_status          VARCHAR(64)    NOT NULL,
+    input_data          BYTEA          NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW(),
     updated_at          TIMESTAMP
 );
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS actions
     action_type         VARCHAR(256) NOT NULL,
     block_height        NUMERIC      NOT NULL,
     job_status          VARCHAR(64)  NOT NULL,
+    input_data          BYTEA        NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW(),
     updated_at          TIMESTAMP
 );

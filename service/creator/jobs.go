@@ -3,6 +3,7 @@ package creator
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -11,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/subchen/go-trylock/v2"
 
+	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
@@ -104,6 +106,15 @@ func (c *Creator) execute(height uint64) error {
 		}
 	}
 
+	// We only need to encode the inputs once.
+	inputs := inputs.Parsing{
+		NodeURL: c.cfg.NodeURL,
+	}
+	data, err := json.Marshal(inputs)
+	if err != nil {
+		return fmt.Errorf("could not encode parsing inputs: %w", err)
+	}
+
 	// We then enter a loop where we keep creating jobs until we hit the stop condition...
 	for pending < c.cfg.PendingLimit {
 
@@ -152,11 +163,12 @@ func (c *Creator) execute(height uint64) error {
 		parsing := jobs.Parsing{
 			ID:                uuid.NewString(),
 			ChainID:           c.cfg.ChainID,
-			Status:            jobs.StatusCreated,
 			ContractAddresses: addresses,
 			EventHashes:       hashes,
 			StartHeight:       start,
 			EndHeight:         end,
+			JobStatus:         jobs.StatusCreated,
+			InputData:         data,
 		}
 		err = c.parsings.Insert(&parsing)
 		if err != nil {

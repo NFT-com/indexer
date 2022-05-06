@@ -190,7 +190,7 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 	// jobs before this one for the same NFT
 
 	var inputs inputs.OwnerChange
-	err := json.Unmarshal(action.Data, &inputs)
+	err := json.Unmarshal(action.InputData, &inputs)
 	if err != nil {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}

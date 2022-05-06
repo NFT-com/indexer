@@ -29,7 +29,7 @@ func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 
 	_, err := p.build.
 		Insert("parsings").
-		Columns(ColumnsParsingJobs...).
+		Columns("id", "chain_id", "contract_addresses", "event_hashes", "start_height", "end_height", "job_status", "input_data").
 		Values(
 			parsing.ID,
 			parsing.ChainID,
@@ -37,7 +37,8 @@ func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 			parsing.EventHashes,
 			parsing.StartHeight,
 			parsing.EndHeight,
-			parsing.Status,
+			parsing.JobStatus,
+			parsing.InputData,
 		).Exec()
 	if err != nil {
 		return fmt.Errorf("could not insert parsing job: %w", err)
@@ -112,7 +113,7 @@ func (p *ParsingRepository) Latest(chainID uint64, contractAddress string, event
 func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 
 	result, err := p.build.
-		Select(ColumnsParsingJobs...).
+		Select("id", "chain_id", "contract_addresses", "event_hashes", "start_height", "end_height", "job_status", "input_data").
 		From("parsings").
 		Where("id = ?", parsingID).
 		Query()
@@ -136,7 +137,8 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 		&parsing.EventHashes,
 		&parsing.StartHeight,
 		&parsing.EndHeight,
-		&parsing.Status,
+		&parsing.JobStatus,
+		&parsing.InputData,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve parsing job: %w", err)
@@ -163,7 +165,7 @@ func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) er
 func (p *ParsingRepository) Find(wheres ...string) ([]*jobs.Parsing, error) {
 
 	query := p.build.
-		Select(ColumnsParsingJobs...).
+		Select("id", "chain_id", "contract_addresses", "event_hashes", "start_height", "end_height", "job_status", "input_data").
 		From("parsings").
 		OrderBy("block_number ASC")
 
@@ -192,7 +194,8 @@ func (p *ParsingRepository) Find(wheres ...string) ([]*jobs.Parsing, error) {
 			&parsing.EventHashes,
 			&parsing.StartHeight,
 			&parsing.EndHeight,
-			&parsing.Status,
+			&parsing.JobStatus,
+			&parsing.InputData,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)

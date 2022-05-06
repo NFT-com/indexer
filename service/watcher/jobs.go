@@ -102,7 +102,7 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) {
 				Uint64("chain_id", parsing.ChainID).
 				Strs("contract_addresses", parsing.ContractAddresses).
 				Strs("event_hashes", parsing.EventHashes).
-				Str("status", string(parsing.Status)).
+				Str("job_status", string(parsing.JobStatus)).
 				Msg("could not publish parsing job")
 			continue
 		}
@@ -113,7 +113,7 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) {
 
 func (j *Job) publishParsingJob(parsing *jobs.Parsing) error {
 
-	if parsing.Status != jobs.StatusCreated {
+	if parsing.JobStatus != jobs.StatusCreated {
 		return nil
 	}
 
