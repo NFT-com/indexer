@@ -28,7 +28,7 @@ func NewActionRepository(db *sql.DB) *ActionRepository {
 func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 
 	query := a.build.
-		Insert(TableActionJobs).
+		Insert("actions").
 		Columns(ColumnsActionJobs...)
 
 	for _, action := range actions {
@@ -55,7 +55,7 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 
 	result, err := a.build.
 		Select(ColumnsActionJobs...).
-		From(TableActionJobs).
+		From("actions").
 		Where("id = ?", actionID).
 		Query()
 	if err != nil {
@@ -90,7 +90,7 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) error {
 
 	_, err := a.build.
-		Update(TableActionJobs).
+		Update("actions").
 		Where("id IN (?)", pq.Array(actionIDs)).
 		Set("status", status).
 		Set("updated_at", time.Now()).
@@ -106,7 +106,7 @@ func (a *ActionRepository) Find(wheres ...string) ([]*jobs.Action, error) {
 
 	query := a.build.
 		Select(ColumnsActionJobs...).
-		From(TableActionJobs).
+		From("actions").
 		OrderBy("block_number ASC")
 
 	for _, where := range wheres {

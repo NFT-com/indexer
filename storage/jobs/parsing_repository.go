@@ -28,7 +28,7 @@ func NewParsingRepository(db *sql.DB) *ParsingRepository {
 func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 
 	_, err := p.build.
-		Insert(TableParsingJobs).
+		Insert("parsings").
 		Columns(ColumnsParsingJobs...).
 		Values(
 			parsing.ID,
@@ -113,7 +113,7 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 
 	result, err := p.build.
 		Select(ColumnsParsingJobs...).
-		From(TableParsingJobs).
+		From("parsings").
 		Where("id = ?", parsingID).
 		Query()
 	if err != nil {
@@ -148,7 +148,7 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) error {
 
 	_, err := p.build.
-		Update(TableParsingJobs).
+		Update("parsings").
 		Where("id IN (?)", pq.Array(parsingIDs)).
 		Set("status", status).
 		Set("updated_at", time.Now()).
@@ -164,7 +164,7 @@ func (p *ParsingRepository) Find(wheres ...string) ([]*jobs.Parsing, error) {
 
 	query := p.build.
 		Select(ColumnsParsingJobs...).
-		From(TableParsingJobs).
+		From("parsings").
 		OrderBy("block_number ASC")
 
 	for _, where := range wheres {
