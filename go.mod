@@ -10,7 +10,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/go-redis/redis/v8 v8.3.2
-	github.com/google/uuid v1.1.5
+	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.4
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/pflag v1.0.5

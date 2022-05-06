@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS networks_marketplaces
     network_id          UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     marketplace_id      UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     contract_address    VARCHAR(128) NOT NULL,
-    PRIMARY KEY (chain_id, marketplace_id)
+    PRIMARY KEY (network_id, marketplace_id)
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_collections
@@ -90,6 +90,6 @@ CREATE TABLE IF NOT EXISTS standards_collections
 CREATE TABLE IF NOT EXISTS standards_events
 (
     standard_id UUID    NOT NULL REFERENCES standards ON DELETE CASCADE,
-    event_id    TEXT    NOT NULL REFERENCES events ON DELETE CASCADE,
+    event_id    UUID    NOT NULL REFERENCES events ON DELETE CASCADE,
     PRIMARY KEY(standard_id, event_id)
 );

@@ -2,11 +2,11 @@ package lambdas
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/sha3"
 
@@ -75,14 +75,15 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 	}
 
 	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.Address, action.TokenID)))
-	nftID := hex.EncodeToString(nftHash[:])
+	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
 		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", action.ChainID, action.Address, action.TokenID, i)))
+		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
 		trait := graph.Trait{
-			ID:    hex.EncodeToString(traitHash[:]),
-			NFTID: nftID,
+			ID:    traitID.String(),
+			NFTID: nftID.String(),
 			Name:  att.TraitType,
 			Type:  att.DisplayType,
 			Value: fmt.Sprint(att.Value),
@@ -91,7 +92,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 	}
 
 	nft := graph.NFT{
-		ID:          nftID,
+		ID:          nftID.String(),
 		TokenID:     action.TokenID,
 		Name:        token.Name,
 		URI:         uri,

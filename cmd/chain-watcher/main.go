@@ -61,8 +61,8 @@ func run() int {
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagNodeURL, "node-url", "n", "ws://127.0.0.1:8545", "URL for Ethereum JSON RPC API connection")
 
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
 	pflag.DurationVar(&flagWriteInterval, "write-interval", time.Second, "interval between checks for job writing")
 	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")

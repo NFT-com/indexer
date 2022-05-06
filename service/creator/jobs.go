@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/subchen/go-trylock/v2"
+
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type Creator struct {
@@ -134,7 +135,7 @@ func (c *Creator) execute(height uint64) error {
 			hashes = append(hashes, hash)
 		}
 		parsing := jobs.Parsing{
-			ID:                uuid.New().String(),
+			ID:                uuid.NewString(),
 			ChainID:           c.cfg.ChainID,
 			Status:            jobs.StatusCreated,
 			ContractAddresses: addresses,
