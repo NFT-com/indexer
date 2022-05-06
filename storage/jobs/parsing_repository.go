@@ -100,13 +100,17 @@ func (p *ParsingRepository) Latest(chainID uint64, contractAddress string, event
 		return 0, sql.ErrNoRows
 	}
 
-	var height uint64
+	var height sql.NullInt64
 	err = result.Scan(&height)
 	if err != nil {
 		return 0, fmt.Errorf("could not scan row: %w", err)
 	}
 
-	return height, nil
+	if !height.Valid {
+		return 0, sql.ErrNoRows
+	}
+
+	return uint64(height.Int64), nil
 }
 
 func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
