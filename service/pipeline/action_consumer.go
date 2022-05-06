@@ -155,7 +155,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		}
 
 		// retry if we ran out of requests on the Ethereum API
-		if strings.Contains(err.Error(), "Too Many Requests") {
+		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
 
