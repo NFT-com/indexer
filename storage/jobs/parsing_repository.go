@@ -33,8 +33,8 @@ func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 		Values(
 			parsing.ID,
 			parsing.ChainID,
-			parsing.ContractAddresses,
-			parsing.EventHashes,
+			pq.Array(parsing.ContractAddresses),
+			pq.Array(parsing.EventHashes),
 			parsing.StartHeight,
 			parsing.EndHeight,
 			parsing.JobStatus,
