@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 

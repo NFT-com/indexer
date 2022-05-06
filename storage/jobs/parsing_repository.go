@@ -154,7 +154,7 @@ func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) er
 
 	_, err := p.build.
 		Update("parsings").
-		Where("id IN (?)", pq.Array(parsingIDs)).
+		Where("id = ANY(?)", pq.Array(parsingIDs)).
 		Set("job_status", status).
 		Set("updated_at", time.Now()).
 		Exec()
@@ -185,11 +185,13 @@ func (p *ParsingRepository) List(status string) ([]*jobs.Parsing, error) {
 		}
 
 		var parsing jobs.Parsing
+		addresses := pq.Array(parsing.ContractAddresses)
+		hashes := pq.Array(parsing.EventHashes)
 		err = result.Scan(
 			&parsing.ID,
 			&parsing.ChainID,
-			&parsing.ContractAddresses,
-			&parsing.EventHashes,
+			addresses,
+			hashes,
 			&parsing.StartHeight,
 			&parsing.EndHeight,
 			&parsing.JobStatus,

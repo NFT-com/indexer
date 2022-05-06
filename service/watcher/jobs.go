@@ -22,7 +22,7 @@ type Job struct {
 func New(log zerolog.Logger, parsings ParsingStore, actions ActionStore, produce *pipeline.Producer, delay time.Duration) *Job {
 
 	j := Job{
-		log:      log.With().Str("component", "watcher").Logger(),
+		log:      log.With().Str("component", "jobs_watcher").Logger(),
 		parsings: parsings,
 		actions:  actions,
 		produce:  produce,

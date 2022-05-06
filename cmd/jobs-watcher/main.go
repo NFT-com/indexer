@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"

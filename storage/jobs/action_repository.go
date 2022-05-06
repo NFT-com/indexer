@@ -93,7 +93,7 @@ func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) erro
 
 	_, err := a.build.
 		Update("actions").
-		Where("id IN (?)", pq.Array(actionIDs)).
+		Where("id = ANY(?)", pq.Array(actionIDs)).
 		Set("job_status", status).
 		Set("updated_at", time.Now()).
 		Exec()
