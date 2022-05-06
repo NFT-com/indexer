@@ -4,9 +4,10 @@
 */
 CREATE OR REPLACE VIEW traits_collections AS
     SELECT t.id,
-            t.nft,
+            t.nft_id,
             t.name,
+            t.type,
             t.value,
-            n.collection
+            n.collection_id
     FROM traits t, nfts n
-    WHERE t.nft = n.id;
+    WHERE t.nft_id = n.id;
