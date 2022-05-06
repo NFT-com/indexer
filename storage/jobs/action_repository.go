@@ -27,6 +27,10 @@ func NewActionRepository(db *sql.DB) *ActionRepository {
 
 func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 
+	if len(actions) == 0 {
+		return nil
+	}
+
 	query := a.build.
 		Insert("actions").
 		Columns("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data")

@@ -24,6 +24,10 @@ func NewSaleRepository(db *sql.DB) *SaleRepository {
 
 func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 
+	if len(sales) == 0 {
+		return nil
+	}
+
 	query := s.build.
 		Insert(TableSaleEvents).
 		Columns(ColumnsSaleEvents...).

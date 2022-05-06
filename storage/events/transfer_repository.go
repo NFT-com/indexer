@@ -24,6 +24,10 @@ func NewTransferRepository(db *sql.DB) *TransferRepository {
 
 func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 
+	if len(transfers) == 0 {
+		return nil
+	}
+
 	query := t.build.
 		Insert(TableTransferEvents).
 		Columns(ColumnsTransferEvents...).

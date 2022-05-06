@@ -25,6 +25,10 @@ func NewTraitRepository(db *sql.DB) *TraitRepository {
 
 func (t *TraitRepository) Insert(traits ...*graph.Trait) error {
 
+	if len(traits) == 0 {
+		return nil
+	}
+
 	query := t.build.
 		Insert("traits").
 		Columns("id", "nft_id", "name", "type", "value")
