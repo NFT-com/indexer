@@ -63,7 +63,7 @@ ProcessLoop:
 
 		case height := <-t.heights:
 
-			t.log.Debug().Uint64("height", height).Msg("updating ticker height")
+			t.log.Debug().Uint64("height", height).Msg("updating ticker block height")
 
 			t.latest = height
 
@@ -71,7 +71,7 @@ ProcessLoop:
 
 		case <-time.After(t.cfg.NotifyInterval):
 
-			t.log.Debug().Uint64("height", t.latest).Msg("notifying ticker height")
+			t.log.Debug().Uint64("height", t.latest).Msg("notifying ticker block height")
 
 			t.listen.Notify(t.latest)
 		}
