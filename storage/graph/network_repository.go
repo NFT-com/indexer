@@ -26,7 +26,7 @@ func NewNetworkRepository(db *sql.DB) *NetworkRepository {
 func (n *NetworkRepository) List() ([]*graph.Network, error) {
 
 	result, err := n.build.
-		Select("*").
+		Select("id", "chain_id", "name", "description", "symbol").
 		From("networks").
 		Query()
 	if err != nil {
@@ -51,6 +51,8 @@ func (n *NetworkRepository) List() ([]*graph.Network, error) {
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)
 		}
+
+		networks = append(networks, &network)
 	}
 
 	return networks, nil

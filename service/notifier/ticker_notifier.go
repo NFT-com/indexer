@@ -25,7 +25,7 @@ func NewTickerNotifier(log zerolog.Logger, ctx context.Context, listen Listener,
 	}
 
 	t := TickerNotifier{
-		log:     log,
+		log:     log.With().Str("component", "ticker_notifier").Logger(),
 		ctx:     ctx,
 		listen:  listen,
 		cfg:     cfg,
