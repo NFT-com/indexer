@@ -8,19 +8,19 @@ import (
 
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/service/pipeline"
-	"github.com/NFT-com/indexer/storage/filters"
+	"github.com/NFT-com/indexer/storage/statements"
 )
 
 type Job struct {
 	log      zerolog.Logger
-	parsings ParsingRepository
-	actions  ActionRepository
+	parsings ParsingStore
+	actions  ActionStore
 	produce  *pipeline.Producer
 	delay    time.Duration
 	close    chan struct{}
 }
 
-func New(log zerolog.Logger, parsings ParsingRepository, actions ActionRepository, produce *pipeline.Producer, delay time.Duration) *Job {
+func New(log zerolog.Logger, parsings ParsingStore, actions ActionStore, produce *pipeline.Producer, delay time.Duration) *Job {
 
 	j := Job{
 		log:      log.With().Str("component", "watcher").Logger(),
@@ -50,7 +50,7 @@ func (j *Job) watchParsings() {
 
 		case <-time.After(j.delay):
 
-			parsings, err := j.parsings.Find(filters.Eq("status", jobs.StatusCreated))
+			parsings, err := j.parsings.Find(statements.Eq("status", jobs.StatusCreated))
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
 				continue
@@ -74,7 +74,7 @@ func (j *Job) watchActions() {
 
 		case <-time.After(j.delay):
 
-			actions, err := j.actions.Find(filters.Eq("status", jobs.StatusCreated))
+			actions, err := j.actions.Find(statements.Eq("status", jobs.StatusCreated))
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve action jobs")
 				continue
@@ -100,7 +100,8 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) {
 				Err(err).
 				Str("parsing_id", parsing.ID).
 				Str("chain_id", parsing.ChainID).
-				Strs("addresses", parsing.Addresses).
+				Strs("contract_addresses", parsing.ContractAddresses).
+				Strs("event_hashes", parsing.EventHashes).
 				Str("status", string(parsing.Status)).
 				Msg("could not publish parsing job")
 			continue

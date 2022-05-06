@@ -56,8 +56,9 @@ func run() error {
 
 		flagOpenConnections uint
 		flagIdleConnections uint
-		flagJobLimit        uint
 		flagJobInterval     time.Duration
+		flagPendingLimit    uint
+		flagHeightRange     uint
 	)
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
@@ -68,8 +69,9 @@ func run() error {
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
-	pflag.UintVar(&flagJobLimit, "job-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.DurationVar(&flagJobInterval, "write-interval", time.Second, "interval between checks for job writing")
+	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
+	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
 
 	pflag.Parse()
 
@@ -156,7 +158,7 @@ func run() error {
 
 				// initialize a job creator that will be notified of heights and
 				// create jobs accordingly
-				create := job.NewCreator(log, flagStartHeight, template, persist, jobsStore, flagJobLimit)
+				create := job.NewCreator(log, flagStartHeight, template, persist, jobsStore, flagPendingLimit)
 				listens = append(listens, create)
 
 				// initialize a ticker that will notify of the latest height at

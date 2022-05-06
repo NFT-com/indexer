@@ -7,5 +7,5 @@ const (
 	TableNFTs         = "nfts"
 	TableTraits       = "traits"
 	TableStandards    = "standards"
-	TableEventTypes   = "event_types"
+	TableEvents       = "event_types"
 )

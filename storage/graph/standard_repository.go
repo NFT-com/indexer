@@ -23,28 +23,32 @@ func NewStandardRepository(db *sql.DB) *StandardRepository {
 	return &s
 }
 
-func (s *StandardRepository) Find(collectionID string) ([]*graph.Standard, error) {
+func (s *StandardRepository) List() ([]*graph.Standard, error) {
 
 	result, err := s.build.
-		Select("standards.id, standards.name").
-		From("standards_collections, standards").
-		Where("standards_collections.collection = ?", collectionID).
-		Where("standards_collections.standard = standards.id").
+		Select("*").
+		From("standards").
+		OrderBy("id ASC").
 		Query()
 	if err != nil {
-		return nil, fmt.Errorf("could not query collections: %w", err)
+		return nil, fmt.Errorf("could not list collections: %w", err)
 	}
 	defer result.Close()
 
 	var standards []*graph.Standard
-	for result.Next() && result.Err() == nil {
+	for result.Next() {
+
+		if result.Err() != nil {
+			return nil, fmt.Errorf("could not get next row: %w", err)
+		}
+
 		var standard graph.Standard
 		err = result.Scan(
 			&standard.ID,
 			&standard.Name,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("could not retrieve standards list: %w", err)
+			return nil, fmt.Errorf("could not scan next row: %w", err)
 		}
 
 		standards = append(standards, &standard)

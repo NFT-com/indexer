@@ -9,54 +9,52 @@ import (
 	"github.com/NFT-com/indexer/models/graph"
 )
 
-type EventTypeRepository struct {
+type EventRepository struct {
 	build squirrel.StatementBuilderType
 }
 
-func NewEventTypeRepository(db *sql.DB) *EventTypeRepository {
+func NewEventRepository(db *sql.DB) *EventRepository {
 
 	cache := squirrel.NewStmtCache(db)
-	c := EventTypeRepository{
+	c := EventRepository{
 		build: squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
 	}
 
 	return &c
 }
 
-func (e *EventTypeRepository) EventTypes(wheres ...string) ([]*graph.EventType, error) {
+func (e *EventRepository) ListForStandard(standardID string) ([]*graph.Event, error) {
 
-	statement := e.build.
-		Select(ColumnsEventTypes...).
-		From(TableEventTypes)
-
-	for _, where := range wheres {
-		statement = statement.Where(where)
-	}
-
-	result, err := statement.Query()
+	result, err := e.build.
+		Select("events.id, events.event_hash, events.name").
+		From("events, standards_events").
+		Where("events.id = standards_events.event_id").
+		Where("standards_events.standard_id = ?", standardID).
+		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
 	}
 	defer result.Close()
 
-	eventTypes := make([]*graph.EventType, 0)
+	events := make([]*graph.Event, 0)
 	for result.Next() {
 
 		if result.Err() != nil {
 			return nil, fmt.Errorf("could not get next row: %w", result.Err())
 		}
 
-		var eventType graph.EventType
+		var event graph.Event
 		err = result.Scan(
-			&eventType.ID,
-			&eventType.Name,
+			&event.ID,
+			&event.EventHash,
+			&event.Name,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)
 		}
 
-		eventTypes = append(eventTypes, &eventType)
+		events = append(events, &event)
 	}
 
-	return eventTypes, nil
+	return events, nil
 }

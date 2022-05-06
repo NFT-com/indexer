@@ -25,30 +25,88 @@ func NewParsingRepository(db *sql.DB) *ParsingRepository {
 	return &p
 }
 
-func (p *ParsingRepository) Insert(parsings ...*jobs.Parsing) error {
+func (p *ParsingRepository) Insert(parsing *jobs.Parsing) error {
 
-	query := p.build.
+	_, err := p.build.
 		Insert(TableParsingJobs).
-		Columns(ColumnsParsingJobs...)
-
-	for _, parsing := range parsings {
-		query = query.Values(
+		Columns(ColumnsParsingJobs...).
+		Values(
 			parsing.ID,
 			parsing.ChainID,
-			parsing.Addresses,
-			parsing.EventTypes,
+			parsing.ContractAddresses,
+			parsing.EventHashes,
 			parsing.StartHeight,
 			parsing.EndHeight,
 			parsing.Status,
-		)
-	}
-
-	_, err := query.Exec()
+		).Exec()
 	if err != nil {
-		return fmt.Errorf("could not create parsing job: %w", err)
+		return fmt.Errorf("could not insert parsing job: %w", err)
 	}
 
 	return nil
+}
+
+func (p *ParsingRepository) Pending(chainID uint64) (uint, error) {
+
+	result, err := p.build.
+		Select("COUNT(id)").
+		From("parsings").
+		Where("chain_id = ?", chainID).
+		Where("status != finished").
+		Where("status != failed").
+		Query()
+
+	if err != nil {
+		return 0, fmt.Errorf("could not execute query: %w", err)
+	}
+	defer result.Close()
+
+	if result.Err() != nil {
+		return 0, fmt.Errorf("could not get result: %w", err)
+	}
+
+	if !result.Next() {
+		return 0, sql.ErrNoRows
+	}
+
+	var count uint
+	err = result.Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("could not scan row: %w", err)
+	}
+
+	return count, nil
+}
+
+func (p *ParsingRepository) Latest(chainID uint64, contractAddress string, eventHash string) (uint64, error) {
+
+	result, err := p.build.
+		Select("MAX(end_height)").
+		From("parsings").
+		Where("chain_id = ?", chainID).
+		Where("? = ANY(contract_addresses)", contractAddress).
+		Where("? = ANY(event_hashes)", eventHash).
+		Query()
+	if err != nil {
+		return 0, fmt.Errorf("could not execute query: %w", err)
+	}
+	defer result.Close()
+
+	if result.Err() != nil {
+		return 0, fmt.Errorf("could not get result: %w", err)
+	}
+
+	if !result.Next() {
+		return 0, sql.ErrNoRows
+	}
+
+	var height uint64
+	err = result.Scan(&height)
+	if err != nil {
+		return 0, fmt.Errorf("could not scan row: %w", err)
+	}
+
+	return height, nil
 }
 
 func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
@@ -74,8 +132,8 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 	err = result.Scan(
 		&parsing.ID,
 		&parsing.ChainID,
-		&parsing.Addresses,
-		&parsing.EventTypes,
+		&parsing.ContractAddresses,
+		&parsing.EventHashes,
 		&parsing.StartHeight,
 		&parsing.EndHeight,
 		&parsing.Status,
@@ -130,8 +188,8 @@ func (p *ParsingRepository) Find(wheres ...string) ([]*jobs.Parsing, error) {
 		err = result.Scan(
 			&parsing.ID,
 			&parsing.ChainID,
-			&parsing.Addresses,
-			&parsing.EventTypes,
+			&parsing.ContractAddresses,
+			&parsing.EventHashes,
 			&parsing.StartHeight,
 			&parsing.EndHeight,
 			&parsing.Status,

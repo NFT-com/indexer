@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	"github.com/NFT-com/indexer/models/graph"
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type CollectionRepository struct {
@@ -24,10 +25,10 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 	return &c
 }
 
-func (c *CollectionRepository) RetrieveByAddress(chainID string, address string, contractCollectionID string) (*graph.Collection, error) {
+func (c *CollectionRepository) One(chainID string, address string, contractCollectionID string) (*graph.Collection, error) {
 
 	query := c.build.
-		Select(ColumnsCollections...).
+		Select("*").
 		From(TableCollections).
 		Where("chain_id = ?", chainID).
 		Where("address = ?", strings.ToLower(address))
@@ -52,7 +53,6 @@ func (c *CollectionRepository) RetrieveByAddress(chainID string, address string,
 	err = result.Scan(
 		&collection.ID,
 		&collection.NetworkID,
-		&collection.BaseTokenID,
 		&collection.Name,
 		&collection.Description,
 		&collection.Symbol,
@@ -67,48 +67,42 @@ func (c *CollectionRepository) RetrieveByAddress(chainID string, address string,
 	return &collection, nil
 }
 
-func (c *CollectionRepository) Find(wheres ...string) ([]*graph.Collection, error) {
+func (c *CollectionRepository) Combinations(chainID string) ([]*jobs.Combination, error) {
 
-	statement := c.build.
-		Select(ColumnsCollections...).
-		From(TableCollections)
-
-	for _, where := range wheres {
-		statement = statement.Where(where)
-	}
-
-	result, err := statement.Query()
+	result, err := c.build.
+		Select("collections.chain_id, collections.contract_address, events.event_hash, collections.start_height").
+		From("collections, collections_standards, standards, standards_events, events").
+		Where("collections.chain_id = ?", chainID).
+		Where("collections.id = collections_standards.collection_id").
+		Where("collection_standards.standard_id = standards.id").
+		Where("standards.id = standards_events.standard_id").
+		Where("standard_events.event_id = events.id").
+		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
 	}
 	defer result.Close()
 
-	var collections []*graph.Collection
+	var combinations []*jobs.Combination
 	for result.Next() {
 
 		if result.Err() != nil {
 			return nil, fmt.Errorf("could not get next row: %w", err)
 		}
 
-		var collection graph.Collection
+		var combination jobs.Combination
 		err = result.Scan(
-			&collection.ID,
-			&collection.NetworkID,
-			&collection.ContractAddress,
-			&collection.BaseTokenID,
-			&collection.Name,
-			&collection.Description,
-			&collection.Symbol,
-			&collection.Slug,
-			&collection.ImageURL,
-			&collection.Website,
+			&combination.ChainID,
+			&combination.ContractAddress,
+			&combination.EventHash,
+			&combination.StartHeight,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)
 		}
 
-		collections = append(collections, &collection)
+		combinations = append(combinations, &combination)
 	}
 
-	return collections, nil
+	return combinations, nil
 }

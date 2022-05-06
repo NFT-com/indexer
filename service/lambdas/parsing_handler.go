@@ -19,6 +19,10 @@ import (
 	"github.com/NFT-com/indexer/service/parsers"
 )
 
+const (
+	zeroAddress = "0x0000000000000000000000000000000000000000"
+)
+
 type ParsingHandler struct {
 	log zerolog.Logger
 }
@@ -49,7 +53,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	fetch := web3.NewLogsFetcher(client)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
-	logs, err := fetch.Logs(ctx, job.Addresses, job.EventTypes, job.StartHeight, job.EndHeight)
+	logs, err := fetch.Logs(ctx, job.ContractAddresses, job.EventHashes, job.StartHeight, job.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -135,7 +139,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	for _, transfer := range transfers {
 		switch {
 
-		case transfer.FromAddress == ZeroAddress:
+		case transfer.FromAddress == zeroAddress:
 
 			inputs := inputs.Addition{
 				NodeURL:  parsing.NodeURL,

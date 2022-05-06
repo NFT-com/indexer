@@ -416,6 +416,10 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/subchen/go-trylock v1.3.0 h1:E7D8v3cWRFYtnnd6whjIM97BjbGp4JTq2LIfkd7TzYM=
+github.com/subchen/go-trylock v1.3.0/go.mod h1:ohi4/7j/bE+NTQdIFykojPECxHUh2bD2ZZNB9tDG5Lg=
+github.com/subchen/go-trylock/v2 v2.0.0 h1:XAZYp/ZvkBFuvSPAeGM0TjbMby/mHoWnnLBAv2FidUw=
+github.com/subchen/go-trylock/v2 v2.0.0/go.mod h1:jjSakPS+IvBCtFw5Fao9rQqdiCnF0ZrkzVkauvkZzLY=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70Z7CTTCmYQn2CKbY8j86K7/FAIr141uY=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
 github.com/tinylib/msgp v1.0.2/go.mod h1:+d+yLhGm8mzTaHzB+wgMYrodPfmZrzkirds8fDWklFE=
