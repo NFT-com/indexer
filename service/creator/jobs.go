@@ -139,11 +139,11 @@ func (c *Creator) execute(height uint64) error {
 		}
 
 		// Now we want to include all of the contract addresses and all of the event hashes
-		// that have a start height at or below our new start height.
+		// that have a start height at or below our end height.
 		addressSet := make(map[string]struct{})
 		hashSet := make(map[string]struct{})
 		for _, combination := range combinations {
-			if combination.StartHeight <= start {
+			if combination.StartHeight <= end {
 				addressSet[combination.ContractAddress] = struct{}{}
 				hashSet[combination.EventHash] = struct{}{}
 				combination.StartHeight = end + 1
@@ -180,7 +180,7 @@ func (c *Creator) execute(height uint64) error {
 		c.log.Info().
 			Uint64("chain_id", parsing.ChainID).
 			Strs("contract_addresses", parsing.ContractAddresses).
-			Strs("event_hashes", parsing.EventHashes).
+			Strs("event_hashesq", parsing.EventHashes).
 			Uint64("start_height", parsing.StartHeight).
 			Uint64("end_height", parsing.EndHeight).
 			Msg("parsing job created")
