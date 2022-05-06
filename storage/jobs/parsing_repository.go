@@ -179,6 +179,7 @@ func (p *ParsingRepository) List(status string) ([]*jobs.Parsing, error) {
 		Select("id", "chain_id", "contract_addresses", "event_hashes", "start_height", "end_height", "job_status", "input_data").
 		From("parsings").
 		Where("job_status = ?", status).
+		OrderBy("start_height ASC").
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)

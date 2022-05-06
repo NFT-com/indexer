@@ -118,6 +118,7 @@ func (a *ActionRepository) List(status string) ([]*jobs.Action, error) {
 		Select("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data").
 		From("actions").
 		Where("job_status = ?", status).
+		OrderBy("block_height ASC").
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
