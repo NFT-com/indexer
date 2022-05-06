@@ -1,8 +1,6 @@
-/cmd/jobs-api/jobs-api
+/cmd/action-dispatcher/action-dispatcher
+/cmd/action-worker/action-worker
+/cmd/jobs-creator/jobs-creator
 /cmd/jobs-watcher/jobs-watcher
 /cmd/parsing-dispatcher/parsing-dispatcher
-/cmd/action-dispatcher/action-dispatcher
-/cmd/chain-watcher/chain-watcher
-/cmd/chain-boostrapper/chain-boostrapper
-/parsers/web3/erc721/transfer/transfer
-/parsers/web3/opensea/ordersmatched/ordersmatched
+/cmd/parsing-worker/parsing-worker
