@@ -129,10 +129,10 @@ func run() int {
 	// same time, a ticker notifier that will trigger it each interval, and a heads
 	// notifier that will update its height.
 	multi := notifier.NewMultiNotifier(creators...)
-	interval := notifier.NewIntervalNotifier(log, ctx, multi,
+	ticker := notifier.NewTickerNotifier(log, ctx, multi,
 		notifier.WithNotifyInterval(flagWriteInterval),
 	)
-	_, err = notifier.NewBlocksNotifier(log, ctx, client, interval)
+	_, err = notifier.NewBlocksNotifier(log, ctx, client, ticker)
 	if err != nil {
 		log.Error().Err(err).Msg("could not initialize blocks notifier")
 		return failure
@@ -144,7 +144,7 @@ func run() int {
 		log.Error().Err(err).Msg("could not get latest block")
 		return failure
 	}
-	interval.Notify(latest)
+	ticker.Notify(latest)
 
 	select {
 

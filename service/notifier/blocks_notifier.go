@@ -49,13 +49,13 @@ ProcessLoop:
 
 		case <-n.ctx.Done():
 
-			n.log.Debug().Msg("terminating heads notifier")
+			n.log.Debug().Msg("terminating blocks notifier")
 
 			break ProcessLoop
 
 		case err := <-n.sub.Err():
 
-			n.log.Error().Err(err).Msg("aborting heads watcher")
+			n.log.Error().Err(err).Msg("aborting blocks notifier")
 
 			break ProcessLoop
 
@@ -63,7 +63,7 @@ ProcessLoop:
 
 			height := head.Number.Uint64()
 
-			n.log.Info().Uint64("height", height).Msg("notifying new head")
+			n.log.Info().Uint64("height", height).Msg("notifying block height")
 
 			n.listen.Notify(height)
 
