@@ -63,7 +63,7 @@ ProcessLoop:
 
 			height := head.Number.Uint64()
 
-			n.log.Info().Uint64("height", height).Msg("notifying block height")
+			n.log.Debug().Uint64("height", height).Msg("notifying block height")
 
 			n.listen.Notify(height)
 

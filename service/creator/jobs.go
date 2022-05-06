@@ -129,7 +129,7 @@ func (c *Creator) execute(height uint64) error {
 
 		// The end height will be the lower between our configured height range and
 		// the height that is available.
-		end := start + uint64(c.cfg.HeightRange)
+		end := start + uint64(c.cfg.HeightRange) - 1
 		if end > height {
 			end = height
 		}
@@ -176,6 +176,14 @@ func (c *Creator) execute(height uint64) error {
 		}
 
 		pending++
+
+		c.log.Info().
+			Uint64("chain_id", parsing.ChainID).
+			Strs("contract_addresses", parsing.ContractAddresses).
+			Strs("event_hashes", parsing.EventHashes).
+			Uint64("start_height", parsing.StartHeight).
+			Uint64("end_height", parsing.EndHeight).
+			Msg("parsing job created")
 	}
 
 	return nil
