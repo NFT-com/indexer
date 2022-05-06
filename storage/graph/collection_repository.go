@@ -68,14 +68,14 @@ func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Colle
 func (c *CollectionRepository) Combinations(chainID uint64) ([]*jobs.Combination, error) {
 
 	result, err := c.build.
-		Select("collections.chain_id, collections.contract_address, events.event_hash, collections.start_height").
+		Select("networks.chain_id, collections.contract_address, events.event_hash, collections.start_height").
 		From("networks, collections, collections_standards, standards, standards_events, events").
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").
 		Where("collections.id = collections_standards.collection_id").
-		Where("collection_standards.standard_id = standards.id").
+		Where("collections_standards.standard_id = standards.id").
 		Where("standards.id = standards_events.standard_id").
-		Where("standard_events.event_id = events.id").
+		Where("standards_events.event_id = events.id").
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
