@@ -16,14 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/config/params"
-	"github.com/NFT-com/indexer/models/inputs"
-	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
-	"github.com/NFT-com/indexer/service/notifier/heads"
-	"github.com/NFT-com/indexer/service/notifier/multiplex"
-	"github.com/NFT-com/indexer/service/notifier/ticker"
-	"github.com/NFT-com/indexer/service/persister"
-	"github.com/NFT-com/indexer/storage/filters"
 	"github.com/NFT-com/indexer/storage/graph"
 	storage "github.com/NFT-com/indexer/storage/jobs"
 )
@@ -56,7 +50,7 @@ func run() error {
 
 		flagOpenConnections uint
 		flagIdleConnections uint
-		flagJobInterval     time.Duration
+		flagWriteInterval   time.Duration
 		flagPendingLimit    uint
 		flagHeightRange     uint
 	)
@@ -69,7 +63,7 @@ func run() error {
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
-	pflag.DurationVar(&flagJobInterval, "write-interval", time.Second, "interval between checks for job writing")
+	pflag.DurationVar(&flagWriteInterval, "write-interval", time.Second, "interval between checks for job writing")
 	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
 
@@ -91,9 +85,8 @@ func run() error {
 	graphDB.SetMaxOpenConns(int(flagOpenConnections))
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
+	networkRepo := graph.NewNetworkRepository(graphDB)
 	collectionRepo := graph.NewCollectionRepository(graphDB)
-	standardRepo := graph.NewStandardRepository(graphDB)
-	eventTypeRepo := graph.NewEventTypeRepository(graphDB)
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
@@ -110,86 +103,41 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("could not connect to node: %w", err)
 	}
-	latest, err := client.BlockNumber(ctx)
+
+	// Get all of the chain IDs from the graph database and initialize one creator
+	// for each of the networks.
+	networks, err := networkRepo.List()
 	if err != nil {
-		return fmt.Errorf("could not get latest block number: %w", err)
+		return fmt.Errorf("could not retrieve networks: %w", err)
+	}
+	creators := make([]notifier.Listener, 0, len(networks))
+	for _, network := range networks {
+		creator := creator.New(log, collectionRepo, parsingRepo,
+			creator.WithChainID(network.ChainID),
+			creator.WithPendingLimit(flagPendingLimit),
+			creator.WithHeightRange(flagHeightRange),
+		)
+		creators = append(creators, creator)
 	}
 
-	collections, err := collectionRepo.Find()
-	if err != nil {
-		return fmt.Errorf("could not get collections: %w", err)
-	}
-
-	persist := persister.New(log, ctx, parsingRepo, 100*time.Millisecond, 1000)
-
-	// For every collection and event type combination, initialize a ticker notifier
-	// that will notify regularly of the latest height.
-	var listens []notifier.Listener
-	for _, collection := range collections {
-
-		standards, err := standardRepo.Find(filters.Eq("collection_id", collection.ID))
-		if err != nil {
-			return fmt.Errorf("could not get standards (collection: %s)", collection.ID)
-		}
-
-		for _, standard := range standards {
-
-			events, err := eventTypeRepo.Find(filters.Eq("standard_id", standard.ID))
-			if err != nil {
-				return fmt.Errorf("could not get event types: %w", err)
-			}
-
-			for _, event := range events {
-
-				inputs := inputs.Parsing{
-					NodeURL: flagNodeURL,
-				}
-
-				// create the job template for this combination
-				template := jobs.Parsing{
-					ID:          "",
-					ChainID:     flagChainID,
-					BlockNumber: 0,
-					Address:     collection.Address,
-					Standard:    standard.Name,
-					Event:       event.ID,
-					Status:      jobs.StatusCreated,
-				}
-
-				// initialize a job creator that will be notified of heights and
-				// create jobs accordingly
-				create := job.NewCreator(log, flagStartHeight, template, persist, jobsStore, flagPendingLimit)
-				listens = append(listens, create)
-
-				// initialize a ticker that will notify of the latest height at
-				// regular intervals, to stay live when no blocks happen
-				live, err := ticker.NewNotifier(log, ctx, flagJobInterval, latest, create)
-				if err != nil {
-					return fmt.Errorf("could not create live notifier: %w", err)
-				}
-				listens = append(listens, live)
-			}
-		}
-	}
-
-	multi := multiplex.NewNotifier(listens...)
-	_, err = heads.NewNotifier(log, ctx, client, multi)
+	// Initialize a multiplex notifier that will notify all of our creators at the
+	// same time, a ticker notifier that will trigger it each interval, and a heads
+	// notifier that will update its height.
+	multi := notifier.NewMultiNotifier(creators...)
+	interval := notifier.NewIntervalNotifier(log, ctx, multi,
+		notifier.WithNotifyInterval(flagWriteInterval),
+	)
+	_, err = notifier.NewBlocksNotifier(log, ctx, client, interval)
 	if err != nil {
 		return fmt.Errorf("could not initialize heads notifier: %w", err)
 	}
 
-	network, err := web3.New(ctx, flagNodeURL)
+	// Manually set the interval notifier to the latest height.
+	latest, err := client.BlockNumber(ctx)
 	if err != nil {
-		return fmt.Errorf("could not create web3 network: %w", err)
+		return fmt.Errorf("could not get latest block number: %w", err)
 	}
-
-	chainID, err := network.ChainID(ctx)
-	if err != nil {
-		return fmt.Errorf("could not get chain ID from network: %w", err)
-	}
-	if chainID != flagChainID {
-		return fmt.Errorf("could not start watcher: mismatch between chain ID and chain URL")
-	}
+	interval.Notify(latest)
 
 	select {
 

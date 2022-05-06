@@ -10,6 +10,6 @@ type CollectionStore interface {
 
 type ParsingStore interface {
 	Pending(chainID uint64) (uint, error)
-	Latest(chainID uint64, contractAddress string, eventHash string) (*jobs.Parsing, error)
+	Latest(chainID uint64, contractAddress string, eventHash string) (uint64, error)
 	Insert(parsings *jobs.Parsing) error
 }

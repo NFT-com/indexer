@@ -25,13 +25,14 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 	return &c
 }
 
-func (c *CollectionRepository) One(chainID string, address string, contractCollectionID string) (*graph.Collection, error) {
+func (c *CollectionRepository) One(chainID uint64, address string, contractCollectionID string) (*graph.Collection, error) {
 
 	query := c.build.
-		Select("*").
-		From(TableCollections).
-		Where("chain_id = ?", chainID).
-		Where("address = ?", strings.ToLower(address))
+		Select("collections.ID, collections.network_id, collections.name, collections.description, collections.symbol, collections.slug, collections.image_url, collections.website").
+		From("networks, collections").
+		Where("networks.chain_id = ?", chainID).
+		Where("collections.network_id = networks.id").
+		Where("collections.address = ?", strings.ToLower(address))
 	if contractCollectionID != "" {
 		query = query.Where("contract_collection_id = ?", contractCollectionID)
 	}
@@ -43,7 +44,7 @@ func (c *CollectionRepository) One(chainID string, address string, contractColle
 	defer result.Close()
 
 	if result.Err() != nil {
-		return nil, fmt.Errorf("could not get row: %w", err)
+		return nil, fmt.Errorf("could not get row: %w", result.Err())
 	}
 	if !result.Next() {
 		return nil, sql.ErrNoRows
@@ -67,12 +68,13 @@ func (c *CollectionRepository) One(chainID string, address string, contractColle
 	return &collection, nil
 }
 
-func (c *CollectionRepository) Combinations(chainID string) ([]*jobs.Combination, error) {
+func (c *CollectionRepository) Combinations(chainID uint64) ([]*jobs.Combination, error) {
 
 	result, err := c.build.
 		Select("collections.chain_id, collections.contract_address, events.event_hash, collections.start_height").
-		From("collections, collections_standards, standards, standards_events, events").
-		Where("collections.chain_id = ?", chainID).
+		From("networks, collections, collections_standards, standards, standards_events, events").
+		Where("networks.chain_id = ?", chainID).
+		Where("collections.network_id = networks.id").
 		Where("collections.id = collections_standards.collection_id").
 		Where("collection_standards.standard_id = standards.id").
 		Where("standards.id = standards_events.standard_id").
@@ -87,7 +89,7 @@ func (c *CollectionRepository) Combinations(chainID string) ([]*jobs.Combination
 	for result.Next() {
 
 		if result.Err() != nil {
-			return nil, fmt.Errorf("could not get next row: %w", err)
+			return nil, fmt.Errorf("could not get next row: %w", result.Err())
 		}
 
 		var combination jobs.Combination

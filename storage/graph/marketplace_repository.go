@@ -38,7 +38,7 @@ func (m *MarketplaceRepository) RetrieveByAddress(chainID string, address string
 	defer result.Close()
 
 	if result.Err() != nil {
-		return nil, fmt.Errorf("could not get row: %w", err)
+		return nil, fmt.Errorf("could not get row: %w", result.Err())
 	}
 	if !result.Next() {
 		return nil, sql.ErrNoRows

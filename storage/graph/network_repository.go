@@ -23,6 +23,39 @@ func NewNetworkRepository(db *sql.DB) *NetworkRepository {
 	return &c
 }
 
+func (n *NetworkRepository) List() ([]*graph.Network, error) {
+
+	result, err := n.build.
+		Select("*").
+		From("networks").
+		Query()
+	if err != nil {
+		return nil, fmt.Errorf("could not execute query: %w", err)
+	}
+
+	var networks []*graph.Network
+	for result.Next() {
+
+		if result.Err() != nil {
+			return nil, fmt.Errorf("could not get next row: %w", result.Err())
+		}
+
+		var network graph.Network
+		err = result.Scan(
+			&network.ID,
+			&network.ChainID,
+			&network.Name,
+			&network.Description,
+			&network.Symbol,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan next row: %w", err)
+		}
+	}
+
+	return networks, nil
+}
+
 func (n *NetworkRepository) Retrieve(chainID string) (*graph.Network, error) {
 
 	result, err := n.build.
@@ -36,7 +69,7 @@ func (n *NetworkRepository) Retrieve(chainID string) (*graph.Network, error) {
 	defer result.Close()
 
 	if result.Err() != nil {
-		return nil, fmt.Errorf("could not get row: %w", err)
+		return nil, fmt.Errorf("could not get row: %w", result.Err())
 	}
 	if !result.Next() {
 		return nil, sql.ErrNoRows

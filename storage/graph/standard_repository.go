@@ -39,7 +39,7 @@ func (s *StandardRepository) List() ([]*graph.Standard, error) {
 	for result.Next() {
 
 		if result.Err() != nil {
-			return nil, fmt.Errorf("could not get next row: %w", err)
+			return nil, fmt.Errorf("could not get next row: %w", result.Err())
 		}
 
 		var standard graph.Standard

@@ -13,7 +13,7 @@ import (
 	"github.com/subchen/go-trylock/v2"
 )
 
-type Jobs struct {
+type Creator struct {
 	mutex       trylock.TryLocker
 	log         zerolog.Logger
 	collections CollectionStore
@@ -21,14 +21,14 @@ type Jobs struct {
 	cfg         Config
 }
 
-func NewCreator(log zerolog.Logger, collections CollectionStore, parsings ParsingStore, options ...Option) *Jobs {
+func New(log zerolog.Logger, collections CollectionStore, parsings ParsingStore, options ...Option) *Creator {
 
 	cfg := DefaultConfig
 	for _, option := range options {
 		option(&cfg)
 	}
 
-	c := Jobs{
+	c := Creator{
 		mutex:       trylock.New(),
 		log:         log.With().Str("component", "jobs_creator").Logger(),
 		collections: collections,
@@ -39,7 +39,7 @@ func NewCreator(log zerolog.Logger, collections CollectionStore, parsings Parsin
 	return &c
 }
 
-func (c *Jobs) Notify(height uint64) {
+func (c *Creator) Notify(height uint64) {
 	if !c.mutex.TryLock(context.Background()) {
 		return
 	}
@@ -52,7 +52,7 @@ func (c *Jobs) Notify(height uint64) {
 	}
 }
 
-func (c *Jobs) execute(height uint64) error {
+func (c *Creator) execute(height uint64) error {
 
 	// First, we get the number of pending jobs in the DB, so that we don't create
 	// new jobs if we are above that.
@@ -83,8 +83,8 @@ func (c *Jobs) execute(height uint64) error {
 		if err != nil {
 			return fmt.Errorf("could not get latest parsing job: %w", err)
 		}
-		if latest.EndHeight >= combination.StartHeight {
-			combination.StartHeight = latest.EndHeight + 1
+		if latest >= combination.StartHeight {
+			combination.StartHeight = latest + 1
 		}
 	}
 

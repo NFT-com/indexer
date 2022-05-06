@@ -1,4 +1,4 @@
-package heads
+package notifier
 
 import (
 	"context"
@@ -9,19 +9,17 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-
-	"github.com/NFT-com/indexer/service/notifier"
 )
 
-type Notifier struct {
+type BlocksNotifier struct {
 	log    zerolog.Logger
 	ctx    context.Context
 	heads  chan *types.Header
 	sub    ethereum.Subscription
-	listen notifier.Listener
+	listen Listener
 }
 
-func NewNotifier(log zerolog.Logger, ctx context.Context, cli *ethclient.Client, listen notifier.Listener) (*Notifier, error) {
+func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, cli *ethclient.Client, listen Listener) (*BlocksNotifier, error) {
 
 	heads := make(chan *types.Header, 1)
 	sub, err := cli.SubscribeNewHead(ctx, heads)
@@ -29,8 +27,8 @@ func NewNotifier(log zerolog.Logger, ctx context.Context, cli *ethclient.Client,
 		return nil, fmt.Errorf("could not subscribe to heads: %w", err)
 	}
 
-	n := Notifier{
-		log:    log.With().Str("component", "heads_notifier").Logger(),
+	n := BlocksNotifier{
+		log:    log.With().Str("component", "blocks_notifier").Logger(),
 		ctx:    ctx,
 		heads:  heads,
 		sub:    sub,
@@ -42,7 +40,7 @@ func NewNotifier(log zerolog.Logger, ctx context.Context, cli *ethclient.Client,
 	return &n, nil
 }
 
-func (n *Notifier) process() {
+func (n *BlocksNotifier) process() {
 
 ProcessLoop:
 	for {
