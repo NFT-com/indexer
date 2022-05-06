@@ -52,14 +52,14 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 
 	case jobs.StandardERC721:
 
-		uri, err = fetchURI.ERC721(ctx, action.Address, action.TokenID)
+		uri, err = fetchURI.ERC721(ctx, action.ContractAddress, action.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
 
 	case jobs.StandardERC1155:
 
-		uri, err = fetchURI.ERC1155(ctx, action.Address, action.TokenID)
+		uri, err = fetchURI.ERC1155(ctx, action.ContractAddress, action.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
@@ -74,12 +74,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 		return nil, fmt.Errorf("could not fetch metadata: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.Address, action.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
 	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", action.ChainID, action.Address, action.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", action.ChainID, action.ContractAddress, action.TokenID, i)))
 		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
 		trait := graph.Trait{
 			ID:    traitID.String(),

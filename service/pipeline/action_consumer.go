@@ -121,7 +121,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return nil
 	}
 
-	collection, err := a.collections.One(action.ChainID, action.Address)
+	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
 	if err != nil {
 		return fmt.Errorf("could not get collection: %w", err)
 	}
@@ -195,7 +195,7 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	collection, err := a.collections.One(action.ChainID, action.Address)
+	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
 	if err != nil {
 		return fmt.Errorf("could not get collection: %w", err)
 	}

@@ -151,14 +151,14 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				return nil, fmt.Errorf("could not encode addition inputs: %w", err)
 			}
 			action := jobs.Action{
-				ID:         uuid.NewString(),
-				ChainID:    transfer.ChainID,
-				Address:    transfer.CollectionAddress,
-				TokenID:    transfer.TokenID,
-				ActionType: jobs.ActionAddition,
-				Height:     transfer.BlockNumber,
-				Data:       data,
-				Status:     jobs.StatusCreated,
+				ID:              uuid.NewString(),
+				ChainID:         transfer.ChainID,
+				ContractAddress: transfer.CollectionAddress,
+				TokenID:         transfer.TokenID,
+				ActionType:      jobs.ActionAddition,
+				BlockHeight:     transfer.BlockNumber,
+				JobStatus:       jobs.StatusCreated,
+				Data:            data,
 			}
 			actions = append(actions, &action)
 
@@ -172,14 +172,14 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				return nil, fmt.Errorf("could not encode owner change inputs: %w", err)
 			}
 			action := jobs.Action{
-				ID:         uuid.NewString(),
-				ChainID:    transfer.ChainID,
-				Address:    transfer.CollectionAddress,
-				TokenID:    transfer.TokenID,
-				ActionType: jobs.ActionOwnerChange,
-				Height:     transfer.BlockNumber,
-				Data:       data,
-				Status:     jobs.StatusCreated,
+				ID:              uuid.NewString(),
+				ChainID:         transfer.ChainID,
+				ContractAddress: transfer.CollectionAddress,
+				TokenID:         transfer.TokenID,
+				ActionType:      jobs.ActionOwnerChange,
+				BlockHeight:     transfer.BlockNumber,
+				JobStatus:       jobs.StatusCreated,
+				Data:            data,
 			}
 			actions = append(actions, &action)
 		}

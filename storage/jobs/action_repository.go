@@ -35,11 +35,11 @@ func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 		query = query.Values(
 			action.ID,
 			action.ChainID,
-			action.Address,
+			action.ContractAddress,
 			action.TokenID,
 			action.ActionType,
-			action.Height,
-			action.Status,
+			action.BlockHeight,
+			action.JobStatus,
 		)
 	}
 
@@ -74,11 +74,11 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	err = result.Scan(
 		&action.ID,
 		&action.ChainID,
-		&action.Address,
+		&action.ContractAddress,
 		&action.TokenID,
 		&action.ActionType,
-		&action.Height,
-		&action.Status,
+		&action.BlockHeight,
+		&action.JobStatus,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve action job: %w", err)
@@ -130,11 +130,11 @@ func (a *ActionRepository) Find(wheres ...string) ([]*jobs.Action, error) {
 		err = result.Scan(
 			&action.ID,
 			&action.ChainID,
-			&action.Address,
+			&action.ContractAddress,
 			&action.TokenID,
 			&action.ActionType,
-			&action.Height,
-			&action.Status,
+			&action.BlockHeight,
+			&action.JobStatus,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("could not scan next row: %w", err)

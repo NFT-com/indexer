@@ -139,9 +139,10 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) {
 				Err(err).
 				Str("action_id", action.ID).
 				Uint64("chain_id", action.ChainID).
-				Str("address", action.Address).
+				Str("contract_address", action.ContractAddress).
 				Str("token_id", action.TokenID).
-				Str("status", string(action.Status)).
+				Str("action_type", action.ActionType).
+				Str("job_status", action.JobStatus).
 				Msg("could not publish action job")
 			continue
 		}
@@ -152,7 +153,7 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) {
 
 func (j *Job) publishActionJob(action *jobs.Action) error {
 
-	if action.Status != jobs.StatusCreated {
+	if action.JobStatus != jobs.StatusCreated {
 		return nil
 	}
 

@@ -8,6 +8,6 @@ type Parsing struct {
 	EventHashes       []string `json:"event_hashes"`
 	StartHeight       uint64   `json:"start_height"`
 	EndHeight         uint64   `json:"end_height"`
-	Status            string   `json:"status"`
+	Status            string   `json:"job_status"`
 	Data              []byte   `json:"data"`
 }
