@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -18,16 +16,16 @@ import (
 	"github.com/NFT-com/indexer/storage/jobs"
 )
 
+const (
+	success = 0
+	failure = 1
+)
+
 func main() {
-	err := run()
-	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
-		log.Fatal(err)
-	}
+	os.Exit(run())
 }
 
-func run() error {
+func run() int {
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -35,10 +33,9 @@ func run() error {
 	var (
 		flagLogLevel string
 
-		flagJobsDB       string
-		flagRedisNetwork string
-		flagRedisURL     string
-		flagRedisDB      int
+		flagJobsDB   string
+		flagRedisURL string
+		flagRedisDB  int
 
 		flagOpenConnections uint
 		flagIdleConnections uint
@@ -61,25 +58,28 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Error().Err(err).Str("log_level", flagLogLevel).Msg("could not parse log level")
+		return failure
 	}
 	log = log.Level(level)
 
 	failed := make(chan error)
-	redisConnection, err := rmq.OpenConnection(params.PipelineIndexer, flagRedisNetwork, flagRedisURL, flagRedisDB, failed)
+	redisConnection, err := rmq.OpenConnection(params.PipelineIndexer, "tcp", flagRedisURL, flagRedisDB, failed)
 	if err != nil {
-		return fmt.Errorf("could not open connection with redis: %w", err)
+		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to Redis")
+		return failure
 	}
 
 	produce, err := pipeline.NewProducer(redisConnection, params.QueueParsing, params.QueueAction)
 	if err != nil {
-		return fmt.Errorf("could not create message producer: %w", err)
+		log.Error().Err(err).Msg("could not create pipeline producer")
+		return failure
 	}
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Msg("could not open SQL connection")
-		return err
+		log.Error().Err(err).Str("jobs_db", flagJobsDB).Msg("could not open jobs database")
+		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
@@ -98,7 +98,7 @@ func run() error {
 		watch.Close()
 	case err = <-failed:
 		log.Error().Err(err).Msg("jobs watcher aborted")
-		return err
+		return failure
 	}
 
 	go func() {
@@ -109,5 +109,5 @@ func run() error {
 
 	log.Info().Msg("jobs watcher done")
 
-	return nil
+	return success
 }
