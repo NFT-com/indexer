@@ -94,7 +94,7 @@ func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) erro
 	_, err := a.build.
 		Update("actions").
 		Where("id IN (?)", pq.Array(actionIDs)).
-		Set("status", status).
+		Set("job_status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {
@@ -104,18 +104,13 @@ func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) erro
 	return nil
 }
 
-func (a *ActionRepository) Find(wheres ...string) ([]*jobs.Action, error) {
+func (a *ActionRepository) List(status string) ([]*jobs.Action, error) {
 
-	query := a.build.
+	result, err := a.build.
 		Select("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data").
 		From("actions").
-		OrderBy("block_number ASC")
-
-	for _, where := range wheres {
-		query = query.Where(where)
-	}
-
-	result, err := query.Query()
+		Where("job_status = ?", status).
+		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
 	}

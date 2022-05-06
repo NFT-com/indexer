@@ -8,7 +8,6 @@ import (
 
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/service/pipeline"
-	"github.com/NFT-com/indexer/storage/statements"
 )
 
 type Job struct {
@@ -50,7 +49,7 @@ func (j *Job) watchParsings() {
 
 		case <-time.After(j.delay):
 
-			parsings, err := j.parsings.Find(statements.Eq("status", jobs.StatusCreated))
+			parsings, err := j.parsings.List(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve parsing jobs")
 				continue
@@ -74,7 +73,7 @@ func (j *Job) watchActions() {
 
 		case <-time.After(j.delay):
 
-			actions, err := j.actions.Find(statements.Eq("status", jobs.StatusCreated))
+			actions, err := j.actions.List(jobs.StatusCreated)
 			if err != nil {
 				j.log.Error().Err(err).Msg("could not retrieve action jobs")
 				continue

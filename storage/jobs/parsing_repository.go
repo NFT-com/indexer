@@ -53,10 +53,9 @@ func (p *ParsingRepository) Pending(chainID uint64) (uint, error) {
 		Select("COUNT(id)").
 		From("parsings").
 		Where("chain_id = ?", chainID).
-		Where("status != finished").
-		Where("status != failed").
+		Where("job_status != ?", "finished").
+		Where("job_status != ?", "failed").
 		Query()
-
 	if err != nil {
 		return 0, fmt.Errorf("could not execute query: %w", err)
 	}
@@ -152,7 +151,7 @@ func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) er
 	_, err := p.build.
 		Update("parsings").
 		Where("id IN (?)", pq.Array(parsingIDs)).
-		Set("status", status).
+		Set("job_status", status).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {
@@ -162,18 +161,13 @@ func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) er
 	return nil
 }
 
-func (p *ParsingRepository) Find(wheres ...string) ([]*jobs.Parsing, error) {
+func (p *ParsingRepository) List(status string) ([]*jobs.Parsing, error) {
 
-	query := p.build.
+	result, err := p.build.
 		Select("id", "chain_id", "contract_addresses", "event_hashes", "start_height", "end_height", "job_status", "input_data").
 		From("parsings").
-		OrderBy("block_number ASC")
-
-	for _, where := range wheres {
-		query = query.Where(where)
-	}
-
-	result, err := query.Query()
+		Where("job_status = ?", status).
+		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
 	}
