@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS parsings
 (
     id                  UUID PRIMARY KEY,
-    chain_id            VARCHAR(128)   NOT NULL,
+    chain_id            NUMERIC        NOT NULL,
     contract_addresses  VARCHAR(128)[] NOT NULL,
     event_hashes        VARCHAR(256)[] NOT NULL,
     start_height        NUMERIC        NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS parsings
 CREATE TABLE IF NOT EXISTS actions
 (
     id                  UUID PRIMARY KEY,
-    chain_id            VARCHAR(128) NOT NULL,
+    chain_id            NUMERIC      NOT NULL,
     contract_address    VARCHAR(128) NOT NULL,
     token_id            VARCHAR(256) NOT NULL,
     action_type         VARCHAR(256) NOT NULL,

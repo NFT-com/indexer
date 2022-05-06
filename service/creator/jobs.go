@@ -180,7 +180,7 @@ func (c *Creator) execute(height uint64) error {
 		c.log.Info().
 			Uint64("chain_id", parsing.ChainID).
 			Strs("contract_addresses", parsing.ContractAddresses).
-			Strs("event_hashesq", parsing.EventHashes).
+			Strs("event_hashes", parsing.EventHashes).
 			Uint64("start_height", parsing.StartHeight).
 			Uint64("end_height", parsing.EndHeight).
 			Msg("parsing job created")

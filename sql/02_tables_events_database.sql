@@ -2,7 +2,7 @@
 CREATE TABLE transfers
 (
     id               UUID PRIMARY KEY,
-    chain_id         VARCHAR(128) NOT NULL,
+    chain_id         NUMERIC      NOT NULL,
     contract_address VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
     block_number     NUMERIC      NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE transfers
 CREATE TABLE sales
 (
     id               UUID PRIMARY KEY,
-    chain_id         VARCHAR(128) NOT NULL,
+    chain_id         NUMERIC      NOT NULL,
     contract_address VARCHAR(128) NOT NULL,
     token_id         VARCHAR(128) NOT NULL,
     block_number     NUMERIC      NOT NULL,
