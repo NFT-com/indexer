@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -22,14 +20,16 @@ import (
 	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
+const (
+	success = 0
+	failure = 1
+)
+
 func main() {
-	err := run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	os.Exit(run())
 }
 
-func run() error {
+func run() int {
 
 	// Seed random generator for jitter.
 	rand.Seed(time.Now().UnixNano())
@@ -74,13 +74,15 @@ func run() error {
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Error().Err(err).Str("log_level", flagLogLevel).Msg("could not parse log level")
+		return failure
 	}
 	log = log.Level(level)
 
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
-		return fmt.Errorf("could not open data DB: %w", err)
+		log.Error().Err(err).Str("graph_db", flagGraphDB).Msg("could not open graph database")
+		return failure
 	}
 	graphDB.SetMaxOpenConns(int(flagOpenConnections))
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
@@ -90,7 +92,8 @@ func run() error {
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		return fmt.Errorf("could not open jobs DB: %w", err)
+		log.Error().Err(err).Str("jobs_db", flagGraphDB).Msg("could not open jobs database")
+		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
@@ -101,14 +104,16 @@ func run() error {
 	// the watchers properly.
 	client, err := ethclient.DialContext(ctx, flagNodeURL)
 	if err != nil {
-		return fmt.Errorf("could not connect to node: %w", err)
+		log.Error().Err(err).Str("node_url", flagNodeURL).Msg("could not connect to node API")
+		return failure
 	}
 
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
 	networks, err := networkRepo.List()
 	if err != nil {
-		return fmt.Errorf("could not retrieve networks: %w", err)
+		log.Error().Err(err).Msg("could not retrieve list of networks")
+		return failure
 	}
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
@@ -129,13 +134,15 @@ func run() error {
 	)
 	_, err = notifier.NewBlocksNotifier(log, ctx, client, interval)
 	if err != nil {
-		return fmt.Errorf("could not initialize heads notifier: %w", err)
+		log.Error().Err(err).Msg("could not initialize blocks notifier")
+		return failure
 	}
 
 	// Manually set the interval notifier to the latest height.
 	latest, err := client.BlockNumber(ctx)
 	if err != nil {
-		return fmt.Errorf("could not get latest block number: %w", err)
+		log.Error().Err(err).Msg("could not get latest block")
+		return failure
 	}
 	interval.Notify(latest)
 
@@ -147,5 +154,5 @@ func run() error {
 		cancel()
 	}
 
-	return nil
+	return success
 }
