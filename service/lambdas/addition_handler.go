@@ -74,12 +74,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 		return nil, fmt.Errorf("could not fetch metadata: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s", action.ChainID, action.Address, action.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.Address, action.TokenID)))
 	nftID := hex.EncodeToString(nftHash[:])
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%s-%s-%d", action.ChainID, action.Address, action.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", action.ChainID, action.Address, action.TokenID, i)))
 		trait := graph.Trait{
 			ID:    hex.EncodeToString(traitHash[:]),
 			NFTID: nftID,

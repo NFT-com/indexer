@@ -84,7 +84,7 @@ func (p *ParsingConsumer) process(payload []byte) error {
 	}
 
 	log := p.log.With().
-		Str("chain_id", parsing.ChainID).
+		Uint64("chain_id", parsing.ChainID).
 		Strs("contract_addresses", parsing.ContractAddresses).
 		Strs("event_hashes", parsing.EventHashes).
 		Uint64("start_height", parsing.StartHeight).

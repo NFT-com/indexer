@@ -6,7 +6,7 @@ import (
 
 type Transfer struct {
 	ID                string    `json:"id"`
-	ChainID           string    `json:"chain_id"`
+	ChainID           uint64    `json:"chain_id"`
 	CollectionAddress string    `json:"collection_address"`
 	TokenID           string    `json:"token_id"`
 	BlockNumber       uint64    `json:"block_number"`

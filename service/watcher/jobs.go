@@ -99,7 +99,7 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) {
 			j.log.Error().
 				Err(err).
 				Str("parsing_id", parsing.ID).
-				Str("chain_id", parsing.ChainID).
+				Uint64("chain_id", parsing.ChainID).
 				Strs("contract_addresses", parsing.ContractAddresses).
 				Strs("event_hashes", parsing.EventHashes).
 				Str("status", string(parsing.Status)).
@@ -138,7 +138,7 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) {
 			j.log.Error().
 				Err(err).
 				Str("action_id", action.ID).
-				Str("chain_id", action.ChainID).
+				Uint64("chain_id", action.ChainID).
 				Str("address", action.Address).
 				Str("token_id", action.TokenID).
 				Str("status", string(action.Status)).

@@ -23,22 +23,21 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 	return &n
 }
 
-func (n *NFTRepository) UpsertNFT(nft *graph.NFT, collectionID string) error {
+func (n *NFTRepository) Insert(nft *graph.NFT) error {
 
 	_, err := n.build.
 		Insert(TableNFTs).
 		Columns(ColumnsNFTs...).
 		Values(
 			nft.ID,
+			nft.CollectionID,
 			nft.TokenID,
-			collectionID,
 			nft.Name,
 			nft.URI,
 			nft.Image,
 			nft.Description,
 			nft.Owner,
 		).
-		Suffix(ConflictNFTs).
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert nft: %w", err)
@@ -47,13 +46,14 @@ func (n *NFTRepository) UpsertNFT(nft *graph.NFT, collectionID string) error {
 	return nil
 }
 
-func (n *NFTRepository) UpdateNFT(nft *graph.NFT) error {
+func (n *NFTRepository) ChangeOwner(collectionID string, tokenID string, owner string) error {
 
 	_, err := n.build.
-		Update(TableNFTs).
-		Set("owner", nft.Owner).
-		Where("id = ?", nft.ID).
-		// Where("collection = ?", collectionID). // FIXME: doesn't seem to exist as a column?
+		Update("nfts").
+		Set("owner", owner).
+		Set("updated_at", "NOW()").
+		Where("collection_id = ?", collectionID).
+		Where("token_id = ?", tokenID).
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert nft: %w", err)

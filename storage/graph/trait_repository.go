@@ -23,14 +23,23 @@ func NewTraitRepository(db *sql.DB) *TraitRepository {
 	return &s
 }
 
-func (t *TraitRepository) UpsertTrait(trait *graph.Trait) error {
+func (t *TraitRepository) Insert(traits ...*graph.Trait) error {
 
-	_, err := t.build.
-		Insert(TableTraits).
-		Columns(ColumnsTraits...).
-		Values(trait.ID, trait.NFTID, trait.Name, trait.Value).
-		Suffix(ConflictTraits).
-		Exec()
+	query := t.build.
+		Insert("traits").
+		Columns("id", "nft_id", "name", "type", "value")
+
+	for _, trait := range traits {
+		query = query.Values(
+			trait.ID,
+			trait.NFTID,
+			trait.Name,
+			trait.Type,
+			trait.Value,
+		)
+	}
+
+	_, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not upsert trait: %w", err)
 	}

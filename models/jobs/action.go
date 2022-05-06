@@ -2,7 +2,7 @@ package jobs
 
 type Action struct {
 	ID         string `json:"id"`
-	ChainID    string `json:"chain_id"`
+	ChainID    uint64 `json:"chain_id"`
 	Address    string `json:"address"`
 	TokenID    string `json:"token_id"`
 	ActionType string `json:"action_type"`

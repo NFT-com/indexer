@@ -171,6 +171,15 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	}
 
 	result.NFT.CollectionID = collection.ID
+	err = a.nfts.Insert(result.NFT)
+	if err != nil {
+		return fmt.Errorf("could not insert NFT: %w", err)
+	}
+
+	err = a.traits.Insert(result.Traits...)
+	if err != nil {
+		return fmt.Errorf("could not insert traits: %w", err)
+	}
 
 	return nil
 }

@@ -6,10 +6,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/config/params"
-	"github.com/NFT-com/indexer/service/pipeline"
-	"github.com/NFT-com/indexer/storage/graph"
-	"github.com/NFT-com/indexer/storage/jobs"
 	_ "github.com/lib/pq"
 
 	"github.com/adjust/rmq/v4"
@@ -20,6 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+
+	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/storage/graph"
+	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (

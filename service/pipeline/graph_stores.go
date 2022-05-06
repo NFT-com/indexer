@@ -5,14 +5,14 @@ import (
 )
 
 type CollectionStore interface {
-	One(chainID string, address string) (*graph.Collection, error)
+	One(chainID uint64, address string) (*graph.Collection, error)
 }
 
 type NFTStore interface {
-	Upsert(nft *graph.NFT) error
+	Insert(nft *graph.NFT) error
 	ChangeOwner(collectionID string, tokenID string, owner string) error
 }
 
 type TraitStore interface {
-	Upsert(traits ...*graph.Trait) error
+	Insert(traits ...*graph.Trait) error
 }

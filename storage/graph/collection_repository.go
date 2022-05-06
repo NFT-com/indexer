@@ -25,7 +25,7 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 	return &c
 }
 
-func (c *CollectionRepository) One(chainID uint64, address string, contractCollectionID string) (*graph.Collection, error) {
+func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Collection, error) {
 
 	query := c.build.
 		Select("collections.ID, collections.network_id, collections.name, collections.description, collections.symbol, collections.slug, collections.image_url, collections.website").
@@ -33,9 +33,6 @@ func (c *CollectionRepository) One(chainID uint64, address string, contractColle
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").
 		Where("collections.address = ?", strings.ToLower(address))
-	if contractCollectionID != "" {
-		query = query.Where("contract_collection_id = ?", contractCollectionID)
-	}
 
 	result, err := query.Query()
 	if err != nil {
