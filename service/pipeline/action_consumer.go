@@ -171,7 +171,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 			if err != nil {
 				return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
 			}
-			return backoff.Permanent(fmt.Errorf("could not execute lambda (%s): %s", execErr.Type, execErr.Message))
+			return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
 		}
 
 		output = result.Payload
