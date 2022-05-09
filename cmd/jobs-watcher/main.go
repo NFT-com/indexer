@@ -2,116 +2,105 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	_ "github.com/lib/pq"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/NFT-com/indexer/models/constants"
-	"github.com/NFT-com/indexer/queue/producer"
-	"github.com/NFT-com/indexer/service/postgres"
-	watcher "github.com/NFT-com/indexer/watcher/jobs"
+	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/service/watcher"
+	"github.com/NFT-com/indexer/storage/jobs"
+)
+
+const (
+	success = 0
+	failure = 1
 )
 
 func main() {
-	err := run()
-	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
-		log.Fatal(err)
-	}
+	os.Exit(run())
 }
 
-func run() error {
+func run() int {
 
-	// Signal catching for clean shutdown.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
-	// Command line parameter initialization.
 	var (
-		flagActionQueueName string
-		flagJobsDB          string
-		flagReadInterval    time.Duration
-		flagRMQTag          string
-		flagRedisNetwork    string
-		flagRedisURL        string
-		flagRedisDatabase   int
-		flagDiscoveryQueue  string
-		flagParsingQueue    string
-		flagLogLevel        string
+		flagLogLevel string
+
+		flagJobsDB   string
+		flagRedisURL string
+		flagRedisDB  int
+
 		flagOpenConnections uint
 		flagIdleConnections uint
+		flagReadInterval    time.Duration
 	)
 
-	pflag.StringVar(&flagActionQueueName, "action-queue", constants.QueueAction, "name of the queue for action queue")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "data source name for database connection")
-	pflag.DurationVar(&flagReadInterval, "read-interval", 200*time.Millisecond, "data read for new jobs delay")
-	pflag.StringVarP(&flagRMQTag, "tag", "t", "jobs-watcher", "jobs watcher producer tag")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
-	pflag.StringVar(&flagDiscoveryQueue, "delivery-queue", constants.QueueDiscovery, "name of the queue for delivery queue")
-	pflag.StringVar(&flagParsingQueue, "parsing-queue", constants.QueueParsing, "name of the queue for parsing queue")
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle connections")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
+	pflag.DurationVar(&flagReadInterval, "read-interval", 100*time.Millisecond, "interval between checks for job reading")
 
 	pflag.Parse()
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Error().Err(err).Str("log_level", flagLogLevel).Msg("could not parse log level")
+		return failure
 	}
 	log = log.Level(level)
 
 	failed := make(chan error)
-	redisConnection, err := rmq.OpenConnection(flagRMQTag, flagRedisNetwork, flagRedisURL, flagRedisDatabase, failed)
+	redisConnection, err := rmq.OpenConnection(params.PipelineIndexer, "tcp", flagRedisURL, flagRedisDB, failed)
 	if err != nil {
-		return fmt.Errorf("could not open connection with redis: %w", err)
+		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to Redis")
+		return failure
 	}
 
-	producer, err := producer.NewProducer(redisConnection, flagDiscoveryQueue, flagParsingQueue, flagActionQueueName)
+	produce, err := pipeline.NewProducer(redisConnection, params.QueueParsing, params.QueueAction)
 	if err != nil {
-		return fmt.Errorf("could not create message producer: %w", err)
+		log.Error().Err(err).Msg("could not create pipeline producer")
+		return failure
 	}
 
-	// Open database connection.
-	db, err := sql.Open(constants.DialectPostgres, flagJobsDB)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Msg("could not open SQL connection")
-		return err
+		log.Error().Err(err).Str("jobs_db", flagJobsDB).Msg("could not open jobs database")
+		return failure
 	}
-	db.SetMaxOpenConns(int(flagOpenConnections))
-	db.SetMaxIdleConns(int(flagIdleConnections))
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	// Create the database store.
-	store, err := postgres.NewStore(db)
-	if err != nil {
-		log.Error().Err(err).Msg("could not create store")
-		return err
-	}
+	parsingRepo := jobs.NewParsingRepository(jobsDB)
+	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	watcher := watcher.New(log, producer, store, flagReadInterval)
+	watch := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
 
 	log.Info().Msg("jobs watcher starting")
-	watcher.Watch()
+	watch.Watch()
 
 	select {
 	case <-sig:
 		log.Info().Msg("jobs watcher stopping")
-		watcher.Close()
+		watch.Close()
 	case err = <-failed:
 		log.Error().Err(err).Msg("jobs watcher aborted")
-		return err
+		return failure
 	}
 
 	go func() {
@@ -122,5 +111,5 @@ func run() error {
 
 	log.Info().Msg("jobs watcher done")
 
-	return nil
+	return success
 }

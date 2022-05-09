@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -19,147 +17,145 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
-	"github.com/NFT-com/indexer/function"
-	"github.com/NFT-com/indexer/models/constants"
-	"github.com/NFT-com/indexer/queue/consumer/action"
-	"github.com/NFT-com/indexer/service/postgres"
+	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/storage/graph"
+	"github.com/NFT-com/indexer/storage/jobs"
+)
+
+const (
+	success = 0
+	failure = 1
 )
 
 func main() {
-	err := run()
-	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
-		log.Fatalln(err)
-	}
+	os.Exit(run())
 }
 
-func run() error {
-	// Signal catching for clean shutdown.
+func run() int {
+
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 
-	// Command line parameter initialization.
 	var (
-		flagActionQueue     string
-		flagBatchSize       int64
-		flagJobsDB          string
-		flagDataDB          string
-		flagLogLevel        string
-		flagRateLimit       int
-		flagRedisDatabase   int
-		flagRedisNetwork    string
-		flagRedisURL        string
-		flagRegion          string
-		flagRMQTag          string
-		flagOpenConnections uint
-		flagIdleConnections uint
+		flagLogLevel string
+
+		flagGraphDB    string
+		flagJobsDB     string
+		flagRedisDB    int
+		flagRedisURL   string
+		flagAWSRegion  string
+		flagLambdaName string
+
+		flagOpenConnections   uint
+		flagIdleConnections   uint
+		flagRateLimit         uint
+		flagLambdaConcurrency uint
+
+		flagDryRun bool
 	)
 
-	pflag.StringVarP(&flagActionQueue, "action-queue", "q", constants.QueueAction, "name of the queue for action jobs")
-	pflag.Int64VarP(&flagBatchSize, "batch", "b", 500, "batch size to process")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "", "jobs database connection string")
-	pflag.StringVarP(&flagDataDB, "data-database", "d", "", "data database connection string")
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.IntVar(&flagRedisDatabase, "redis-database", 1, "redis database number")
-	pflag.IntVarP(&flagRateLimit, "rate-limit", "t", 100, "maximum amount of lambdas that can be invoked per second")
-	pflag.StringVarP(&flagRedisNetwork, "network", "n", "tcp", "redis network type")
-	pflag.StringVarP(&flagRedisURL, "url", "u", "", "redis server connection url")
-	pflag.StringVarP(&flagRegion, "aws-region", "r", "eu-west-1", "aws lambda region")
-	pflag.StringVarP(&flagRMQTag, "tag", "c", "dispatcher-agent", "rmq consumer tag")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of Lambda function for invocation")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests per second")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 900, "maximum number of concurrent Lambda invocations")
+
+	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
 	pflag.Parse()
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
 	level, err := zerolog.ParseLevel(flagLogLevel)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Error().Err(err).Str("log_level", flagLogLevel).Msg("could not parse log level")
+		return failure
 	}
 	log = log.Level(level)
 
-	sessionConfig := aws.Config{Region: aws.String(flagRegion)}
+	sessionConfig := aws.Config{Region: aws.String(flagAWSRegion)}
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	dispatcher, err := function.New(lambdaClient)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		return fmt.Errorf("could not create function client dispatcher: %w", err)
-	}
-
-	jobsDB, err := sql.Open(constants.DialectPostgres, flagJobsDB)
-	if err != nil {
-		return fmt.Errorf("could not open jobs SQL connection: %w", err)
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not connect to jobs database")
+		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	jobStore, err := postgres.NewStore(jobsDB)
-	if err != nil {
-		return fmt.Errorf("could not create job store: %w", err)
-	}
+	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	dataDB, err := sql.Open(constants.DialectPostgres, flagDataDB)
+	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
-		return fmt.Errorf("could not open data SQL connection: %w", err)
+		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not connect to graph database")
+		return failure
 	}
-	dataDB.SetMaxOpenConns(int(flagOpenConnections))
-	dataDB.SetMaxIdleConns(int(flagIdleConnections))
+	graphDB.SetMaxOpenConns(int(flagOpenConnections))
+	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	dataStore, err := postgres.NewStore(dataDB)
-	if err != nil {
-		return fmt.Errorf("could not create data store: %w", err)
-	}
+	collectionRepo := graph.NewCollectionRepository(graphDB)
+	nftRepo := graph.NewNFTRepository(graphDB)
+	traitRepo := graph.NewTraitRepository(graphDB)
 
 	redisClient := redis.NewClient(&redis.Options{
-		Network: flagRedisNetwork,
+		Network: "tcp",
 		Addr:    flagRedisURL,
-		DB:      flagRedisDatabase,
+		DB:      flagRedisDB,
 	})
-
 	failed := make(chan error)
-	rmqConnection, err := rmq.OpenConnectionWithRedisClient(flagRMQTag, redisClient, failed)
+	rmqConnection, err := rmq.OpenConnectionWithRedisClient(params.PipelineIndexer, redisClient, failed)
 	if err != nil {
-		return fmt.Errorf("could not open redis connection: %w", err)
+		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to redis server")
+		return failure
+	}
+	defer rmqConnection.StopAllConsuming()
+
+	queue, err := rmqConnection.OpenQueue(params.QueueAction)
+	if err != nil {
+		log.Error().Err(err).Msg("could not open queue")
+		return failure
 	}
 
-	queue, err := rmqConnection.OpenQueue(flagActionQueue)
+	err = queue.StartConsuming(int64(flagLambdaConcurrency), 200*time.Millisecond)
 	if err != nil {
-		return fmt.Errorf("could not open redis queue: %w", err)
+		log.Error().Err(err).Msg("could not start consuming")
+		return failure
 	}
 
-	err = queue.StartConsuming(2*flagBatchSize, 100*time.Millisecond)
-	if err != nil {
-		return fmt.Errorf("could not start consuming process: %w", err)
+	for i := uint(0); i < flagLambdaConcurrency; i++ {
+		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, traitRepo, flagRateLimit, flagDryRun)
+		_, err = queue.AddConsumer("action-consumer", consumer)
+		if err != nil {
+			log.Error().Err(err).Msg("could not add consumer")
+			return failure
+		}
 	}
-
-	consumer := action.NewConsumer(log, dispatcher, jobStore, dataStore, flagRateLimit)
-	consumerName, err := queue.AddConsumer(flagRMQTag, consumer)
-	if err != nil {
-		return fmt.Errorf("could not add action consumer: %w", err)
-	}
-	log = log.With().Str("name", consumerName).Logger()
-
-	log.Info().Msg("started action dispatcher")
-	consumer.Run()
 
 	select {
 	case <-sig:
-		rmqConnection.StopAllConsuming()
-		consumer.Close()
-	case err := <-failed:
-		return err
+		log.Info().Msg("initialized shutdown")
+	case err = <-failed:
+		log.Error().Err(err).Msg("execution failed")
+		return failure
 	}
 
 	go func() {
 		<-sig
-		log.Fatal().Msg("forced interruption")
+		log.Fatal().Msg("forced shutdown")
 	}()
 
-	log.Info().Msg("stopped action dispatcher gracefully")
+	log.Info().Msg("shutdown complete")
 
-	return nil
+	return success
 }

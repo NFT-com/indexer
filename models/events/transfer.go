@@ -5,13 +5,15 @@ import (
 )
 
 type Transfer struct {
-	ID              string    `json:"id"`
-	CollectionID    string    `json:"collection_id"`
-	Block           uint64    `json:"block"`
-	EventIndex      uint      `json:"event_index"`
-	TransactionHash string    `json:"transaction_hash"`
-	TokenID         string    `json:"token_id"`
-	FromAddress     string    `json:"from_address"`
-	ToAddress       string    `json:"to_address"`
-	EmittedAt       time.Time `json:"emitted_at"`
+	ID                string    `json:"id"`
+	ChainID           uint64    `json:"chain_id"`
+	CollectionAddress string    `json:"collection_address"`
+	TokenID           string    `json:"token_id"`
+	BlockNumber       uint64    `json:"block_number"`
+	TransactionHash   string    `json:"transaction_hash"`
+	EventIndex        uint      `json:"event_index"`
+	SenderAddress     string    `json:"sender_address"`
+	ReceiverAddress   string    `json:"receiver_address"`
+	TokenCount        uint      `json:"count"`
+	EmittedAt         time.Time `json:"emitted_at"`
 }

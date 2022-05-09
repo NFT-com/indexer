@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -10,55 +8,31 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 
-	handler "github.com/NFT-com/indexer/function/handlers/parsing"
-	"github.com/NFT-com/indexer/function/processors/parsing"
-	"github.com/NFT-com/indexer/function/processors/parsing/erc721"
-	"github.com/NFT-com/indexer/function/processors/parsing/opensea"
-	"github.com/NFT-com/indexer/networks"
+	"github.com/NFT-com/indexer/service/lambdas"
 )
 
 const (
-	envVarLogLevel  = "LOG_LEVEL"
-	defaultLogLevel = "info"
+	defaultLevel = "info"
+	envLevel     = "LOG_LEVEL"
 )
 
 func main() {
-	err := run()
-	if err != nil {
-		// TODO: Improve this mixing logging
-		// https://github.com/NFT-com/indexer/issues/32
-		log.Fatalln(err)
-	}
-}
 
-func run() error {
-	logLevel, ok := os.LookupEnv(envVarLogLevel)
+	level, ok := os.LookupEnv(envLevel)
 	if !ok {
-		logLevel = defaultLogLevel
+		level = defaultLevel
 	}
 
-	// Logger initialization.
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
-	log := zerolog.New(os.Stderr).With().Timestamp().Logger().Level(zerolog.DebugLevel)
-	level, err := zerolog.ParseLevel(logLevel)
+	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	lvl, err := zerolog.ParseLevel(level)
 	if err != nil {
-		return fmt.Errorf("could not parse log level: %w", err)
+		log.Fatal().Err(err).Msg("could not parse log level")
 	}
-	log = log.Level(level)
+	log = log.Level(lvl)
 
-	handler := handler.NewHandler(log, func(client networks.Network) ([]parsing.Parser, error) {
-		parsers := make([]parsing.Parser, 0, 2)
-		parsers = append(parsers, erc721.NewParser())
-
-		openseaParser, err := opensea.NewParser(client)
-		if err != nil {
-			return nil, fmt.Errorf("could not create opensea parser: %w", err)
-		}
-		parsers = append(parsers, openseaParser)
-
-		return parsers, nil
-	})
+	handler := lambdas.NewParsingHandler(log)
 	lambda.Start(handler.Handle)
 
-	return nil
+	os.Exit(0)
 }
