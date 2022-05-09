@@ -66,7 +66,7 @@ docker run indexer-chainwatcher:1.0.0 -u wss://mainnet.infura.io/ws/v3/d7b15235a
 > 🚧
 > The Chain Watcher will no longer need an event type, contract and standard type.
 
-### Jobs Creator
+### Jobs Watcher
 
 Job Watcher watches the dispatcher and parsing websockets for new updates and pushes them into their respective queue.
 See the [job creator binary readme file](cmd/jobs-watcher/README.md) for more details about its flags.
@@ -79,7 +79,7 @@ See the [job creator binary readme file](cmd/jobs-watcher/README.md) for more de
 #### Starting the Container
 
 ```console
-docker run indexer-jobs-creator:1.0.0 -u <redis_url> -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode> -g "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>
+docker run indexer-jobs-creator:1.0.0 -u <redis_url> -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Parsing Dispatcher
@@ -97,7 +97,7 @@ the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) fo
 #### Starting the Container
 
 ```console
-docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsing-dispatcher:1.0.0 -u <redis_url> -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -g "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsing-dispatcher:1.0.0 -u <redis_url> -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -e "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Action Dispatcher

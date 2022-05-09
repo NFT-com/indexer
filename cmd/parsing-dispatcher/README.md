@@ -7,7 +7,7 @@ The parsing dispatcher consumes messages from the queue and launches jobs.
 ```
 Usage of parsing-dispatcher:
   -l, --log-level string                severity level for log output (default "info")
-  -j, --graph-database string           postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
+  -e, --events-database string          postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
   -u, --redis-url string                url for redis server connection (default "127.0.0.1:6379")
   -d, --redis-database int              redis database number (default 1)
