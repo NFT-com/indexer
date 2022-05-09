@@ -9,8 +9,8 @@ type Collection struct {
 	Description     string `json:"description"`
 	Symbol          string `json:"symbol"`
 	Slug            string `json:"slug"`
-	ImageURL        string `json:"image_url"`
 	Website         string `json:"website"`
+	ImageURL        string `json:"image_url"`
 }
 
 type CollectionExtra struct {

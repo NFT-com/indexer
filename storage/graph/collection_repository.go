@@ -27,14 +27,13 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 
 func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Collection, error) {
 
-	query := c.build.
-		Select("collections.ID, collections.network_id, collections.name, collections.description, collections.symbol, collections.slug, collections.image_url, collections.website").
+	result, err := c.build.
+		Select("collections.ID, collections.contract_address, collections.network_id, collections.name, collections.description, collections.symbol, collections.slug, collections.image_url, collections.website").
 		From("networks, collections").
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").
-		Where("collections.address = ?", strings.ToLower(address))
-
-	result, err := query.Query()
+		Where("collections.contract_address = ?", strings.ToLower(address)).
+		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not query collection: %w", err)
 	}
@@ -51,12 +50,13 @@ func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Colle
 	err = result.Scan(
 		&collection.ID,
 		&collection.NetworkID,
+		&collection.ContractAddress,
 		&collection.Name,
 		&collection.Description,
 		&collection.Symbol,
 		&collection.Slug,
-		&collection.ImageURL,
 		&collection.Website,
+		&collection.ImageURL,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not scan row: %w", err)
