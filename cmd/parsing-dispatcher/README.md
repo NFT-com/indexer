@@ -6,18 +6,19 @@ The parsing dispatcher consumes messages from the queue and launches jobs.
 
 ```
 Usage of parsing-dispatcher:
-  -a, --api string               jobs api base hostname and port
-  -r, --aws-region string        aws lambda region (default "eu-west-1")
-      --database int             redis database number (default 1)
-  -d, --db string                database connection string
-  -l, --log-level string         log level (default "info")
-  -n, --network string           redis network type (default "tcp")
-  -q, --parsing-queue string     name of the queue for parsing (default "parsing")
-  -i, --poll-duration duration   time for each consumer poll (default 20s)
-  -p, --prefetch int             amount of message to prefetch in the consumer (default 80)
-  -t, --rate-limit int           amount of concurrent jobs for the consumer (default 500)
-  -c, --tag string               rmq consumer tag (default "parsing-agent")
-  -u, --url string               redis server connection url
+  -l, --log-level string                severity level for log output (default "info")
+  -j, --graph-database string           postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
+  -j, --jobs-database string            postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
+  -u, --redis-url string                url for redis server connection (default "127.0.0.1:6379")
+  -d, --redis-database int              redis database number (default 1)
+  -r, --aws-region string               aws region for lambda invocation (default "eu-west-1")
+      --db-connection-limit uint        maximum number of open database connections (default 128)
+      --db-idle-connection-limit uint   maximum number of idle database connections (default 32)
+      --rate-limit uint                 maximum number of api requests to ethereum json rpc api (default 100)
+      --height-range utint              maximum heights per parsing job
+      --consumer-count uint             maximum number of concurrent lambda invocations (default 100)
+      --lambda-name string              name of lambda function for invocation (default "parsing-worker")
+      --dry-run boolean                 executing as dry run disables invocation of lambda function (default "false")
 ```
 
 ## Database Address - Data Source Name

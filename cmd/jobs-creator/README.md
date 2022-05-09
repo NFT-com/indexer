@@ -1,21 +1,21 @@
-# Chain Watcher
+# Jobs Creator
 
-Chain Watcher watches the chain and push jobs to parse network data.
-If the chain watcher stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height instead of 0.
+Jobs Creator watches the chain and push jobs to parse network data.
+If the job creator stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height instead of 0.
 
 ## Usage
 
 ```
 Usage of chain-watcher:
-  -a, --api string              jobs api base endpoint
-  -b, --batch int64             number of jobs in each batch request (default 200)
-  --batch-delay durantion       delay between each batch request (default 1s)
-  -i, --chain-id string         id of the chain to watch
-  -u, --chain-url string        url of the chain to connect
-  -t, --chain-type string       type of chain to parse
-  -d, --db string               data source name for database connection
-  -l, --log-level string        log level (default "info")
-  --standard-type string        standard type of the contract to watch
+  -l, --log-level string                severity level for log output (default "info")
+  -g, --graph-database string           postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
+  -j, --jobs-database string            postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
+  -n, --node-url string                 url for ethereum json rpc api connection (default "ws://127.0.0.1:8545")
+      --db-connection-limit uint        maximum number of open database connections (default 16)
+      --db-idle-connection-limit uint   maximum number of idle database connections (default 4)
+      --write-interval duration         interval between checks for job writing (default 1s)
+      --pending-limit uint              maximum number of pending jobs per combination (dafault 1000)
+      --height-range uint               maximum heights to include in a single job (default 10)
 ```
 
 > ⚠️ Be careful when changing the batch amount, as it can cause the job-watcher to crash.
