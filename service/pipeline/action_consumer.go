@@ -166,7 +166,12 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 
 		// don't retry if the function failed for some reason
 		if result.FunctionError != nil {
-			return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", *result.FunctionError))
+			var execErr results.Error
+			err = json.Unmarshal(result.Payload, &execErr)
+			if err != nil {
+				return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
+			}
+			return backoff.Permanent(fmt.Errorf("could not execute lambda (%s): %s", execErr.Type, execErr.Message))
 		}
 
 		output = result.Payload
