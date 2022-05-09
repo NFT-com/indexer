@@ -3,6 +3,7 @@ package web3
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/NFT-com/indexer/models/abis"
@@ -35,7 +36,12 @@ func (u *URIFetcher) ERC1155(ctx context.Context, address string, tokenID string
 
 func (u *URIFetcher) fetch(ctx context.Context, address string, tokenID string, name string, abi abi.ABI) (string, error) {
 
-	input, err := abi.Pack(name, tokenID)
+	id, ok := big.NewInt(0).SetString(tokenID, 10)
+	if !ok {
+		return "", fmt.Errorf("could not convert token ID to integer")
+	}
+
+	input, err := abi.Pack(name, id)
 	if err != nil {
 		return "", fmt.Errorf("could not pack input: %w", err)
 	}
