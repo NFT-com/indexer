@@ -40,7 +40,7 @@ func (n *NFTRepository) Insert(nft *graph.NFT) error {
 		).
 		Exec()
 	if err != nil {
-		return fmt.Errorf("could not upsert nft: %w", err)
+		return fmt.Errorf("could not execute query: %w", err)
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (n *NFTRepository) ChangeOwner(collectionID string, tokenID string, owner s
 		Where("token_id = ?", tokenID).
 		Exec()
 	if err != nil {
-		return fmt.Errorf("could not upsert nft: %w", err)
+		return fmt.Errorf("could not execute query: %w", err)
 	}
 
 	return nil

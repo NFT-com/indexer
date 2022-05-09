@@ -120,7 +120,8 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	}
 
 	nft := graph.NFT{
-		ID:          nftID.String(),
+		ID: nftID.String(),
+		// CollectionID is populated after parsing
 		TokenID:     job.TokenID,
 		Name:        token.Name,
 		URI:         tokenURI,
