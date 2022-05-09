@@ -19,7 +19,8 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 	hash := sha3.Sum256(data)
 
 	transfer := events.Transfer{
-		ID:                uuid.Must(uuid.FromBytes(hash[:16])).String(),
+		ID: uuid.Must(uuid.FromBytes(hash[:16])).String(),
+		// ChainID set after parsing
 		CollectionAddress: log.Address.Hex(),
 		TokenID:           log.Topics[3].Big().String(),
 		BlockNumber:       log.BlockNumber,
@@ -28,7 +29,7 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 		SenderAddress:     log.Topics[1].Hex(),
 		ReceiverAddress:   log.Topics[2].Hex(),
 		TokenCount:        1,
-		// EmmittedAt set after processing
+		// EmmittedAt set after parsing
 	}
 
 	return &transfer, nil

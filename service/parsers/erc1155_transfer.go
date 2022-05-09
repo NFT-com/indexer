@@ -37,7 +37,8 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	hash := sha3.Sum256(data)
 
 	transfer := events.Transfer{
-		ID:                uuid.Must(uuid.FromBytes(hash[:16])).String(),
+		ID: uuid.Must(uuid.FromBytes(hash[:16])).String(),
+		// ChainID set after parsing
 		CollectionAddress: log.Address.Hex(),
 		TokenID:           tokenID.String(),
 		BlockNumber:       log.BlockNumber,
@@ -46,7 +47,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 		SenderAddress:     log.Topics[2].Hex(),
 		ReceiverAddress:   log.Topics[3].Hex(),
 		TokenCount:        uint(count.Uint64()),
-		// EmmittedAt set after processing
+		// EmmittedAt set after parsing
 	}
 
 	return &transfer, nil

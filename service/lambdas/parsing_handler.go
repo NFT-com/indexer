@@ -186,9 +186,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 	// Go through all logs and assign timestamp of emission
 	for _, transfer := range transfers {
+		transfer.ChainID = job.ChainID
 		transfer.EmittedAt = timestamps[transfer.BlockNumber]
 	}
 	for _, sale := range sales {
+		sale.ChainID = job.ChainID
 		sale.EmittedAt = timestamps[sale.BlockNumber]
 	}
 
