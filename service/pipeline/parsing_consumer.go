@@ -148,9 +148,14 @@ func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) 
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
 
-		// don't retry on any other error, for now
+		// don't retry on any other infrastructure error, for now
 		if err != nil {
-			return backoff.Permanent(fmt.Errorf("could not execute lambda: %w", err))
+			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
+		}
+
+		// don't retry if the function failed for some reason
+		if result.FunctionError != nil {
+			return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", *result.FunctionError))
 		}
 
 		output = result.Payload
