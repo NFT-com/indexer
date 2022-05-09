@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
 )
 
