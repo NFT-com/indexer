@@ -40,9 +40,10 @@ func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 		binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
 		copy(data[48:80], tokenID.Bytes())
 		hash := sha3.Sum256(data)
+		transferID := uuid.Must(uuid.FromBytes(hash[:16]))
 
 		transfer := events.Transfer{
-			ID: uuid.Must(uuid.FromBytes(hash[:16])).String(),
+			ID: transferID.String(),
 			// ChainID set after parsing
 			CollectionAddress: log.Address.Hex(),
 			TokenID:           tokenID.String(),

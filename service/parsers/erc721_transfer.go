@@ -17,9 +17,10 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 	copy(data[8:40], log.TxHash[:])
 	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
 	hash := sha3.Sum256(data)
+	transferID := uuid.Must(uuid.FromBytes(hash[:16]))
 
 	transfer := events.Transfer{
-		ID: uuid.Must(uuid.FromBytes(hash[:16])).String(),
+		ID: transferID.String(),
 		// ChainID set after parsing
 		CollectionAddress: log.Address.Hex(),
 		TokenID:           log.Topics[3].Big().String(),

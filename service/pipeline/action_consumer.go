@@ -62,8 +62,6 @@ func NewActionConsumer(
 
 func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
 
-	log := a.log
-
 	payload := []byte(delivery.Payload())
 	err := delivery.Ack()
 	if err != nil {

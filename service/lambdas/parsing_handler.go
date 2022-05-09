@@ -7,9 +7,10 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/inputs"
@@ -20,7 +21,7 @@ import (
 )
 
 const (
-	zeroAddress = "0x0000000000000000000000000000000000000000"
+	zeroAddress = "0x0000000000000000000000000000000000000000000000000000000000000000"
 )
 
 type ParsingHandler struct {

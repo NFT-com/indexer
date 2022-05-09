@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/sha3"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
@@ -50,6 +51,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to node: %w", err)
 	}
+	defer client.Close()
 
 	a.log.Debug().
 		Str("node_url", addition.NodeURL).
