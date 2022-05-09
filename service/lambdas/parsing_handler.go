@@ -46,9 +46,13 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 	client, err := ethclient.DialContext(ctx, parsing.NodeURL)
 	if err != nil {
-		return nil, fmt.Errorf("could not connect to node: %w", err)
+		return nil, fmt.Errorf("could not connect to node (node_url: %s): %w", parsing.NodeURL, err)
 	}
 	defer client.Close()
+
+	p.log.Debug().
+		Str("node_url", parsing.NodeURL).
+		Msg("connected to node API")
 
 	fetch := web3.NewLogsFetcher(client)
 
@@ -57,6 +61,10 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
+
+	p.log.Debug().
+		Int("logs", len(logs)).
+		Msg("event logs fetched")
 
 	// For each log, try to parse it into the respective events.
 	var transfers []*events.Transfer
@@ -67,6 +75,10 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 		// skip logs for reverted transactions
 		if log.Removed {
+			p.log.Trace().
+				Str("transaction", log.TxHash.Hex()).
+				Uint("index", log.Index).
+				Msg("skipping log for reverted transaction")
 			continue
 		}
 
@@ -85,6 +97,16 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			transfers = append(transfers, transfer)
 			standards[transfer.ID] = jobs.StandardERC721
 
+			p.log.Trace().
+				Str("transaction", log.TxHash.Hex()).
+				Uint("index", log.Index).
+				Str("collection", transfer.CollectionAddress).
+				Str("token_id", transfer.TokenID).
+				Str("from", transfer.FromAddress).
+				Str("to", transfer.ToAddress).
+				Uint("count", transfer.Count).
+				Msg("ERC721 transfer parsed")
+
 		case ERC1155TransferHash:
 
 			transfer, err := parsers.ERC1155Transfer(log)
@@ -94,6 +116,16 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			transfers = append(transfers, transfer)
 			standards[transfer.ID] = jobs.StandardERC1155
 
+			p.log.Trace().
+				Str("transaction", log.TxHash.Hex()).
+				Uint("index", log.Index).
+				Str("collection", transfer.CollectionAddress).
+				Str("token_id", transfer.TokenID).
+				Str("from", transfer.FromAddress).
+				Str("to", transfer.ToAddress).
+				Uint("count", transfer.Count).
+				Msg("ERC1155 transfer parsed")
+
 		case ERC1155BatchHash:
 
 			batch, err := parsers.ERC1155Batch(log)
@@ -102,7 +134,18 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			}
 			transfers = append(transfers, batch...)
 			for _, transfer := range batch {
+
 				standards[transfer.ID] = jobs.StandardERC1155
+
+				p.log.Trace().
+					Str("transaction", log.TxHash.Hex()).
+					Uint("index", log.Index).
+					Str("collection", transfer.CollectionAddress).
+					Str("token_id", transfer.TokenID).
+					Str("from", transfer.FromAddress).
+					Str("to", transfer.ToAddress).
+					Uint("count", transfer.Count).
+					Msg("ERC115 batch parsed")
 			}
 
 		case OpenSeaTradeHash:
@@ -112,8 +155,19 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				return nil, fmt.Errorf("could not parse OpenSea sale: %w", err)
 			}
 			sales = append(sales, sale)
+
+			p.log.Trace().
+				Str("transaction", log.TxHash.Hex()).
+				Uint("index", log.Index).
+				Msg("OpenSea sale parsed")
 		}
 	}
+
+	p.log.Info().
+		Int("logs", len(logs)).
+		Int("transfers", len(transfers)).
+		Int("sales", len(sales)).
+		Msg("all logs parsed")
 
 	// Get all of the headers to assign timestamps to the events.
 	for height := range timestamps {
@@ -125,6 +179,10 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 		timestamps[height] = time.Unix(int64(header.Time), 0)
 	}
+
+	p.log.Info().
+		Int("heights", len(timestamps)).
+		Msg("block heights retrieved")
 
 	// Go through all logs and assign timestamp of emission
 	for _, transfer := range transfers {
@@ -183,8 +241,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			}
 			actions = append(actions, &action)
 		}
-
 	}
+
+	p.log.Info().
+		Int("actions", len(actions)).
+		Msg("downstream actions created")
 
 	// Put everything together for the result.
 	result := results.Parsing{

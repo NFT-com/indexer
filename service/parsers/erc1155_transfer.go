@@ -24,6 +24,10 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid type for \"id\" field (%T)", fields["id"])
 	}
+	count, ok := fields["value"].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("invalid type for \"value\" field (%T)", fields["value"])
+	}
 
 	data := make([]byte, 8+32+8)
 	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
@@ -40,6 +44,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 		TransactionHash:   log.TxHash.Hex(),
 		FromAddress:       log.Topics[2].Hex(),
 		ToAddress:         log.Topics[3].Hex(),
+		Count:             uint(count.Uint64()),
 		// EmmittedAt set after processing
 	}
 
