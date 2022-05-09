@@ -1,6 +1,10 @@
 /cmd/action-dispatcher/action-dispatcher
 /cmd/action-worker/action-worker
+/cmd/action-worker/worker
+/cmd/action-worker/action.zip
 /cmd/jobs-creator/jobs-creator
 /cmd/jobs-watcher/jobs-watcher
 /cmd/parsing-dispatcher/parsing-dispatcher
 /cmd/parsing-worker/parsing-worker
+/cmd/parsing-worker/worker
+/cmd/parsing-worker/parsing.zip
