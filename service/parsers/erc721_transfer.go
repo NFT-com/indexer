@@ -2,9 +2,9 @@ package parsers
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/NFT-com/indexer/models/events"
@@ -19,7 +19,7 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 	hash := sha3.Sum256(data)
 
 	transfer := events.Transfer{
-		ID:                hex.EncodeToString(hash[:]),
+		ID:                uuid.Must(uuid.FromBytes(hash[:16])).String(),
 		CollectionAddress: log.Address.Hex(),
 		TokenID:           log.Topics[3].Big().String(),
 		BlockNumber:       log.BlockNumber,

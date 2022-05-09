@@ -2,11 +2,11 @@ package parsers
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/NFT-com/indexer/models/abis"
@@ -37,7 +37,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	hash := sha3.Sum256(data)
 
 	transfer := events.Transfer{
-		ID:                hex.EncodeToString(hash[:]),
+		ID:                uuid.Must(uuid.FromBytes(hash[:16])).String(),
 		CollectionAddress: log.Address.Hex(),
 		TokenID:           tokenID.String(),
 		BlockNumber:       log.BlockNumber,

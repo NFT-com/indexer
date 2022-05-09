@@ -2,10 +2,10 @@ package parsers
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -34,7 +34,7 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 	hash := sha3.Sum256(data)
 
 	sale := events.Sale{
-		ID:                 hex.EncodeToString(hash[:]),
+		ID:                 uuid.Must(uuid.FromBytes(hash[:16])).String(),
 		MarketplaceAddress: log.Address.Hex(),
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
