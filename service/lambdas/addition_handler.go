@@ -39,6 +39,13 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		return nil, fmt.Errorf("could not decode addition inputs: %w", err)
 	}
 
+	a.log.Debug().
+		Uint64("chain_id", job.ChainID).
+		Str("contract_address", job.ContractAddress).
+		Str("token_id", job.TokenID).
+		Uint64("block_height", job.BlockHeight).
+		Msg("handling addition job")
+
 	client, err := ethclient.DialContext(ctx, addition.NodeURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to node: %w", err)

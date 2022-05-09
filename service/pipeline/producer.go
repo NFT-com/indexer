@@ -28,17 +28,17 @@ func NewProducer(connection rmq.Connection, parsingQueue string, actionQueue str
 
 func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 
-	q, err := p.connection.OpenQueue(p.parsingQueue)
-	if err != nil {
-		return fmt.Errorf("could not open connection with queue: %w", err)
-	}
-
 	payload, err := json.Marshal(job)
 	if err != nil {
 		return fmt.Errorf("could not marshal payload: %w", err)
 	}
 
-	err = q.PublishBytes(payload)
+	queue, err := p.connection.OpenQueue(p.parsingQueue)
+	if err != nil {
+		return fmt.Errorf("could not open connection with queue: %w", err)
+	}
+
+	err = queue.PublishBytes(payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
 	}
@@ -48,17 +48,17 @@ func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 
 func (p *Producer) PublishActionJob(job *jobs.Action) error {
 
-	q, err := p.connection.OpenQueue(p.actionQueue)
-	if err != nil {
-		return fmt.Errorf("could not open connection with queue: %w", err)
-	}
-
 	payload, err := json.Marshal(job)
 	if err != nil {
 		return fmt.Errorf("could not marshal payload: %w", err)
 	}
 
-	err = q.PublishBytes(payload)
+	queue, err := p.connection.OpenQueue(p.actionQueue)
+	if err != nil {
+		return fmt.Errorf("could not open connection with queue: %w", err)
+	}
+
+	err = queue.PublishBytes(payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
 	}

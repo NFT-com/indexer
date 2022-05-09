@@ -44,6 +44,14 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		return nil, fmt.Errorf("could not decode parsing inputs: %w", err)
 	}
 
+	p.log.Debug().
+		Uint64("chain_id", job.ChainID).
+		Strs("contract_addresses", job.ContractAddresses).
+		Strs("event_hashes", job.EventHashes).
+		Uint64("start_height", job.StartHeight).
+		Uint64("end_height", job.EndHeight).
+		Msg("handling parsing job")
+
 	client, err := ethclient.DialContext(ctx, parsing.NodeURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to node (node_url: %s): %w", parsing.NodeURL, err)
