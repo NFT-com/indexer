@@ -31,55 +31,74 @@ func NewAdditionHandler(log zerolog.Logger) *AdditionHandler {
 	return &a
 }
 
-func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*results.Addition, error) {
+func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*results.Addition, error) {
 
-	var inputs inputs.Addition
-	err := json.Unmarshal(action.InputData, &inputs)
+	var addition inputs.Addition
+	err := json.Unmarshal(job.InputData, &addition)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode addition inputs: %w", err)
 	}
 
-	client, err := ethclient.DialContext(ctx, inputs.NodeURL)
+	client, err := ethclient.DialContext(ctx, addition.NodeURL)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to node: %w", err)
 	}
 
+	a.log.Debug().
+		Str("node_url", addition.NodeURL).
+		Msg("connected to node API")
+
 	fetchURI := web3.NewURIFetcher(client)
 	fetchMetadata := web2.NewMetadataFetcher()
 
-	var uri string
-	switch inputs.Standard {
+	var tokenURI string
+	switch addition.Standard {
 
 	case jobs.StandardERC721:
 
-		uri, err = fetchURI.ERC721(ctx, action.ContractAddress, action.TokenID)
+		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
 
+		a.log.Info().
+			Str("token_uri", tokenURI).
+			Msg("ERC721 token URI retrieved")
+
 	case jobs.StandardERC1155:
 
-		uri, err = fetchURI.ERC1155(ctx, action.ContractAddress, action.TokenID)
+		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
 
+		a.log.Info().
+			Str("token_uri", tokenURI).
+			Msg("ERC1155 token URI retrieved")
+
 	default:
 
-		return nil, fmt.Errorf("unknown addition standard (%s)", inputs.Standard)
+		return nil, fmt.Errorf("unknown addition standard (%s)", addition.Standard)
 	}
 
-	token, err := fetchMetadata.Token(ctx, uri)
+	token, err := fetchMetadata.Token(ctx, tokenURI)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch metadata: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
+	a.log.Info().
+		Str("name", token.Name).
+		Str("description", token.Description).
+		Str("image", token.Image).
+		Int("attributes", len(token.Attributes)).
+		Msg("token metadata fetched")
+
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", job.ChainID, job.ContractAddress, job.TokenID)))
 	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", action.ChainID, action.ContractAddress, action.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", job.ChainID, job.ContractAddress, job.TokenID, i)))
 		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
 		trait := graph.Trait{
 			ID:    traitID.String(),
@@ -93,12 +112,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, action *jobs.Action) (*res
 
 	nft := graph.NFT{
 		ID:          nftID.String(),
-		TokenID:     action.TokenID,
+		TokenID:     job.TokenID,
 		Name:        token.Name,
-		URI:         uri,
+		URI:         tokenURI,
 		Image:       token.Image,
 		Description: token.Description,
-		Owner:       inputs.Owner,
+		Owner:       addition.Owner,
 	}
 
 	result := results.Addition{
