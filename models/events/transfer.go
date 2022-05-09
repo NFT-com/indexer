@@ -12,8 +12,8 @@ type Transfer struct {
 	BlockNumber       uint64    `json:"block_number"`
 	TransactionHash   string    `json:"transaction_hash"`
 	EventIndex        uint      `json:"event_index"`
-	FromAddress       string    `json:"from_address"`
-	ToAddress         string    `json:"to_address"`
-	Count             uint      `json:"count"`
+	SenderAddress     string    `json:"sender_address"`
+	ReceiverAddress   string    `json:"receiver_address"`
+	TokenCount        uint      `json:"count"`
 	EmittedAt         time.Time `json:"emitted_at"`
 }

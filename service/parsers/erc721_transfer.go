@@ -25,9 +25,9 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 		BlockNumber:       log.BlockNumber,
 		EventIndex:        log.Index,
 		TransactionHash:   log.TxHash.Hex(),
-		FromAddress:       log.Topics[1].Hex(),
-		ToAddress:         log.Topics[2].Hex(),
-		Count:             1,
+		SenderAddress:     log.Topics[1].Hex(),
+		ReceiverAddress:   log.Topics[2].Hex(),
+		TokenCount:        1,
 		// EmmittedAt set after processing
 	}
 

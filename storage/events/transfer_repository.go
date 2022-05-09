@@ -36,13 +36,14 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 	for _, transfer := range transfers {
 		query = query.Values(
 			transfer.ID,
-			transfer.BlockNumber,
-			transfer.EventIndex,
+			transfer.ChainID,
 			transfer.CollectionAddress,
-			transfer.TransactionHash,
 			transfer.TokenID,
-			transfer.FromAddress,
-			transfer.ToAddress,
+			transfer.BlockNumber,
+			transfer.TransactionHash,
+			transfer.EventIndex,
+			transfer.SenderAddress,
+			transfer.ReceiverAddress,
 			transfer.EmittedAt,
 		)
 	}

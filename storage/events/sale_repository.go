@@ -36,10 +36,12 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 	for _, sale := range sales {
 		query = query.Values(
 			sale.ID,
-			sale.BlockNumber,
-			sale.EventIndex,
-			sale.TransactionHash,
+			sale.ChainID,
 			sale.MarketplaceAddress,
+			sale.TokenID,
+			sale.BlockNumber,
+			sale.TransactionHash,
+			sale.EventIndex,
 			sale.SellerAddress,
 			sale.BuyerAddress,
 			sale.TradePrice,

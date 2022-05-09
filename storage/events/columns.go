@@ -1,8 +1,30 @@
 package events
 
 var (
-	ColumnsMintEvents     = []string{"id", "block", "event_index", "transaction_hash", "collection", "token_id", "owner", "emitted_at"}
-	ColumnsTransferEvents = []string{"id", "block", "event_index", "transaction_hash", "collection", "token_id", "from_address", "to_address", "emitted_at"}
-	ColumnsSaleEvents     = []string{"id", "block", "event_index", "transaction_hash", "marketplace", "seller", "buyer", "price", "emitted_at"}
-	ColumnsBurnEvents     = []string{"id", "block", "event_index", "transaction_hash", "collection", "token_id", "emitted_at"}
+	ColumnsTransferEvents = []string{
+		"id",
+		"chain_id",
+		"collection_address",
+		"token_id",
+		"block_number",
+		"transaction_hash",
+		"event_index",
+		"sender_address",
+		"receiver_address",
+		"emitted_at",
+	}
+
+	ColumnsSaleEvents = []string{
+		"id",
+		"chain_id",
+		"marketplace_address",
+		"token_id",
+		"block_number",
+		"transaction_hash",
+		"event_index",
+		"seller_address",
+		"buyer_addres",
+		"trade_price",
+		"emitted_at",
+	}
 )

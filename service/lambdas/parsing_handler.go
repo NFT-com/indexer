@@ -100,11 +100,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Str("collection", transfer.CollectionAddress).
+				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
-				Str("from", transfer.FromAddress).
-				Str("to", transfer.ToAddress).
-				Uint("count", transfer.Count).
+				Str("sender_address", transfer.SenderAddress).
+				Str("receiver_address", transfer.ReceiverAddress).
+				Uint("token_count", transfer.TokenCount).
 				Msg("ERC721 transfer parsed")
 
 		case ERC1155TransferHash:
@@ -119,11 +119,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Str("collection", transfer.CollectionAddress).
+				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
-				Str("from", transfer.FromAddress).
-				Str("to", transfer.ToAddress).
-				Uint("count", transfer.Count).
+				Str("sender_address", transfer.SenderAddress).
+				Str("receiver_address", transfer.ReceiverAddress).
+				Uint("token_count", transfer.TokenCount).
 				Msg("ERC1155 transfer parsed")
 
 		case ERC1155BatchHash:
@@ -140,11 +140,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				p.log.Trace().
 					Str("transaction", log.TxHash.Hex()).
 					Uint("index", log.Index).
-					Str("collection", transfer.CollectionAddress).
+					Str("collection_address", transfer.CollectionAddress).
 					Str("token_id", transfer.TokenID).
-					Str("from", transfer.FromAddress).
-					Str("to", transfer.ToAddress).
-					Uint("count", transfer.Count).
+					Str("sender_address", transfer.SenderAddress).
+					Str("receiver_address", transfer.ReceiverAddress).
+					Uint("token_count", transfer.TokenCount).
 					Msg("ERC115 batch parsed")
 			}
 
@@ -197,12 +197,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	for _, transfer := range transfers {
 		switch {
 
-		case transfer.FromAddress == zeroAddress:
+		case transfer.SenderAddress == zeroAddress:
 
 			inputs := inputs.Addition{
 				NodeURL:  parsing.NodeURL,
 				Standard: standards[transfer.ID],
-				Owner:    transfer.ToAddress,
+				Owner:    transfer.ReceiverAddress,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
@@ -223,7 +223,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		default:
 
 			inputs := inputs.OwnerChange{
-				NewOwner: transfer.ToAddress,
+				NewOwner: transfer.ReceiverAddress,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
