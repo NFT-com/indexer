@@ -3,7 +3,6 @@ package graph
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/Masterminds/squirrel"
 
@@ -32,7 +31,7 @@ func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Colle
 		From("networks, collections").
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").
-		Where("collections.contract_address = ?", strings.ToLower(address)).
+		Where("LOWER(collections.contract_address) = LOWER(?)", address).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not query collection: %w", err)

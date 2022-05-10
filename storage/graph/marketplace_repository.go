@@ -28,7 +28,7 @@ func (m *MarketplaceRepository) RetrieveByAddress(chainID string, address string
 	result, err := m.build.
 		Select("marketplaces.id", "marketplaces.name", "marketplaces.description", "marketplaces.website").
 		From("marketplaces, chains_marketplaces").
-		Where("chains_marketplaces.address = ?", address).
+		Where("LOWER(chains_marketplaces.address) = LOWER(?)", address).
 		Where("chains_marketplaces.chain_id = ?", chainID).
 		Where("chains_marketplaces.marketplace_id = marketplaces.id").
 		Query()
