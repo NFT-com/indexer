@@ -22,14 +22,14 @@ There are currently two workers:
 
 Checkout the [deployment guide](DEPLOYMENT-GUIDE.md) if you want to deploy it manually.
 
-### Starting the Components.
+### Starting the Components
 
 ```shell
 docker-compose up postgres -d
 ```
 
-This will create action-dispatcher, jobs-creator, jobs-watcher and parsing-dispatcher instances.
-The jobs-creator will create parsing jobs with the Chain URL `wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71` for all collections in the database.
+This creates action-dispatcher, jobs-creator, jobs-watcher and parsing-dispatcher instances.
+The jobs-creator creates parsing jobs with the Chain URL `wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71` for all collections in the database.
 
 ### Starting the Parsing Dispatcher
 

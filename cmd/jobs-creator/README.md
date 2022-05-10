@@ -1,7 +1,7 @@
 # Jobs Creator
 
-Jobs Creator watches the chain and push jobs to parse network data.
-If the job creator stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height instead of 0.
+Jobs Creator watches the chain and pushes jobs to parse network data.
+If stopped during an instantiation, the jobs creator resumes its work from where it left off.
 
 ## Usage
 

@@ -36,9 +36,9 @@ docker build . -f cmd/<name>/Dockerfile -t indexer-<name>:1.0.0
 
 ### Jobs Creator
 
-Jobs Creator watches the chain and instantiates all the parsing jobs required for the network. If the job creator
-stopped during an instantiation, upon restarting it retrieves the last job saved in the API and starts from that height
-instead of 0. See the [chain watcher binary readme file](cmd/chain-watcher/README.md) for more details about its flags.
+The jobs creator watches the chain and instantiates all the parsing jobs required for the network.
+If stopped during an instantiation, the jobs creator resumes its work from where it left off.
+See the [jobs creator binary readme file](cmd/jobs-creator/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -53,11 +53,9 @@ docker run indexer-jobs-creator:1.0.0 -u <web3_node_url> -g "host=<postgres_host
 
 Here is an example where the watcher is configured to watch for:
 
-* The following
-  contract: [Fighter (FIGHTER)](https://etherscan.io/address/0x87E738a3d5E5345d6212D8982205A564289e6324) (`0x87E738a3d5E5345d6212D8982205A564289e6324`)
-  ;
-* With the event type _Transfer_ (`0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`);
-* With the `ERC721` standard type.
+* The following contract: [Fighter (FIGHTER)](https://etherscan.io/address/0x87E738a3d5E5345d6212D8982205A564289e6324) (`0x87E738a3d5E5345d6212D8982205A564289e6324`)
+* With the event type _Transfer_ (`0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`)
+* With the `ERC721` standard type
 
 ```console
 docker run indexer-chainwatcher:1.0.0 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
@@ -69,7 +67,7 @@ docker run indexer-chainwatcher:1.0.0 -u wss://mainnet.infura.io/ws/v3/d7b15235a
 ### Jobs Watcher
 
 Job Watcher watches the dispatcher and parsing websockets for new updates and pushes them into their respective queue.
-See the [job creator binary readme file](cmd/jobs-watcher/README.md) for more details about its flags.
+See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -84,8 +82,8 @@ docker run indexer-jobs-creator:1.0.0 -u <redis_url> -j "host=<postgres_host> po
 
 ### Parsing Dispatcher
 
-The Parsing Dispatcher consumes messages from the queue and launches jobs. See
-the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
+The Parsing Dispatcher consumes messages from the queue and launches jobs.
+See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 #### Requirements
 
@@ -102,8 +100,8 @@ docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e A
 
 ### Action Dispatcher
 
-Action Dispatcher consumes messages from the queue and launches jobs. See
-the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
+Action Dispatcher consumes messages from the queue and launches jobs.
+See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 #### Requirements
 

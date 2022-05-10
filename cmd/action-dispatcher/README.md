@@ -27,8 +27,8 @@ Usage of action-dispatcher:
 
 ## Database Address - Data Source Name
 
-Data Source Name (DSN) is the string specified describing how the connection to the database should be established. The
-string's format is the following:
+Data Source Name (DSN) is the string specified describing how the connection to the database should be established.
+The string's format is the following:
 
 ```
 host=localhost user=database-user password=password dbname=database-name port=5432 sslmode=disable
