@@ -15,10 +15,10 @@ In order to tun the indexer it requires these components:
 
 * [Docker](https://docs.docker.com/get-docker/)
 * [Docker Network](#docker-network)
-* [Postgres](#postgres)
+* [PostgreSQL](#postgresql)
 * [Redis](#redis)
 
-Natively installed postgres and redis instances can alternatively be used instead of running them in containers.
+Natively installed PostgreSQL and Redis instances can alternatively be used instead of running them in containers.
 
 ### Docker Network
 
@@ -28,9 +28,9 @@ First
 docker network create indexer
 ```
 
-### Postgres
+### PostgreSQL
 
-There are a couple ways to have postgres running:
+Here are two suggested methods of running PostgreSQL
 
 * [Natively](https://www.postgresql.org/download/)
 * [Docker](https://hub.docker.com/_/postgres)
@@ -45,7 +45,7 @@ docker run -d --name postgres --network indexer -e POSTGRES_USER=postgres -e POS
 > If you update the sql files and want to redeploy them.
 > There are two options to update the container:
 > * Manually
-> * Shutting down the container and running `docker volume prume` and then starting up the container again
+> * Shutting down the container and running `docker volume prune` and then starting up the container again
 
 ### Redis
 
