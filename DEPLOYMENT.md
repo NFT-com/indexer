@@ -11,11 +11,45 @@
 
 ## Requirements
 
+In order to tun the indexer it requires these components:
+
 * [Docker](https://docs.docker.com/get-docker/)
-* [Postgres](https://hub.docker.com/_/postgres)
-* [Redis](https://hub.docker.com/_/redis)
+* [Postgres](#postgres)
+* [Redis](#redis)
 
 Natively installed postgres and redis instances can alternatively be used instead of running them in containers.
+
+### Postgres
+
+There are a couple ways to have postgres running:
+
+* [Natively](https://www.postgresql.org/download/)
+* [Docker](https://hub.docker.com/_/postgres)
+
+Example of running postgres with automatic migration:
+
+```console
+docker run postgres -d --name postgres --network indexer -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres -p '5432:5432' -v './sql/:/docker-entrypoint-initdb.d/'
+```
+
+> 🚧
+> If you update the sql files and want to redeploy them.
+> There are two options to update the container:
+> * Manually
+> * Shutting down the container and running `docker volume prume` and then starting up the container again
+
+### Redis
+
+There are a couple ways to have redis running:
+
+* [Natively](https://redis.io/docs/getting-started/installation/)
+* [Docker](https://hub.docker.com/_/redis)
+
+Example of using redis with docker:
+
+```console
+docker run redis -d --name redis --network indexer -p '6379:6379'
+```
 
 ## Building the Containers
 
@@ -48,7 +82,7 @@ See the [jobs creator binary readme file](cmd/jobs-creator/README.md) for more d
 #### Starting the Container
 
 ```console
-docker run indexer-jobs-creator:1.0.0 -u <web3_node_url> -g "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>" -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run indexer-jobs-creator:1.0.0 --network indexer  -u <web3_node_url> -g "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>" -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 Here is an example where the watcher is configured to watch for:
@@ -58,11 +92,8 @@ Here is an example where the watcher is configured to watch for:
 * With the `ERC721` standard type
 
 ```console
-docker run indexer-chainwatcher:1.0.0 -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run indexer-chainwatcher:1.0.0 --network indexer  -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -c 0x87E738a3d5E5345d6212D8982205A564289e6324 -e 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef --standard-type ERC721 -d "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
-
-> 🚧
-> The Chain Watcher will no longer need an event type, contract and standard type.
 
 ### Jobs Watcher
 
@@ -77,7 +108,7 @@ See the [job watcher binary readme file](cmd/jobs-watcher/README.md) for more de
 #### Starting the Container
 
 ```console
-docker run indexer-jobs-creator:1.0.0 -u <redis_url> -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run indexer-jobs-creator:1.0.0 --network indexer  -u <redis_url> -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Parsing Dispatcher
@@ -95,7 +126,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsing-dispatcher:1.0.0 -u <redis_url> -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -e "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run -e AWS_REGION='<aws_region>' --network indexer  -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsing-dispatcher:1.0.0 -u <redis_url> -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -e "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Action Dispatcher
@@ -113,7 +144,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-action-dispatcher:1.0.0 -u <redis_url> -g "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
+docker run -e AWS_REGION='<aws_region>' --network indexer  -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-action-dispatcher:1.0.0 -u <redis_url> -g "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=chains sslmode=<postgres_sslmode>" -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=jobs sslmode=<postgres_sslmode>"
 ```
 
 ### Functions
