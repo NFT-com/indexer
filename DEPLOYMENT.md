@@ -130,7 +130,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -d --network indexer --name parsing-dispatcher -e AWS_REGION='<aws_region>'-e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsing-dispatcher:1.0.0 -u <redis_url> -j "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>" -e "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+docker run -d --network indexer --name parsing-dispatcher -e AWS_REGION='<aws_region>'-e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-parsing-dispatcher:1.0.0 -u <redis_url> -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>" -e "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
 ```
 
 ### Action Dispatcher
@@ -148,7 +148,7 @@ See the [parsing dispatcher binary readme file](cmd/parsing-dispatcher/README.md
 #### Starting the Container
 
 ```console
-docker run -d --network indexer --name action-dispatcher -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-action-dispatcher:1.0.0 -u <redis_url> -g "port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>" -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+docker run -d --network indexer --name action-dispatcher -e AWS_REGION='<aws_region>' -e AWS_ACCESS_KEY_ID='<aws_key_id>' -e AWS_SECRET_ACCESS_KEY='<aws_access_key>' indexer-action-dispatcher:1.0.0 -u <redis_url> -g "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>" -j "host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
 ```
 
 ### Functions
