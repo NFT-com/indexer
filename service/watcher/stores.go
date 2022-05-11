@@ -6,10 +6,10 @@ import (
 
 type ParsingStore interface {
 	List(status string) ([]*jobs.Parsing, error)
-	UpdateStatus(status string, parsingIDs ...string) error
+	UpdateStatus(status string, statusMessage string, parsingIDs ...string) error
 }
 
 type ActionStore interface {
 	List(status string) ([]*jobs.Action, error)
-	UpdateStatus(status string, actionIDs ...string) error
+	UpdateStatus(status string, statusMessage string, actionIDs ...string) error
 }
