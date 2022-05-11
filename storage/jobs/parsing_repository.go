@@ -152,13 +152,18 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 
 func (p *ParsingRepository) UpdateStatus(status string, statusMessage string, parsingIDs ...string) error {
 
-	result, err := p.build.
+	query := p.build.
 		Update("parsings").
 		Where("id = ANY(?)", pq.Array(parsingIDs)).
 		Set("job_status", status).
 		Set("status_message", statusMessage).
-		Set("updated_at", time.Now()).
-		Exec()
+		Set("updated_at", time.Now())
+
+	if statusMessage != "" {
+		query = query.Set("status_message", statusMessage)
+	}
+
+	result, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not update parsing job status: %w", err)
 	}
