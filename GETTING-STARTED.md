@@ -20,7 +20,7 @@ There are currently two workers:
 * Action Worker (`action-worker`)
 * Parsing Worker (`parsing-worker`)
 
-Checkout the [deployment guide](DEPLOYMENT-GUIDE.md) if you want to deploy it manually.
+Checkout the [deployment guide](DEPLOYMENT.md) if you want to deploy it manually.
 
 ### Starting the Components
 

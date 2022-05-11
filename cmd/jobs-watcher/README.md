@@ -1,6 +1,6 @@
 # Jobs Watcher
 
-Job Watcher watches the dispatcher and parsing websockets for new updates and pushes them into their respective queue.
+Job Watcher watches the dispatcher and parsing tables in the database for new jobs and pushes them into their respective queue.
 
 ## Usage
 

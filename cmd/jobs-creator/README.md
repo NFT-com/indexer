@@ -8,9 +8,9 @@ If stopped during an instantiation, the jobs creator resumes its work from where
 ```
 Usage of chain-watcher:
   -l, --log-level string                severity level for log output (default "info")
-  -g, --graph-database string           postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
-  -n, --node-url string                 url for ethereum json rpc api connection (default "ws://127.0.0.1:8545")
+  -n, --node-url string                 url for ethereum json rpc api connection (default "http://127.0.0.1:8545")
+  -w, --websocket-url string            websocket url for ethereum json rpc api connection (default "ws://127.0.0.1:8545")
       --db-connection-limit uint        maximum number of open database connections (default 16)
       --db-idle-connection-limit uint   maximum number of idle database connections (default 4)
       --write-interval duration         interval between checks for job writing (default 1s)

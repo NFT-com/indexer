@@ -20,7 +20,7 @@ func NewMetadataFetcher() *MetadataFetcher {
 	return &m
 }
 
-func (m *MetadataFetcher) Token(ctx context.Context, uri string) (*metadata.Token, error) {
+func (m *MetadataFetcher) Token(_ context.Context, uri string) (*metadata.Token, error) {
 
 	res, err := http.Get(uri)
 	if err != nil {
