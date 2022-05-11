@@ -93,12 +93,13 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	return &action, nil
 }
 
-func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) error {
+func (a *ActionRepository) UpdateStatus(status string, statusMessage string, actionIDs ...string) error {
 
 	result, err := a.build.
 		Update("actions").
 		Where("id = ANY(?)", pq.Array(actionIDs)).
 		Set("job_status", status).
+		Set("status_message", statusMessage).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {

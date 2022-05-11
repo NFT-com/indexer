@@ -150,12 +150,13 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 	return &parsing, nil
 }
 
-func (p *ParsingRepository) UpdateStatus(status string, parsingIDs ...string) error {
+func (p *ParsingRepository) UpdateStatus(status string, statusMessage string, parsingIDs ...string) error {
 
 	result, err := p.build.
 		Update("parsings").
 		Where("id = ANY(?)", pq.Array(parsingIDs)).
 		Set("job_status", status).
+		Set("status_message", statusMessage).
 		Set("updated_at", time.Now()).
 		Exec()
 	if err != nil {

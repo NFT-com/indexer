@@ -91,22 +91,22 @@ func (p *ParsingConsumer) process(payload []byte) error {
 		Uint64("end_height", parsing.EndHeight).
 		Logger()
 
-	err = p.parsings.UpdateStatus(jobs.StatusProcessing, parsing.ID)
+	err = p.parsings.UpdateStatus(jobs.StatusProcessing, "", parsing.ID)
 	if err != nil {
 		return fmt.Errorf("could not update job status: %w", err)
 	}
 
-	result, err := p.processParsing(payload, &parsing)
+	result, err := p.processParsing(payload)
 	if err != nil {
 		log.Error().Err(err).Msg("parsing job failed")
-		err = p.parsings.UpdateStatus(jobs.StatusFailed, parsing.ID)
+		err = p.parsings.UpdateStatus(jobs.StatusFailed, err.Error(), parsing.ID)
 	} else {
 		log.Info().
 			Int("transfers", len(result.Transfers)).
 			Int("sales", len(result.Sales)).
 			Int("actions", len(result.Actions)).
 			Msg("parsing job completed")
-		err = p.parsings.UpdateStatus(jobs.StatusFinished, parsing.ID)
+		err = p.parsings.UpdateStatus(jobs.StatusFinished, "", parsing.ID)
 	}
 
 	if err != nil {
@@ -116,7 +116,7 @@ func (p *ParsingConsumer) process(payload []byte) error {
 	return nil
 }
 
-func (p *ParsingConsumer) processParsing(payload []byte, parsing *jobs.Parsing) (*results.Parsing, error) {
+func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, error) {
 
 	if p.dryRun {
 		return &results.Parsing{}, nil
