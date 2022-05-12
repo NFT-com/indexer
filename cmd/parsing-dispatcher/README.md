@@ -10,9 +10,9 @@ Usage of parsing-dispatcher:
       --db-connection-limit uint        maximum number of database connections, -1 for unlimited (default 128)
       --db-idle-connection-limit uint   maximum number of idle connections (default 32)
       --dry-run                         executing as dry run disables invocation of Lambda function
-  -e, --events-database string          Postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable")
+  -e, --events-database string          Postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
       --height-range uint               maximum heights per parsing job (default 10)
-  -j, --jobs-database string            Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
+  -j, --jobs-database string            Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
       --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 100)
   -n, --lambda-name string              name of the lambda function to invoke (default "parsing-worker")
   -l, --log-level string                log level (default "info")

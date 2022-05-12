@@ -9,9 +9,9 @@ If the job creator stops, it retrieves the last job saved in the API upon restar
 Usage of job-creator:
       --db-connection-limit uint        maximum number of open database connections (default 16)
       --db-idle-connection-limit uint   maximum number of idle database connections (default 4)
-  -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
+  -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
       --height-range uint               maximum heights to include in a single job (default 10)
-  -j, --job-database string             Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
+  -j, --job-database string             Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
   -l, --log-level string                severity level for log output (default "info")
   -n, --node-url string                 HTTP URL for Ethereum JSON RPC API connection (default "http://127.0.0.1:8545")
       --pending-limit uint              maximum number of pending jobs per combination (default 1000)

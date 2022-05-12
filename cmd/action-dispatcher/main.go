@@ -54,9 +54,9 @@ func run() int {
 
 	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for graph database")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.StringVarP(&flagJobDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for job database")
+	pflag.StringVarP(&flagJobDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for job database")
 	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")

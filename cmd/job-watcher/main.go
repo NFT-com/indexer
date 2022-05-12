@@ -43,7 +43,7 @@ func run() int {
 	)
 
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
-	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for job database")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for job database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.DurationVar(&flagReadInterval, "read-interval", 100*time.Millisecond, "interval between checks for job reading")

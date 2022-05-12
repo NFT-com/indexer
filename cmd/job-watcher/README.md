@@ -8,7 +8,7 @@ The job watcher watches the PostgreSQL database for new jobs from the job creato
 Usage of job-watcher:
       --db-connection-limit uint        maximum number of open database connections (default 16)
       --db-idle-connection-limit uint   maximum number of idle database connections (default 4)
-  -j, --job-database string             Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
+  -j, --job-database string             Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
   -l, --log-level string                severity level for log output (default "info")
       --read-interval duration          interval between checks for job reading (default 100ms)
   -d, --redis-database int              Redis database number (default 1)
