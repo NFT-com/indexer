@@ -41,6 +41,8 @@ func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, cli *ethclient.C
 }
 
 func (n *BlocksNotifier) process() {
+	// Count of succeeding errors to check if reconnecting worked.
+	errorCount := 0
 
 ProcessLoop:
 	for {
@@ -55,11 +57,21 @@ ProcessLoop:
 
 		case err := <-n.sub.Err():
 
-			n.log.Error().Err(err).Msg("aborting blocks notifier")
+			// If error count meets the threshold stop the notifier.
+			if errorCount >= 3 {
+				n.log.Error().Err(err).Msg("aborting blocks notifier")
 
-			break ProcessLoop
+				break ProcessLoop
+			}
+
+			n.log.Error().Err(err).Msg("error from websocket connection")
+			errorCount++
+
+			continue ProcessLoop
 
 		case head := <-n.heads:
+			// Connection resumed set the error count to 0 again.
+			errorCount = 0
 
 			height := head.Number.Uint64()
 
