@@ -12,7 +12,7 @@ Usage of parsing-dispatcher:
       --dry-run                         executing as dry run disables invocation of Lambda function
   -e, --events-database string          Postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
       --height-range uint               maximum heights per parsing job (default 10)
-  -j, --jobs-database string            Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
+  -j, --job-database string            Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
       --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 100)
   -n, --lambda-name string              name of the lambda function to invoke (default "parsing-worker")
   -l, --log-level string                log level (default "info")

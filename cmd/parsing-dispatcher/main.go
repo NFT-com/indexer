@@ -60,7 +60,7 @@ func run() int {
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for events database")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights per parsing job")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.StringVarP(&flagJobDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for job database")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for job database")
 	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
@@ -84,16 +84,16 @@ func run() int {
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobDB)
+	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("could not connect to job database")
 		return failure
 	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := jobs.NewParsingRepository(jobsDB)
-	actionRepo := jobs.NewActionRepository(jobsDB)
+	parsingRepo := jobs.NewParsingRepository(jobDB)
+	actionRepo := jobs.NewActionRepository(jobDB)
 
 	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
 	if err != nil {

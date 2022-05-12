@@ -126,7 +126,7 @@ The job creator requires having access to an Ethereum node's API on both `WSS` a
 ./job-creator   -n="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
                 -w="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
                 --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
@@ -138,7 +138,7 @@ docker run  -d
               --node-url="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
               --websocket-url="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
               --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Job Watcher
@@ -149,7 +149,7 @@ See the [job watcher readme](../cmd/job-watcher/README.md) for more details abou
 ```bash
 # Using the binary.
 ./job-watcher   -u="172.17.0.100:6379"
-                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
@@ -159,7 +159,7 @@ docker run  -d
             --name="job-watcher"
             indexer-job-watcher
               --redis-url="172.17.0.100:6379"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Parsing Dispatcher
@@ -173,7 +173,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 ```bash
 # Using the binary.
 ./parsing-dispatcher  -u="172.17.0.100:6379"
-                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                      --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                       --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -187,7 +187,7 @@ docker run  -d
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-parsing-dispatcher
               --redis_url="172.17.0.100:6379"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -203,7 +203,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 ```bash
 # Using the binary.
 ./action-dispatcher  -u="172.17.0.100:6379"
-                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                      --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                       --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -217,6 +217,6 @@ docker run  -d
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-action-dispatcher
               --redis_url="172.17.0.100:6379"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```

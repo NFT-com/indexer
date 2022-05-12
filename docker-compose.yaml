@@ -16,7 +16,7 @@ services:
     restart: always
     ports:
       - '6379:6379'
-  jobs-watcher:
+  job-watcher:
     build:
       context: .
       dockerfile: cmd/job-watcher/Dockerfile
@@ -25,7 +25,7 @@ services:
     depends_on:
       - postgres
       - redis
-  jobs-creator:
+  job-creator:
     build:
       context: .
       dockerfile: cmd/job-creator/Dockerfile

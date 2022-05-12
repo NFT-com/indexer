@@ -56,7 +56,7 @@ func run() int {
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for graph database")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.StringVarP(&flagJobDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for job database")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "Postgres connection details for job database")
 	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
@@ -80,15 +80,15 @@ func run() int {
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobDB)
+	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
-		log.Error().Err(err).Str("jobs_database", flagJobDB).Msg("could not connect to job database")
+		log.Error().Err(err).Str("job_database", flagJobDB).Msg("could not connect to job database")
 		return failure
 	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	actionRepo := jobs.NewActionRepository(jobsDB)
+	actionRepo := jobs.NewActionRepository(jobDB)
 
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {

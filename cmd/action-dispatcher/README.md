@@ -16,7 +16,7 @@ Usage of action-dispatcher:
       --db-idle-connection-limit uint   maximum number of idle database connections (default 32)
       --dry-run                         executing as dry run disables invocation of Lambda function
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
-  -j, --jobs-database string            Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
+  -j, --job-database string            Postgres connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
       --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 900)
   -n, --lambda-name string              name of Lambda function for invocation (default "action-worker")
   -l, --log-level string                severity level for log output (default "info")
