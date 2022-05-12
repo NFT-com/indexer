@@ -62,7 +62,7 @@ You are free to run PostgreSQL however you want, but if you are unfamiliar with 
 ```bash
 docker run  -d
             --name="postgres"
-            --network="<your_network">
+            --network="indexer"
             -e "POSTGRES_USER=postgres"
             -e "POSTGRES_PASSWORD=postgres"
             -e "POSTGRES_DB=postgres"
@@ -79,7 +79,7 @@ Just like for PostgreSQL, Redis just needs to be accessible by your services, so
 
 ```bash
 docker run  -d
-            --network="<your_network>"
+            --network="indexer"
             -p "6379:6379"
             redis
             redis:alpine
@@ -88,10 +88,10 @@ docker run  -d
 ### Docker
 
 When using Docker, it is essential to start by creating a network on which the services should run.
-Then, each `docker run` command should be given the `--network=<your_network>` parameter.
+Then, each `docker run` command should be given the `--network=indexer` parameter.
 
 ```bash
-docker network create "<your_network>"
+docker network create "indexer"
 ```
 
 #### Building the Images
@@ -123,22 +123,22 @@ The job creator requires having access to an Ethereum node's API on both `WSS` a
 
 ```bash
 # Using the binary.
-./job-creator   -n="<web3_http_node_url>"
-                -w="<web3_ws_node_url>"
-                --graph-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
-                --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+./job-creator   -n="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
+                -w="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
+                --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
-            --network="<your_network>"
+            --network="indexer"
             --name="job-creator"
             indexer-job-creator
-              --node-url="<web3_http_node_url>"
-              --websocket-url="<web3_ws_node_url>"
-              --graph-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
-              --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+              --node-url="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
+              --websocket-url="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
+              --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Job Watcher
@@ -148,18 +148,18 @@ See the [job watcher readme](../cmd/job-watcher/README.md) for more details abou
 
 ```bash
 # Using the binary.
-./job-watcher   -u="<redis_url>"
-                --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+./job-watcher   -u="172.17.0.100:6379"
+                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
-            --network="<your_network>"
+            --network="indexer"
             --name="job-watcher"
             indexer-job-watcher
-              --redis-url="<redis_url>"
-              --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+              --redis-url="172.17.0.100:6379"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Parsing Dispatcher
@@ -172,23 +172,23 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 
 ```bash
 # Using the binary.
-./parsing-dispatcher  -u="<redis_url>"
-                      --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
-                      --events-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+./parsing-dispatcher  -u="172.17.0.100:6379"
+                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                      --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
-            --network="<your_network>"
+            --network="indexer"
             --name="parsing-dispatcher"
-            -e AWS_REGION="<aws_region>"
-            -e AWS_ACCESS_KEY_ID="<aws_key_id>"
-            -e AWS_SECRET_ACCESS_KEY="<aws_access_key>"
+            -e AWS_REGION="eu-west-1"
+            -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
+            -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-parsing-dispatcher
-              --redis_url="<redis_url>"
-              --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
-              --events-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+              --redis_url="172.17.0.100:6379"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Action Dispatcher
@@ -202,21 +202,21 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 
 ```bash
 # Using the binary.
-./action-dispatcher  -u="<redis_url>"
-                      --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
-                      --events-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+./action-dispatcher  -u="172.17.0.100:6379"
+                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                      --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
-            --network="<your_network>"
+            --network="indexer"
             --name="action-dispatcher"
-            -e AWS_REGION="<aws_region>"
-            -e AWS_ACCESS_KEY_ID="<aws_key_id>"
-            -e AWS_SECRET_ACCESS_KEY="<aws_access_key>"
+            -e AWS_REGION="eu-west-1"
+            -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
+            -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-action-dispatcher
-              --redis_url="<redis_url>"
-              --jobs-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
-              --events-database="host=<postgres_host> port=<postgres_port> user=<postgres_user> password=<postgres_password> dbname=postgres sslmode=<postgres_sslmode>"
+              --redis_url="172.17.0.100:6379"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
