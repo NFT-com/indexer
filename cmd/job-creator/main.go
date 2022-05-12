@@ -44,32 +44,28 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
-		flagLogLevel string
-
-		flagGraphDB      string
-		flagJobsDB       string
-		flagNodeURL      string
-		flagWebsocketURL string
-
-		flagOpenConnections uint
-		flagIdleConnections uint
-		flagWriteInterval   time.Duration
-		flagPendingLimit    uint
+		flagGraphDB         string
 		flagHeightRange     uint
+		flagIdleConnections uint
+		flagJobDB           string
+		flagLogLevel        string
+		flagNodeURL         string
+		flagOpenConnections uint
+		flagPendingLimit    uint
+		flagWebsocketURL    string
+		flagWriteInterval   time.Duration
 	)
 
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
-
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagNodeURL, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
-	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
-
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
-	pflag.DurationVar(&flagWriteInterval, "write-interval", time.Second, "interval between checks for job writing")
-	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for job database")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+	pflag.StringVarP(&flagNodeURL, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
+	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
+	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
+	pflag.DurationVar(&flagWriteInterval, "write-interval", time.Second, "interval between checks for job writing")
 
 	pflag.Parse()
 
@@ -94,15 +90,15 @@ func run() int {
 	networkRepo := graph.NewNetworkRepository(graphDB)
 	collectionRepo := graph.NewCollectionRepository(graphDB)
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
-		log.Error().Err(err).Str("jobs_db", flagGraphDB).Msg("could not open jobs database")
+		log.Error().Err(err).Str("job_db", flagGraphDB).Msg("could not open job database")
 		return failure
 	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := storage.NewParsingRepository(jobsDB)
+	parsingRepo := storage.NewParsingRepository(jobDB)
 
 	// Initialize the Ethereum node client and get the latest height to initialize
 	// the watchers properly.
@@ -156,13 +152,17 @@ func run() int {
 	}
 	ticker.Notify(latest)
 
+	log.Info().Msg("job creator started")
 	select {
 
 	case <-ctx.Done():
 
 	case <-sig:
+		log.Info().Msg("job creator stopping")
 		cancel()
 	}
+
+	log.Info().Msg("job creator done")
 
 	return success
 }

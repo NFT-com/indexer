@@ -40,40 +40,34 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
-		flagLogLevel string
-
-		flagJobsDB     string
-		flagEventsDB   string
-		flagRedisDB    int
-		flagRedisURL   string
-		flagAWSRegion  string
-		flagLambdaName string
-
-		flagOpenConnections   uint
-		flagIdleConnections   uint
+		flagAWSRegion         string
+		flagDryRun            bool
+		flagEventsDB          string
 		flagHeightRange       uint
-		flagRateLimit         uint
+		flagIdleConnections   uint
+		flagJobDB             string
 		flagLambdaConcurrency uint
-
-		flagDryRun bool
+		flagLambdaName        string
+		flagLogLevel          string
+		flagOpenConnections   uint
+		flagRateLimit         uint
+		flagRedisDB           int
+		flagRedisURL          string
 	)
 
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
 	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
-	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
-
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights per parsing job")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
-	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
-
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
+	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
+	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights per parsing job")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
+	pflag.StringVarP(&flagJobDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for job database")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
 
 	pflag.Parse()
 
@@ -90,9 +84,9 @@ func run() int {
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
-		log.Error().Err(err).Msg("could not connect to jobs database")
+		log.Error().Err(err).Msg("could not connect to job database")
 		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
