@@ -48,8 +48,6 @@ Setting up the infrastructure to run this locally is very complex, so it is reco
       1. Install [Pulumi](https://www.pulumi.com/)
       2. Run `run pulumi up`
 
-> ⚠️ Warning! After redeploying the functions, you need to set the lambda timeout to ten minutes.
-
 ### PostgreSQL
 
 You are free to run PostgreSQL however you want, but if you are unfamiliar with it, you can either get started by [downloading](https://www.postgresql.org/download/) and [installing it natively](https://www.postgresql.org/docs/current/tutorial-install.html) on your platform, or use the official [PostgreSQL Docker image](https://hub.docker.com/_/postgres).
@@ -58,6 +56,8 @@ You are free to run PostgreSQL however you want, but if you are unfamiliar with 
 > Tables have to be created, and some also should be populated.
 > This can be done by executing the SQL scripts from the `./sql` folder at the root of the repository in PostgreSQL.
 > For the Docker image, simply mount the `${PWD}/sql` folder from this repository at `/docker-entrypoint-initdb.d/`.
+
+If you want to use Docker, you first need to [set the network up](#docker) before you can run that command.
 
 ```bash
 docker run  -d
@@ -76,6 +76,8 @@ docker run  -d
 ### Redis
 
 Just like for PostgreSQL, Redis just needs to be accessible by your services, so you can [install it natively](https://redis.io/docs/getting-started/installation/) or use the [official Docker image](https://hub.docker.com/_/redis).
+
+If you want to use Docker, you first need to [set the network up](#docker) before you can run that command.
 
 ```bash
 docker run  -d
