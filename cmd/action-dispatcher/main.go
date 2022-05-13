@@ -8,8 +8,6 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/adjust/rmq/v4"
-	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
@@ -38,32 +36,38 @@ func run() int {
 	signal.Notify(sig, os.Interrupt)
 
 	var (
-		flagAWSRegion         string
-		flagDryRun            bool
-		flagGraphDB           string
-		flagIdleConnections   uint
-		flagJobDB             string
-		flagLambdaConcurrency uint
-		flagLambdaName        string
-		flagLogLevel          string
+		flagLogLevel string
+
+		flagGraphDB    string
+		flagJobDB      string
+		flagRedisDB    int
+		flagRedisURL   string
+		flagAWSRegion  string
+		flagLambdaName string
+
 		flagOpenConnections   uint
+		flagIdleConnections   uint
 		flagRateLimit         uint
-		flagRedisDB           int
-		flagRedisURL          string
+		flagLambdaConcurrency uint
+
+		flagDryRun bool
 	)
 
-	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "aws region for Lambda invocation")
-	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
-	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
-	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
+
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
 	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "redis database number")
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "redis server url")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "aws region for Lambda invocation")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
+
+	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
 	pflag.Parse()
 

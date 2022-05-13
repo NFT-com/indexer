@@ -44,28 +44,32 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
-		flagGraphDB         string
-		flagHeightRange     uint
-		flagIdleConnections uint
-		flagJobDB           string
-		flagLogLevel        string
-		flagNodeURL         string
+		flagLogLevel string
+
+		flagGraphDB      string
+		flagJobDB        string
+		flagNodeURL      string
+		flagWebsocketURL string
+
 		flagOpenConnections uint
-		flagPendingLimit    uint
-		flagWebsocketURL    string
+		flagIdleConnections uint
 		flagWriteInterval   time.Duration
+		flagPendingLimit    uint
+		flagHeightRange     uint
 	)
 
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
-	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
-	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
 	pflag.StringVarP(&flagNodeURL, "node-url", "n", "http://127.0.0.1:8545", "http URL for Ethereum JSON RPC API connection")
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
-	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
 	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "websocket URL for Ethereum JSON RPC API connection")
+
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
 	pflag.DurationVar(&flagWriteInterval, "write-interval", time.Second, "interval between checks for job writing")
+	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
+	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
 
 	pflag.Parse()
 
