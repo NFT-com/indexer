@@ -30,7 +30,7 @@ services:
       context: .
       dockerfile: cmd/job-creator/Dockerfile
     restart: always
-    entrypoint: '/creator -n wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/creator -n wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -w wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
   parsing-dispatcher:
