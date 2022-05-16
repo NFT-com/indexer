@@ -105,14 +105,6 @@ func run() int {
 
 	parsingRepo := storage.NewParsingRepository(jobDB)
 
-	// Initialize the Ethereum node client and get the latest height to initialize
-	// the watchers properly.
-	client, err := ethclient.DialContext(ctx, flagWebsocketURL)
-	if err != nil {
-		log.Error().Err(err).Str("websocket_url", flagWebsocketURL).Msg("could not connect to node API")
-		return failure
-	}
-
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
 	networks, err := networkRepo.List()
@@ -143,9 +135,16 @@ func run() int {
 	ticker := notifier.NewTickerNotifier(log, ctx, multi,
 		notifier.WithNotifyInterval(flagWriteInterval),
 	)
-	_, err = notifier.NewBlocksNotifier(log, ctx, client, ticker)
+	_, err = notifier.NewBlocksNotifier(log, ctx, flagWebsocketURL, ticker)
 	if err != nil {
 		log.Error().Err(err).Msg("could not initialize blocks notifier")
+		return failure
+	}
+
+	// Initialize the Ethereum node client and get the latest height.
+	client, err := ethclient.DialContext(ctx, flagNodeURL)
+	if err != nil {
+		log.Error().Err(err).Str("node_url", flagNodeURL).Msg("could not connect to node API")
 		return failure
 	}
 
