@@ -8,6 +8,10 @@ type CollectionStore interface {
 	Combinations(chainID uint64) ([]*jobs.Combination, error)
 }
 
+type MarketplaceStore interface {
+	Combinations(chainID uint64) ([]*jobs.Combination, error)
+}
+
 type ParsingStore interface {
 	Pending(chainID uint64) (uint, error)
 	Latest(chainID uint64, contractAddress string, eventHash string) (uint64, error)

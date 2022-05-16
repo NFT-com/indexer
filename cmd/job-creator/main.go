@@ -93,6 +93,7 @@ func run() int {
 
 	networkRepo := graph.NewNetworkRepository(graphDB)
 	collectionRepo := graph.NewCollectionRepository(graphDB)
+	marketplaceRepo := graph.NewMarketplaceRepository(graphDB)
 
 	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
@@ -121,7 +122,7 @@ func run() int {
 	}
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
-		creator := creator.New(log, collectionRepo, parsingRepo,
+		creator := creator.New(log, collectionRepo, marketplaceRepo, parsingRepo,
 			creator.WithNodeURL(flagNodeURL),
 			creator.WithChainID(network.ChainID),
 			creator.WithPendingLimit(flagPendingLimit),

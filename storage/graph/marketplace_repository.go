@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/NFT-com/indexer/models/jobs"
 
 	"github.com/NFT-com/indexer/models/graph"
 )
@@ -21,6 +22,47 @@ func NewMarketplaceRepository(db *sql.DB) *MarketplaceRepository {
 	}
 
 	return &m
+}
+
+func (m *MarketplaceRepository) Combinations(chainID uint64) ([]*jobs.Combination, error) {
+
+	result, err := m.build.
+		Select("networks.chain_id, networks_marketplaces.contract_address, events.event_hash, networks_marketplaces.start_height").
+		From("networks, networks_marketplaces, marketplaces_standards, standards, standards_events, events").
+		Where("networks.chain_id = ?", chainID).
+		Where("networks_marketplaces.network_id = networks.id").
+		Where("networks_marketplaces.marketplace_id = marketplaces_standards.marketplace_ic").
+		Where("marketplaces_standards.standard_id = standards.id").
+		Where("standards.id = standards_events.standard_id").
+		Where("standards_events.event_id = events.id").
+		Query()
+	if err != nil {
+		return nil, fmt.Errorf("could not execute query: %w", err)
+	}
+	defer result.Close()
+
+	var combinations []*jobs.Combination
+	for result.Next() {
+
+		if result.Err() != nil {
+			return nil, fmt.Errorf("could not get next row: %w", result.Err())
+		}
+
+		var combination jobs.Combination
+		err = result.Scan(
+			&combination.ChainID,
+			&combination.ContractAddress,
+			&combination.EventHash,
+			&combination.StartHeight,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan next row: %w", err)
+		}
+
+		combinations = append(combinations, &combination)
+	}
+
+	return combinations, nil
 }
 
 func (m *MarketplaceRepository) RetrieveByAddress(chainID string, address string) (*graph.Marketplace, error) {

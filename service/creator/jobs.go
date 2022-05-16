@@ -17,14 +17,15 @@ import (
 )
 
 type Creator struct {
-	mutex       trylock.TryLocker
-	log         zerolog.Logger
-	collections CollectionStore
-	parsings    ParsingStore
-	cfg         Config
+	mutex        trylock.TryLocker
+	log          zerolog.Logger
+	collections  CollectionStore
+	marketplaces MarketplaceStore
+	parsings     ParsingStore
+	cfg          Config
 }
 
-func New(log zerolog.Logger, collections CollectionStore, parsings ParsingStore, options ...Option) *Creator {
+func New(log zerolog.Logger, collections CollectionStore, marketplaces MarketplaceStore, parsings ParsingStore, options ...Option) *Creator {
 
 	cfg := DefaultConfig
 	for _, option := range options {
@@ -32,11 +33,12 @@ func New(log zerolog.Logger, collections CollectionStore, parsings ParsingStore,
 	}
 
 	c := Creator{
-		mutex:       trylock.New(),
-		log:         log.With().Str("component", "jobs_creator").Logger(),
-		collections: collections,
-		parsings:    parsings,
-		cfg:         cfg,
+		mutex:        trylock.New(),
+		log:          log.With().Str("component", "jobs_creator").Logger(),
+		collections:  collections,
+		marketplaces: marketplaces,
+		parsings:     parsings,
+		cfg:          cfg,
 	}
 
 	return &c
@@ -71,12 +73,23 @@ func (c *Creator) execute(height uint64) error {
 		return nil
 	}
 
-	// Our goal now is to build a list of all possible combinations of contract
-	// address and event hash for this chain.
-	combinations, err := c.collections.Combinations(c.cfg.ChainID)
+	combinations := make([]*jobs.Combination, 0)
+
+	// Our goal now is to build a list of all possible combinations of collection
+	// and event hash for this chain.
+	collectionCombinations, err := c.collections.Combinations(c.cfg.ChainID)
 	if err != nil {
-		return fmt.Errorf("could not get combinations: %w", err)
+		return fmt.Errorf("could not get collections combinations: %w", err)
 	}
+	combinations = append(combinations, collectionCombinations...)
+
+	// Our goal now is to build a list of all possible combinations of marketplace
+	// address and event hash for this chain.
+	marketplaceCombinations, err := c.marketplaces.Combinations(c.cfg.ChainID)
+	if err != nil {
+		return fmt.Errorf("could not get marketplaces combinations: %w", err)
+	}
+	combinations = append(combinations, marketplaceCombinations...)
 
 	// Then, we get the latest job for each combination in order to update the
 	// start height where necessary.
