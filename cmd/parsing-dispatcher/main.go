@@ -40,14 +40,14 @@ func run() int {
 
 	// Command line parameter initialization.
 	var (
-		flagLogLevel          string
+		flagLogLevel string
 
-		flagJobDB             string
-		flagEventsDB          string
-		flagRedisDB           int
-		flagRedisURL          string
-		flagAWSRegion         string
-		flagLambdaName        string
+		flagJobDB      string
+		flagEventsDB   string
+		flagRedisDB    int
+		flagRedisURL   string
+		flagAWSRegion  string
+		flagLambdaName string
 
 		flagOpenConnections   uint
 		flagIdleConnections   uint
@@ -55,7 +55,7 @@ func run() int {
 		flagRateLimit         uint
 		flagLambdaConcurrency uint
 
-		flagDryRun            bool
+		flagDryRun bool
 	)
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")

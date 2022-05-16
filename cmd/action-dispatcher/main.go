@@ -8,6 +8,8 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"github.com/adjust/rmq/v4"
+	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 

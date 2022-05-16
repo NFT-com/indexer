@@ -33,11 +33,11 @@ func run() int {
 	signal.Notify(sig, os.Interrupt)
 
 	var (
-		flagLogLevel        string
+		flagLogLevel string
 
-		flagRedisDB         int
-		flagRedisURL        string
-		flagJobDB           string
+		flagRedisDB  int
+		flagRedisURL string
+		flagJobDB    string
 
 		flagOpenConnections uint
 		flagIdleConnections uint
