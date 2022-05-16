@@ -41,7 +41,7 @@ func run() int {
 		flagLogLevel string
 
 		flagGraphDB    string
-		flagJobsDB     string
+		flagJobDB      string
 		flagRedisDB    int
 		flagRedisURL   string
 		flagAWSRegion  string
@@ -55,19 +55,19 @@ func run() int {
 		flagDryRun bool
 	)
 
-	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
+	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
-	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
-	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of Lambda function for invocation")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "redis database number")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "redis server url")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "aws region for Lambda invocation")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of open database connections")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle database connections")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests per second")
-	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 900, "maximum number of concurrent Lambda invocations")
+	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
+	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
@@ -86,15 +86,15 @@ func run() int {
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
-		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not connect to jobs database")
+		log.Error().Err(err).Str("job_database", flagJobDB).Msg("could not connect to job database")
 		return failure
 	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	actionRepo := jobs.NewActionRepository(jobsDB)
+	actionRepo := jobs.NewActionRepository(jobDB)
 
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {

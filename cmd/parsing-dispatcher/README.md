@@ -1,26 +1,28 @@
 # Parsing Dispatcher
 
-The parsing dispatcher consumes messages from the queue and launches jobs.
+The parsing dispatcher consumes messages from the queue and launches parsing jobs.
 
 ## Usage
 
 ```
 Usage of parsing-dispatcher:
-  -a, --api string               jobs api base hostname and port
-  -r, --aws-region string        aws lambda region (default "eu-west-1")
-      --database int             redis database number (default 1)
-  -d, --db string                database connection string
-  -l, --log-level string         log level (default "info")
-  -n, --network string           redis network type (default "tcp")
-  -q, --parsing-queue string     name of the queue for parsing (default "parsing")
-  -i, --poll-duration duration   time for each consumer poll (default 20s)
-  -p, --prefetch int             amount of message to prefetch in the consumer (default 80)
-  -t, --rate-limit int           amount of concurrent jobs for the consumer (default 500)
-  -c, --tag string               rmq consumer tag (default "parsing-agent")
-  -u, --url string               redis server connection url
+  -r, --aws-region string               aws region for Lambda invocation (default "eu-west-1")
+      --db-connection-limit uint        maximum number of database connections, -1 for unlimited (default 128)
+      --db-idle-connection-limit uint   maximum number of idle connections (default 32)
+      --dry-run                         executing as dry run disables invocation of Lambda function
+  -e, --events-database string          postgresql connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
+      --height-range uint               maximum heights per parsing job (default 10)
+  -j, --job-database string             postgresql connection details for job database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")
+      --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 100)
+  -n, --lambda-name string              name of the lambda function to invoke (default "parsing-worker")
+  -l, --log-level string                log level (default "info")
+      --rate-limit uint                 maximum number of API requests per second (default 10)
+  -d, --redis-database int              Redis database number (default 1)
+  -u, --redis-url string                redis server url (default "127.0.0.1:6379")
+
 ```
 
-## Database Address - Data Source Name
+## Database Address — Data Source Name
 
 Data Source Name (DSN) is the string specified describing how the connection to the database should be established.
 Format of the string is the following:

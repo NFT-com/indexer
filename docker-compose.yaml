@@ -16,31 +16,21 @@ services:
     restart: always
     ports:
       - '6379:6379'
-  api:
+  job-watcher:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: cmd/job-watcher/Dockerfile
     restart: always
-    entrypoint: '/api -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
-    ports:
-      - '8081:8081'
-    depends_on:
-      - postgres
-  jobs-watcher:
-    build:
-      context: .
-      dockerfile: Dockerfile.jobwatcher
-    restart: always
-    entrypoint: '/watcher -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/watcher -u redis:6379 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - redis
-  chain-watcher:
+  job-creator:
     build:
       context: .
-      dockerfile: Dockerfile.chainwatcher
+      dockerfile: cmd/job-creator/Dockerfile
     restart: always
-    entrypoint: '/watcher -u wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -i 1 -t web3 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/creator -n https://mainnet.infura.io/v3/d7b15235a515483490a5b89644221a71 -w wss://mainnet.infura.io/ws/v3/d7b15235a515483490a5b89644221a71 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
   parsing-dispatcher:
@@ -50,9 +40,9 @@ services:
       - AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
     build:
       context: .
-      dockerfile: Dockerfile.parsingdispatcher
+      dockerfile: cmd/parsing-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -b 10 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -u redis:6379 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - redis
@@ -63,9 +53,9 @@ services:
       - AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
     build:
       context: .
-      dockerfile: Dockerfile.actiondispatcher
+      dockerfile: cmd/action-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -d "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -u redis:6379 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - redis

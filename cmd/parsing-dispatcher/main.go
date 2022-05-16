@@ -42,7 +42,7 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagJobsDB     string
+		flagJobDB      string
 		flagEventsDB   string
 		flagRedisDB    int
 		flagRedisURL   string
@@ -60,11 +60,11 @@ func run() int {
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "URL for Redis server connection")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
-	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
+	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
+	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for events database")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "redis database number")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "redis server url")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "aws region for Lambda invocation")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
@@ -90,16 +90,16 @@ func run() int {
 	session := session.Must(session.NewSession(&sessionConfig))
 	lambdaClient := lambda.New(session)
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
 	if err != nil {
-		log.Error().Err(err).Msg("could not connect to jobs database")
+		log.Error().Err(err).Msg("could not connect to job database")
 		return failure
 	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := jobs.NewParsingRepository(jobsDB)
-	actionRepo := jobs.NewActionRepository(jobsDB)
+	parsingRepo := jobs.NewParsingRepository(jobDB)
+	actionRepo := jobs.NewActionRepository(jobDB)
 
 	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
 	if err != nil {

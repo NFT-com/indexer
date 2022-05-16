@@ -2,11 +2,10 @@ FROM golang:1.17-buster AS build
 WORKDIR /app
 COPY . .
 RUN go mod download
-RUN go build -o /api ./cmd/jobs-api
+RUN go build -o /creator ./cmd/job-creator
 
 FROM gcr.io/distroless/base-debian10
 WORKDIR /
-COPY --from=build /api /api
-EXPOSE 8081
+COPY --from=build /creator /creator
 USER nonroot:nonroot
-ENTRYPOINT ["/api"]
+ENTRYPOINT ["/creator"]
