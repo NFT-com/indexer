@@ -37,7 +37,7 @@ func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, websocketURL str
 
 	err := n.subscribe(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could subscribe to new headers: %w", err)
+		return nil, fmt.Errorf("could not subscribe to new headers: %w", err)
 	}
 
 	go n.process()
@@ -59,7 +59,7 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) error {
 		return nil
 	}, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxReconnects))
 	if err != nil {
-		return fmt.Errorf("could connecto to node api: %w", err)
+		return fmt.Errorf("could not connect to to node API: %w", err)
 	}
 
 	sub, err := cli.SubscribeNewHead(ctx, n.heads)
