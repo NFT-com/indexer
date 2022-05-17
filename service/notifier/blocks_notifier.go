@@ -49,12 +49,11 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) error {
 	var cli *ethclient.Client
 
 	err := backoff.Retry(func() error {
-		var err error
-
-		cli, err = ethclient.DialContext(ctx, n.websocketURL)
+		ethCli, err := ethclient.DialContext(ctx, n.websocketURL)
 		if err != nil {
 			return fmt.Errorf("could not dial to websocket node api: %w", err)
 		}
+		cli = ethCli
 
 		return nil
 	}, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxReconnects))
