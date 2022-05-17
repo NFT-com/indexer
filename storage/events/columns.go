@@ -23,7 +23,7 @@ var (
 		"transaction_hash",
 		"event_index",
 		"seller_address",
-		"buyer_addres",
+		"buyer_address",
 		"trade_price",
 		"emitted_at",
 	}
