@@ -156,7 +156,6 @@ func (p *ParsingRepository) UpdateStatus(status string, statusMessage string, pa
 		Update("parsings").
 		Where("id = ANY(?)", pq.Array(parsingIDs)).
 		Set("job_status", status).
-		Set("status_message", statusMessage).
 		Set("updated_at", time.Now())
 
 	if statusMessage != "" {
