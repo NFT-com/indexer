@@ -137,14 +137,14 @@ func run() int {
 	)
 	_, err = notifier.NewBlocksNotifier(log, ctx, flagWebsocketURL, ticker)
 	if err != nil {
-		log.Error().Err(err).Msg("could not initialize blocks notifier")
+		log.Error().Err(err).Str("websocket_node_url", flagWebsocketURL).Msg("could not initialize blocks notifier")
 		return failure
 	}
 
 	// Initialize the Ethereum node client and get the latest height.
 	client, err := ethclient.DialContext(ctx, flagNodeURL)
 	if err != nil {
-		log.Error().Err(err).Str("node_url", flagNodeURL).Msg("could not connect to node API")
+		log.Error().Err(err).Str("http_node_url", flagNodeURL).Msg("could not connect to node API")
 		return failure
 	}
 
