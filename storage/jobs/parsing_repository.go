@@ -150,7 +150,12 @@ func (p *ParsingRepository) Retrieve(parsingID string) (*jobs.Parsing, error) {
 	return &parsing, nil
 }
 
-func (p *ParsingRepository) UpdateStatus(status string, statusMessage string, parsingIDs ...string) error {
+func (p *ParsingRepository) UpdateStatus(status string, parsingIDs []string, options ...UpdateStatusOption) error {
+
+	opts := &updateOptions{}
+	for _, o := range options {
+		o(opts)
+	}
 
 	query := p.build.
 		Update("parsings").
@@ -158,8 +163,8 @@ func (p *ParsingRepository) UpdateStatus(status string, statusMessage string, pa
 		Set("job_status", status).
 		Set("updated_at", time.Now())
 
-	if statusMessage != "" {
-		query = query.Set("status_message", statusMessage)
+	if opts.statusMessage != nil {
+		query = query.Set("status_message", *opts.statusMessage)
 	}
 
 	result, err := query.Exec()

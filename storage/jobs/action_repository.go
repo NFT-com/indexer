@@ -93,7 +93,12 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	return &action, nil
 }
 
-func (a *ActionRepository) UpdateStatus(status string, statusMessage string, actionIDs ...string) error {
+func (a *ActionRepository) UpdateStatus(status string, actionIDs []string, options ...UpdateStatusOption) error {
+
+	opts := &updateOptions{}
+	for _, o := range options {
+		o(opts)
+	}
 
 	query := a.build.
 		Update("actions").
@@ -101,8 +106,8 @@ func (a *ActionRepository) UpdateStatus(status string, statusMessage string, act
 		Set("job_status", status).
 		Set("updated_at", time.Now())
 
-	if statusMessage != "" {
-		query = query.Set("status_message", statusMessage)
+	if opts.statusMessage != nil {
+		query = query.Set("status_message", opts.statusMessage)
 	}
 
 	result, err := query.Exec()

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	storage "github.com/NFT-com/indexer/storage/jobs"
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
@@ -91,7 +92,7 @@ func (p *ParsingConsumer) process(payload []byte) error {
 		Uint64("end_height", parsing.EndHeight).
 		Logger()
 
-	err = p.parsings.UpdateStatus(jobs.StatusProcessing, "", parsing.ID)
+	err = p.parsings.UpdateStatus(jobs.StatusProcessing, []string{parsing.ID})
 	if err != nil {
 		return fmt.Errorf("could not update job status: %w", err)
 	}
@@ -99,14 +100,14 @@ func (p *ParsingConsumer) process(payload []byte) error {
 	result, err := p.processParsing(payload)
 	if err != nil {
 		log.Error().Err(err).Msg("parsing job failed")
-		err = p.parsings.UpdateStatus(jobs.StatusFailed, err.Error(), parsing.ID)
+		err = p.parsings.UpdateStatus(jobs.StatusFailed, []string{parsing.ID}, storage.StatusMessage(err.Error()))
 	} else {
 		log.Info().
 			Int("transfers", len(result.Transfers)).
 			Int("sales", len(result.Sales)).
 			Int("actions", len(result.Actions)).
 			Msg("parsing job completed")
-		err = p.parsings.UpdateStatus(jobs.StatusFinished, "", parsing.ID)
+		err = p.parsings.UpdateStatus(jobs.StatusFinished, []string{parsing.ID})
 	}
 
 	if err != nil {
