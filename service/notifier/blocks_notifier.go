@@ -17,22 +17,22 @@ const (
 )
 
 type BlocksNotifier struct {
-	log          zerolog.Logger
-	ctx          context.Context
-	websocketURL string
-	heads        chan *types.Header
-	sub          ethereum.Subscription
-	listen       Listener
+	log    zerolog.Logger
+	ctx    context.Context
+	wsURL  string
+	heads  chan *types.Header
+	sub    ethereum.Subscription
+	listen Listener
 }
 
-func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, websocketURL string, listen Listener) (*BlocksNotifier, error) {
+func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, wsURL string, listen Listener) (*BlocksNotifier, error) {
 
 	n := BlocksNotifier{
-		log:          log.With().Str("component", "blocks_notifier").Logger(),
-		ctx:          ctx,
-		websocketURL: websocketURL,
-		heads:        make(chan *types.Header, 1),
-		listen:       listen,
+		log:    log.With().Str("component", "blocks_notifier").Logger(),
+		ctx:    ctx,
+		wsURL:  wsURL,
+		heads:  make(chan *types.Header, 1),
+		listen: listen,
 	}
 
 	err := n.subscribe(ctx)
@@ -49,7 +49,7 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) error {
 	var cli *ethclient.Client
 
 	err := backoff.Retry(func() error {
-		ethCli, err := ethclient.DialContext(ctx, n.websocketURL)
+		ethCli, err := ethclient.DialContext(ctx, n.wsURL)
 		if err != nil {
 			return fmt.Errorf("could not dial to websocket node api: %w", err)
 		}
