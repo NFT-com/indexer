@@ -75,19 +75,19 @@ func (c *Creator) execute(height uint64) error {
 
 	combinations := make([]*jobs.Combination, 0)
 
-	// Our goal now is to build a list of all possible combinations of collection
+	// Build a list of all possible combinations of collection
 	// and event hash for this chain.
 	collectionCombinations, err := c.collections.Combinations(c.cfg.ChainID)
 	if err != nil {
-		return fmt.Errorf("could not get collections combinations: %w", err)
+		return fmt.Errorf("could not get collection combinations: %w", err)
 	}
 	combinations = append(combinations, collectionCombinations...)
 
-	// Our goal now is to build a list of all possible combinations of marketplace
+	// Build a list of all possible combinations of marketplace
 	// address and event hash for this chain.
 	marketplaceCombinations, err := c.marketplaces.Combinations(c.cfg.ChainID)
 	if err != nil {
-		return fmt.Errorf("could not get marketplaces combinations: %w", err)
+		return fmt.Errorf("could not get marketplace combinations: %w", err)
 	}
 	combinations = append(combinations, marketplaceCombinations...)
 
