@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	storage "github.com/NFT-com/indexer/storage/jobs"
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
@@ -91,7 +92,7 @@ func (a *ActionConsumer) process(payload []byte) error {
 		Uint64("block_height", action.BlockHeight).
 		Logger()
 
-	err = a.actions.UpdateStatus(jobs.StatusProcessing, action.ID)
+	err = a.actions.UpdateStatus(jobs.StatusProcessing, []string{action.ID})
 	if err != nil {
 		return fmt.Errorf("could not update job status: %w", err)
 	}
@@ -107,10 +108,10 @@ func (a *ActionConsumer) process(payload []byte) error {
 
 	if err != nil {
 		log.Error().Err(err).Msg("action job failed")
-		err = a.actions.UpdateStatus(jobs.StatusFailed, action.ID)
+		err = a.actions.UpdateStatus(jobs.StatusFailed, []string{action.ID}, storage.StatusMessage(err.Error()))
 	} else {
 		log.Info().Msg("action job completed")
-		err = a.actions.UpdateStatus(jobs.StatusFinished, action.ID)
+		err = a.actions.UpdateStatus(jobs.StatusFinished, []string{action.ID})
 	}
 
 	if err != nil {

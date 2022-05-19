@@ -93,14 +93,24 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	return &action, nil
 }
 
-func (a *ActionRepository) UpdateStatus(status string, actionIDs ...string) error {
+func (a *ActionRepository) UpdateStatus(status string, actionIDs []string, options ...UpdateStatusOption) error {
 
-	result, err := a.build.
+	opts := &updateOptions{}
+	for _, o := range options {
+		o(opts)
+	}
+
+	query := a.build.
 		Update("actions").
 		Where("id = ANY(?)", pq.Array(actionIDs)).
 		Set("job_status", status).
-		Set("updated_at", time.Now()).
-		Exec()
+		Set("updated_at", time.Now())
+
+	if opts.statusMessage != nil {
+		query = query.Set("status_message", opts.statusMessage)
+	}
+
+	result, err := query.Exec()
 	if err != nil {
 		return fmt.Errorf("could not update action job status: %w", err)
 	}
