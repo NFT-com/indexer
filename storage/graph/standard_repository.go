@@ -27,7 +27,7 @@ func (s *StandardRepository) List() ([]*graph.Standard, error) {
 
 	result, err := s.build.
 		Select("*").
-		From("standards").
+		From(TableStandards).
 		OrderBy("id ASC").
 		Query()
 	if err != nil {

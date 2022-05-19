@@ -9,4 +9,5 @@ type NFT struct {
 	Image        string `json:"image"`
 	Description  string `json:"description"`
 	Owner        string `json:"owner"`
+	Number       uint64 `json:"number"`
 }

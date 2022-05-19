@@ -9,13 +9,16 @@ import (
 
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
+	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -29,6 +32,7 @@ type ActionConsumer struct {
 	actions     ActionStore
 	collections CollectionStore
 	nfts        NFTStore
+	nftOwners   NFTOwnerStore
 	traits      TraitStore
 	limit       ratelimit.Limiter
 	dryRun      bool
@@ -197,6 +201,11 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not insert traits: %w", err)
 	}
 
+	err = a.nftOwners.Upsert(result.NFT)
+	if err != nil {
+		return fmt.Errorf("could not update owners: %w", err)
+	}
+
 	return nil
 }
 
@@ -211,14 +220,22 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
-	if err != nil {
-		return fmt.Errorf("could not get collection: %w", err)
-	}
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
+	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
-	err = a.nfts.ChangeOwner(collection.ID, action.TokenID, inputs.NewOwner)
+	prev := &graph.NFT{
+		ID:     nftID.String(),
+		Owner:  inputs.PrevOwner,
+		Number: -inputs.Number,
+	}
+	new := &graph.NFT{
+		ID:     nftID.String(),
+		Owner:  inputs.NewOwner,
+		Number: inputs.Number,
+	}
+	err = a.nftOwners.Upsert(prev, new)
 	if err != nil {
-		return fmt.Errorf("could not change owner: %w", err)
+		return fmt.Errorf("could not update owners: %w", err)
 	}
 
 	return nil

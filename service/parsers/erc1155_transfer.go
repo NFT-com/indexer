@@ -47,7 +47,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 		TransactionHash:   log.TxHash.Hex(),
 		SenderAddress:     log.Topics[2].Hex(),
 		ReceiverAddress:   log.Topics[3].Hex(),
-		TokenCount:        uint(count.Uint64()),
+		TokenCount:        count.Uint64(),
 		// EmmittedAt set after parsing
 	}
 

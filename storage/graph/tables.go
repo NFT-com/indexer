@@ -5,6 +5,7 @@ const (
 	TableMarketplaces = "marketplaces"
 	TableCollections  = "collections"
 	TableNFTs         = "nfts"
+	TableNFTOwners    = "nft_owners"
 	TableTraits       = "traits"
 	TableStandards    = "standards"
 	TableEvents       = "event_types"

@@ -26,8 +26,8 @@ func NewNetworkRepository(db *sql.DB) *NetworkRepository {
 func (n *NetworkRepository) List() ([]*graph.Network, error) {
 
 	result, err := n.build.
-		Select("id", "chain_id", "name", "description", "symbol").
-		From("networks").
+		Select(ColumnsNetworks...).
+		From(TableNetworks).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)

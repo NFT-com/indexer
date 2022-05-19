@@ -128,6 +128,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Image:       token.Image,
 		Description: token.Description,
 		Owner:       addition.Owner,
+		Number:      addition.Number,
 	}
 
 	result := results.Addition{

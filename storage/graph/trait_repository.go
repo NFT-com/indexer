@@ -30,8 +30,8 @@ func (t *TraitRepository) Insert(traits ...*graph.Trait) error {
 	}
 
 	query := t.build.
-		Insert("traits").
-		Columns("id", "nft_id", "name", "type", "value")
+		Insert(TableTraits).
+		Columns(ColumnsTraits...)
 
 	for _, trait := range traits {
 		query = query.Values(
