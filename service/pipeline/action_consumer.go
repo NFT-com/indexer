@@ -186,6 +186,10 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not decode NFT: %w", err)
 	}
 
+	if result.NFT == nil {
+		return fmt.Errorf("could not get nft from result")
+	}
+
 	result.NFT.CollectionID = collection.ID
 	err = a.nfts.Insert(result.NFT)
 	if err != nil {
