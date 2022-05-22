@@ -43,14 +43,13 @@ VALUES
     '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
     '0x306b1ea3ecdf94aB739F1910bbda052Ed4A9f949',
     14492070,
-    'Something',
+    'BEANZ Official',
     'BEANZ coming soon.',
     'SMTH',
     'something',
     '',
     ''
   );
-
 
 
 -- ERC-721 contracts scraped from Etherscan.io
