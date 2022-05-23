@@ -62,7 +62,7 @@ func run() int {
 	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "redis database number")
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "redis server url")
 	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "aws region for Lambda invocation")
-	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the lambda function to invoke")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of the lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")

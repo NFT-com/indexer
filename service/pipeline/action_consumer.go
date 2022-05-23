@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	storage "github.com/NFT-com/indexer/storage/jobs"
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
@@ -20,6 +19,7 @@ import (
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
 type ActionConsumer struct {
@@ -184,10 +184,6 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	err = json.Unmarshal(output, &result)
 	if err != nil {
 		return fmt.Errorf("could not decode NFT: %w", err)
-	}
-
-	if result.NFT == nil {
-		return fmt.Errorf("could not get nft from result")
 	}
 
 	result.NFT.CollectionID = collection.ID
