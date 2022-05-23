@@ -12,9 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const (
-	maxReconnects = 9
-)
+const maxReconnects = 9
 
 type BlocksNotifier struct {
 	log    zerolog.Logger
