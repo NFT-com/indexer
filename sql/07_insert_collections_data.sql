@@ -6,7 +6,7 @@ VALUES
     '612ecc22-36ef-4ef7-bb0b-5b864b85d089',
     '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
     '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d',
-    122875079,
+    12287507,
     'Bored Ape Yacht Club',
     'The Bored Ape Yacht Club is a collection of 10,000 unique Bored Ape NFTs— unique digital collectibles living on the Ethereum blockchain. Your Bored Ape doubles as your Yacht Club membership card, and grants access to members-only benefits, the first of which is access to THE BATHROOM, a collaborative graffiti board. Future areas and perks can be unlocked by the community through roadmap activation. Visit www.BoredApeYachtClub.com for more details.',
     'BAYC',
