@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS networks_marketplaces
     marketplace_id   UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     contract_address VARCHAR(128) NOT NULL,
     start_height     NUMERIC      NOT NULL,
-    PRIMARY KEY (network_id, marketplace_id)
+    PRIMARY KEY (network_id, marketplace_id, contract_address)
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_standards
