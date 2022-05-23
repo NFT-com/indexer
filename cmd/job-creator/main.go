@@ -48,7 +48,7 @@ func run() int {
 
 		flagGraphDB      string
 		flagJobDB        string
-		flagNodeURL      string
+		flagHTTPNodeURL  string
 		flagWebsocketURL string
 
 		flagOpenConnections uint
@@ -62,7 +62,7 @@ func run() int {
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
 	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
-	pflag.StringVarP(&flagNodeURL, "node-url", "n", "http://127.0.0.1:8545", "http URL for Ethereum JSON RPC API connection")
+	pflag.StringVarP(&flagHTTPNodeURL, "node-url", "n", "http://127.0.0.1:8545", "http URL for Ethereum JSON RPC API connection")
 	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "websocket URL for Ethereum JSON RPC API connection")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
@@ -105,14 +105,6 @@ func run() int {
 
 	parsingRepo := storage.NewParsingRepository(jobDB)
 
-	// Initialize the Ethereum node client and get the latest height to initialize
-	// the watchers properly.
-	client, err := ethclient.DialContext(ctx, flagWebsocketURL)
-	if err != nil {
-		log.Error().Err(err).Str("websocket_url", flagWebsocketURL).Msg("could not connect to node API")
-		return failure
-	}
-
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
 	networks, err := networkRepo.List()
@@ -123,7 +115,7 @@ func run() int {
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
 		creator := creator.New(log, collectionRepo, marketplaceRepo, parsingRepo,
-			creator.WithNodeURL(flagNodeURL),
+			creator.WithNodeURL(flagHTTPNodeURL),
 			creator.WithChainID(network.ChainID),
 			creator.WithPendingLimit(flagPendingLimit),
 			creator.WithHeightRange(flagHeightRange),
@@ -143,9 +135,16 @@ func run() int {
 	ticker := notifier.NewTickerNotifier(log, ctx, multi,
 		notifier.WithNotifyInterval(flagWriteInterval),
 	)
-	_, err = notifier.NewBlocksNotifier(log, ctx, client, ticker)
+	_, err = notifier.NewBlocksNotifier(log, ctx, flagWebsocketURL, ticker)
 	if err != nil {
-		log.Error().Err(err).Msg("could not initialize blocks notifier")
+		log.Error().Err(err).Str("websocket_node_url", flagWebsocketURL).Msg("could not initialize blocks notifier")
+		return failure
+	}
+
+	// Initialize the Ethereum node client and get the latest height.
+	client, err := ethclient.DialContext(ctx, flagHTTPNodeURL)
+	if err != nil {
+		log.Error().Err(err).Str("http_node_url", flagHTTPNodeURL).Msg("could not connect to node API")
 		return failure
 	}
 
