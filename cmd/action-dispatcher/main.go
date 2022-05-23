@@ -106,6 +106,7 @@ func run() int {
 
 	collectionRepo := graph.NewCollectionRepository(graphDB)
 	nftRepo := graph.NewNFTRepository(graphDB)
+	nftOwnerRepo := graph.NewNFTOwnerRepository(graphDB)
 	traitRepo := graph.NewTraitRepository(graphDB)
 
 	redisClient := redis.NewClient(&redis.Options{
@@ -134,7 +135,7 @@ func run() int {
 	}
 
 	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, traitRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, nftOwnerRepo, traitRepo, flagRateLimit, flagDryRun)
 		_, err = queue.AddConsumer("action-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
