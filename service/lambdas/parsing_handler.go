@@ -214,7 +214,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				NodeURL:  parsing.NodeURL,
 				Standard: standards[transfer.ID],
 				Owner:    transfer.ReceiverAddress,
-				Number:   transfer.TokenCount,
+				Number:   int64(transfer.TokenCount),
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
@@ -237,7 +237,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			inputs := inputs.OwnerChange{
 				PrevOwner: transfer.SenderAddress,
 				NewOwner:  transfer.ReceiverAddress,
-				Number:    transfer.TokenCount,
+				Number:    int64(transfer.TokenCount),
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
