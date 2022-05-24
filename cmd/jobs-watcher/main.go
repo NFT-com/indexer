@@ -35,9 +35,9 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagRedisDB  int
+		flagJobsDB   string
 		flagRedisURL string
-		flagJobDB    string
+		flagRedisDB  int
 
 		flagOpenConnections uint
 		flagIdleConnections uint
@@ -46,9 +46,9 @@ func run() int {
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
-	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "redis database number")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "redis server url")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server url")
+	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
@@ -78,16 +78,16 @@ func run() int {
 		return failure
 	}
 
-	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Str("job_db", flagJobDB).Msg("could not open job database")
+		log.Error().Err(err).Str("job_db", flagJobsDB).Msg("could not open job database")
 		return failure
 	}
-	jobDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := jobs.NewParsingRepository(jobDB)
-	actionRepo := jobs.NewActionRepository(jobDB)
+	parsingRepo := jobs.NewParsingRepository(jobsDB)
+	actionRepo := jobs.NewActionRepository(jobsDB)
 
 	watch := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
 

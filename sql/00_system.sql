@@ -1,1 +1,1 @@
-ALTER system SET max_connections = 300;
+ALTER system SET max_connections = 500;

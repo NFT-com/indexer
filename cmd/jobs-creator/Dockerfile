@@ -2,7 +2,7 @@ FROM golang:1.17-buster AS build
 WORKDIR /app
 COPY . .
 RUN go mod download
-RUN go build -o /creator ./cmd/job-creator
+RUN go build -o /creator ./cmd/jobs-creator
 
 FROM gcr.io/distroless/base-debian10
 WORKDIR /
