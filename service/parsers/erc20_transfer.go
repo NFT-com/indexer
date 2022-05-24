@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/NFT-com/indexer/models/abis"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
 )
 

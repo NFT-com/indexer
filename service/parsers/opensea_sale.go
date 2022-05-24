@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/NFT-com/indexer/models/hashes"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
@@ -14,6 +13,7 @@ import (
 
 	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/hashes"
 )
 
 const (
