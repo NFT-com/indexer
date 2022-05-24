@@ -18,6 +18,7 @@ var (
 		"id",
 		"chain_id",
 		"marketplace_address",
+		"collection_address",
 		"token_id",
 		"block_number",
 		"transaction_hash",
@@ -25,6 +26,7 @@ var (
 		"seller_address",
 		"buyer_address",
 		"trade_price",
+		"trade_currency",
 		"emitted_at",
 	}
 )

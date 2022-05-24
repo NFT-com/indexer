@@ -7,12 +7,14 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/hashes"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -97,7 +99,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		eventType := log.Topics[0]
 		switch eventType.String() {
 
-		case ERC721TransferHash:
+		case hashes.ERC721Transfer:
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
@@ -116,7 +118,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				Uint("token_count", transfer.TokenCount).
 				Msg("ERC721 transfer parsed")
 
-		case ERC1155TransferHash:
+		case hashes.ERC1155Transfer:
 
 			transfer, err := parsers.ERC1155Transfer(log)
 			if err != nil {
@@ -135,7 +137,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				Uint("token_count", transfer.TokenCount).
 				Msg("ERC1155 transfer parsed")
 
-		case ERC1155BatchHash:
+		case hashes.ERC1155Batch:
 
 			batch, err := parsers.ERC1155Batch(log)
 			if err != nil {
@@ -157,9 +159,22 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 					Msg("ERC115 batch parsed")
 			}
 
-		case OpenSeaTradeHash:
+		case hashes.OpenSeaTrade:
 
-			sale, err := parsers.OpenSeaSale(log)
+			// Retrieve the logs for all the addresses and event types for the given block range.
+			blockLogs, err := fetch.Logs(ctx, nil, nil, log.BlockNumber, log.BlockNumber)
+			if err != nil {
+				return nil, fmt.Errorf("could not fetch logs: %w", err)
+			}
+
+			saleLogs := make([]types.Log, 0, 8)
+			for _, blockLog := range blockLogs {
+				if blockLog.TxHash == log.TxHash {
+					saleLogs = append(saleLogs, blockLog)
+				}
+			}
+
+			sale, err := parsers.OpenSeaSale(saleLogs)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse OpenSea sale: %w", err)
 			}

@@ -38,6 +38,7 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			sale.ID,
 			sale.ChainID,
 			sale.MarketplaceAddress,
+			sale.CollectionAddress,
 			sale.TokenID,
 			sale.BlockNumber,
 			sale.TransactionHash,
@@ -45,6 +46,7 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			sale.SellerAddress,
 			sale.BuyerAddress,
 			sale.TradePrice,
+			sale.TradeCurrency,
 			sale.EmittedAt,
 		)
 	}
