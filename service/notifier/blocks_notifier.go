@@ -36,7 +36,7 @@ func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, wsURL string, li
 		listen: listen,
 	}
 
-	go n.subscribe(ctx)
+	n.subscribe(ctx)
 
 	go n.process()
 
