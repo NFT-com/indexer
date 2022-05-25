@@ -46,10 +46,10 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagGraphDB      string
-		flagJobsDB       string
-		flagHTTPNodeURL  string
-		flagWebsocketURL string
+		flagGraphDB  string
+		flagJobsDB   string
+		flagNodeHTTP string
+		flagNodeWS   string
 
 		flagOpenConnections uint
 		flagIdleConnections uint
@@ -62,8 +62,8 @@ func run() int {
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagHTTPNodeURL, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
-	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
+	pflag.StringVarP(&flagNodeHTTP, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
+	pflag.StringVarP(&flagNodeWS, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
@@ -115,7 +115,7 @@ func run() int {
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
 		creator := creator.New(log, collectionRepo, marketplaceRepo, parsingRepo,
-			creator.WithNodeURL(flagHTTPNodeURL),
+			creator.WithNodeURL(flagNodeHTTP),
 			creator.WithChainID(network.ChainID),
 			creator.WithPendingLimit(flagPendingLimit),
 			creator.WithHeightRange(flagHeightRange),
@@ -135,16 +135,16 @@ func run() int {
 	ticker := notifier.NewTickerNotifier(log, ctx, multi,
 		notifier.WithNotifyInterval(flagWriteInterval),
 	)
-	_, err = notifier.NewBlocksNotifier(log, ctx, flagWebsocketURL, ticker)
+	_, err = notifier.NewBlocksNotifier(log, ctx, flagNodeWS, ticker)
 	if err != nil {
-		log.Error().Err(err).Str("websocket_node_url", flagWebsocketURL).Msg("could not initialize blocks notifier")
+		log.Error().Err(err).Str("node_websocket", flagNodeWS).Msg("could not initialize blocks notifier")
 		return failure
 	}
 
 	// Initialize the Ethereum node client and get the latest height.
-	client, err := ethclient.DialContext(ctx, flagHTTPNodeURL)
+	client, err := ethclient.DialContext(ctx, flagNodeHTTP)
 	if err != nil {
-		log.Error().Err(err).Str("http_node_url", flagHTTPNodeURL).Msg("could not connect to node API")
+		log.Error().Err(err).Str("node_http", flagNodeHTTP).Msg("could not connect to node API")
 		return failure
 	}
 

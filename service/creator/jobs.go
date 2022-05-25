@@ -73,7 +73,7 @@ func (c *Creator) execute(height uint64) error {
 		return nil
 	}
 
-	combinations := make([]*jobs.Combination, 0)
+	var combinations []*jobs.Combination
 
 	// Build a list of all possible combinations of collection
 	// and event hash for this chain.
