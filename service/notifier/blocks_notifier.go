@@ -44,7 +44,7 @@ func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, wsURL string, li
 }
 
 func (n *BlocksNotifier) subscribe(ctx context.Context) {
-	
+
 	var sub ethereum.Subscription
 
 	err := backoff.Retry(func() error {
