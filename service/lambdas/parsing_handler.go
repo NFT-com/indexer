@@ -113,7 +113,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				Str("token_id", transfer.TokenID).
 				Str("sender_address", transfer.SenderAddress).
 				Str("receiver_address", transfer.ReceiverAddress).
-				Uint64("token_count", transfer.TokenCount).
+				Uint("token_count", transfer.TokenCount).
 				Msg("ERC721 transfer parsed")
 
 		case ERC1155TransferHash:
@@ -132,7 +132,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				Str("token_id", transfer.TokenID).
 				Str("sender_address", transfer.SenderAddress).
 				Str("receiver_address", transfer.ReceiverAddress).
-				Uint64("token_count", transfer.TokenCount).
+				Uint("token_count", transfer.TokenCount).
 				Msg("ERC1155 transfer parsed")
 
 		case ERC1155BatchHash:
@@ -153,7 +153,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 					Str("token_id", transfer.TokenID).
 					Str("sender_address", transfer.SenderAddress).
 					Str("receiver_address", transfer.ReceiverAddress).
-					Uint64("token_count", transfer.TokenCount).
+					Uint("token_count", transfer.TokenCount).
 					Msg("ERC115 batch parsed")
 			}
 
@@ -214,7 +214,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				NodeURL:  parsing.NodeURL,
 				Standard: standards[transfer.ID],
 				Owner:    transfer.ReceiverAddress,
-				Number:   int64(transfer.TokenCount),
+				Number:   transfer.TokenCount,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
@@ -237,7 +237,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			inputs := inputs.OwnerChange{
 				PrevOwner: transfer.SenderAddress,
 				NewOwner:  transfer.ReceiverAddress,
-				Number:    int64(transfer.TokenCount),
+				Number:    transfer.TokenCount,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
