@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	storage "github.com/NFT-com/indexer/storage/jobs"
 	"github.com/rs/zerolog"
 
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/service/pipeline"
+	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
 type Job struct {

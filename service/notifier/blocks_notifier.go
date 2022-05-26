@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/rs/zerolog"
-	"go.uber.org/atomic"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 )
 
 type BlocksNotifier struct {
@@ -19,7 +17,7 @@ type BlocksNotifier struct {
 	wsURL  string
 	heads  chan *types.Header
 	sub    ethereum.Subscription
-	done   *atomic.Bool
+	done   chan struct{}
 	errors chan error
 	listen Listener
 }
@@ -30,10 +28,10 @@ func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, wsURL string, li
 		log:    log.With().Str("component", "blocks_notifier").Logger(),
 		ctx:    ctx,
 		wsURL:  wsURL,
-		heads:  make(chan *types.Header, 1),
-		done:   atomic.NewBool(false),
-		errors: make(chan error, 1),
 		listen: listen,
+		heads:  make(chan *types.Header, 1),
+		done:   make(chan struct{}),
+		errors: make(chan error, 1),
 	}
 
 	n.subscribe(ctx)
@@ -48,8 +46,13 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) {
 	var sub ethereum.Subscription
 
 	err := backoff.Retry(func() error {
-		if n.done.Load() {
+		select {
+
+		case <-n.done:
 			return nil
+
+		default:
+
 		}
 
 		cli, err := ethclient.DialContext(ctx, n.wsURL)
@@ -82,15 +85,13 @@ ProcessLoop:
 
 			n.log.Debug().Msg("terminating blocks notifier")
 
-			n.done.Store(true)
+			close(n.done)
 
 			break ProcessLoop
 
 		case err := <-n.errors:
 
-			n.log.Error().Err(err).Msg("could not connect to to node API")
-
-			n.log.Debug().Msg("terminating blocks notifier")
+			n.log.Error().Err(err).Msg("termination blocks notifier: could not connect to to node API")
 
 			break ProcessLoop
 
