@@ -42,13 +42,12 @@ CREATE TABLE IF NOT EXISTS nfts
     updated_at    TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS nft_owners
+CREATE TABLE IF NOT EXISTS owners
 (
-    nft_id     UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
-    owner      VARCHAR(128) NOT NULL,
-    number     NUMERIC      NOT NULL DEFAULT 0,
-    created_at TIMESTAMP             DEFAULT NOW(),
-    updated_at TIMESTAMP,
+    nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
+    owner  VARCHAR(128) NOT NULL,
+    number NUMERIC      NOT NULL DEFAULT 0,
+    constraint number_non_negative check (number >= 0),
     PRIMARY KEY (nft_id, owner)
 );
 

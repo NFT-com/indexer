@@ -106,7 +106,7 @@ func run() int {
 
 	collectionRepo := graph.NewCollectionRepository(graphDB)
 	nftRepo := graph.NewNFTRepository(graphDB)
-	nftOwnerRepo := graph.NewNFTOwnerRepository(graphDB)
+	nftOwnerRepo := graph.NewOwnerRepository(graphDB)
 	traitRepo := graph.NewTraitRepository(graphDB)
 
 	redisClient := redis.NewClient(&redis.Options{

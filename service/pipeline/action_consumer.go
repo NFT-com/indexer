@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
-	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -32,7 +31,7 @@ type ActionConsumer struct {
 	actions     ActionStore
 	collections CollectionStore
 	nfts        NFTStore
-	nftOwners   NFTOwnerStore
+	owners      OwnerStore
 	traits      TraitStore
 	limit       ratelimit.Limiter
 	dryRun      bool
@@ -45,7 +44,7 @@ func NewActionConsumer(
 	actions ActionStore,
 	collections CollectionStore,
 	nfts NFTStore,
-	nftOwners NFTOwnerStore,
+	owners OwnerStore,
 	traits TraitStore,
 	rateLimit uint,
 	dryRun bool,
@@ -58,7 +57,7 @@ func NewActionConsumer(
 		actions:     actions,
 		collections: collections,
 		nfts:        nfts,
-		nftOwners:   nftOwners,
+		owners:      owners,
 		traits:      traits,
 		limit:       ratelimit.New(int(rateLimit)),
 		dryRun:      dryRun,
@@ -203,9 +202,9 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not insert traits: %w", err)
 	}
 
-	err = a.nftOwners.Upsert(result.NFT)
+	err = a.owners.AddCount(result.NFT.ID, result.NFT.Owner, result.NFT.Number)
 	if err != nil {
-		return fmt.Errorf("could not update owners: %w", err)
+		return fmt.Errorf("could not add owner: %w", err)
 	}
 
 	return nil
@@ -225,17 +224,7 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
 	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
-	prev := &graph.NFT{
-		ID:     nftID.String(),
-		Owner:  inputs.PrevOwner,
-		Number: -inputs.Number,
-	}
-	new := &graph.NFT{
-		ID:     nftID.String(),
-		Owner:  inputs.NewOwner,
-		Number: inputs.Number,
-	}
-	err = a.nftOwners.Upsert(prev, new)
+	err = a.owners.MoveCount(nftID.String(), inputs.PrevOwner, inputs.NewOwner, inputs.Number)
 	if err != nil {
 		return fmt.Errorf("could not update owners: %w", err)
 	}

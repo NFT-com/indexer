@@ -12,8 +12,9 @@ type NFTStore interface {
 	Insert(nft *graph.NFT) error
 }
 
-type NFTOwnerStore interface {
-	Upsert(nft ...*graph.NFT) error
+type OwnerStore interface {
+	AddCount(nftID string, owner string, count uint) error
+	MoveCount(nftID string, from string, to string, count uint) error
 }
 
 type TraitStore interface {

@@ -26,8 +26,8 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 func (n *NFTRepository) Insert(nft *graph.NFT) error {
 
 	_, err := n.build.
-		Insert(TableNFTs).
-		Columns(ColumnsNFTs...).
+		Insert("nfts").
+		Columns("id", "collection_id", "token_id", "name", "uri", "image", "description").
 		Values(
 			nft.ID,
 			nft.CollectionID,
