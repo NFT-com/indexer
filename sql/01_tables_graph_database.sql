@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS networks
 (
     id          UUID PRIMARY KEY,
-    chain_id    NUMERIC     NOT NULL,
+    chain_id    NUMERIC     NOT NULL UNIQUE,
     name        TEXT        NOT NULL,
     description TEXT        NOT NULL,
     symbol      VARCHAR(16) NOT NULL
@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS collections
     symbol           VARCHAR(16)  NOT NULL,
     slug             VARCHAR(256) NOT NULL,
     website          TEXT         NOT NULL,
-    image_url        TEXT         NOT NULL
+    image_url        TEXT         NOT NULL,
+    UNIQUE (network_id, contract_address)
 );
 
 CREATE TABLE IF NOT EXISTS nfts
@@ -40,7 +41,8 @@ CREATE TABLE IF NOT EXISTS nfts
     description   TEXT         NULL,
     owner         VARCHAR(128) NOT NULL,
     created_at    TIMESTAMP DEFAULT NOW(),
-    updated_at    TIMESTAMP
+    updated_at    TIMESTAMP,
+    UNIQUE (collection_id, token_id)
 );
 
 CREATE TABLE IF NOT EXISTS traits
@@ -71,7 +73,7 @@ CREATE TABLE IF NOT EXISTS networks_marketplaces
     marketplace_id   UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     contract_address VARCHAR(128) NOT NULL,
     start_height     NUMERIC      NOT NULL,
-    PRIMARY KEY (network_id, marketplace_id)
+    PRIMARY KEY (network_id, marketplace_id, contract_address)
 );
 
 CREATE TABLE IF NOT EXISTS marketplaces_standards
