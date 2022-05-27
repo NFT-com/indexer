@@ -39,6 +39,7 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			sale.ID,
 			sale.ChainID,
 			sale.MarketplaceAddress,
+			sale.CollectionAddress,
 			sale.TokenID,
 			sale.BlockNumber,
 			sale.TransactionHash,

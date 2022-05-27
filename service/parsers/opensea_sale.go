@@ -38,6 +38,7 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 		ID: saleID.String(),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
+		CollectionAddress:  "", // TODO
 		TokenID:            "", // TODO
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
