@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+
 	"github.com/NFT-com/indexer/models/jobs"
 )
 

@@ -6,11 +6,12 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/NFT-com/indexer/models/abis"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/NFT-com/indexer/models/abis"
 )
 
 type URIFetcher struct {
