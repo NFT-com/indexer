@@ -47,12 +47,9 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) {
 
 	err := backoff.Retry(func() error {
 		select {
-
 		case <-n.done:
 			return nil
-
 		default:
-
 		}
 
 		cli, err := ethclient.DialContext(ctx, n.wsURL)
