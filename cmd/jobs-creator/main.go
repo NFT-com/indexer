@@ -47,7 +47,7 @@ func run() int {
 		flagLogLevel string
 
 		flagGraphDB      string
-		flagJobDB        string
+		flagJobsDB       string
 		flagHTTPNodeURL  string
 		flagWebsocketURL string
 
@@ -60,10 +60,10 @@ func run() int {
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for graph database")
-	pflag.StringVarP(&flagJobDB, "job-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres sslmode=disable", "postgresql connection details for job database")
-	pflag.StringVarP(&flagHTTPNodeURL, "node-url", "n", "http://127.0.0.1:8545", "http URL for Ethereum JSON RPC API connection")
-	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "websocket URL for Ethereum JSON RPC API connection")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagHTTPNodeURL, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
+	pflag.StringVarP(&flagWebsocketURL, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
@@ -95,15 +95,15 @@ func run() int {
 	collectionRepo := graph.NewCollectionRepository(graphDB)
 	marketplaceRepo := graph.NewMarketplaceRepository(graphDB)
 
-	jobDB, err := sql.Open(params.DialectPostgres, flagJobDB)
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Str("job_db", flagGraphDB).Msg("could not open job database")
+		log.Error().Err(err).Str("job_db", flagJobsDB).Msg("could not open job database")
 		return failure
 	}
-	jobDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobDB.SetMaxIdleConns(int(flagIdleConnections))
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := storage.NewParsingRepository(jobDB)
+	parsingRepo := storage.NewParsingRepository(jobsDB)
 
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
