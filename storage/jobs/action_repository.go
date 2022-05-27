@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/lib/pq"
-
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
@@ -93,22 +91,16 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	return &action, nil
 }
 
-func (a *ActionRepository) UpdateStatus(status string, actionIDs []string, options ...UpdateStatusOption) error {
+func (a *ActionRepository) Update(selector UpdateSelector, setters ...UpdateSetter) error {
 
-	opts := &updateOptions{}
-	for _, o := range options {
-		o(opts)
+	query := a.build.Update("actions")
+
+	query = selector(query)
+	for _, setter := range setters {
+		query = setter(query)
 	}
 
-	query := a.build.
-		Update("actions").
-		Where("id = ANY(?)", pq.Array(actionIDs)).
-		Set("job_status", status).
-		Set("updated_at", time.Now())
-
-	if opts.statusMessage != nil {
-		query = query.Set("status_message", opts.statusMessage)
-	}
+	query = query.Set("updated_at", time.Now())
 
 	result, err := query.Exec()
 	if err != nil {

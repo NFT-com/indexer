@@ -7,10 +7,10 @@ import (
 
 type ParsingStore interface {
 	List(status string) ([]*jobs.Parsing, error)
-	UpdateStatus(status string, parsingIDs []string, options ...storage.UpdateStatusOption) error
+	Update(selector storage.UpdateSelector, setters ...storage.UpdateSetter) error
 }
 
 type ActionStore interface {
 	List(status string) ([]*jobs.Action, error)
-	UpdateStatus(status string, actionIDs []string, options ...storage.UpdateStatusOption) error
+	Update(selector storage.UpdateSelector, setters ...storage.UpdateSetter) error
 }

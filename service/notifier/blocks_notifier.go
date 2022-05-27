@@ -5,14 +5,11 @@ import (
 	"fmt"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/rs/zerolog"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 )
-
-const maxReconnects = 9
 
 type BlocksNotifier struct {
 	log    zerolog.Logger
@@ -20,6 +17,8 @@ type BlocksNotifier struct {
 	wsURL  string
 	heads  chan *types.Header
 	sub    ethereum.Subscription
+	done   chan struct{}
+	errors chan error
 	listen Listener
 }
 
@@ -29,43 +28,48 @@ func NewBlocksNotifier(log zerolog.Logger, ctx context.Context, wsURL string, li
 		log:    log.With().Str("component", "blocks_notifier").Logger(),
 		ctx:    ctx,
 		wsURL:  wsURL,
-		heads:  make(chan *types.Header, 1),
 		listen: listen,
+		heads:  make(chan *types.Header, 1),
+		done:   make(chan struct{}),
+		errors: make(chan error, 1),
 	}
 
-	err := n.subscribe(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not subscribe to new headers: %w", err)
-	}
+	n.subscribe(ctx)
 
 	go n.process()
 
 	return &n, nil
 }
 
-func (n *BlocksNotifier) subscribe(ctx context.Context) error {
-	var cli *ethclient.Client
+func (n *BlocksNotifier) subscribe(ctx context.Context) {
+
+	var sub ethereum.Subscription
 
 	err := backoff.Retry(func() error {
-		ethCli, err := ethclient.DialContext(ctx, n.wsURL)
+		select {
+		case <-n.done:
+			return nil
+		default:
+		}
+
+		cli, err := ethclient.DialContext(ctx, n.wsURL)
 		if err != nil {
 			return fmt.Errorf("could not dial to websocket node api: %w", err)
 		}
-		cli = ethCli
+
+		sub, err = cli.SubscribeNewHead(ctx, n.heads)
+		if err != nil {
+			return fmt.Errorf("could not subscribe to heads: %w", err)
+		}
 
 		return nil
-	}, backoff.WithMaxRetries(backoff.NewExponentialBackOff(), maxReconnects))
+	}, backoff.NewExponentialBackOff())
 	if err != nil {
-		return fmt.Errorf("could not connect to to node API: %w", err)
-	}
-
-	sub, err := cli.SubscribeNewHead(ctx, n.heads)
-	if err != nil {
-		return fmt.Errorf("could not subscribe to heads: %w", err)
+		n.errors <- err
+		return
 	}
 
 	n.sub = sub
-	return nil
 }
 
 func (n *BlocksNotifier) process() {
@@ -78,17 +82,21 @@ ProcessLoop:
 
 			n.log.Debug().Msg("terminating blocks notifier")
 
+			close(n.done)
+
+			break ProcessLoop
+
+		case err := <-n.errors:
+
+			n.log.Error().Err(err).Msg("termination blocks notifier: could not connect to to node API")
+
 			break ProcessLoop
 
 		case err := <-n.sub.Err():
 
 			n.log.Error().Err(err).Msg("error from websocket connection")
 
-			err = n.subscribe(n.ctx)
-			if err != nil {
-				n.log.Error().Err(err).Msg("error reconnection to websocket")
-				break ProcessLoop
-			}
+			go n.subscribe(n.ctx)
 
 			continue ProcessLoop
 

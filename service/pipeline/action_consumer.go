@@ -97,7 +97,7 @@ func (a *ActionConsumer) process(payload []byte) error {
 		Uint64("block_height", action.BlockHeight).
 		Logger()
 
-	err = a.actions.UpdateStatus(jobs.StatusProcessing, []string{action.ID})
+	err = a.actions.Update(storage.One(action.ID), storage.SetStatus(jobs.StatusProcessing))
 	if err != nil {
 		return fmt.Errorf("could not update job status: %w", err)
 	}
@@ -113,10 +113,10 @@ func (a *ActionConsumer) process(payload []byte) error {
 
 	if err != nil {
 		log.Error().Err(err).Msg("action job failed")
-		err = a.actions.UpdateStatus(jobs.StatusFailed, []string{action.ID}, storage.StatusMessage(err.Error()))
+		err = a.actions.Update(storage.One(action.ID), storage.SetStatus(jobs.StatusFailed), storage.SetMessage(err.Error()))
 	} else {
 		log.Info().Msg("action job completed")
-		err = a.actions.UpdateStatus(jobs.StatusFinished, []string{action.ID})
+		err = a.actions.Update(storage.One(action.ID), storage.SetStatus(jobs.StatusFinished))
 	}
 
 	if err != nil {

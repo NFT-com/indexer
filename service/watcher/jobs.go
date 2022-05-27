@@ -8,6 +8,7 @@ import (
 
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/service/pipeline"
+	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
 type Job struct {
@@ -125,7 +126,7 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 		log.Info().Msg("parsing job published")
 	}
 
-	err := j.parsings.UpdateStatus(jobs.StatusQueued, parsingIDs)
+	err := j.parsings.Update(storage.Many(parsingIDs), storage.SetStatus(jobs.StatusQueued))
 	if err != nil {
 		return fmt.Errorf("could not update parsing jobs status: %w", err)
 	}
@@ -157,7 +158,7 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 		log.Info().Msg("action job published")
 	}
 
-	err := j.actions.UpdateStatus(jobs.StatusQueued, actionIDs)
+	err := j.actions.Update(storage.Many(actionIDs), storage.SetStatus(jobs.StatusQueued))
 	if err != nil {
 		return fmt.Errorf("could not update action jobs status: %w", err)
 	}
