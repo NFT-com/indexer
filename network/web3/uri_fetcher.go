@@ -50,15 +50,11 @@ func (u *URIFetcher) fetch(ctx context.Context, address string, tokenID string, 
 	ethAddress := common.HexToAddress(address)
 	msg := ethereum.CallMsg{From: common.Address{}, To: &ethAddress, Data: input}
 	output, err := u.client.CallContract(ctx, msg, nil)
-	if err != nil && !strings.Contains(err.Error(), "nonexistent token") {
-		return "", fmt.Errorf("could not call present contract: %w", err)
-	}
-
-	if strings.Contains(err.Error(), "nonexistent token") {
+	if err != nil && strings.Contains(err.Error(), "nonexistent token") {
 		output, err = u.client.CallContract(ctx, msg, big.NewInt(0).SetUint64(height))
-		if err != nil {
-			return "", fmt.Errorf("could not call past contract: %w", err)
-		}
+	}
+	if err != nil {
+		return "", fmt.Errorf("could not execute contract call: %w", err)
 	}
 
 	fields, err := abi.Unpack(name, output)
