@@ -65,7 +65,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC721:
 
-		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.TokenID)
+		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
@@ -76,7 +76,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC1155:
 
-		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.TokenID)
+		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
