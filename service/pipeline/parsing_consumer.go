@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	storage "github.com/NFT-com/indexer/storage/jobs"
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
 type ParsingConsumer struct {
