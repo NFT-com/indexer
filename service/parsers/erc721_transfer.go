@@ -30,7 +30,7 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 		SenderAddress:     log.Topics[1].Hex(),
 		ReceiverAddress:   log.Topics[2].Hex(),
 		TokenCount:        1,
-		// EmmittedAt set after parsing
+		// EmittedAt set after parsing
 	}
 
 	return &transfer, nil

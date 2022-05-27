@@ -26,8 +26,8 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 func (n *NFTRepository) Insert(nft *graph.NFT) error {
 
 	_, err := n.build.
-		Insert(TableNFTs).
-		Columns(ColumnsNFTs...).
+		Insert("nfts").
+		Columns("id", "collection_id", "token_id", "name", "uri", "image", "description").
 		Values(
 			nft.ID,
 			nft.CollectionID,
@@ -36,24 +36,7 @@ func (n *NFTRepository) Insert(nft *graph.NFT) error {
 			nft.URI,
 			nft.Image,
 			nft.Description,
-			nft.Owner,
 		).
-		Exec()
-	if err != nil {
-		return fmt.Errorf("could not execute query: %w", err)
-	}
-
-	return nil
-}
-
-func (n *NFTRepository) ChangeOwner(collectionID string, tokenID string, owner string) error {
-
-	_, err := n.build.
-		Update("nfts").
-		Set("owner", owner).
-		Set("updated_at", "NOW()").
-		Where("collection_id = ?", collectionID).
-		Where("token_id = ?", tokenID).
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not execute query: %w", err)

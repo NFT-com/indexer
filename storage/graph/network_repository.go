@@ -61,8 +61,8 @@ func (n *NetworkRepository) List() ([]*graph.Network, error) {
 func (n *NetworkRepository) Retrieve(chainID string) (*graph.Network, error) {
 
 	result, err := n.build.
-		Select(ColumnsNetworks...).
-		From(TableNetworks).
+		Select("id", "chain_id", "name", "description", "symbol").
+		From("networks").
 		Where("chain_id = ?", chainID).
 		Query()
 	if err != nil {

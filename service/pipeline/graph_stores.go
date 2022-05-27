@@ -10,7 +10,11 @@ type CollectionStore interface {
 
 type NFTStore interface {
 	Insert(nft *graph.NFT) error
-	ChangeOwner(collectionID string, tokenID string, owner string) error
+}
+
+type OwnerStore interface {
+	AddCount(nftID string, owner string, count uint) error
+	MoveCount(nftID string, from string, to string, count uint) error
 }
 
 type TraitStore interface {

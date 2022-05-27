@@ -9,9 +9,11 @@ import (
 
 	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -29,6 +31,7 @@ type ActionConsumer struct {
 	actions     ActionStore
 	collections CollectionStore
 	nfts        NFTStore
+	owners      OwnerStore
 	traits      TraitStore
 	limit       ratelimit.Limiter
 	dryRun      bool
@@ -41,6 +44,7 @@ func NewActionConsumer(
 	actions ActionStore,
 	collections CollectionStore,
 	nfts NFTStore,
+	owners OwnerStore,
 	traits TraitStore,
 	rateLimit uint,
 	dryRun bool,
@@ -53,6 +57,7 @@ func NewActionConsumer(
 		actions:     actions,
 		collections: collections,
 		nfts:        nfts,
+		owners:      owners,
 		traits:      traits,
 		limit:       ratelimit.New(int(rateLimit)),
 		dryRun:      dryRun,
@@ -197,6 +202,11 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not insert traits: %w", err)
 	}
 
+	err = a.owners.AddCount(result.NFT.ID, result.NFT.Owner, result.NFT.Number)
+	if err != nil {
+		return fmt.Errorf("could not add owner: %w", err)
+	}
+
 	return nil
 }
 
@@ -211,14 +221,12 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
-	if err != nil {
-		return fmt.Errorf("could not get collection: %w", err)
-	}
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
+	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
-	err = a.nfts.ChangeOwner(collection.ID, action.TokenID, inputs.NewOwner)
+	err = a.owners.MoveCount(nftID.String(), inputs.PrevOwner, inputs.NewOwner, inputs.Number)
 	if err != nil {
-		return fmt.Errorf("could not change owner: %w", err)
+		return fmt.Errorf("could not update owners: %w", err)
 	}
 
 	return nil

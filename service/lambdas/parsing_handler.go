@@ -178,7 +178,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Int("sales", len(sales)).
 		Msg("all logs parsed")
 
-	// Get all of the headers to assign timestamps to the events.
+	// Get all the headers to assign timestamps to the events.
 	for height := range timestamps {
 
 		header, err := client.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
@@ -214,6 +214,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				NodeURL:  parsing.NodeURL,
 				Standard: standards[transfer.ID],
 				Owner:    transfer.ReceiverAddress,
+				Number:   transfer.TokenCount,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
@@ -234,7 +235,9 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		default:
 
 			inputs := inputs.OwnerChange{
-				NewOwner: transfer.ReceiverAddress,
+				PrevOwner: transfer.SenderAddress,
+				NewOwner:  transfer.ReceiverAddress,
+				Number:    transfer.TokenCount,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {

@@ -45,7 +45,7 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 		SellerAddress:      log.Topics[1].Hex(),
 		BuyerAddress:       log.Topics[2].Hex(),
 		TradePrice:         price.String(),
-		// EmmittedAt set after parsing
+		// EmittedAt set after parsing
 	}
 
 	return &sale, nil
