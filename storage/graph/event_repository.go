@@ -26,7 +26,7 @@ func NewEventRepository(db *sql.DB) *EventRepository {
 func (e *EventRepository) ListForStandard(standardID string) ([]*graph.Event, error) {
 
 	result, err := e.build.
-		Select("events.id, events.event_hash, events.name").
+		Select("events.id", "events.event_hash", "events.name").
 		From("events, standards_events").
 		Where("events.id = standards_events.event_id").
 		Where("standards_events.standard_id = ?", standardID).

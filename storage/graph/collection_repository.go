@@ -67,7 +67,7 @@ func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Colle
 func (c *CollectionRepository) Combinations(chainID uint64) ([]*jobs.Combination, error) {
 
 	result, err := c.build.
-		Select("networks.chain_id, collections.contract_address, events.event_hash, collections.start_height").
+		Select("networks.chain_id", "collections.contract_address", "events.event_hash", "collections.start_height").
 		From("networks, collections, collections_standards, standards, standards_events, events").
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").
