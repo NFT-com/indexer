@@ -80,7 +80,7 @@ func run() int {
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Str("job_db", flagJobsDB).Msg("could not open job database")
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not open jobs database")
 		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
@@ -93,13 +93,13 @@ func run() int {
 
 	watch.Watch()
 
-	log.Info().Msg("job watcher started")
+	log.Info().Msg("jobs watcher started")
 	select {
 	case <-sig:
-		log.Info().Msg("job watcher stopping")
+		log.Info().Msg("jobs watcher stopping")
 		watch.Close()
 	case err = <-failed:
-		log.Error().Err(err).Msg("job watcher aborted")
+		log.Error().Err(err).Msg("jobs watcher aborted")
 		return failure
 	}
 
@@ -109,7 +109,7 @@ func run() int {
 		os.Exit(1)
 	}()
 
-	log.Info().Msg("job watcher done")
+	log.Info().Msg("jobs watcher done")
 
 	return success
 }

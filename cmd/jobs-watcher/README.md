@@ -1,6 +1,6 @@
-# Job Watcher
+# Jobs Watcher
 
-The job watcher watches the PostgreSQL database for new jobs from the job creator and pushes them into their respective queue.
+The jobs watcher watches the PostgreSQL database for new jobs from the jobs creator and pushes them into their respective queue.
 
 ## Usage
 

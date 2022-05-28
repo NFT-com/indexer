@@ -1,7 +1,7 @@
-# Job Creator
+# Jobs Creator
 
-The job creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
-If the job creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of 0.
+The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
+If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of 0.
 
 ## Usage
 

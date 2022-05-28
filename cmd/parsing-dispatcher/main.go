@@ -92,7 +92,7 @@ func run() int {
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Msg("could not connect to job database")
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not connect to jobs database")
 		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
@@ -103,7 +103,7 @@ func run() int {
 
 	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
 	if err != nil {
-		log.Error().Err(err).Msg("could not connect to events database")
+		log.Error().Err(err).Str("events_database", flagEventsDB).Msg("could not connect to events database")
 		return failure
 	}
 	eventsDB.SetMaxOpenConns(int(flagOpenConnections))
