@@ -35,6 +35,7 @@ func (n *NFTRepository) Touch(nftID string, collectionID string, tokenID string)
 			"uri",
 			"image",
 			"description",
+			"updated_at",
 		).
 		Values(
 			nftID,
@@ -44,6 +45,7 @@ func (n *NFTRepository) Touch(nftID string, collectionID string, tokenID string)
 			"",
 			"",
 			"",
+			"NOW()",
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"updated_at = NOW()").
@@ -67,6 +69,7 @@ func (n *NFTRepository) Insert(nft *graph.NFT) error {
 			"uri",
 			"image",
 			"description",
+			"created_at",
 		).
 		Values(
 			nft.ID,
@@ -76,6 +79,7 @@ func (n *NFTRepository) Insert(nft *graph.NFT) error {
 			nft.URI,
 			nft.Image,
 			nft.Description,
+			"NOW()",
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"name = EXCLUDED.name, " +

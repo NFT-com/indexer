@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS nfts
     uri           TEXT         NOT NULL,
     image         TEXT         NOT NULL,
     description   TEXT         NOT NULL,
-    created_at    TIMESTAMP DEFAULT NOW(),
+    created_at    TIMESTAMP,
     updated_at    TIMESTAMP,
     UNIQUE (collection_id, token_id)
 );
