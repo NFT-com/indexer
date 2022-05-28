@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 
+	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 	storage "github.com/NFT-com/indexer/storage/jobs"
@@ -124,7 +125,7 @@ func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, erro
 	}
 
 	notify := func(err error, dur time.Duration) {
-		log.Error().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation")
+		log.Warn().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation, retrying")
 	}
 
 	var output []byte
@@ -166,7 +167,7 @@ func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, erro
 
 		output = result.Payload
 		return nil
-	}, backoff.NewExponentialBackOff(), notify)
+	}, retry.Indefinite(), notify)
 	if err != nil {
 		return nil, fmt.Errorf("could not successfully invoke parser: %w", err)
 	}

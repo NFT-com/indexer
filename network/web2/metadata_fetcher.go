@@ -6,30 +6,62 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
+	"github.com/rs/zerolog/log"
+
+	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/metadata"
 )
 
 type MetadataFetcher struct {
+	cfg MetadataConfig
 }
 
-func NewMetadataFetcher() *MetadataFetcher {
+func NewMetadataFetcher(options ...MetadataOption) *MetadataFetcher {
 
-	m := MetadataFetcher{}
+	cfg := MetadataDefaultConfig
+	for _, option := range options {
+		option(&cfg)
+	}
+
+	m := MetadataFetcher{
+		cfg: cfg,
+	}
 
 	return &m
 }
 
 func (m *MetadataFetcher) Token(_ context.Context, uri string) (*metadata.Token, error) {
 
-	res, err := http.Get(uri)
-	if err != nil {
-		return nil, fmt.Errorf("could not execute request: %w", err)
+	notify := func(err error, dur time.Duration) {
+		log.Warn().Err(err).Dur("duration", dur).Msg("could not get token data, retrying")
 	}
-	defer res.Body.Close()
 
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, fmt.Errorf("invalid response code (%d)", res.StatusCode)
+	var res *http.Response
+	err := backoff.RetryNotify(func() error {
+
+		var err error
+		res, err = http.Get(uri)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("could not execute request: %w", err))
+		}
+		defer res.Body.Close()
+
+		_, ok := m.cfg.RetryCodes[res.StatusCode]
+		if ok {
+			return fmt.Errorf("bad response code (%d)", res.StatusCode)
+		}
+
+		if res.StatusCode < 200 || res.StatusCode > 299 {
+			return backoff.Permanent(fmt.Errorf("fatal response code (%d)", res.StatusCode))
+		}
+
+		return nil
+	}, retry.Capped(m.cfg.RetryCap), notify)
+	if err != nil {
+		return nil, fmt.Errorf("could not get token data: %w", err)
 	}
 
 	payload, err := io.ReadAll(res.Body)

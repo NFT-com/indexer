@@ -3,9 +3,12 @@ package notifier
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/NFT-com/indexer/config/retry"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -46,7 +49,12 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) {
 
 	var sub ethereum.Subscription
 
-	err := backoff.Retry(func() error {
+	notify := func(err error, dur time.Duration) {
+		log.Warn().Err(err).Dur("duration", dur).Msg("could not subscribe to headers, retrying")
+	}
+
+	err := backoff.RetryNotify(func() error {
+
 		select {
 		case <-n.done:
 			return nil
@@ -64,7 +72,7 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) {
 		}
 
 		return nil
-	}, backoff.NewExponentialBackOff())
+	}, retry.Indefinite(), notify)
 	if err != nil {
 		n.errors <- err
 		return
