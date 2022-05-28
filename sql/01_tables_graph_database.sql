@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS collections
     id               UUID PRIMARY KEY,
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     contract_address VARCHAR(128) NOT NULL,
-    start_height     NUMERIC      NOT NULL DEFAULT 0,
+    start_height     NUMERIC      NOT NULL,
     name             TEXT         NOT NULL,
     description      TEXT         NOT NULL,
     symbol           VARCHAR(16)  NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS owners
 (
     nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
     owner  VARCHAR(128) NOT NULL,
-    number NUMERIC      NOT NULL DEFAULT 0,
+    number NUMERIC      NOT NULL,
     PRIMARY KEY (nft_id, owner)
 );
 
