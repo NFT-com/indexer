@@ -3,16 +3,16 @@
 This guide's purpose is to allow you to deploy the Indexer architecture in order to fill its database, to be served by the Analytics API.
 
 1. [Pre-requisites](#pre-requisites)
-   1. [AWS](#amazon-web-services)
+   1. [Amazon Web Services](#amazon-web-services)
    2. [PostgreSQL](#postgresql)
    3. [Redis](#redis)
    4. [Docker](#docker)
       1. [Building the Images](#building-the-images)
-3. [Deployment](#deployment)
-    1. [Job Creator](#job-creator)
-    2. [Job Watcher](#job-watcher)
-    3. [Parsing Dispatcher](#parsing-dispatcher)
-    4. [Action Dispatcher](#action-dispatcher)
+2. [Deployment](#deployment)
+   1. [Jobs Creator](#jobs-creator)
+   2. [Jobs Watcher](#jobs-watcher)
+   3. [Parsing Dispatcher](#parsing-dispatcher)
+   4. [Action Dispatcher](#action-dispatcher)
 
 ## Pre-requisites
 
@@ -115,53 +115,53 @@ done
 
 ## Deployment
 
-### Job Creator
+### Jobs Creator
 
-The job creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
-If the job creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of `0`.
-See the [job creator readme](../cmd/jobs-creator/README.md) for more details about its flags.
+The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
+If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of `0`.
+See the [jobs creator readme](../cmd/jobs-creator/README.md) for more details about its flags.
 
-The job creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
+The jobs creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
 
 ```bash
 # Using the binary.
 ./jobs-creator   -n="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
                 -w="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
                 --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
             --network="indexer"
-            --name="job-creator"
+            --name="jobs-creator"
             indexer-jobs-creator
               --node-url="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
               --websocket-url="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
               --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
-### Job Watcher
+### Jobs Watcher
 
-The job watcher watches the [PostgreSQL database](#postgresql) for new jobs from the [job creator](#job-creator) and pushes them into their respective [queue](#redis).
-See the [job watcher readme](../cmd/jobs-watcher/README.md) for more details about its flags.
+The jobs watcher watches the [PostgreSQL database](#postgresql) for new jobs from the [jobs creator](#jobs-creator) and pushes them into their respective [queue](#redis).
+See the [jobs watcher readme](../cmd/jobs-watcher/README.md) for more details about its flags.
 
 ```bash
 # Using the binary.
 ./jobs-watcher   -u="172.17.0.100:6379"
-                --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
             --network="indexer"
-            --name="job-watcher"
+            --name="jobs-watcher"
             indexer-jobs-watcher
               --redis-url="172.17.0.100:6379"
-              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Parsing Dispatcher
@@ -175,7 +175,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 ```bash
 # Using the binary.
 ./parsing-dispatcher  -u="172.17.0.100:6379"
-                      --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                       --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -189,7 +189,7 @@ docker run  -d
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-parsing-dispatcher
               --redis_url="172.17.0.100:6379"
-              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -205,7 +205,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 ```bash
 # Using the binary.
 ./action-dispatcher  -u="172.17.0.100:6379"
-                      --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                       --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -219,6 +219,6 @@ docker run  -d
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-action-dispatcher
               --redis_url="172.17.0.100:6379"
-              --job-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```

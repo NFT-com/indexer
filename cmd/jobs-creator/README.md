@@ -6,7 +6,7 @@ If the job creator stops, it retrieves the last job saved in the API upon restar
 ## Usage
 
 ```
-Usage of job-creator:
+Usage of jobs-creator:
   -l, --log-level string                severity level for log output (default "info")
 
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")

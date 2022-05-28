@@ -5,7 +5,7 @@ The job watcher watches the PostgreSQL database for new jobs from the job creato
 ## Usage
 
 ```
-Usage of job-watcher:
+Usage of jobs-watcher:
   -l, --log-level string                severity level for log output (default "info")
 
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
