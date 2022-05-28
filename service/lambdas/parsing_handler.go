@@ -55,7 +55,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 	client, err := ethclient.DialContext(ctx, parsing.NodeURL)
 	if err != nil {
-		return nil, fmt.Errorf("could not connect to node (node_url: %s): %w", parsing.NodeURL, err)
+		return nil, fmt.Errorf("could not connect to node: %w", err)
 	}
 	defer client.Close()
 

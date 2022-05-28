@@ -37,9 +37,9 @@ CREATE TABLE IF NOT EXISTS nfts
     token_id      VARCHAR(128) NOT NULL,
     name          TEXT         NOT NULL,
     uri           TEXT         NOT NULL,
-    image         TEXT         NULL,
-    description   TEXT         NULL,
-    created_at    TIMESTAMP DEFAULT NOW(),
+    image         TEXT         NOT NULL,
+    description   TEXT         NOT NULL,
+    created_at    TIMESTAMP,
     updated_at    TIMESTAMP,
     UNIQUE (collection_id, token_id)
 );
@@ -48,8 +48,7 @@ CREATE TABLE IF NOT EXISTS owners
 (
     nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
     owner  VARCHAR(128) NOT NULL,
-    number NUMERIC      NOT NULL DEFAULT 0,
-    constraint number_non_negative check (number >= 0),
+    number NUMERIC      NOT NULL,
     PRIMARY KEY (nft_id, owner)
 );
 

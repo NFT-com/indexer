@@ -23,11 +23,54 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 	return &n
 }
 
+func (n *NFTRepository) Touch(nftID string, collectionID string, tokenID string) error {
+
+	_, err := n.build.
+		Insert("nfts").
+		Columns(
+			"id",
+			"collection_id",
+			"token_id",
+			"name",
+			"uri",
+			"image",
+			"description",
+			"updated_at",
+		).
+		Values(
+			nftID,
+			collectionID,
+			tokenID,
+			"",
+			"",
+			"",
+			"",
+			"NOW()",
+		).
+		Suffix("ON CONFLICT (id) DO UPDATE SET " +
+			"updated_at = NOW()").
+		Exec()
+
+	if err != nil {
+		return fmt.Errorf("could not execute statement: %w", err)
+	}
+	return nil
+}
+
 func (n *NFTRepository) Insert(nft *graph.NFT) error {
 
 	_, err := n.build.
 		Insert("nfts").
-		Columns("id", "collection_id", "token_id", "name", "uri", "image", "description").
+		Columns(
+			"id",
+			"collection_id",
+			"token_id",
+			"name",
+			"uri",
+			"image",
+			"description",
+			"created_at",
+		).
 		Values(
 			nft.ID,
 			nft.CollectionID,
@@ -36,7 +79,14 @@ func (n *NFTRepository) Insert(nft *graph.NFT) error {
 			nft.URI,
 			nft.Image,
 			nft.Description,
+			"NOW()",
 		).
+		Suffix("ON CONFLICT (id) DO UPDATE SET " +
+			"name = EXCLUDED.name, " +
+			"uri = EXCLUDED.uri, " +
+			"image = EXCLUDED.image, " +
+			"description = EXCLUDED.description, " +
+			"created_at = NOW()").
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not execute query: %w", err)

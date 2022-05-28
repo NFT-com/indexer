@@ -26,12 +26,15 @@ func NewStandardRepository(db *sql.DB) *StandardRepository {
 func (s *StandardRepository) List() ([]*graph.Standard, error) {
 
 	result, err := s.build.
-		Select("*").
+		Select(
+			"id",
+			"name",
+		).
 		From("standards").
-		OrderBy("id ASC").
+		OrderBy("name ASC").
 		Query()
 	if err != nil {
-		return nil, fmt.Errorf("could not list collections: %w", err)
+		return nil, fmt.Errorf("could not execute query: %w", err)
 	}
 	defer result.Close()
 

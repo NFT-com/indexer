@@ -88,7 +88,7 @@ func run() int {
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Str("job_db", flagJobsDB).Msg("could not connect to job database")
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not connect to jobs database")
 		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
@@ -98,7 +98,7 @@ func run() int {
 
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
-		log.Error().Err(err).Str("graph_db", flagGraphDB).Msg("could not connect to graph database")
+		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not connect to graph database")
 		return failure
 	}
 	graphDB.SetMaxOpenConns(int(flagOpenConnections))

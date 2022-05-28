@@ -85,7 +85,7 @@ func run() int {
 
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
-		log.Error().Err(err).Str("graph_db", flagGraphDB).Msg("could not open graph database")
+		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not open graph database")
 		return failure
 	}
 	graphDB.SetMaxOpenConns(int(flagOpenConnections))
@@ -97,7 +97,7 @@ func run() int {
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
-		log.Error().Err(err).Str("job_db", flagJobsDB).Msg("could not open job database")
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not open jobs database")
 		return failure
 	}
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
@@ -125,7 +125,7 @@ func run() int {
 		log.Info().
 			Str("network", network.Name).
 			Uint64("chain_id", network.ChainID).
-			Msg("launching job creator")
+			Msg("launching jobs creator")
 	}
 
 	// Initialize a multiplex notifier that will notify all of our creators at the
@@ -156,17 +156,17 @@ func run() int {
 	}
 	ticker.Notify(latest)
 
-	log.Info().Msg("job creator started")
+	log.Info().Msg("jobs creator started")
 	select {
 
 	case <-ctx.Done():
 
 	case <-sig:
-		log.Info().Msg("job creator stopping")
+		log.Info().Msg("jobs creator stopping")
 		cancel()
 	}
 
-	log.Info().Msg("job creator done")
+	log.Info().Msg("jobs creator done")
 
 	return success
 }

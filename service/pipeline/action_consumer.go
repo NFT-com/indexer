@@ -202,9 +202,9 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not insert traits: %w", err)
 	}
 
-	err = a.owners.AddCount(result.NFT.ID, result.NFT.Owner, result.NFT.Number)
+	err = a.owners.AddCount(result.NFT.ID, result.NFT.Owner, int(result.NFT.Number))
 	if err != nil {
-		return fmt.Errorf("could not add owner: %w", err)
+		return fmt.Errorf("could not add owner count: %w", err)
 	}
 
 	return nil
@@ -221,12 +221,27 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
-	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
-
-	err = a.owners.MoveCount(nftID.String(), inputs.PrevOwner, inputs.NewOwner, inputs.Number)
+	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
 	if err != nil {
-		return fmt.Errorf("could not update owners: %w", err)
+		return fmt.Errorf("could not retrieve collection: %w", err)
+	}
+
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
+	nftID := uuid.Must(uuid.FromBytes(nftHash[:16])).String()
+
+	err = a.nfts.Touch(nftID, collection.ID, action.TokenID)
+	if err != nil {
+		return fmt.Errorf("could not touch NFT: %w", err)
+	}
+
+	err = a.owners.AddCount(nftID, inputs.PrevOwner, -int(inputs.Number))
+	if err != nil {
+		return fmt.Errorf("could not decrease previous owner count: %w", err)
+	}
+
+	err = a.owners.AddCount(nftID, inputs.NewOwner, int(inputs.Number))
+	if err != nil {
+		return fmt.Errorf("could not increase new owner count: %w", err)
 	}
 
 	return nil

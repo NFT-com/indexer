@@ -74,6 +74,7 @@ func (n *BlocksNotifier) subscribe(ctx context.Context) {
 }
 
 func (n *BlocksNotifier) process() {
+
 ProcessLoop:
 	for {
 
@@ -89,7 +90,7 @@ ProcessLoop:
 
 		case err := <-n.errors:
 
-			n.log.Error().Err(err).Msg("termination blocks notifier: could not connect to to node API")
+			n.log.Error().Err(err).Msg("aborting blocks notifier")
 
 			break ProcessLoop
 

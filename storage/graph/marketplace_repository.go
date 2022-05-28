@@ -27,7 +27,12 @@ func NewMarketplaceRepository(db *sql.DB) *MarketplaceRepository {
 func (m *MarketplaceRepository) Combinations(chainID uint64) ([]*jobs.Combination, error) {
 
 	result, err := m.build.
-		Select("networks.chain_id, networks_marketplaces.contract_address, events.event_hash, networks_marketplaces.start_height").
+		Select(
+			"networks.chain_id",
+			"networks_marketplaces.contract_address",
+			"events.event_hash",
+			"networks_marketplaces.start_height",
+		).
 		From("networks, networks_marketplaces, marketplaces_standards, standards, standards_events, events").
 		Where("networks.chain_id = ?", chainID).
 		Where("networks_marketplaces.network_id = networks.id").
@@ -68,7 +73,12 @@ func (m *MarketplaceRepository) Combinations(chainID uint64) ([]*jobs.Combinatio
 func (m *MarketplaceRepository) RetrieveByAddress(chainID string, address string) (*graph.Marketplace, error) {
 
 	result, err := m.build.
-		Select("marketplaces.id", "marketplaces.name", "marketplaces.description", "marketplaces.website").
+		Select(
+			"marketplaces.id",
+			"marketplaces.name",
+			"marketplaces.description",
+			"marketplaces.website",
+		).
 		From("marketplaces, chains_marketplaces").
 		Where("LOWER(chains_marketplaces.address) = LOWER(?)", address).
 		Where("chains_marketplaces.chain_id = ?", chainID).

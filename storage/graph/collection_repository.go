@@ -27,7 +27,17 @@ func NewCollectionRepository(db *sql.DB) *CollectionRepository {
 func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Collection, error) {
 
 	result, err := c.build.
-		Select("collections.ID, collections.contract_address, collections.network_id, collections.name, collections.description, collections.symbol, collections.slug, collections.image_url, collections.website").
+		Select(
+			"collections.ID",
+			"collections.contract_address",
+			"collections.network_id",
+			"collections.name",
+			"collections.description",
+			"collections.symbol",
+			"collections.slug",
+			"collections.image_url",
+			"collections.website",
+		).
 		From("networks, collections").
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").
@@ -67,7 +77,12 @@ func (c *CollectionRepository) One(chainID uint64, address string) (*graph.Colle
 func (c *CollectionRepository) Combinations(chainID uint64) ([]*jobs.Combination, error) {
 
 	result, err := c.build.
-		Select("networks.chain_id, collections.contract_address, events.event_hash, collections.start_height").
+		Select(
+			"networks.chain_id",
+			"collections.contract_address",
+			"events.event_hash",
+			"collections.start_height",
+		).
 		From("networks, collections, collections_standards, standards, standards_events, events").
 		Where("networks.chain_id = ?", chainID).
 		Where("collections.network_id = networks.id").

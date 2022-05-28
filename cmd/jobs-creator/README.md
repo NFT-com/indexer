@@ -1,12 +1,12 @@
-# Job Creator
+# Jobs Creator
 
-The job creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
-If the job creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of 0.
+The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
+If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of 0.
 
 ## Usage
 
 ```
-Usage of job-creator:
+Usage of jobs-creator:
   -l, --log-level string                severity level for log output (default "info")
 
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
