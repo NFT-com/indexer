@@ -213,9 +213,6 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 
 func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 
-	// TODO: check and sleep if there are any pending addition or owner change
-	// jobs before this one for the same NFT
-
 	var inputs inputs.OwnerChange
 	err := json.Unmarshal(action.InputData, &inputs)
 	if err != nil {
