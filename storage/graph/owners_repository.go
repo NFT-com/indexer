@@ -25,9 +25,18 @@ func (n *OwnerRepository) AddCount(nftID string, owner string, count int) error 
 
 	_, err := n.build.
 		Insert("owners").
-		Columns("nft_id", "owner", "number").
-		Values(nftID, owner, count).
-		Suffix("ON CONFLICT (nft_id, owner) DO UPDATE SET number = (owners.number + EXCLUDED.number)").
+		Columns(
+			"nft_id",
+			"owner",
+			"number",
+		).
+		Values(
+			nftID,
+			owner,
+			count,
+		).
+		Suffix("ON CONFLICT (nft_id, owner) DO UPDATE SET " +
+			"number = (owners.number + EXCLUDED.number)").
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not execute query: %w", err)

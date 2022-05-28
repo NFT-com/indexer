@@ -9,6 +9,7 @@ type CollectionStore interface {
 }
 
 type NFTStore interface {
+	Touch(nftID string, collectionID string, tokenID string) error
 	Insert(nft *graph.NFT) error
 }
 

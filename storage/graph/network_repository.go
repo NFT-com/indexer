@@ -26,7 +26,13 @@ func NewNetworkRepository(db *sql.DB) *NetworkRepository {
 func (n *NetworkRepository) List() ([]*graph.Network, error) {
 
 	result, err := n.build.
-		Select("id", "chain_id", "name", "description", "symbol").
+		Select(
+			"id",
+			"chain_id",
+			"name",
+			"description",
+			"symbol",
+		).
 		From("networks").
 		Query()
 	if err != nil {
@@ -61,7 +67,13 @@ func (n *NetworkRepository) List() ([]*graph.Network, error) {
 func (n *NetworkRepository) Retrieve(chainID string) (*graph.Network, error) {
 
 	result, err := n.build.
-		Select("id", "chain_id", "name", "description", "symbol").
+		Select(
+			"id",
+			"chain_id",
+			"name",
+			"description",
+			"symbol",
+		).
 		From("networks").
 		Where("chain_id = ?", chainID).
 		Query()

@@ -26,7 +26,10 @@ func NewStandardRepository(db *sql.DB) *StandardRepository {
 func (s *StandardRepository) List() ([]*graph.Standard, error) {
 
 	result, err := s.build.
-		Select("id", "name").
+		Select(
+			"id",
+			"name",
+		).
 		From("standards").
 		OrderBy("name ASC").
 		Query()
