@@ -13,8 +13,7 @@ type NFTStore interface {
 }
 
 type OwnerStore interface {
-	AddCount(nftID string, owner string, count uint) error
-	MoveCount(nftID string, from string, to string, count uint) error
+	AddCount(nftID string, owner string, count int) error
 }
 
 type TraitStore interface {
