@@ -39,11 +39,10 @@ func (m *MetadataFetcher) Token(_ context.Context, uri string) (*metadata.Token,
 		log.Warn().Err(err).Dur("duration", dur).Msg("could not get token data, retrying")
 	}
 
-	var res *http.Response
+	var payload []byte
 	err := backoff.RetryNotify(func() error {
 
-		var err error
-		res, err = http.Get(uri)
+		res, err := http.Get(uri)
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not execute request: %w", err))
 		}
@@ -58,15 +57,15 @@ func (m *MetadataFetcher) Token(_ context.Context, uri string) (*metadata.Token,
 			return backoff.Permanent(fmt.Errorf("fatal response code (%d)", res.StatusCode))
 		}
 
+		payload, err = io.ReadAll(res.Body)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("could not read response body: %w", err))
+		}
+
 		return nil
 	}, retry.Capped(m.cfg.RetryCap), notify)
 	if err != nil {
 		return nil, fmt.Errorf("could not get token data: %w", err)
-	}
-
-	payload, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read response body: %w", err)
 	}
 
 	var token metadata.Token
