@@ -65,15 +65,12 @@ func NewParsingHandler(
 }
 
 func (p *ParsingHandler) HandleMessage(message *nsq.Message) error {
-	message.Touch()
-
 	err := p.process(message.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
 		return err
 	}
 
-	message.Finish()
 	return nil
 }
 

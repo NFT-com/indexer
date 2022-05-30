@@ -71,15 +71,12 @@ func NewActionHandler(
 }
 
 func (a *ActionHandler) HandleMessage(message *nsq.Message) error {
-	message.Touch()
-
 	err := a.process(message.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
 		return err
 	}
 
-	message.Finish()
 	return nil
 }
 
