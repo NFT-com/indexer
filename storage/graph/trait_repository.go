@@ -40,7 +40,7 @@ func (t *TraitRepository) Insert(traits ...*graph.Trait) error {
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"name = EXCLUDED.name, " +
-			"type = EXLCUDED.type, " +
+			"type = EXCLUDED.type, " +
 			"value = EXCLUDED.value")
 
 	for _, trait := range traits {
