@@ -7,8 +7,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/adjust/rmq/v4"
-	"github.com/go-redis/redis/v8"
+	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"go.uber.org/ratelimit"
@@ -43,8 +42,7 @@ func run() int {
 
 		flagGraphDB    string
 		flagJobsDB     string
-		flagRedisURL   string
-		flagRedisDB    int
+		flagNSQLookups []string
 		flagLambdaName string
 
 		flagOpenConnections   uint
@@ -59,8 +57,7 @@ func run() int {
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server URL")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "", []string{"127.0.0.1:4161"}, "addresses for NSQ lookups to bootstrap consuming")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of the Lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
@@ -80,6 +77,12 @@ func run() int {
 		return failure
 	}
 	log = log.Level(level)
+
+	awsCfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("could not load AWS configuration")
+		return failure
+	}
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
@@ -104,58 +107,36 @@ func run() int {
 	ownerRepo := graph.NewOwnerRepository(graphDB)
 	traitRepo := graph.NewTraitRepository(graphDB)
 
-	redisClient := redis.NewClient(&redis.Options{
-		Network: "tcp",
-		Addr:    flagRedisURL,
-		DB:      flagRedisDB,
-	})
-	failed := make(chan error)
-	rmqConnection, err := rmq.OpenConnectionWithRedisClient(params.PipelineIndexer, redisClient, failed)
+	nsqCfg := nsq.NewConfig()
+	err = nsqCfg.Set("max-in-flight", 2*flagLambdaConcurrency)
 	if err != nil {
-		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to redis server")
-		return failure
-	}
-	defer rmqConnection.StopAllConsuming()
-
-	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		log.Error().Err(err).Msg("could not load AWS configuration")
+		log.Error().Err(err).Msg("could not update NSQ configuration")
 		return failure
 	}
 
-	queue, err := rmqConnection.OpenQueue(params.QueueAction)
+	consumer, err := nsq.NewConsumer(params.TopicAction, params.PipelineIndexer, nsqCfg)
 	if err != nil {
-		log.Error().Err(err).Msg("could not open queue")
+		log.Error().Err(err).Str("topic", params.TopicAction).Str("channel", params.PipelineIndexer).Msg("could not create NSQ consumer")
 		return failure
 	}
+	defer consumer.Stop()
 
-	err = queue.StartConsuming(int64(flagLambdaConcurrency), 200*time.Millisecond)
-	if err != nil {
-		log.Error().Err(err).Msg("could not start consuming")
-		return failure
-	}
-
-	// TODO: implement proper shutdown with context to propagate
-	client := lambda.NewFromConfig(cfg)
+	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewActionConsumer(context.Background(), log, client, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, limit, flagDryRun)
-		_, err = queue.AddConsumer("action-consumer", consumer)
-		if err != nil {
-			log.Error().Err(err).Msg("could not add consumer")
-			return failure
-		}
+	handler := pipeline.NewActionHandler(context.Background(), log, lambda, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, limit, flagDryRun)
+	consumer.AddConcurrentHandlers(handler, int(flagLambdaConcurrency))
+
+	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
+	if err != nil {
+		log.Error().Err(err).Strs("nsq_lookups", flagNSQLookups).Msg("could not connect to NSQ lookups")
+		return failure
 	}
 
 	log.Info().Msg("action dispatcher started")
 
-	select {
-	case <-sig:
-		log.Info().Msg("initialized shutdown")
-	case err = <-failed:
-		log.Error().Err(err).Msg("execution failed")
-		return failure
-	}
+	<-sig
+
+	log.Info().Msg("initialized shutdown")
 
 	go func() {
 		<-sig

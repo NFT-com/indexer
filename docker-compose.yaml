@@ -11,20 +11,36 @@ services:
       - ./sql/:/docker-entrypoint-initdb.d/
     ports:
       - '5432:5432'
-  redis:
-    image: redis:alpine
-    restart: always
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
     ports:
-      - '6379:6379'
+      - "4160:4160"
+      - "4161:4161"
+  nsqd:
+    image: nsqio/nsq
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4150:4150"
+      - "4151:4151"
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "4171:4171"
   jobs-watcher:
     build:
       context: .
       dockerfile: cmd/jobs-watcher/Dockerfile
     restart: always
-    entrypoint: '/watcher -u redis:6379 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/watcher -n nsqd:4150 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
-      - redis
+      - nsqd
   jobs-creator:
     environment:
       - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
@@ -46,10 +62,10 @@ services:
       context: .
       dockerfile: cmd/parsing-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -a nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
-      - redis
+      - nsqlookupd
   action-dispatcher:
     environment:
       - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
@@ -59,7 +75,7 @@ services:
       context: .
       dockerfile: cmd/action-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher -u redis:6379 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -a nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
-      - redis
+      - nsqlookupd

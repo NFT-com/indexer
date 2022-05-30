@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
@@ -22,7 +22,7 @@ import (
 	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
-type ParsingConsumer struct {
+type ParsingHandler struct {
 	ctx       context.Context
 	log       zerolog.Logger
 	lambda    *lambda.Client
@@ -35,7 +35,7 @@ type ParsingConsumer struct {
 	dryRun    bool
 }
 
-func NewParsingConsumer(
+func NewParsingHandler(
 	ctx context.Context,
 	log zerolog.Logger,
 	lambda *lambda.Client,
@@ -46,9 +46,9 @@ func NewParsingConsumer(
 	sales SaleStore,
 	limit ratelimit.Limiter,
 	dryRun bool,
-) *ParsingConsumer {
+) *ParsingHandler {
 
-	p := ParsingConsumer{
+	p := ParsingHandler{
 		ctx:       ctx,
 		log:       log,
 		lambda:    lambda,
@@ -64,23 +64,20 @@ func NewParsingConsumer(
 	return &p
 }
 
-func (p *ParsingConsumer) Consume(delivery rmq.Delivery) {
+func (p *ParsingHandler) HandleMessage(message *nsq.Message) error {
+	message.Touch()
 
-	payload := []byte(delivery.Payload())
-	err := delivery.Ack()
-	if err != nil {
-		log.Error().Err(err).Msg("could not acknowledge delivery")
-		return
-	}
-
-	err = p.process(payload)
+	err := p.process(message.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
-		return
+		return err
 	}
+
+	message.Finish()
+	return nil
 }
 
-func (p *ParsingConsumer) process(payload []byte) error {
+func (p *ParsingHandler) process(payload []byte) error {
 
 	var parsing jobs.Parsing
 	err := json.Unmarshal(payload, &parsing)
@@ -121,7 +118,7 @@ func (p *ParsingConsumer) process(payload []byte) error {
 	return nil
 }
 
-func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, error) {
+func (p *ParsingHandler) processParsing(payload []byte) (*results.Parsing, error) {
 
 	if p.dryRun {
 		return &results.Parsing{}, nil

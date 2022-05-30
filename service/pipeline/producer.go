@@ -4,23 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/adjust/rmq/v4"
+	"github.com/nsqio/go-nsq"
 
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type Producer struct {
-	connection   rmq.Connection
-	parsingQueue string
-	actionQueue  string
+	connection   *nsq.Producer
+	parsingTopic string
+	actionTopic  string
 }
 
-func NewProducer(connection rmq.Connection, parsingQueue string, actionQueue string) (*Producer, error) {
+func NewProducer(connection *nsq.Producer, parsingTopic string, actionTopic string) (*Producer, error) {
 
 	p := Producer{
 		connection:   connection,
-		parsingQueue: parsingQueue,
-		actionQueue:  actionQueue,
+		parsingTopic: parsingTopic,
+		actionTopic:  actionTopic,
 	}
 
 	return &p, nil
@@ -33,12 +33,8 @@ func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 		return fmt.Errorf("could not marshal payload: %w", err)
 	}
 
-	queue, err := p.connection.OpenQueue(p.parsingQueue)
-	if err != nil {
-		return fmt.Errorf("could not open connection with queue: %w", err)
-	}
-
-	err = queue.PublishBytes(payload)
+	// Note: There is a possibility to MultiPublish (bulk publish)
+	err = p.connection.Publish(p.parsingTopic, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
 	}
@@ -53,12 +49,8 @@ func (p *Producer) PublishActionJob(job *jobs.Action) error {
 		return fmt.Errorf("could not marshal payload: %w", err)
 	}
 
-	queue, err := p.connection.OpenQueue(p.actionQueue)
-	if err != nil {
-		return fmt.Errorf("could not open connection with queue: %w", err)
-	}
-
-	err = queue.PublishBytes(payload)
+	// Note: There is a possibility to MultiPublish (bulk publish)
+	err = p.connection.Publish(p.actionTopic, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
 	}

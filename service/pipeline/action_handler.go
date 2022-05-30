@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
+	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
@@ -25,7 +25,7 @@ import (
 	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
-type ActionConsumer struct {
+type ActionHandler struct {
 	ctx         context.Context
 	log         zerolog.Logger
 	client      *lambda.Client
@@ -39,7 +39,7 @@ type ActionConsumer struct {
 	dryRun      bool
 }
 
-func NewActionConsumer(
+func NewActionHandler(
 	ctx context.Context,
 	log zerolog.Logger,
 	client *lambda.Client,
@@ -51,9 +51,9 @@ func NewActionConsumer(
 	traits TraitStore,
 	limit ratelimit.Limiter,
 	dryRun bool,
-) *ActionConsumer {
+) *ActionHandler {
 
-	a := ActionConsumer{
+	a := ActionHandler{
 		ctx:         ctx,
 		log:         log,
 		client:      client,
@@ -70,23 +70,20 @@ func NewActionConsumer(
 	return &a
 }
 
-func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
+func (a *ActionHandler) HandleMessage(message *nsq.Message) error {
+	message.Touch()
 
-	payload := []byte(delivery.Payload())
-	err := delivery.Ack()
-	if err != nil {
-		log.Error().Err(err).Msg("could not acknowledge delivery")
-		return
-	}
-
-	err = a.process(payload)
+	err := a.process(message.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
-		return
+		return err
 	}
+
+	message.Finish()
+	return nil
 }
 
-func (a *ActionConsumer) process(payload []byte) error {
+func (a *ActionHandler) process(payload []byte) error {
 
 	var action jobs.Action
 	err := json.Unmarshal(payload, &action)
@@ -130,7 +127,7 @@ func (a *ActionConsumer) process(payload []byte) error {
 	return nil
 }
 
-func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) error {
+func (a *ActionHandler) processAddition(payload []byte, action *jobs.Action) error {
 
 	if a.dryRun {
 		return nil
@@ -232,7 +229,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	return nil
 }
 
-func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
+func (a *ActionHandler) processOwnerChange(action *jobs.Action) error {
 
 	var inputs inputs.OwnerChange
 	err := json.Unmarshal(action.InputData, &inputs)
