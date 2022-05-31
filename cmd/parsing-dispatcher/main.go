@@ -111,7 +111,7 @@ func run() int {
 	saleRepo := events.NewSaleRepository(eventsDB)
 
 	config := nsq.NewConfig()
-	err = config.Set("max-in-flight", flagLambdaConcurrency)
+	err = config.Set("max-in-flight", flagLambdaConcurrency*10)
 	if err != nil {
 		log.Error().Err(err).Uint("max-in-flight", 2*flagLambdaConcurrency).Msg("could not update NSQ configuration")
 		return failure
