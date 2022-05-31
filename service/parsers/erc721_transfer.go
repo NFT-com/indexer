@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/NFT-com/indexer/models/events"
@@ -28,8 +29,8 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 		BlockNumber:       log.BlockNumber,
 		EventIndex:        log.Index,
 		TransactionHash:   log.TxHash.Hex(),
-		SenderAddress:     log.Topics[1].Hex(),
-		ReceiverAddress:   log.Topics[2].Hex(),
+		SenderAddress:     common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
+		ReceiverAddress:   common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 		TokenCount:        1,
 		// EmittedAt set after parsing
 	}
