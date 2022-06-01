@@ -9,17 +9,17 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/NFT-com/indexer/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/ethereum/go-ethereum/rpc"
 	_ "github.com/lib/pq"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 
+	"github.com/NFT-com/indexer/aws"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
