@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
@@ -20,13 +22,15 @@ import (
 )
 
 type AdditionHandler struct {
-	log zerolog.Logger
+	log    zerolog.Logger
+	client *http.Client
 }
 
-func NewAdditionHandler(log zerolog.Logger) *AdditionHandler {
+func NewAdditionHandler(log zerolog.Logger, client *http.Client) *AdditionHandler {
 
 	a := AdditionHandler{
-		log: log,
+		log:    log,
+		client: client,
 	}
 
 	return &a
@@ -47,10 +51,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Uint64("block_height", job.BlockHeight).
 		Msg("handling addition job")
 
-	client, err := ethclient.DialContext(ctx, addition.NodeURL)
+	rpc, err := rpc.DialHTTPWithClient(addition.NodeURL, a.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to node: %w", err)
 	}
+
+	client := ethclient.NewClient(rpc)
 	defer client.Close()
 
 	a.log.Debug().

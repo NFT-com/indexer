@@ -1,19 +1,28 @@
 package main
 
 import (
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 
+	"github.com/NFT-com/indexer/aws"
 	"github.com/NFT-com/indexer/service/lambdas"
 )
 
 const (
-	defaultLevel = "info"
-	envLevel     = "LOG_LEVEL"
+	envLevel  = "LOG_LEVEL"
+	envRegion = "AWS_REGION"
+
+	defaultLevel  = "info"
+	defaultRegion = "eu-west-1"
+
+	service = "managedblockchain"
 )
 
 func main() {
@@ -21,6 +30,11 @@ func main() {
 	level, ok := os.LookupEnv(envLevel)
 	if !ok {
 		level = defaultLevel
+	}
+
+	awsRegion, ok := os.LookupEnv(envRegion)
+	if !ok {
+		awsRegion = defaultRegion
 	}
 
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
@@ -31,7 +45,22 @@ func main() {
 	}
 	log = log.Level(lvl)
 
-	handler := lambdas.NewParsingHandler(log)
+	client := &http.Client{}
+
+	creds := credentials.NewEnvCredentials()
+	_, err = creds.Get()
+	if err == nil {
+		signer := v4.NewSigner(creds)
+		transport := aws.NewInjectorRoundTripper(
+			signer,
+			awsRegion,
+			service,
+			http.DefaultTransport,
+		)
+		client.Transport = transport
+	}
+
+	handler := lambdas.NewParsingHandler(log, client)
 	lambda.Start(handler.Handle)
 
 	os.Exit(0)

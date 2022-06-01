@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"net/http"
 	"time"
 
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
@@ -25,13 +27,15 @@ const (
 )
 
 type ParsingHandler struct {
-	log zerolog.Logger
+	log    zerolog.Logger
+	client *http.Client
 }
 
-func NewParsingHandler(log zerolog.Logger) *ParsingHandler {
+func NewParsingHandler(log zerolog.Logger, client *http.Client) *ParsingHandler {
 
 	e := ParsingHandler{
-		log: log,
+		log:    log,
+		client: client,
 	}
 
 	return &e
@@ -53,10 +57,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Uint64("end_height", job.EndHeight).
 		Msg("handling parsing job")
 
-	client, err := ethclient.DialContext(ctx, parsing.NodeURL)
+	rpc, err := rpc.DialHTTPWithClient(parsing.NodeURL, p.client)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to node: %w", err)
 	}
+
+	client := ethclient.NewClient(rpc)
 	defer client.Close()
 
 	p.log.Debug().
