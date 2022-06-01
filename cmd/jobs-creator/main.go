@@ -4,10 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/NFT-com/indexer/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/ethereum/go-ethereum/rpc"
 	_ "github.com/lib/pq"
 
 	"github.com/rs/zerolog"
@@ -46,10 +51,11 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagGraphDB  string
-		flagJobsDB   string
-		flagNodeHTTP string
-		flagNodeWS   string
+		flagGraphDB   string
+		flagJobsDB    string
+		flagAWSRegion string
+		flagNodeHTTP  string
+		flagNodeWS    string
 
 		flagOpenConnections uint
 		flagIdleConnections uint
@@ -62,6 +68,7 @@ func run() int {
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
 	pflag.StringVarP(&flagNodeHTTP, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
 	pflag.StringVarP(&flagNodeWS, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
 
@@ -141,12 +148,29 @@ func run() int {
 		return failure
 	}
 
+	ethClient := &http.Client{}
+
+	creds := credentials.NewEnvCredentials()
+	_, err = creds.Get()
+	if err == nil {
+		signer := v4.NewSigner(creds)
+		transport := aws.NewInjectorRoundTripper(
+			signer,
+			flagAWSRegion,
+			params.ManagedBlockchainService,
+			http.DefaultTransport,
+		)
+		ethClient.Transport = transport
+	}
+
 	// Initialize the Ethereum node client and get the latest height.
-	client, err := ethclient.DialContext(ctx, flagNodeHTTP)
+	rpc, err := rpc.DialHTTPWithClient(flagNodeHTTP, ethClient)
 	if err != nil {
 		log.Error().Err(err).Str("node_http", flagNodeHTTP).Msg("could not connect to node API")
 		return failure
 	}
+
+	client := ethclient.NewClient(rpc)
 
 	// Manually set the interval notifier to the latest height.
 	latest, err := client.BlockNumber(ctx)
@@ -160,6 +184,7 @@ func run() int {
 	select {
 
 	case <-ctx.Done():
+		client.Close()
 
 	case <-sig:
 		log.Info().Msg("jobs creator stopping")

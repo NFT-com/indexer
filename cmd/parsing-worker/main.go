@@ -12,6 +12,7 @@ import (
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 
 	"github.com/NFT-com/indexer/aws"
+	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/lambdas"
 )
 
@@ -21,8 +22,6 @@ const (
 
 	defaultLevel  = "info"
 	defaultRegion = "eu-west-1"
-
-	service = "managedblockchain"
 )
 
 func main() {
@@ -54,7 +53,7 @@ func main() {
 		transport := aws.NewInjectorRoundTripper(
 			signer,
 			awsRegion,
-			service,
+			params.ManagedBlockchainService,
 			http.DefaultTransport,
 		)
 		client.Transport = transport
