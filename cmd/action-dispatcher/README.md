@@ -13,8 +13,7 @@ Usage of action-dispatcher:
   
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
-  -u, --redis-url string                Redis server URL (default "127.0.0.1:6379")
-  -d, --redis-database int              Redis database number (default 1)
+  -a, --nsq-lookup-address string       NSQ lookup address (default "127.0.0.1:4161")
   -r, --aws-region string               AWS region for Lambda invocation (default "eu-west-1")
   -n, --lambda-name string              name of Lambda function for invocation (default "action-worker")
 
