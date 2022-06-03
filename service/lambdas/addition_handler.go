@@ -42,8 +42,8 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	a.log.Debug().
 		Uint64("chain_id", job.ChainID).
-		Str("contract_address", job.ContractAddress).
-		Str("token_id", job.TokenID).
+		Str("contract_address", addition.ContractAddress).
+		Str("token_id", addition.TokenID).
 		Uint64("block_height", job.BlockHeight).
 		Msg("handling addition job")
 
@@ -65,7 +65,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC721:
 
-		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		tokenURI, err = fetchURI.ERC721(ctx, addition.ContractAddress, job.BlockHeight, addition.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
@@ -76,7 +76,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC1155:
 
-		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		tokenURI, err = fetchURI.ERC1155(ctx, addition.ContractAddress, job.BlockHeight, addition.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
@@ -102,12 +102,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Int("attributes", len(token.Attributes)).
 		Msg("token metadata fetched")
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", job.ChainID, job.ContractAddress, job.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", job.ChainID, addition.ContractAddress, addition.TokenID)))
 	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", job.ChainID, job.ContractAddress, job.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", job.ChainID, addition.ContractAddress, addition.TokenID, i)))
 		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
 		trait := graph.Trait{
 			ID:    traitID.String(),
@@ -122,7 +122,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	nft := graph.NFT{
 		ID: nftID.String(),
 		// CollectionID is populated after parsing
-		TokenID:     job.TokenID,
+		TokenID:     addition.TokenID,
 		Name:        token.Name,
 		URI:         tokenURI,
 		Image:       token.Image,

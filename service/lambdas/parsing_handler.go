@@ -211,50 +211,73 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		case transfer.SenderAddress == zeroAddress:
 
 			inputs := inputs.Addition{
-				NodeURL:  parsing.NodeURL,
-				Standard: standards[transfer.ID],
-				Owner:    transfer.ReceiverAddress,
-				Number:   transfer.TokenCount,
+				NodeURL:         parsing.NodeURL,
+				ContractAddress: transfer.CollectionAddress,
+				TokenID:         transfer.TokenID,
+				Standard:        standards[transfer.ID],
+				Owner:           transfer.ReceiverAddress,
+				Number:          transfer.TokenCount,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
 				return nil, fmt.Errorf("could not encode addition inputs: %w", err)
 			}
 			action := jobs.Action{
-				ID:              uuid.NewString(),
-				ChainID:         transfer.ChainID,
-				ContractAddress: transfer.CollectionAddress,
-				TokenID:         transfer.TokenID,
-				ActionType:      jobs.ActionAddition,
-				BlockHeight:     transfer.BlockNumber,
-				JobStatus:       jobs.StatusCreated,
-				InputData:       data,
+				ID:          uuid.NewString(),
+				ChainID:     transfer.ChainID,
+				ActionType:  jobs.ActionAddition,
+				BlockHeight: transfer.BlockNumber,
+				JobStatus:   jobs.StatusCreated,
+				InputData:   data,
 			}
 			actions = append(actions, &action)
 
 		default:
 
 			inputs := inputs.OwnerChange{
-				PrevOwner: transfer.SenderAddress,
-				NewOwner:  transfer.ReceiverAddress,
-				Number:    transfer.TokenCount,
+				ContractAddress: transfer.CollectionAddress,
+				TokenID:         transfer.TokenID,
+				PrevOwner:       transfer.SenderAddress,
+				NewOwner:        transfer.ReceiverAddress,
+				Number:          transfer.TokenCount,
 			}
 			data, err := json.Marshal(inputs)
 			if err != nil {
 				return nil, fmt.Errorf("could not encode owner change inputs: %w", err)
 			}
 			action := jobs.Action{
-				ID:              uuid.NewString(),
-				ChainID:         transfer.ChainID,
-				ContractAddress: transfer.CollectionAddress,
-				TokenID:         transfer.TokenID,
-				ActionType:      jobs.ActionOwnerChange,
-				BlockHeight:     transfer.BlockNumber,
-				JobStatus:       jobs.StatusCreated,
-				InputData:       data,
+				ID:          uuid.NewString(),
+				ChainID:     transfer.ChainID,
+				ActionType:  jobs.ActionOwnerChange,
+				BlockHeight: transfer.BlockNumber,
+				JobStatus:   jobs.StatusCreated,
+				InputData:   data,
 			}
 			actions = append(actions, &action)
 		}
+	}
+	for _, sale := range sales {
+
+		inputs := inputs.SaleCollection{
+			SaleID:          sale.ID,
+			NodeURL:         parsing.NodeURL,
+			TransactionHash: sale.TransactionHash,
+			TradePrice:      sale.TradePrice,
+		}
+		data, err := json.Marshal(inputs)
+		if err != nil {
+			return nil, fmt.Errorf("could not encode sale collection inputs: %w", err)
+		}
+
+		action := jobs.Action{
+			ID:          uuid.NewString(),
+			ChainID:     sale.ChainID,
+			ActionType:  jobs.ActionSaleCollection,
+			BlockHeight: sale.BlockNumber,
+			JobStatus:   jobs.StatusCreated,
+			InputData:   data,
+		}
+		actions = append(actions, &action)
 	}
 
 	p.log.Info().

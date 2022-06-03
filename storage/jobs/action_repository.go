@@ -32,14 +32,12 @@ func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 
 	query := a.build.
 		Insert("actions").
-		Columns("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data")
+		Columns("id", "chain_id", "action_type", "block_height", "job_status", "input_data")
 
 	for _, action := range actions {
 		query = query.Values(
 			action.ID,
 			action.ChainID,
-			action.ContractAddress,
-			action.TokenID,
 			action.ActionType,
 			action.BlockHeight,
 			action.JobStatus,
@@ -58,7 +56,7 @@ func (a *ActionRepository) Insert(actions ...*jobs.Action) error {
 func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 
 	result, err := a.build.
-		Select("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data").
+		Select("id", "chain_id", "action_type", "block_height", "job_status", "input_data").
 		From("actions").
 		Where("id = ?", actionID).
 		Query()
@@ -78,8 +76,6 @@ func (a *ActionRepository) Retrieve(actionID string) (*jobs.Action, error) {
 	err = result.Scan(
 		&action.ID,
 		&action.ChainID,
-		&action.ContractAddress,
-		&action.TokenID,
 		&action.ActionType,
 		&action.BlockHeight,
 		&action.JobStatus,
@@ -122,7 +118,7 @@ func (a *ActionRepository) Update(selector UpdateSelector, setters ...UpdateSett
 func (a *ActionRepository) List(status string) ([]*jobs.Action, error) {
 
 	result, err := a.build.
-		Select("id", "chain_id", "contract_address", "token_id", "action_type", "block_height", "job_status", "input_data").
+		Select("id", "chain_id", "action_type", "block_height", "job_status", "input_data").
 		From("actions").
 		Where("job_status = ?", status).
 		OrderBy("block_height ASC").
@@ -143,8 +139,6 @@ func (a *ActionRepository) List(status string) ([]*jobs.Action, error) {
 		err = result.Scan(
 			&action.ID,
 			&action.ChainID,
-			&action.ContractAddress,
-			&action.TokenID,
 			&action.ActionType,
 			&action.BlockHeight,
 			&action.JobStatus,

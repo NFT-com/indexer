@@ -140,9 +140,8 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 	for _, action := range actions {
 
 		log := j.log.With().
+			Str("id", action.ID).
 			Uint64("chain_id", action.ChainID).
-			Str("contract_address", action.ContractAddress).
-			Str("token_id", action.TokenID).
 			Str("action_type", action.ActionType).
 			Uint64("block_height", action.BlockHeight).
 			Str("job_status", action.JobStatus).

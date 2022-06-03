@@ -91,9 +91,8 @@ func (a *ActionConsumer) process(payload []byte) error {
 		return fmt.Errorf("could not decode action job: %w", err)
 	}
 	log := a.log.With().
+		Str("id", action.ID).
 		Uint64("chain_id", action.ChainID).
-		Str("contract_address", action.ContractAddress).
-		Str("token_id", action.TokenID).
 		Str("action_type", action.ActionType).
 		Uint64("block_height", action.BlockHeight).
 		Logger()
@@ -133,7 +132,13 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return nil
 	}
 
-	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
+	var addition inputs.Addition
+	err := json.Unmarshal(action.InputData, &addition)
+	if err != nil {
+		return fmt.Errorf("could not decode addition inputs: %w", err)
+	}
+
+	collection, err := a.collections.One(action.ChainID, addition.ContractAddress)
 	if err != nil {
 		return fmt.Errorf("could not get collection: %w", err)
 	}
@@ -219,15 +224,15 @@ func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
 		return fmt.Errorf("could not decode owner change inputs: %w", err)
 	}
 
-	collection, err := a.collections.One(action.ChainID, action.ContractAddress)
+	collection, err := a.collections.One(action.ChainID, inputs.ContractAddress)
 	if err != nil {
 		return fmt.Errorf("could not retrieve collection: %w", err)
 	}
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, action.ContractAddress, action.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", action.ChainID, inputs.ContractAddress, inputs.TokenID)))
 	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
-	err = a.nfts.Touch(nftID.String(), collection.ID, action.TokenID)
+	err = a.nfts.Touch(nftID.String(), collection.ID, inputs.TokenID)
 	if err != nil {
 		return fmt.Errorf("could not touch NFT: %w", err)
 	}
