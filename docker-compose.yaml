@@ -13,13 +13,13 @@ services:
       - '5432:5432'
   nsqlookupd:
     image: nsqio/nsq
-    command: /nsqlookupd
+    entrypoint: /nsqlookupd
     ports:
       - "4160:4160"
       - "4161:4161"
   nsqd:
     image: nsqio/nsq
-    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+    entrypoint: /nsqd --lookupd-tcp-address=nsqlookupd:4160
     depends_on:
       - nsqlookupd
     ports:
@@ -27,7 +27,7 @@ services:
       - "4151:4151"
   nsqadmin:
     image: nsqio/nsq
-    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    entrypoint: /nsqadmin --lookupd-http-address=nsqlookupd:4161
     depends_on:
       - nsqlookupd
     ports:
