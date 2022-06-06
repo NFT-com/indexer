@@ -10,7 +10,7 @@ Usage of parsing-dispatcher:
 
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
   -e, --events-database string          Postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable")
-  -a, --nsq-lookup-address string       NSQ lookup address (default "127.0.0.1:4161")
+  -q, --nsq-server string               NSQ server address (default "127.0.0.1:4150")
   -r, --aws-region string               aws region for Lambda invocation (default "eu-west-1")
   -n, --lambda-name string              name of the lambda function to invoke (default "parsing-worker")
 

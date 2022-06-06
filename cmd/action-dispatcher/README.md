@@ -13,7 +13,7 @@ Usage of action-dispatcher:
   
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
-  -a, --nsq-lookup-address string       NSQ lookup address (default "127.0.0.1:4161")
+  -q, --nsq-server string               NSQ server address (default "127.0.0.1:4150")
   -r, --aws-region string               AWS region for Lambda invocation (default "eu-west-1")
   -n, --lambda-name string              name of Lambda function for invocation (default "action-worker")
 
