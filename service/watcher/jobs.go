@@ -15,18 +15,18 @@ type Job struct {
 	log      zerolog.Logger
 	parsings ParsingStore
 	actions  ActionStore
-	produce  *pipeline.Producer
+	creator  *pipeline.JobCreator
 	delay    time.Duration
 	close    chan struct{}
 }
 
-func New(log zerolog.Logger, parsings ParsingStore, actions ActionStore, produce *pipeline.Producer, delay time.Duration) *Job {
+func New(log zerolog.Logger, parsings ParsingStore, actions ActionStore, creator *pipeline.JobCreator, delay time.Duration) *Job {
 
 	j := Job{
 		log:      log.With().Str("component", "jobs_watcher").Logger(),
 		parsings: parsings,
 		actions:  actions,
-		produce:  produce,
+		creator:  creator,
 		delay:    delay,
 		close:    make(chan struct{}),
 	}
@@ -116,7 +116,7 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 			Str("job_status", string(parsing.JobStatus)).
 			Logger()
 
-		err := j.produce.PublishParsingJob(parsing)
+		err := j.creator.PublishParsingJob(parsing)
 		if err != nil {
 			return fmt.Errorf("could not publish parsing job: %w", err)
 		}
@@ -148,7 +148,7 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 			Str("job_status", action.JobStatus).
 			Logger()
 
-		err := j.produce.PublishActionJob(action)
+		err := j.creator.PublishActionJob(action)
 		if err != nil {
 			return fmt.Errorf("could not publish action job: %w", err)
 		}

@@ -66,11 +66,12 @@ func run() int {
 	nsqCfg := nsq.NewConfig()
 	producer, err := nsq.NewProducer(flagNSQServer, nsqCfg)
 	if err != nil {
-		log.Error().Err(err).Str("nsq_address", flagNSQServer).Msg("could not create NQS producer")
+		log.Error().Err(err).Str("nsq_address", flagNSQServer).Msg("could not create NSQ producer")
 		return failure
 	}
+	defer producer.Stop()
 
-	produce, err := pipeline.NewProducer(producer, params.TopicParsing, params.TopicAction)
+	handler, err := pipeline.NewJobCreator(producer, params.TopicParsing, params.TopicAction)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create pipeline producer")
 		return failure
@@ -87,17 +88,16 @@ func run() int {
 	parsingRepo := jobs.NewParsingRepository(jobsDB)
 	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	watch := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
+	watch := watcher.New(log, parsingRepo, actionRepo, handler, flagReadInterval)
+	defer watch.Close()
 
 	watch.Watch()
 
 	log.Info().Msg("jobs watcher started")
-	select {
-	case <-sig:
-		log.Info().Msg("jobs watcher stopping")
-		watch.Close()
-		producer.Stop()
-	}
+
+	<-sig
+
+	log.Info().Msg("jobs watcher stopping")
 
 	go func() {
 		<-sig

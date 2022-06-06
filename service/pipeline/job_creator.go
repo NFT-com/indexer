@@ -9,24 +9,24 @@ import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
-type Producer struct {
-	connection   *nsq.Producer
+type JobCreator struct {
+	producer     *nsq.Producer
 	parsingTopic string
 	actionTopic  string
 }
 
-func NewProducer(connection *nsq.Producer, parsingTopic string, actionTopic string) (*Producer, error) {
+func NewJobCreator(producer *nsq.Producer, parsingTopic string, actionTopic string) (*JobCreator, error) {
 
-	p := Producer{
-		connection:   connection,
+	j := JobCreator{
+		producer:     producer,
 		parsingTopic: parsingTopic,
 		actionTopic:  actionTopic,
 	}
 
-	return &p, nil
+	return &j, nil
 }
 
-func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
+func (j *JobCreator) PublishParsingJob(job *jobs.Parsing) error {
 
 	payload, err := json.Marshal(job)
 	if err != nil {
@@ -34,7 +34,7 @@ func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 	}
 
 	// Note: There is a possibility to MultiPublish (bulk publish)
-	err = p.connection.Publish(p.parsingTopic, payload)
+	err = j.producer.Publish(j.parsingTopic, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
 	}
@@ -42,7 +42,7 @@ func (p *Producer) PublishParsingJob(job *jobs.Parsing) error {
 	return nil
 }
 
-func (p *Producer) PublishActionJob(job *jobs.Action) error {
+func (j *JobCreator) PublishActionJob(job *jobs.Action) error {
 
 	payload, err := json.Marshal(job)
 	if err != nil {
@@ -50,7 +50,7 @@ func (p *Producer) PublishActionJob(job *jobs.Action) error {
 	}
 
 	// Note: There is a possibility to MultiPublish (bulk publish)
-	err = p.connection.Publish(p.actionTopic, payload)
+	err = j.producer.Publish(j.actionTopic, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
 	}
