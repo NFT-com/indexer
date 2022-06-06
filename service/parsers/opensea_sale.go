@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/NFT-com/indexer/models/abis"
@@ -43,8 +44,8 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
 		EventIndex:         log.Index,
-		SellerAddress:      log.Topics[1].Hex(),
-		BuyerAddress:       log.Topics[2].Hex(),
+		SellerAddress:      common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
+		BuyerAddress:       common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 		TradePrice:         price.String(),
 		// EmittedAt set after parsing
 	}
