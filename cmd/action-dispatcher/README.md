@@ -11,6 +11,7 @@ The action dispatcher consumes messages from the action queue and launches jobs 
 Usage of action-dispatcher:
   -l, --log-level string                severity level for log output (default "info")
   
+  -e, --events-database string          Postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable")
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
   -u, --redis-url string                Redis server URL (default "127.0.0.1:6379")

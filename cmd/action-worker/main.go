@@ -31,7 +31,7 @@ func main() {
 	}
 	log = log.Level(lvl)
 
-	handler := lambdas.NewAdditionHandler(log)
+	handler := lambdas.NewActionHandler(log)
 	lambda.Start(handler.Handle)
 
 	os.Exit(0)

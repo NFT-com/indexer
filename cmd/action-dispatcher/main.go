@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/NFT-com/indexer/storage/events"
 	_ "github.com/lib/pq"
 
 	"github.com/adjust/rmq/v4"
@@ -40,6 +41,7 @@ func run() int {
 	var (
 		flagLogLevel string
 
+		flagEventsDB   string
 		flagGraphDB    string
 		flagJobsDB     string
 		flagRedisURL   string
@@ -57,6 +59,7 @@ func run() int {
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
+	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server URL")
@@ -109,6 +112,16 @@ func run() int {
 	ownerRepo := graph.NewOwnerRepository(graphDB)
 	traitRepo := graph.NewTraitRepository(graphDB)
 
+	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
+	if err != nil {
+		log.Error().Err(err).Str("events_database", flagGraphDB).Msg("could not connect to events database")
+		return failure
+	}
+	eventsDB.SetMaxOpenConns(int(flagOpenConnections))
+	eventsDB.SetMaxIdleConns(int(flagIdleConnections))
+
+	salesRepo := events.NewSaleRepository(eventsDB)
+
 	redisClient := redis.NewClient(&redis.Options{
 		Network: "tcp",
 		Addr:    flagRedisURL,
@@ -135,7 +148,7 @@ func run() int {
 	}
 
 	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, salesRepo, flagRateLimit, flagDryRun)
 		_, err = queue.AddConsumer("action-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")

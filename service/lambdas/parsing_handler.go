@@ -169,6 +169,9 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
 				Msg("OpenSea sale parsed")
+
+		default:
+			return nil, fmt.Errorf("could not process event: unknown event type: (%s)", eventType.String())
 		}
 	}
 

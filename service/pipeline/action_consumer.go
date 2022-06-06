@@ -34,6 +34,7 @@ type ActionConsumer struct {
 	nfts        NFTStore
 	owners      OwnerStore
 	traits      TraitStore
+	sales       SaleStore
 	limit       ratelimit.Limiter
 	dryRun      bool
 }
@@ -47,6 +48,7 @@ func NewActionConsumer(
 	nfts NFTStore,
 	owners OwnerStore,
 	traits TraitStore,
+	sales SaleStore,
 	rateLimit uint,
 	dryRun bool,
 ) *ActionConsumer {
@@ -60,6 +62,7 @@ func NewActionConsumer(
 		nfts:        nfts,
 		owners:      owners,
 		traits:      traits,
+		sales:       sales,
 		limit:       ratelimit.New(int(rateLimit)),
 		dryRun:      dryRun,
 	}
@@ -103,8 +106,8 @@ func (a *ActionConsumer) process(payload []byte) error {
 	}
 
 	switch action.ActionType {
-	case jobs.ActionAddition:
-		err = a.processAddition(payload, &action)
+	case jobs.ActionAddition, jobs.ActionSaleCollection:
+		err = a.processLambdaAction(payload, &action)
 	case jobs.ActionOwnerChange:
 		err = a.processOwnerChange(&action)
 	default:
@@ -126,21 +129,10 @@ func (a *ActionConsumer) process(payload []byte) error {
 	return nil
 }
 
-func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) error {
+func (a *ActionConsumer) processLambdaAction(payload []byte, action *jobs.Action) error {
 
 	if a.dryRun {
 		return nil
-	}
-
-	var addition inputs.Addition
-	err := json.Unmarshal(action.InputData, &addition)
-	if err != nil {
-		return fmt.Errorf("could not decode addition inputs: %w", err)
-	}
-
-	collection, err := a.collections.One(action.ChainID, addition.ContractAddress)
-	if err != nil {
-		return fmt.Errorf("could not get collection: %w", err)
 	}
 
 	notify := func(err error, dur time.Duration) {
@@ -148,7 +140,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	}
 
 	var output []byte
-	err = backoff.RetryNotify(func() error {
+	err := backoff.RetryNotify(func() error {
 
 		a.limit.Take()
 
@@ -191,10 +183,38 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not successfully invoke parser: %w", err)
 	}
 
-	var result results.Addition
+	var result results.Action
 	err = json.Unmarshal(output, &result)
 	if err != nil {
 		return fmt.Errorf("could not decode NFT: %w", err)
+	}
+
+	switch action.ActionType {
+	case jobs.ActionAddition:
+		err = a.processAddition(action, result)
+	case jobs.ActionSaleCollection:
+		err = a.processSaleCollection(action, result)
+	default:
+		err = fmt.Errorf("unknown lambda action type (%s)", action.ActionType)
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not process lambda output: %w", err)
+	}
+
+	return nil
+}
+
+func (a *ActionConsumer) processAddition(action *jobs.Action, result results.Action) error {
+	var addition inputs.Addition
+	err := json.Unmarshal(action.InputData, &addition)
+	if err != nil {
+		return fmt.Errorf("could not decode addition inputs: %w", err)
+	}
+
+	collection, err := a.collections.One(action.ChainID, addition.ContractAddress)
+	if err != nil {
+		return fmt.Errorf("could not get collection: %w", err)
 	}
 
 	result.NFT.CollectionID = collection.ID
@@ -211,6 +231,21 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	err = a.owners.AddCount(result.NFT.ID, result.NFT.Owner, int(result.NFT.Number))
 	if err != nil {
 		return fmt.Errorf("could not add owner count: %w", err)
+	}
+
+	return nil
+}
+
+func (a *ActionConsumer) processSaleCollection(action *jobs.Action, result results.Action) error {
+	var saleCollection inputs.SaleCollection
+	err := json.Unmarshal(action.InputData, &saleCollection)
+	if err != nil {
+		return fmt.Errorf("could not decode sale collection inputs: %w", err)
+	}
+
+	err = a.sales.Upsert(result.Sale)
+	if err != nil {
+		return fmt.Errorf("could not insert NFT: %w", err)
 	}
 
 	return nil
