@@ -64,8 +64,10 @@ func NewParsingHandler(
 	return &p
 }
 
-func (p *ParsingHandler) HandleMessage(message *nsq.Message) error {
-	err := p.process(message.Body)
+func (p *ParsingHandler) HandleMessage(m *nsq.Message) error {
+	m.DisableAutoResponse()
+
+	err := p.process(m.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
 		return err

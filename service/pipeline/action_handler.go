@@ -70,8 +70,10 @@ func NewActionHandler(
 	return &a
 }
 
-func (a *ActionHandler) HandleMessage(message *nsq.Message) error {
-	err := a.process(message.Body)
+func (a *ActionHandler) HandleMessage(m *nsq.Message) error {
+	m.DisableAutoResponse()
+
+	err := a.process(m.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
 		return err
