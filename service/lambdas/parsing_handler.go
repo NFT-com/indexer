@@ -265,7 +265,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			SaleID:          sale.ID,
 			NodeURL:         parsing.NodeURL,
 			TransactionHash: sale.TransactionHash,
-			TradePrice:      sale.TradePrice,
 		}
 		data, err := json.Marshal(inputs)
 		if err != nil {
