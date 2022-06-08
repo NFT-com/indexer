@@ -50,7 +50,7 @@ runs:
 
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-watcher/Dockerfile -t ${{ env.REPO }}:jobs-watcher -t ${{ env.REPO }}:jobs-watcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:jobs-watcher
-        docker push ${{ env.REPO }}:action-dispatcher-${{ github.sha }}
+        docker push ${{ env.REPO }}:jobs-dispatcher-${{ github.sha }}
 
         
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile -t ${{ env.REPO }}:parsing-dispatcher -t ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }} 
