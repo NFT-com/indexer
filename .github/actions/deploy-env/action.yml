@@ -1,0 +1,69 @@
+name: Deploy Indexer Env
+description: Deploys the indexer infrastrcuture and apps to an environment
+inputs:
+  stage:
+    description: Indexer Environment to deploy on
+    required: true
+    default: dev
+  secrets:
+    description: Secrets
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 16.x
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ fromJSON(inputs.secrets).AWS_ACCESS_KEY_ID }}
+        aws-region: ${{ fromJSON(inputs.secrets).AWS_REGION }}
+        aws-secret-access-key: ${{ fromJSON(inputs.secrets).AWS_SECRET_ACCESS_KEY }}
+    - name: Login to AWS ECR
+      id: login_ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Install Pulumi CLI
+      uses: pulumi/setup-pulumi@v2
+    - name: Login to Pulumi backend
+      shell: bash
+      run: pulumi login s3://nftcom-pulumi-state
+    - name: Install Indexer Infra Deps
+      working-directory: infra
+      shell: bash
+      run: npm install
+    - name: Deploy Indexer Shared Infra
+      working-directory: infra
+      shell: bash
+      env:
+        STAGE: ${{ inputs.stage }}
+        PULUMI_CONFIG_PASSPHRASE: ""
+        AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
+        DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+      run: npm run deploy:shared
+    - name: Build and Push Indexer Docker Image(s)
+      shell: bash
+      env:
+        REPO: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.stage }}-indexer
+      run: |
+        export DOCKER_BUILDKIT=1
+      
+        docker pull ${{ env.REPO }}:build || true
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target build --cache-from ${{ env.REPO }}:build -t ${{ env.REPO }}:build
+        docker push ${{ env.REPO }}:build
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target action-dispatcher -t ${{ env.REPO }}-action-dispatcher:latest -t ${{ env.REPO }}-action-dispatcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-action-dispatcher:latest
+        docker push ${{ env.REPO }}-action-dispatcher:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target parsing-dispatcher -t ${{ env.REPO }}-parsing-dispatcher:latest -t ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-parsing-dispatcher:latest
+        docker push ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target action-dispatcher -t ${{ env.REPO }}-action-dispatcher:latest -t ${{ env.REPO }}-action-dispatcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-action-dispatcher:latest
+        docker push ${{ env.REPO }}-action-dispatcher:${{ github.sha }}
+        
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target jobs-creator -t ${{ env.REPO }}-jobs-creator:latest -t ${{ env.REPO }}-jobs-creator:${{ github.sha }} 
+        docker push ${{ env.REPO }}-jobs-creator:latest
+        docker push ${{ env.REPO }}-jobs-creator:${{ github.sha }}
