@@ -4,7 +4,6 @@ import * as process from 'process'
 import * as upath from 'upath'
 import * as pulumi from '@pulumi/pulumi'
 import { SharedInfraOutput, sharedOutputFileName } from './defs'
-import { createIndexerServer, updateIndexerEnvFile } from './indexer'
 import { createSharedInfra } from './shared'
 
 export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void => {
@@ -44,12 +43,13 @@ const main = async (): Promise<any> => {
   }
 
   if (buildIndexerEnv) {
-    updateIndexerEnvFile()
+    //updateIndexerEnvFile()
     return
   }
 
   if (deployIndexer) {
-    return createIndexerServer()
+    //return createIndexerServer()
+    return
   }
 }
 
