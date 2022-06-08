@@ -47,23 +47,19 @@ runs:
         REPO: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.stage }}-indexer
       run: |
         export DOCKER_BUILDKIT=1
-      
-        docker pull ${{ env.REPO }}:build || true
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target build --cache-from ${{ env.REPO }}:build -t ${{ env.REPO }}:build
-        docker push ${{ env.REPO }}:build
+
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-watcher/Dockerfile --target jobs-watcher -t ${{ env.REPO }}-jobs-watcher:latest -t ${{ env.REPO }}-jobs-watcher:${{ github.sha }} 
+        docker push ${{ env.REPO }}-jobs-watcher:latest
+        docker push ${{ env.REPO }}-jobs-watcher:${{ github.sha }}
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target action-dispatcher -t ${{ env.REPO }}-action-dispatcher:latest -t ${{ env.REPO }}-action-dispatcher:${{ github.sha }} 
-        docker push ${{ env.REPO }}-action-dispatcher:latest
-        docker push ${{ env.REPO }}-action-dispatcher:${{ github.sha }}
-        
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target parsing-dispatcher -t ${{ env.REPO }}-parsing-dispatcher:latest -t ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile --target parsing-dispatcher -t ${{ env.REPO }}-parsing-dispatcher:latest -t ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }} 
         docker push ${{ env.REPO }}-parsing-dispatcher:latest
         docker push ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }}
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target action-dispatcher -t ${{ env.REPO }}-action-dispatcher:latest -t ${{ env.REPO }}-action-dispatcher:${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/action-dispatcher/Dockerfile --target action-dispatcher -t ${{ env.REPO }}-action-dispatcher:latest -t ${{ env.REPO }}-action-dispatcher:${{ github.sha }} 
         docker push ${{ env.REPO }}-action-dispatcher:latest
         docker push ${{ env.REPO }}-action-dispatcher:${{ github.sha }}
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --target jobs-creator -t ${{ env.REPO }}-jobs-creator:latest -t ${{ env.REPO }}-jobs-creator:${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile --target jobs-creator -t ${{ env.REPO }}-jobs-creator:latest -t ${{ env.REPO }}-jobs-creator:${{ github.sha }} 
         docker push ${{ env.REPO }}-jobs-creator:latest
         docker push ${{ env.REPO }}-jobs-creator:${{ github.sha }}
