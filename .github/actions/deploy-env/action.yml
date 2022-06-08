@@ -48,18 +48,20 @@ runs:
       run: |
         export DOCKER_BUILDKIT=1
 
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-watcher/Dockerfile -t ${{ env.REPO }}-jobs-watcher:latest -t ${{ env.REPO }}-jobs-watcher:${{ github.sha }} 
-        docker push ${{ env.REPO }}-jobs-watcher:latest
-        docker push ${{ env.REPO }}-jobs-watcher:${{ github.sha }}
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-watcher/Dockerfile -t ${{ env.REPO }}:jobs-watcher -t ${{ env.REPO }}:jobs-watcher-${{ github.sha }} 
+        docker push ${{ env.REPO }}:jobs-watcher
+        docker push ${{ env.REPO }}:action-dispatcher-${{ github.sha }}
+
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile -t ${{ env.REPO }}-parsing-dispatcher:latest -t ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }} 
-        docker push ${{ env.REPO }}-parsing-dispatcher:latest
-        docker push ${{ env.REPO }}-parsing-dispatcher:${{ github.sha }}
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile -t ${{ env.REPO }}:parsing-dispatcher -t ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }} 
+        docker push ${{ env.REPO }}:parsing-dispatcher
+        docker push ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }}
+
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/action-dispatcher/Dockerfile -t ${{ env.REPO }}-action-dispatcher:latest -t ${{ env.REPO }}-action-dispatcher:${{ github.sha }} 
-        docker push ${{ env.REPO }}-action-dispatcher:latest
-        docker push ${{ env.REPO }}-action-dispatcher:${{ github.sha }}
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/action-dispatcher/Dockerfile -t ${{ env.REPO }}:action-dispatcher -t ${{ env.REPO }}:action-dispatcher-${{ github.sha }} 
+        docker push ${{ env.REPO }}:action-dispatcher
+        docker push ${{ env.REPO }}:action-dispatcher-${{ github.sha }}
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}-jobs-creator:latest -t ${{ env.REPO }}-jobs-creator:${{ github.sha }} 
-        docker push ${{ env.REPO }}-jobs-creator:latest
-        docker push ${{ env.REPO }}-jobs-creator:${{ github.sha }}
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}:jobs-creator -t ${{ env.REPO }}:jobs-creator-${{ github.sha }} 
+        docker push ${{ env.REPO }}:jobs-creator
+        docker push ${{ env.REPO }}:jobs-creator-${{ github.sha }}
