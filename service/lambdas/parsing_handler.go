@@ -203,7 +203,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		requests++
 		header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
 		if err != nil {
-			return nil, fmt.Errorf("could not get header for height (%d): %w", height, err)
+			return nil, fmt.Errorf("could not get header: %w", err)
 		}
 		timestamps[height] = time.Unix(int64(header.Time), 0)
 	}
