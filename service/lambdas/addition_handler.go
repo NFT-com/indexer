@@ -53,7 +53,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	var api *ethclient.Client
 	if strings.Contains(addition.NodeURL, "ethereum.managedblockchain") {
-		cfg, err := config.LoadDefaultConfig(context.Background())
+		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
 		}

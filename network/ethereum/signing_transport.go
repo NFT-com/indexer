@@ -16,13 +16,12 @@ import (
 
 type SigningTransport struct {
 	ctx         context.Context
+	transport   http.RoundTripper
 	credentials aws.Credentials
 	region      string
 }
 
 func (s SigningTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-
-	transport := http.DefaultTransport
 
 	body, err := req.GetBody()
 	if err != nil {
@@ -45,5 +44,5 @@ func (s SigningTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	req.Header.Add("accept-encoding", "gzip, deflate")
 
-	return transport.RoundTrip(req)
+	return s.transport.RoundTrip(req)
 }
