@@ -4,33 +4,33 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/network/web2"
 	"github.com/NFT-com/indexer/network/web3"
 )
 
 type AdditionHandler struct {
-	log    zerolog.Logger
-	client *http.Client
+	log zerolog.Logger
 }
 
-func NewAdditionHandler(log zerolog.Logger, client *http.Client) *AdditionHandler {
+func NewAdditionHandler(log zerolog.Logger) *AdditionHandler {
 
 	a := AdditionHandler{
-		log:    log,
-		client: client,
+		log: log,
 	}
 
 	return &a
@@ -51,19 +51,28 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Uint64("block_height", job.BlockHeight).
 		Msg("handling addition job")
 
-	rpc, err := rpc.DialHTTPWithClient(addition.NodeURL, a.client)
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to node: %w", err)
+	var api *ethclient.Client
+	if strings.Contains(addition.NodeURL, "ethereum.managedblockchain") {
+		cfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
+		}
+		api, err = ethereum.NewSigningClient(ctx, addition.NodeURL, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("could not create signing client (url: %s): %w", addition.NodeURL, err)
+		}
+	} else {
+		api, err = ethclient.DialContext(ctx, addition.NodeURL)
+		if err != nil {
+			return nil, fmt.Errorf("could not create default client (url: %s): %w", addition.NodeURL, err)
+		}
 	}
-
-	client := ethclient.NewClient(rpc)
-	defer client.Close()
 
 	a.log.Debug().
 		Str("node_url", addition.NodeURL).
 		Msg("connected to node API")
 
-	fetchURI := web3.NewURIFetcher(client)
+	fetchURI := web3.NewURIFetcher(api)
 	fetchMetadata := web2.NewMetadataFetcher()
 
 	var tokenURI string

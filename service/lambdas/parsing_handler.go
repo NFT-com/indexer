@@ -5,19 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"net/http"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/network/web3"
 	"github.com/NFT-com/indexer/service/parsers"
 )
@@ -27,15 +28,13 @@ const (
 )
 
 type ParsingHandler struct {
-	log    zerolog.Logger
-	client *http.Client
+	log zerolog.Logger
 }
 
-func NewParsingHandler(log zerolog.Logger, client *http.Client) *ParsingHandler {
+func NewParsingHandler(log zerolog.Logger) *ParsingHandler {
 
 	e := ParsingHandler{
-		log:    log,
-		client: client,
+		log: log,
 	}
 
 	return &e
@@ -57,19 +56,28 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Uint64("end_height", job.EndHeight).
 		Msg("handling parsing job")
 
-	rpc, err := rpc.DialHTTPWithClient(parsing.NodeURL, p.client)
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to node: %w", err)
+	var api *ethclient.Client
+	if strings.Contains(parsing.NodeURL, "ethereum.managedblockchain") {
+		cfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
+		}
+		api, err = ethereum.NewSigningClient(ctx, parsing.NodeURL, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("could not create signing client (url: %s): %w", parsing.NodeURL, err)
+		}
+	} else {
+		api, err = ethclient.DialContext(ctx, parsing.NodeURL)
+		if err != nil {
+			return nil, fmt.Errorf("could not create default client (url: %s): %w", parsing.NodeURL, err)
+		}
 	}
-
-	client := ethclient.NewClient(rpc)
-	defer client.Close()
 
 	p.log.Debug().
 		Str("node_url", parsing.NodeURL).
 		Msg("connected to node API")
 
-	fetch := web3.NewLogsFetcher(client)
+	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
 	logs, err := fetch.Logs(ctx, job.ContractAddresses, job.EventHashes, job.StartHeight, job.EndHeight)
@@ -187,7 +195,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	// Get all the headers to assign timestamps to the events.
 	for height := range timestamps {
 
-		header, err := client.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
+		header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
 		if err != nil {
 			return nil, fmt.Errorf("could not get header for height (%d): %w", height, err)
 		}

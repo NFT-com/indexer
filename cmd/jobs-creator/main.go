@@ -4,23 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"math/rand"
-	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	_ "github.com/lib/pq"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/NFT-com/indexer/config/params"
-	"github.com/NFT-com/indexer/network/amb"
+	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
 	"github.com/NFT-com/indexer/storage/graph"
@@ -51,11 +49,10 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagGraphDB   string
-		flagJobsDB    string
-		flagAWSRegion string
-		flagNodeURL   string
-		flagWSURL     string
+		flagGraphDB string
+		flagJobsDB  string
+		flagNodeURL string
+		flagWSURL   string
 
 		flagOpenConnections uint
 		flagIdleConnections uint
@@ -68,7 +65,6 @@ func run() int {
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
 	pflag.StringVarP(&flagNodeURL, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
 	pflag.StringVarP(&flagWSURL, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
 
@@ -112,6 +108,38 @@ func run() int {
 
 	parsingRepo := storage.NewParsingRepository(jobsDB)
 
+	// If we are using an AWS Managed Blockchain instance for for our node API, we
+	// should load the AWS configuration from the environment and use the related
+	// AWS signer on our requests.
+	var api *ethclient.Client
+	if strings.Contains(flagNodeURL, "ethereum.managedblockchain") {
+
+		log.Info().Str("node_url", flagNodeURL).Msg("using AWS Managed Blockchain node")
+
+		// Load the AWS configuration from the environment. This will work on all EC2
+		// instances out of the box; otherwise, the necessary environment variables will
+		// need to be set manualy.
+		cfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			log.Error().Err(err).Msg("could not load AWS configuration")
+			return failure
+		}
+
+		api, err = ethereum.NewSigningClient(ctx, flagNodeURL, cfg)
+		if err != nil {
+			log.Error().Str("node_url", flagNodeURL).Err(err).Msg("could not create signing client")
+			return failure
+		}
+
+	} else {
+
+		api, err = ethclient.DialContext(ctx, flagNodeURL)
+		if err != nil {
+			log.Error().Str("node_url", flagNodeURL).Err(err).Msg("could not create default client")
+			return failure
+		}
+	}
+
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
 	networks, err := networkRepo.List()
@@ -147,30 +175,6 @@ func run() int {
 		log.Error().Err(err).Str("node_websocket", flagWSURL).Msg("could not initialize blocks notifier")
 		return failure
 	}
-
-	client := &http.Client{}
-	creds := credentials.NewEnvCredentials()
-	_, err = creds.Get()
-	if err == nil {
-		log.Info().Msg("using AWS Managed Blockchain round tripper")
-		signer := v4.NewSigner(creds)
-		transport := amb.NewRoundTripper(
-			signer,
-			flagAWSRegion,
-			params.AWSManagedBlockchain,
-			http.DefaultTransport,
-		)
-		client.Transport = transport
-	}
-
-	// Initialize the Ethereum node client and get the latest height.
-	rpc, err := rpc.DialHTTPWithClient(flagNodeURL, client)
-	if err != nil {
-		log.Error().Err(err).Str("node_http", flagNodeURL).Msg("could not connect to node API")
-		return failure
-	}
-
-	api := ethclient.NewClient(rpc)
 
 	// Manually set the interval notifier to the latest height.
 	latest, err := api.BlockNumber(ctx)
