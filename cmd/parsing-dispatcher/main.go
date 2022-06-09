@@ -147,6 +147,8 @@ func run() int {
 		}
 	}
 
+	log.Info().Msg("parsing dispatcher started")
+
 	select {
 	case <-sig:
 		log.Info().Msg("initialized shutdown")
