@@ -156,28 +156,46 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		}
 		result, err := a.client.Invoke(a.ctx, input)
 
-		// retry if we ran out of requests on the Ethereum API
+		// retry if we ran out of Lambda requests
 		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
 
-		// don't retry on any other infrastructure error, for now
+		// retry if we ran out of file handles
+		if err != nil && strings.Contains(err.Error(), "too many opion files") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// retry if we failed the DNS request
+		if err != nil && strings.Contains(err.Error(), "no such host") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// otherwise, fail permanently
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
 		}
 
-		// don't retry if the function failed for some reason
-		if result.FunctionError != nil {
-			var execErr results.Error
-			err = json.Unmarshal(result.Payload, &execErr)
-			if err != nil {
-				return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
-			}
-			return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
+		// if the function has not failed, we are done
+		if result.FunctionError == nil {
+			output = result.Payload
+			return nil
 		}
 
-		output = result.Payload
-		return nil
+		// otherwise, process the function error
+		var execErr results.Error
+		err = json.Unmarshal(result.Payload, &execErr)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
+		}
+
+		// retry if we ran out of requests on the node
+		if strings.Contains(execErr.Message, "Too Many Requests") {
+			return fmt.Errorf("could not execute lambda: %s", execErr.Message)
+		}
+
+		// all other errors should be permanent for now
+		return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
 	}, retry.Indefinite(), notify)
 	if err != nil {
 		return fmt.Errorf("could not successfully invoke parser: %w", err)
