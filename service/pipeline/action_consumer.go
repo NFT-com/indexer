@@ -205,6 +205,13 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 		return fmt.Errorf("could not add owner count: %w", err)
 	}
 
+	// If the retrieval of the token URL was retried by the Lambda, because the NFT
+	// has been deleted, and we attempt to get it from the archival state, then we
+	// should take up one more slot on the rate limit, to make sure it stays correct.
+	if result.Retried {
+		a.limit.Take()
+	}
+
 	return nil
 }
 
