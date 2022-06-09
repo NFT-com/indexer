@@ -48,6 +48,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		return nil, fmt.Errorf("could not decode parsing inputs: %w", err)
 	}
 
+	requests := uint(0)
+
 	p.log.Debug().
 		Uint64("chain_id", job.ChainID).
 		Strs("contract_addresses", job.ContractAddresses).
@@ -80,6 +82,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
+	requests++
 	logs, err := fetch.Logs(ctx, job.ContractAddresses, job.EventHashes, job.StartHeight, job.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
@@ -194,12 +197,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 	// Get all the headers to assign timestamps to the events.
 	for height := range timestamps {
-
+		requests++
 		header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
 		if err != nil {
 			return nil, fmt.Errorf("could not get header for height (%d): %w", height, err)
 		}
-
 		timestamps[height] = time.Unix(int64(header.Time), 0)
 	}
 
@@ -280,6 +282,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Sales:     sales,
 		Transfers: transfers,
 		Actions:   actions,
+		Requests:  requests,
 	}
 
 	return &result, nil

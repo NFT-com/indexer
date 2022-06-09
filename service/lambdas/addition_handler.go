@@ -75,15 +75,16 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	fetchURI := web3.NewURIFetcher(api)
 	fetchMetadata := web2.NewMetadataFetcher()
 
+	requests := uint(0)
 	var tokenURI string
-	retried := false
 	switch addition.Standard {
 
 	case jobs.StandardERC721:
 
+		requests++
 		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.TokenID)
 		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
-			retried = true
+			requests++
 			tokenURI, err = fetchURI.ERC721Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		}
 		if err != nil {
@@ -96,9 +97,10 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC1155:
 
+		requests++
 		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.TokenID)
 		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
-			retried = true
+			requests++
 			tokenURI, err = fetchURI.ERC1155Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		}
 		if err != nil {
@@ -156,9 +158,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	}
 
 	result := results.Addition{
-		NFT:     &nft,
-		Traits:  traits,
-		Retried: retried,
+		NFT:      &nft,
+		Traits:   traits,
+		Requests: requests,
 	}
 
 	return &result, nil

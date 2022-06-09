@@ -190,5 +190,11 @@ func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, erro
 		return nil, fmt.Errorf("could not upsert action jobs: %w", err)
 	}
 
+	// As we can't know in advance how many requests a Lambda will make, we will
+	// wait here to take up any requests above one that we needed.
+	for i := 1; i < int(result.Requests); i++ {
+		p.limit.Take()
+	}
+
 	return &result, nil
 }
