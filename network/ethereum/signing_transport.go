@@ -20,18 +20,7 @@ type SigningTransport struct {
 	region      string
 }
 
-func NewSigningTransport(ctx context.Context, credentials aws.Credentials, region string) *SigningTransport {
-
-	s := SigningTransport{
-		ctx:         ctx,
-		credentials: credentials,
-		region:      region,
-	}
-
-	return &s
-}
-
-func (s *SigningTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (s SigningTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	transport := http.DefaultTransport
 

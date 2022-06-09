@@ -11,9 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-type SigningClient struct {
-}
-
 func NewSigningClient(ctx context.Context, url string, cfg aws.Config) (*ethclient.Client, error) {
 
 	credentials, err := cfg.Credentials.Retrieve(ctx)
@@ -21,10 +18,15 @@ func NewSigningClient(ctx context.Context, url string, cfg aws.Config) (*ethclie
 		return nil, fmt.Errorf("could not retrieve AWS credentials: %w", err)
 	}
 
-	client := http.DefaultClient
-	client.Transport = NewSigningTransport(ctx, credentials, cfg.Region)
+	client := http.Client{
+		Transport: SigningTransport{
+			ctx:         ctx,
+			credentials: credentials,
+			region:      cfg.Region,
+		},
+	}
 
-	rpc, err := rpc.DialHTTPWithClient(url, client)
+	rpc, err := rpc.DialHTTPWithClient(url, &client)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to JSON RPC API: %w", err)
 	}
