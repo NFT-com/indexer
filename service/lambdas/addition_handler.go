@@ -90,6 +90,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 			requests++
 			tokenURI, err = fetchURI.ERC721Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		}
+		if err != nil && strings.Contains(err.Error(), "missing trie node") {
+			return nil, fmt.Errorf("node does not support archive mode (missing trie node)")
+		}
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
@@ -105,6 +108,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
 			requests++
 			tokenURI, err = fetchURI.ERC1155Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		}
+		if err != nil && strings.Contains(err.Error(), "missing trie node") {
+			return nil, fmt.Errorf("node does not support archive mode (missing trie node)")
 		}
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
