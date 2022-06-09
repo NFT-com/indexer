@@ -19,8 +19,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/NFT-com/indexer/aws"
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/network/amb"
 	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
 	"github.com/NFT-com/indexer/storage/graph"
@@ -154,7 +154,7 @@ func run() int {
 	_, err = creds.Get()
 	if err == nil {
 		signer := v4.NewSigner(creds)
-		transport := aws.NewInjectorRoundTripper(
+		transport := amb.NewRoundTripper(
 			signer,
 			flagAWSRegion,
 			params.ManagedBlockchainService,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
@@ -8,20 +9,18 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 
-	"github.com/NFT-com/indexer/aws"
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/network/amb"
 	"github.com/NFT-com/indexer/service/lambdas"
 )
 
 const (
-	envLevel  = "LOG_LEVEL"
-	envRegion = "AWS_REGION"
-
-	defaultLevel  = "info"
-	defaultRegion = "eu-west-1"
+	envLevel     = "LOG_LEVEL"
+	defaultLevel = "info"
 )
 
 func main() {
@@ -29,11 +28,6 @@ func main() {
 	level, ok := os.LookupEnv(envLevel)
 	if !ok {
 		level = defaultLevel
-	}
-
-	awsRegion, ok := os.LookupEnv(envRegion)
-	if !ok {
-		awsRegion = defaultRegion
 	}
 
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
@@ -44,15 +38,20 @@ func main() {
 	}
 	log = log.Level(lvl)
 
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not load AWS config")
+	}
+
 	client := &http.Client{}
 
 	creds := credentials.NewEnvCredentials()
 	_, err = creds.Get()
 	if err == nil {
 		signer := v4.NewSigner(creds)
-		transport := aws.NewInjectorRoundTripper(
+		transport := amb.NewRoundTripper(
 			signer,
-			awsRegion,
+			cfg.Region,
 			params.ManagedBlockchainService,
 			http.DefaultTransport,
 		)
