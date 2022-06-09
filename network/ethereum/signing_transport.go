@@ -27,6 +27,7 @@ func (s SigningTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not get request body: %w", err)
 	}
+	defer body.Close()
 
 	data, err := ioutil.ReadAll(body)
 	if err != nil {
