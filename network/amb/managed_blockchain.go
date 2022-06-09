@@ -1,8 +1,9 @@
 package amb
 
 import (
+	"bytes"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -30,17 +31,18 @@ func NewRoundTripper(signer *v4.Signer, region string, service string, wrap http
 
 func (t *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
-	reader, err := req.GetBody()
+	body, err := req.GetBody()
 	if err != nil {
 		return nil, fmt.Errorf("could not get request body: %w", err)
 	}
 
-	seeker, ok := reader.(io.ReadSeekCloser)
-	if !ok {
-		return nil, fmt.Errorf("could not cast request body (type: %T)", reader)
+	data, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read request body: %w", err)
 	}
 
-	_, err = t.signer.Sign(req, seeker, t.service, t.region, time.Now())
+	reader := bytes.NewReader(data)
+	_, err = t.signer.Sign(req, reader, t.service, t.region, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("could not sign request: %w", err)
 	}
