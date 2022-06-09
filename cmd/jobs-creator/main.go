@@ -184,7 +184,7 @@ func run() int {
 	}
 	ticker.Notify(latest)
 
-	log.Info().Msg("jobs creator started")
+	log.Info().Uint64("height", latest).Msg("jobs creator started")
 	select {
 
 	case <-ctx.Done():
