@@ -112,6 +112,7 @@ func run() int {
 	// should load the AWS configuration from the environment and use the related
 	// AWS signer on our requests.
 	var api *ethclient.Client
+	close := func() {}
 	if strings.Contains(flagNodeURL, "ethereum.managedblockchain") {
 
 		log.Info().Str("node_url", flagNodeURL).Msg("using AWS Managed Blockchain node")
@@ -125,7 +126,7 @@ func run() int {
 			return failure
 		}
 
-		api, err = ethereum.NewSigningClient(ctx, flagNodeURL, cfg)
+		api, close, err = ethereum.NewSigningClient(ctx, flagNodeURL, cfg)
 		if err != nil {
 			log.Error().Str("node_url", flagNodeURL).Err(err).Msg("could not create signing client")
 			return failure
@@ -139,6 +140,8 @@ func run() int {
 			return failure
 		}
 	}
+	defer api.Close()
+	defer close()
 
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
@@ -188,7 +191,6 @@ func run() int {
 	select {
 
 	case <-ctx.Done():
-		api.Close()
 
 	case <-sig:
 		log.Info().Msg("jobs creator stopping")

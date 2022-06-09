@@ -52,12 +52,13 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Msg("handling addition job")
 
 	var api *ethclient.Client
+	close := func() {}
 	if strings.Contains(addition.NodeURL, "ethereum.managedblockchain") {
 		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
 		}
-		api, err = ethereum.NewSigningClient(ctx, addition.NodeURL, cfg)
+		api, close, err = ethereum.NewSigningClient(ctx, addition.NodeURL, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("could not create signing client (url: %s): %w", addition.NodeURL, err)
 		}
@@ -68,6 +69,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		}
 	}
 	defer api.Close()
+	defer close()
 
 	a.log.Debug().
 		Str("node_url", addition.NodeURL).

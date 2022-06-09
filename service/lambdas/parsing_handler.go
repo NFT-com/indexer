@@ -59,12 +59,13 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Msg("handling parsing job")
 
 	var api *ethclient.Client
+	close := func() {}
 	if strings.Contains(parsing.NodeURL, "ethereum.managedblockchain") {
 		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
 		}
-		api, err = ethereum.NewSigningClient(ctx, parsing.NodeURL, cfg)
+		api, close, err = ethereum.NewSigningClient(ctx, parsing.NodeURL, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("could not create signing client (url: %s): %w", parsing.NodeURL, err)
 		}
@@ -75,6 +76,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		}
 	}
 	defer api.Close()
+	defer close()
 
 	p.log.Debug().
 		Str("node_url", parsing.NodeURL).
