@@ -74,6 +74,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 			return nil, fmt.Errorf("could not create default client (url: %s): %w", parsing.NodeURL, err)
 		}
 	}
+	defer api.Close()
 
 	p.log.Debug().
 		Str("node_url", parsing.NodeURL).

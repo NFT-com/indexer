@@ -67,6 +67,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 			return nil, fmt.Errorf("could not create default client (url: %s): %w", addition.NodeURL, err)
 		}
 	}
+	defer api.Close()
 
 	a.log.Debug().
 		Str("node_url", addition.NodeURL).
