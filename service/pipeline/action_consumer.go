@@ -1,8 +1,8 @@
 package pipeline
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,8 +15,8 @@ import (
 	"go.uber.org/ratelimit"
 	"golang.org/x/crypto/sha3"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/inputs"
@@ -26,8 +26,9 @@ import (
 )
 
 type ActionConsumer struct {
+	ctx         context.Context
 	log         zerolog.Logger
-	lambda      *lambda.Lambda
+	client      *lambda.Client
 	name        string
 	actions     ActionStore
 	collections CollectionStore
@@ -39,8 +40,9 @@ type ActionConsumer struct {
 }
 
 func NewActionConsumer(
+	ctx context.Context,
 	log zerolog.Logger,
-	lambda *lambda.Lambda,
+	client *lambda.Client,
 	name string,
 	actions ActionStore,
 	collections CollectionStore,
@@ -52,8 +54,9 @@ func NewActionConsumer(
 ) *ActionConsumer {
 
 	a := ActionConsumer{
+		ctx:         ctx,
 		log:         log,
-		lambda:      lambda,
+		client:      client,
 		name:        name,
 		actions:     actions,
 		collections: collections,
@@ -151,13 +154,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 			FunctionName: aws.String(a.name),
 			Payload:      payload,
 		}
-		result, err := a.lambda.Invoke(input)
-		var reqErr *lambda.TooManyRequestsException
-
-		// retry if we ran out of concurrent lambdas
-		if errors.As(err, &reqErr) {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
+		result, err := a.client.Invoke(a.ctx, input)
 
 		// retry if we ran out of requests on the Ethereum API
 		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {

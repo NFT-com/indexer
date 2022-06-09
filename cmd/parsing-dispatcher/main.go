@@ -1,21 +1,20 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	_ "github.com/lib/pq"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
 
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
@@ -46,7 +45,6 @@ func run() int {
 		flagEventsDB   string
 		flagRedisDB    int
 		flagRedisURL   string
-		flagAWSRegion  string
 		flagLambdaName string
 
 		flagOpenConnections   uint
@@ -64,7 +62,6 @@ func run() int {
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server URL")
 	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
-	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the Lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
@@ -85,10 +82,6 @@ func run() int {
 		return failure
 	}
 	log = log.Level(level)
-
-	sessionConfig := aws.Config{Region: aws.String(flagAWSRegion)}
-	session := session.Must(session.NewSession(&sessionConfig))
-	lambdaClient := lambda.New(session)
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
@@ -125,6 +118,12 @@ func run() int {
 	}
 	defer rmqConnection.StopAllConsuming()
 
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("could not load AWS configuration")
+		return failure
+	}
+
 	queue, err := rmqConnection.OpenQueue(params.QueueParsing)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open queue")
@@ -137,8 +136,10 @@ func run() int {
 		return failure
 	}
 
+	// TODO: implement proper shutdown logic with context to propagate
+	client := lambda.NewFromConfig(cfg)
 	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewParsingConsumer(log, lambdaClient, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewParsingConsumer(context.Background(), log, client, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
 		_, err := queue.AddConsumer("parsing-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")

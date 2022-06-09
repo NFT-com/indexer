@@ -1,21 +1,21 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"os"
 	"os/signal"
 	"time"
-
-	_ "github.com/lib/pq"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	_ "github.com/lib/pq"
+
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
@@ -44,7 +44,6 @@ func run() int {
 		flagJobsDB     string
 		flagRedisURL   string
 		flagRedisDB    int
-		flagAWSRegion  string
 		flagLambdaName string
 
 		flagOpenConnections   uint
@@ -61,7 +60,6 @@ func run() int {
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server URL")
 	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
-	pflag.StringVarP(&flagAWSRegion, "aws-region", "r", "eu-west-1", "AWS region for Lambda invocation")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of the Lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
@@ -81,10 +79,6 @@ func run() int {
 		return failure
 	}
 	log = log.Level(level)
-
-	sessionConfig := aws.Config{Region: aws.String(flagAWSRegion)}
-	session := session.Must(session.NewSession(&sessionConfig))
-	lambdaClient := lambda.New(session)
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
@@ -122,6 +116,12 @@ func run() int {
 	}
 	defer rmqConnection.StopAllConsuming()
 
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("could not load AWS configuration")
+		return failure
+	}
+
 	queue, err := rmqConnection.OpenQueue(params.QueueAction)
 	if err != nil {
 		log.Error().Err(err).Msg("could not open queue")
@@ -134,8 +134,10 @@ func run() int {
 		return failure
 	}
 
+	// TODO: implement proper shutdown with context to propagate
+	client := lambda.NewFromConfig(cfg)
 	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewActionConsumer(log, lambdaClient, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewActionConsumer(context.Background(), log, client, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, flagRateLimit, flagDryRun)
 		_, err = queue.AddConsumer("action-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")

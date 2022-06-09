@@ -1,8 +1,8 @@
 package pipeline
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -13,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/jobs"
@@ -23,8 +23,9 @@ import (
 )
 
 type ParsingConsumer struct {
+	ctx       context.Context
 	log       zerolog.Logger
-	lambda    *lambda.Lambda
+	lambda    *lambda.Client
 	name      string
 	parsings  ParsingStore
 	actions   ActionStore
@@ -35,8 +36,9 @@ type ParsingConsumer struct {
 }
 
 func NewParsingConsumer(
+	ctx context.Context,
 	log zerolog.Logger,
-	lambda *lambda.Lambda,
+	lambda *lambda.Client,
 	name string,
 	parsings ParsingStore,
 	actions ActionStore,
@@ -47,6 +49,7 @@ func NewParsingConsumer(
 ) *ParsingConsumer {
 
 	p := ParsingConsumer{
+		ctx:       ctx,
 		log:       log,
 		lambda:    lambda,
 		name:      name,
@@ -137,13 +140,7 @@ func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, erro
 			FunctionName: aws.String(p.name),
 			Payload:      payload,
 		}
-		result, err := p.lambda.Invoke(input)
-		var reqErr *lambda.TooManyRequestsException
-
-		// retry if we ran out of concurrent lambdas
-		if errors.As(err, &reqErr) {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
+		result, err := p.lambda.Invoke(p.ctx, input)
 
 		// retry if we ran out of requests on the Ethereum API
 		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
