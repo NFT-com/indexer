@@ -152,6 +152,7 @@ func run() int {
 	creds := credentials.NewEnvCredentials()
 	_, err = creds.Get()
 	if err == nil {
+		log.Info().Msg("using AWS Managed Blockchain round tripper")
 		signer := v4.NewSigner(creds)
 		transport := amb.NewRoundTripper(
 			signer,
