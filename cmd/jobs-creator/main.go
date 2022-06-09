@@ -148,8 +148,7 @@ func run() int {
 		return failure
 	}
 
-	ethClient := &http.Client{}
-
+	client := &http.Client{}
 	creds := credentials.NewEnvCredentials()
 	_, err = creds.Get()
 	if err == nil {
@@ -157,23 +156,23 @@ func run() int {
 		transport := amb.NewRoundTripper(
 			signer,
 			flagAWSRegion,
-			params.ManagedBlockchainService,
+			params.AWSManagedBlockchain,
 			http.DefaultTransport,
 		)
-		ethClient.Transport = transport
+		client.Transport = transport
 	}
 
 	// Initialize the Ethereum node client and get the latest height.
-	rpc, err := rpc.DialHTTPWithClient(flagNodeURL, ethClient)
+	rpc, err := rpc.DialHTTPWithClient(flagNodeURL, client)
 	if err != nil {
 		log.Error().Err(err).Str("node_http", flagNodeURL).Msg("could not connect to node API")
 		return failure
 	}
 
-	client := ethclient.NewClient(rpc)
+	api := ethclient.NewClient(rpc)
 
 	// Manually set the interval notifier to the latest height.
-	latest, err := client.BlockNumber(ctx)
+	latest, err := api.BlockNumber(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("could not get latest block")
 		return failure
@@ -184,7 +183,7 @@ func run() int {
 	select {
 
 	case <-ctx.Done():
-		client.Close()
+		api.Close()
 
 	case <-sig:
 		log.Info().Msg("jobs creator stopping")

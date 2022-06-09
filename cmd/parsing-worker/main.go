@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	envLevel     = "LOG_LEVEL"
 	defaultLevel = "info"
+	envLevel     = "LOG_LEVEL"
 )
 
 func main() {
@@ -44,7 +44,6 @@ func main() {
 	}
 
 	client := &http.Client{}
-
 	creds := credentials.NewEnvCredentials()
 	_, err = creds.Get()
 	if err == nil {
@@ -52,7 +51,7 @@ func main() {
 		transport := amb.NewRoundTripper(
 			signer,
 			cfg.Region,
-			params.ManagedBlockchainService,
+			params.AWSManagedBlockchain,
 			http.DefaultTransport,
 		)
 		client.Transport = transport

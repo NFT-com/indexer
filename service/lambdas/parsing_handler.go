@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/inputs"
