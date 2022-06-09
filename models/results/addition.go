@@ -5,6 +5,7 @@ import (
 )
 
 type Addition struct {
-	NFT    *graph.NFT     `json:"nft"`
-	Traits []*graph.Trait `json:"traits"`
+	NFT     *graph.NFT     `json:"nft"`
+	Traits  []*graph.Trait `json:"traits"`
+	Retried bool           `json:"retried"`
 }

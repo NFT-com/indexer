@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/sha3"
+
+	"github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -15,6 +18,7 @@ import (
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/network/web2"
 	"github.com/NFT-com/indexer/network/web3"
 )
@@ -47,25 +51,41 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Uint64("block_height", job.BlockHeight).
 		Msg("handling addition job")
 
-	client, err := ethclient.DialContext(ctx, addition.NodeURL)
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to node: %w", err)
+	var api *ethclient.Client
+	if strings.Contains(addition.NodeURL, "ethereum.managedblockchain") {
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
+		}
+		api, err = ethereum.NewSigningClient(ctx, addition.NodeURL, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("could not create signing client (url: %s): %w", addition.NodeURL, err)
+		}
+	} else {
+		api, err = ethclient.DialContext(ctx, addition.NodeURL)
+		if err != nil {
+			return nil, fmt.Errorf("could not create default client (url: %s): %w", addition.NodeURL, err)
+		}
 	}
-	defer client.Close()
 
 	a.log.Debug().
 		Str("node_url", addition.NodeURL).
 		Msg("connected to node API")
 
-	fetchURI := web3.NewURIFetcher(client)
+	fetchURI := web3.NewURIFetcher(api)
 	fetchMetadata := web2.NewMetadataFetcher()
 
 	var tokenURI string
+	retried := false
 	switch addition.Standard {
 
 	case jobs.StandardERC721:
 
-		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.TokenID)
+		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
+			retried = true
+			tokenURI, err = fetchURI.ERC721Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
@@ -76,7 +96,11 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC1155:
 
-		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.TokenID)
+		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
+			retried = true
+			tokenURI, err = fetchURI.ERC1155Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
@@ -132,8 +156,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	}
 
 	result := results.Addition{
-		NFT:    &nft,
-		Traits: traits,
+		NFT:     &nft,
+		Traits:  traits,
+		Retried: retried,
 	}
 
 	return &result, nil

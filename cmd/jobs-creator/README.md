@@ -11,6 +11,7 @@ Usage of jobs-creator:
 
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
+  -r, --aws-region string               AWS region for Lambda invocation (default "eu-west-1")
   -n, --node-url string                 HTTP URL for Ethereum JSON RPC API connection (default "http://127.0.0.1:8545")
   -w, --websocket-url string            Websocket URL for Ethereum JSON RPC API connection (default "ws://127.0.0.1:8545")
   
