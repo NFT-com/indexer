@@ -49,7 +49,7 @@ func NewActionConsumer(
 	nfts NFTStore,
 	owners OwnerStore,
 	traits TraitStore,
-	rateLimit uint,
+	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ActionConsumer {
 
@@ -63,7 +63,7 @@ func NewActionConsumer(
 		nfts:        nfts,
 		owners:      owners,
 		traits:      traits,
-		limit:       ratelimit.New(int(rateLimit)),
+		limit:       limit,
 		dryRun:      dryRun,
 	}
 

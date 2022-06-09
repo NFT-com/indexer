@@ -44,7 +44,7 @@ func NewParsingConsumer(
 	actions ActionStore,
 	transfers TransferStore,
 	sales SaleStore,
-	rateLimit uint,
+	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ParsingConsumer {
 
@@ -57,7 +57,7 @@ func NewParsingConsumer(
 		actions:   actions,
 		transfers: transfers,
 		sales:     sales,
-		limit:     ratelimit.New(int(rateLimit)),
+		limit:     limit,
 		dryRun:    dryRun,
 	}
 

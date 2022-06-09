@@ -11,6 +11,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
+	"go.uber.org/ratelimit"
 
 	_ "github.com/lib/pq"
 
@@ -136,8 +137,9 @@ func run() int {
 
 	// TODO: implement proper shutdown with context to propagate
 	client := lambda.NewFromConfig(cfg)
+	limit := ratelimit.New(int(flagRateLimit))
 	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewActionConsumer(context.Background(), log, client, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewActionConsumer(context.Background(), log, client, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, limit, flagDryRun)
 		_, err = queue.AddConsumer("action-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")

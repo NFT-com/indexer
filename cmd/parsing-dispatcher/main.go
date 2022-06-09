@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	_ "github.com/lib/pq"
+	"go.uber.org/ratelimit"
 
 	"github.com/adjust/rmq/v4"
 	"github.com/go-redis/redis/v8"
@@ -138,8 +139,9 @@ func run() int {
 
 	// TODO: implement proper shutdown logic with context to propagate
 	client := lambda.NewFromConfig(cfg)
+	limit := ratelimit.New(int(flagRateLimit))
 	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewParsingConsumer(context.Background(), log, client, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, flagRateLimit, flagDryRun)
+		consumer := pipeline.NewParsingConsumer(context.Background(), log, client, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, limit, flagDryRun)
 		_, err := queue.AddConsumer("parsing-consumer", consumer)
 		if err != nil {
 			log.Error().Err(err).Msg("could not add consumer")
