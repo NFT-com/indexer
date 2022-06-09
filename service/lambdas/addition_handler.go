@@ -82,7 +82,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	case jobs.StandardERC721:
 
 		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.TokenID)
-		if strings.Contains(err.Error(), "nonexistent token") {
+		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
 			retried = true
 			tokenURI, err = fetchURI.ERC721Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		}
@@ -97,7 +97,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	case jobs.StandardERC1155:
 
 		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.TokenID)
-		if strings.Contains(err.Error(), "nonexistent token") {
+		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
 			retried = true
 			tokenURI, err = fetchURI.ERC1155Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
 		}
