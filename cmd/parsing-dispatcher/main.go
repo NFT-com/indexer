@@ -60,7 +60,7 @@ func run() int {
 
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
-	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "q", []string{"127.0.0.1:4161"}, "address for NSQ lookup server to bootstrap consuming")
+	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "u", []string{"127.0.0.1:4161"}, "address for NSQ lookup server to bootstrap consuming")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the Lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")

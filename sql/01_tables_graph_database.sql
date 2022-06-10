@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS collections
     UNIQUE (network_id, contract_address)
 );
 
+CREATE INDEX collections_contract_address_idx ON collections(contract_address);
+
 CREATE TABLE IF NOT EXISTS nfts
 (
     id            UUID PRIMARY KEY,
@@ -46,11 +48,13 @@ CREATE TABLE IF NOT EXISTS nfts
 
 CREATE TABLE IF NOT EXISTS owners
 (
-    nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
     owner  VARCHAR(128) NOT NULL,
+    nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
     number NUMERIC      NOT NULL,
-    PRIMARY KEY (nft_id, owner)
+    PRIMARY KEY (owner, nft_id)
 );
+
+CREATE INDEX owners_nft_id_idx ON owners(nft_id);
 
 CREATE TABLE IF NOT EXISTS traits
 (
@@ -60,6 +64,8 @@ CREATE TABLE IF NOT EXISTS traits
     type   TEXT NOT NULL,
     value  TEXT NOT NULL
 );
+
+CREATE INDEX traits_nft_id_idx ON traits(nft_id);
 
 CREATE TABLE IF NOT EXISTS standards
 (
