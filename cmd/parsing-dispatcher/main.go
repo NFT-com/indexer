@@ -117,9 +117,9 @@ func run() int {
 		return failure
 	}
 
-	consumer, err := nsq.NewConsumer(params.TopicParsing, params.PipelineIndexer, config)
+	consumer, err := nsq.NewConsumer(params.TopicParsing, params.ChannelDispatch, config)
 	if err != nil {
-		log.Error().Err(err).Str("topic", params.TopicParsing).Str("channel", params.PipelineIndexer).Msg("could not create NSQ consumer")
+		log.Error().Err(err).Str("topic", params.TopicParsing).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
 	}
 

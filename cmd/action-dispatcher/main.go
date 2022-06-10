@@ -114,9 +114,9 @@ func run() int {
 		return failure
 	}
 
-	consumer, err := nsq.NewConsumer(params.TopicAction, params.PipelineIndexer, nsqCfg)
+	consumer, err := nsq.NewConsumer(params.TopicAction, params.ChannelDispatch, nsqCfg)
 	if err != nil {
-		log.Error().Err(err).Str("topic", params.TopicAction).Str("channel", params.PipelineIndexer).Msg("could not create NSQ consumer")
+		log.Error().Err(err).Str("topic", params.TopicAction).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
 	}
 	defer consumer.Stop()
