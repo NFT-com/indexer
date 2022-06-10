@@ -5,7 +5,10 @@ The action dispatcher consumes messages from the action queue and launches jobs 
 * **addition**: add a newly minted NFT to the graph database
 * **owner change**: update an NFT owner after a transfer
 
-## Usage
+## Command Line Parameters
+
+The action dispatcher depends on the graph database, the jobs database, at least one NSQ lookup server and the Lambda function name.
+These configuration parameters have to be passed with the following command line parameters.
 
 ```
 Usage of action-dispatcher:
@@ -13,8 +16,7 @@ Usage of action-dispatcher:
   
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
-  -q, --nsq-server string               NSQ server address (default "127.0.0.1:4150")
-  -r, --aws-region string               AWS region for Lambda invocation (default "eu-west-1")
+  -k, --nsq-lookups []string            addresses for NSQ lookups to bootstrap consuming (default "127.0.0.1:4150")
   -n, --lambda-name string              name of Lambda function for invocation (default "action-worker")
 
       --db-connection-limit uint        maximum number of open database connections (default 128)
@@ -23,6 +25,18 @@ Usage of action-dispatcher:
       --rate-limit uint                 maximum number of API requests per second (default 100)
       
       --dry-run                         executing as dry run disables invocation of Lambda function
+```
+
+## Environment Variables
+
+In addition tho the command line parameters, the action dispatcher depends on living in a valid AWS environment.
+You need to make sure the role associated with the container has the necessary access to invoke Lambdas.
+Otherwise, you need to make sure that valid credentials are provided, and the region needs to be set regardless.
+
+```sh
+export AWS_DEFAULT_REGION="eu-west-1"
+export AWS_ACCESS_KEY_ID="ABCDEFGHIJKLMNOPQRST"
+export AWS_SECRET_ACCESS_KEY="AbCdEfGhIkLmNoPqRsTuVw12345+AbCdEfGhI+Ab"
 ```
 
 ## Database Address — Data Source Name
