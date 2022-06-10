@@ -13,7 +13,6 @@ export const createParsingWorker = (): aws.lambda.Function => {
         reservedConcurrentExecutions: -1,
         role: "arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole",
         runtime: "go1.x",
-        sourceCodeHash: "v2kKP0fLXtIZtQ/BnP25qNNAJhpnAU7xUka46vTAqgM=",
         timeout: 600,
         tracingConfig: {
             mode: "PassThrough",
@@ -34,7 +33,6 @@ export const createActionWorker = (): aws.lambda.Function => {
         reservedConcurrentExecutions: -1,
         role: "arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole",
         runtime: "go1.x",
-        sourceCodeHash: "QPPPtmO3I7S2T/z1KIeOxELq8aGy1BlWGTnXxchln8Q=",
         timeout: 600,
         tracingConfig: {
             mode: "PassThrough",

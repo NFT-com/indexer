@@ -19,15 +19,19 @@ runs:
       with:
         go-version: 1.17
     - name: Build Go Parser Worker
+      working-directory: infra/shared/stack
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ./cmd/parsing-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ../../../cmd/parsing-worker
     - name: Zip Parser Worker
+      working-directory: infra/shared/stack
       shell: bash
       run: zip parsing.zip worker     
     - name: Build Go Action Worker
+      working-directory: infra/shared/stack
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ./cmd/action-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ../../../cmd/action-worker
     - name: Zip Action Worker
+      working-directory: infra/shared/stack
       shell: bash
       run: zip action.zip worker    
     - name: Configure AWS Credentials
