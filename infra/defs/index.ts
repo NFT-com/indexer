@@ -10,4 +10,6 @@ export type SharedInfraOutput = {
   vpcId: string
   webSGId: string
   indexerECRRepo: string
+  parserFunctionId: string
+  actionFunctionId: string
 }
