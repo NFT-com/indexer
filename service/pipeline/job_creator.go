@@ -33,7 +33,6 @@ func (j *JobCreator) PublishParsingJob(job *jobs.Parsing) error {
 		return fmt.Errorf("could not marshal payload: %w", err)
 	}
 
-	// Note: There is a possibility to MultiPublish (bulk publish)
 	err = j.producer.Publish(j.parsingTopic, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)
@@ -49,7 +48,6 @@ func (j *JobCreator) PublishActionJob(job *jobs.Action) error {
 		return fmt.Errorf("could not marshal payload: %w", err)
 	}
 
-	// Note: There is a possibility to MultiPublish (bulk publish)
 	err = j.producer.Publish(j.actionTopic, payload)
 	if err != nil {
 		return fmt.Errorf("could not publish job: %w", err)

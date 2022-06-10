@@ -106,6 +106,15 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 
 	parsingIDs := make([]string, 0, len(parsings))
 	for _, parsing := range parsings {
+		parsingIDs = append(parsingIDs, parsing.ID)
+	}
+
+	err := j.parsings.Update(storage.Many(parsingIDs), storage.SetStatus(jobs.StatusQueued))
+	if err != nil {
+		return fmt.Errorf("could not update parsing jobs status: %w", err)
+	}
+
+	for _, parsing := range parsings {
 
 		log := j.log.With().
 			Uint64("chain_id", parsing.ChainID).
@@ -121,14 +130,7 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 			return fmt.Errorf("could not publish parsing job: %w", err)
 		}
 
-		parsingIDs = append(parsingIDs, parsing.ID)
-
 		log.Info().Msg("parsing job published")
-	}
-
-	err := j.parsings.Update(storage.Many(parsingIDs), storage.SetStatus(jobs.StatusQueued))
-	if err != nil {
-		return fmt.Errorf("could not update parsing jobs status: %w", err)
 	}
 
 	return nil
@@ -137,6 +139,15 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 
 	actionIDs := make([]string, 0, len(actions))
+	for _, action := range actions {
+		actionIDs = append(actionIDs, action.ID)
+	}
+
+	err := j.actions.Update(storage.Many(actionIDs), storage.SetStatus(jobs.StatusQueued))
+	if err != nil {
+		return fmt.Errorf("could not update action jobs status: %w", err)
+	}
+
 	for _, action := range actions {
 
 		log := j.log.With().
@@ -153,14 +164,7 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 			return fmt.Errorf("could not publish action job: %w", err)
 		}
 
-		actionIDs = append(actionIDs, action.ID)
-
 		log.Info().Msg("action job published")
-	}
-
-	err := j.actions.Update(storage.Many(actionIDs), storage.SetStatus(jobs.StatusQueued))
-	if err != nil {
-		return fmt.Errorf("could not update action jobs status: %w", err)
 	}
 
 	return nil

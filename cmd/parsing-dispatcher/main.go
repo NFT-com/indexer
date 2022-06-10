@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
+	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/events"
@@ -122,6 +123,8 @@ func run() int {
 		log.Error().Err(err).Str("topic", params.TopicParsing).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
 	}
+	defer consumer.Stop()
+	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsqlog.ToNSQLevel(level))
 
 	lambda := lambda.NewFromConfig(cfg)
 	limit := ratelimit.New(int(flagRateLimit))

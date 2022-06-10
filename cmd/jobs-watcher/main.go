@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/service/watcher"
@@ -70,6 +71,7 @@ func run() int {
 		return failure
 	}
 	defer producer.Stop()
+	producer.SetLogger(nsqlog.WrapForNSQ(log), nsqlog.ToNSQLevel(level))
 
 	handler, err := pipeline.NewJobCreator(producer, params.TopicParsing, params.TopicAction)
 	if err != nil {
