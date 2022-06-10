@@ -17,8 +17,6 @@ export const createParsingWorker = (): aws.lambda.Function => {
         tracingConfig: {
             mode: "PassThrough",
         },
-    }, {
-        protect: true,
     })
 }
 
@@ -37,7 +35,5 @@ export const createActionWorker = (): aws.lambda.Function => {
         tracingConfig: {
             mode: "PassThrough",
         },
-    }, {
-        protect: true,
     })
 }
