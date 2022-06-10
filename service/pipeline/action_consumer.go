@@ -1,8 +1,8 @@
 package pipeline
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,8 +15,8 @@ import (
 	"go.uber.org/ratelimit"
 	"golang.org/x/crypto/sha3"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/inputs"
@@ -26,8 +26,9 @@ import (
 )
 
 type ActionConsumer struct {
+	ctx         context.Context
 	log         zerolog.Logger
-	lambda      *lambda.Lambda
+	client      *lambda.Client
 	name        string
 	actions     ActionStore
 	collections CollectionStore
@@ -39,28 +40,30 @@ type ActionConsumer struct {
 }
 
 func NewActionConsumer(
+	ctx context.Context,
 	log zerolog.Logger,
-	lambda *lambda.Lambda,
+	client *lambda.Client,
 	name string,
 	actions ActionStore,
 	collections CollectionStore,
 	nfts NFTStore,
 	owners OwnerStore,
 	traits TraitStore,
-	rateLimit uint,
+	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ActionConsumer {
 
 	a := ActionConsumer{
+		ctx:         ctx,
 		log:         log,
-		lambda:      lambda,
+		client:      client,
 		name:        name,
 		actions:     actions,
 		collections: collections,
 		nfts:        nfts,
 		owners:      owners,
 		traits:      traits,
-		limit:       ratelimit.New(int(rateLimit)),
+		limit:       limit,
 		dryRun:      dryRun,
 	}
 
@@ -151,36 +154,48 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 			FunctionName: aws.String(a.name),
 			Payload:      payload,
 		}
-		result, err := a.lambda.Invoke(input)
-		var reqErr *lambda.TooManyRequestsException
+		result, err := a.client.Invoke(a.ctx, input)
 
-		// retry if we ran out of concurrent lambdas
-		if errors.As(err, &reqErr) {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-
-		// retry if we ran out of requests on the Ethereum API
+		// retry if we ran out of Lambda requests
 		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
 
-		// don't retry on any other infrastructure error, for now
+		// retry if we ran out of file handles
+		if err != nil && strings.Contains(err.Error(), "too many opion files") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// retry if we failed the DNS request
+		if err != nil && strings.Contains(err.Error(), "no such host") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// otherwise, fail permanently
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
 		}
 
-		// don't retry if the function failed for some reason
-		if result.FunctionError != nil {
-			var execErr results.Error
-			err = json.Unmarshal(result.Payload, &execErr)
-			if err != nil {
-				return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
-			}
-			return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
+		// if the function has not failed, we are done
+		if result.FunctionError == nil {
+			output = result.Payload
+			return nil
 		}
 
-		output = result.Payload
-		return nil
+		// otherwise, process the function error
+		var execErr results.Error
+		err = json.Unmarshal(result.Payload, &execErr)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
+		}
+
+		// retry if we ran out of requests on the node
+		if strings.Contains(execErr.Message, "Too Many Requests") {
+			return fmt.Errorf("could not execute lambda: %s", execErr.Message)
+		}
+
+		// all other errors should be permanent for now
+		return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
 	}, retry.Indefinite(), notify)
 	if err != nil {
 		return fmt.Errorf("could not successfully invoke parser: %w", err)
@@ -206,6 +221,12 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	err = a.owners.AddCount(result.NFT.ID, result.NFT.Owner, int(result.NFT.Number))
 	if err != nil {
 		return fmt.Errorf("could not add owner count: %w", err)
+	}
+
+	// As we can't know in advance how many requests a Lambda will make, we will
+	// wait here to take as many slots on the rate limiter as were needed.
+	for i := 0; i < int(result.Requests); i++ {
+		a.limit.Take()
 	}
 
 	return nil

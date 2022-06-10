@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
+	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/network/web3"
 	"github.com/NFT-com/indexer/service/parsers"
 )
@@ -45,6 +48,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		return nil, fmt.Errorf("could not decode parsing inputs: %w", err)
 	}
 
+	requests := uint(0)
+
 	p.log.Debug().
 		Uint64("chain_id", job.ChainID).
 		Strs("contract_addresses", job.ContractAddresses).
@@ -53,19 +58,34 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Uint64("end_height", job.EndHeight).
 		Msg("handling parsing job")
 
-	client, err := ethclient.DialContext(ctx, parsing.NodeURL)
-	if err != nil {
-		return nil, fmt.Errorf("could not connect to node: %w", err)
+	var api *ethclient.Client
+	close := func() {}
+	if strings.Contains(parsing.NodeURL, "ethereum.managedblockchain") {
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
+		}
+		api, close, err = ethereum.NewSigningClient(ctx, parsing.NodeURL, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("could not create signing client (url: %s): %w", parsing.NodeURL, err)
+		}
+	} else {
+		api, err = ethclient.DialContext(ctx, parsing.NodeURL)
+		if err != nil {
+			return nil, fmt.Errorf("could not create default client (url: %s): %w", parsing.NodeURL, err)
+		}
 	}
-	defer client.Close()
+	defer api.Close()
+	defer close()
 
 	p.log.Debug().
 		Str("node_url", parsing.NodeURL).
 		Msg("connected to node API")
 
-	fetch := web3.NewLogsFetcher(client)
+	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
+	requests++
 	logs, err := fetch.Logs(ctx, job.ContractAddresses, job.EventHashes, job.StartHeight, job.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
@@ -180,12 +200,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 	// Get all the headers to assign timestamps to the events.
 	for height := range timestamps {
-
-		header, err := client.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
+		requests++
+		header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
 		if err != nil {
-			return nil, fmt.Errorf("could not get header for height (%d): %w", height, err)
+			return nil, fmt.Errorf("could not get header: %w", err)
 		}
-
 		timestamps[height] = time.Unix(int64(header.Time), 0)
 	}
 
@@ -266,6 +285,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 		Sales:     sales,
 		Transfers: transfers,
 		Actions:   actions,
+		Requests:  requests,
 	}
 
 	return &result, nil

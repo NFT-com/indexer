@@ -1,8 +1,8 @@
 package pipeline
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -13,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/jobs"
@@ -23,8 +23,9 @@ import (
 )
 
 type ParsingConsumer struct {
+	ctx       context.Context
 	log       zerolog.Logger
-	lambda    *lambda.Lambda
+	lambda    *lambda.Client
 	name      string
 	parsings  ParsingStore
 	actions   ActionStore
@@ -35,18 +36,20 @@ type ParsingConsumer struct {
 }
 
 func NewParsingConsumer(
+	ctx context.Context,
 	log zerolog.Logger,
-	lambda *lambda.Lambda,
+	lambda *lambda.Client,
 	name string,
 	parsings ParsingStore,
 	actions ActionStore,
 	transfers TransferStore,
 	sales SaleStore,
-	rateLimit uint,
+	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ParsingConsumer {
 
 	p := ParsingConsumer{
+		ctx:       ctx,
 		log:       log,
 		lambda:    lambda,
 		name:      name,
@@ -54,7 +57,7 @@ func NewParsingConsumer(
 		actions:   actions,
 		transfers: transfers,
 		sales:     sales,
-		limit:     ratelimit.New(int(rateLimit)),
+		limit:     limit,
 		dryRun:    dryRun,
 	}
 
@@ -137,36 +140,48 @@ func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, erro
 			FunctionName: aws.String(p.name),
 			Payload:      payload,
 		}
-		result, err := p.lambda.Invoke(input)
-		var reqErr *lambda.TooManyRequestsException
+		result, err := p.lambda.Invoke(p.ctx, input)
 
-		// retry if we ran out of concurrent lambdas
-		if errors.As(err, &reqErr) {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-
-		// retry if we ran out of requests on the Ethereum API
+		// retry if we ran out of Lambda requests
 		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
 
-		// don't retry on any other infrastructure error, for now
+		// retry if we ran out of file handles
+		if err != nil && strings.Contains(err.Error(), "too many opion files") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// retry if we failed the DNS request
+		if err != nil && strings.Contains(err.Error(), "no such host") {
+			return fmt.Errorf("could not invoke lambda: %w", err)
+		}
+
+		// otherwise, fail permanently
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
 		}
 
-		// don't retry if the function failed for some reason
-		if result.FunctionError != nil {
-			var execErr results.Error
-			err = json.Unmarshal(result.Payload, &execErr)
-			if err != nil {
-				return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
-			}
-			return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
+		// if the function has not failed, we are done
+		if result.FunctionError == nil {
+			output = result.Payload
+			return nil
 		}
 
-		output = result.Payload
-		return nil
+		// otherwise, process the function error
+		var execErr results.Error
+		err = json.Unmarshal(result.Payload, &execErr)
+		if err != nil {
+			return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
+		}
+
+		// retry if we ran out of requests on the node
+		if strings.Contains(execErr.Message, "Too Many Requests") {
+			return fmt.Errorf("could not execute lambda: %s", execErr.Message)
+		}
+
+		// all other errors should be permanent for now
+		return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
 	}, retry.Indefinite(), notify)
 	if err != nil {
 		return nil, fmt.Errorf("could not successfully invoke parser: %w", err)
@@ -191,6 +206,12 @@ func (p *ParsingConsumer) processParsing(payload []byte) (*results.Parsing, erro
 	err = p.actions.Insert(result.Actions...)
 	if err != nil {
 		return nil, fmt.Errorf("could not upsert action jobs: %w", err)
+	}
+
+	// As we can't know in advance how many requests a Lambda will make, we will
+	// wait here to take up any requests above one that we needed.
+	for i := 1; i < int(result.Requests); i++ {
+		p.limit.Take()
 	}
 
 	return &result, nil
