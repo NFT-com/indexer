@@ -120,7 +120,7 @@ func run() int {
 		log.Error().Err(err).Str("topic", params.TopicAction).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
 	}
-	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsqlog.ToNSQLevel(level))
+	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 	defer consumer.Stop()
 
 	lambda := lambda.NewFromConfig(awsCfg)

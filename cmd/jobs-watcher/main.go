@@ -71,7 +71,7 @@ func run() int {
 		return failure
 	}
 	defer producer.Stop()
-	producer.SetLogger(nsqlog.WrapForNSQ(log), nsqlog.ToNSQLevel(level))
+	producer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
 	handler, err := pipeline.NewJobCreator(producer, params.TopicParsing, params.TopicAction)
 	if err != nil {

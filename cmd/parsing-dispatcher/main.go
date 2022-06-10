@@ -124,7 +124,7 @@ func run() int {
 		return failure
 	}
 	defer consumer.Stop()
-	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsqlog.ToNSQLevel(level))
+	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
 	lambda := lambda.NewFromConfig(cfg)
 	limit := ratelimit.New(int(flagRateLimit))

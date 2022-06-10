@@ -17,7 +17,7 @@ func WrapForNSQ(log zerolog.Logger) NSQWrapper {
 	return w
 }
 
-func (w NSQWrapper) Output(calldepth int, s string) error {
-	w.log.Print(s)
+func (w NSQWrapper) Output(calldepth int, msg string) error {
+	w.log.Trace().Msg(msg)
 	return nil
 }
