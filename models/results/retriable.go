@@ -22,6 +22,9 @@ func Retriable(err error) bool {
 	case strings.Contains(msg, "no such host"):
 		return true
 
+	case strings.Contains(msg, "Client.Timeout exceeded while awaiting headers"):
+		return true
+
 	default:
 		return false
 	}
