@@ -20,13 +20,13 @@ runs:
         go-version: 1.17
     - name: Build Go Parser Worker
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ../../cmd/parsing-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ./cmd/parsing-worker
     - name: Zip Parser Worker
       shell: bash
       run: zip parsing.zip worker     
     - name: Build Go Action Worker
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ../../cmd/action-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ./cmd/action-worker
     - name: Zip Action Worker
       shell: bash
       run: zip action.zip worker    
