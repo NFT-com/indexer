@@ -21,7 +21,7 @@ runs:
     - name: Build Go Parser Worker
       working-directory: infra/shared
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ../cmd/parsing-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ../../cmd/parsing-worker
     - name: Zip Parser Worker
       working-directory: infra/shared
       shell: bash
@@ -29,7 +29,7 @@ runs:
     - name: Build Go Action Worker
       working-directory: infra/shared
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ../cmd/action-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ../../cmd/action-worker
     - name: Zip Action Worker
       working-directory: infra/shared
       shell: bash
