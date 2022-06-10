@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -132,52 +131,35 @@ func (p *ParsingHandler) processParsing(payload []byte) (*results.Parsing, error
 
 		p.limit.Take()
 
+		// invoke the lambda and retry on retriable errors
 		input := &lambda.InvokeInput{
 			FunctionName: aws.String(p.name),
 			Payload:      payload,
 		}
 		result, err := p.lambda.Invoke(p.ctx, input)
-
-		// retry if we ran out of Lambda requests
-		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
+		if results.Retriable(err) {
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
-
-		// retry if we ran out of file handles
-		if err != nil && strings.Contains(err.Error(), "too many opion files") {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-
-		// retry if we failed the DNS request
-		if err != nil && strings.Contains(err.Error(), "no such host") {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-
-		// otherwise, fail permanently
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
 		}
 
-		// if the function has not failed, we are done
+		// check function error, if it is nil we are done
 		if result.FunctionError == nil {
 			output = result.Payload
 			return nil
 		}
 
-		// otherwise, process the function error
+		// otherwise, decode the function error
 		var execErr results.Error
 		err = json.Unmarshal(result.Payload, &execErr)
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
 		}
-
-		// retry if we ran out of requests on the node
-		if strings.Contains(execErr.Message, "Too Many Requests") {
-			return fmt.Errorf("could not execute lambda: %s", execErr.Message)
+		if results.Retriable(execErr) {
+			return fmt.Errorf("could not execute lambda: %w", execErr)
 		}
-
-		// all other errors should be permanent for now
-		return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
+		return backoff.Permanent(fmt.Errorf("could not execute lambda: %w", execErr))
 	}, retry.Indefinite(), notify)
 	if err != nil {
 		return nil, fmt.Errorf("could not successfully invoke parser: %w", err)
