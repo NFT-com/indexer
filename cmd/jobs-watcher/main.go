@@ -8,10 +8,11 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/adjust/rmq/v4"
+	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
+	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/service/watcher"
@@ -35,9 +36,8 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagJobsDB   string
-		flagRedisURL string
-		flagRedisDB  int
+		flagJobsDB    string
+		flagNSQServer string
 
 		flagOpenConnections uint
 		flagIdleConnections uint
@@ -47,8 +47,7 @@ func run() int {
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server url")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringVarP(&flagNSQServer, "nsq-server", "q", "127.0.0.1:4150", "address for NSQ server to produce messages")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
@@ -65,14 +64,16 @@ func run() int {
 	}
 	log = log.Level(level)
 
-	failed := make(chan error)
-	redisConnection, err := rmq.OpenConnection(params.PipelineIndexer, "tcp", flagRedisURL, flagRedisDB, failed)
+	nsqCfg := nsq.NewConfig()
+	producer, err := nsq.NewProducer(flagNSQServer, nsqCfg)
 	if err != nil {
-		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to Redis")
+		log.Error().Err(err).Str("nsq_address", flagNSQServer).Msg("could not create NSQ producer")
 		return failure
 	}
+	defer producer.Stop()
+	producer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
-	produce, err := pipeline.NewProducer(redisConnection, params.QueueParsing, params.QueueAction)
+	handler, err := pipeline.NewJobCreator(producer, params.TopicParsing, params.TopicAction)
 	if err != nil {
 		log.Error().Err(err).Msg("could not create pipeline producer")
 		return failure
@@ -89,19 +90,16 @@ func run() int {
 	parsingRepo := jobs.NewParsingRepository(jobsDB)
 	actionRepo := jobs.NewActionRepository(jobsDB)
 
-	watch := watcher.New(log, parsingRepo, actionRepo, produce, flagReadInterval)
+	watch := watcher.New(log, parsingRepo, actionRepo, handler, flagReadInterval)
+	defer watch.Close()
 
 	watch.Watch()
 
 	log.Info().Msg("jobs watcher started")
-	select {
-	case <-sig:
-		log.Info().Msg("jobs watcher stopping")
-		watch.Close()
-	case err = <-failed:
-		log.Error().Err(err).Msg("jobs watcher aborted")
-		return failure
-	}
+
+	<-sig
+
+	log.Info().Msg("jobs watcher stopping")
 
 	go func() {
 		<-sig

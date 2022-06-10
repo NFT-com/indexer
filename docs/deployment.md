@@ -5,7 +5,7 @@ This guide's purpose is to allow you to deploy the Indexer architecture in order
 1. [Pre-requisites](#pre-requisites)
    1. [Amazon Web Services](#amazon-web-services)
    2. [PostgreSQL](#postgresql)
-   3. [Redis](#redis)
+   3. [NSQ](#nsq)
    4. [Docker](#docker)
       1. [Building the Images](#building-the-images)
 2. [Deployment](#deployment)
@@ -19,9 +19,9 @@ This guide's purpose is to allow you to deploy the Indexer architecture in order
 The Indexer requires two separate databases to function:
 
 * [PostgreSQL](#postgresql), which is used to persist indexed data;
-* [Redis](#redis), which is used by RabbitMQ as the backend of the jobs queue.
+* [NSQ](#nsq), which is used by RabbitMQ as the backend of the jobs queue.
 
-PostgreSQL and Redis need to be deployed before any of the services described in the guide below.
+PostgreSQL and NSQ need to be deployed before any of the services described in the guide below.
 You are free to run them any way you want, as long as they are accessible on the network on which the Indexer services are deployed.
 
 Indexer services can be launched either using their binaries, or the docker images that can be built with the Dockerfiles within this repository.
@@ -73,18 +73,34 @@ docker run  -d
 
 > ⚠️ Warning! If you update the SQL files and want to redeploy them, you need to either manually log into the container and run `psql` commands to execute your changes, or to shut down the container, run `docker volume prune` and restart it.
 
-### Redis
+### NSQ
 
-Just like for PostgreSQL, Redis just needs to be accessible by your services, so you can [install it natively](https://redis.io/docs/getting-started/installation/) or use the [official Docker image](https://hub.docker.com/_/redis).
+Just like for PostgreSQL, NSQ just needs to be accessible by your services, so you can [install it natively](https://nsq.io/deployment/installing.html) or use the [official Docker image](https://hub.docker.com/r/nsqio/nsq).
 
 If you want to use Docker, you first need to [set the network up](#docker) before you can run that command.
 
 ```bash
 docker run  -d
             --network="indexer"
-            -p "6379:6379"
-            redis
-            redis:alpine
+            -p "4160:4160"
+            -p "4161:4161"
+            --entrypoint "/nsqlookupd"
+            nsqio/nsq
+
+
+docker run  -d
+            --network="indexer"
+            -p "4150:4150"
+            -p "4151:4151"
+            --entrypoint "/nsqd --lookupd-tcp-address=nsqlookupd:4160"
+            nsqio/nsq
+
+# If you want more visibility into the queue run the command bellow and check the http://localhost:4171.
+docker run  -d
+            --network="indexer"
+            -p "4171:4171"
+            --entrypoint "/nsqadmin --lookupd-http-address=nsqlookupd:4161"
+            nsqio/nsq
 ```
 
 ### Docker
@@ -125,7 +141,7 @@ The jobs creator requires having access to an Ethereum node's API on both `WSS` 
 
 ```bash
 # Using the binary.
-./jobs-creator   -n="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
+./jobs-creator  -n="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
                 -w="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
                 --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                 --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
@@ -145,12 +161,12 @@ docker run  -d
 
 ### Jobs Watcher
 
-The jobs watcher watches the [PostgreSQL database](#postgresql) for new jobs from the [jobs creator](#jobs-creator) and pushes them into their respective [queue](#redis).
+The jobs watcher watches the [PostgreSQL database](#postgresql) for new jobs from the [jobs creator](#jobs-creator) and pushes them into their respective [queue](#nsq).
 See the [jobs watcher readme](../cmd/jobs-watcher/README.md) for more details about its flags.
 
 ```bash
 # Using the binary.
-./jobs-watcher   -u="172.17.0.100:6379"
+./jobs-watcher  -n="172.17.0.100:4150"
                 --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -160,13 +176,13 @@ docker run  -d
             --network="indexer"
             --name="jobs-watcher"
             indexer-jobs-watcher
-              --redis-url="172.17.0.100:6379"
+              --nsq-address="172.17.0.100:4150"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Parsing Dispatcher
 
-The parsing dispatcher consumes messages from the [queue](#redis) and launches parsing jobs on [AWS Lambdas](#amazon-web-services).
+The parsing dispatcher consumes messages from the [queue](#nsq) and launches parsing jobs on [AWS Lambdas](#amazon-web-services).
 See the [parsing dispatcher readme](../cmd/parsing-dispatcher/README.md) for more details about its flags.
 
 In order for the parsing dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
@@ -174,7 +190,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 
 ```bash
 # Using the binary.
-./parsing-dispatcher  -u="172.17.0.100:6379"
+./parsing-dispatcher  -a="172.17.0.100:4161"
                       --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                       --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
@@ -188,14 +204,14 @@ docker run  -d
             -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-parsing-dispatcher
-              --redis_url="172.17.0.100:6379"
+              --nsq-lookup-address="172.17.0.100:4161"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ### Action Dispatcher
 
-The action dispatcher consumes messages from the [queue](#redis) and launches jobs on [AWS Lambdas](#amazon-web-services).
+The action dispatcher consumes messages from the [queue](#nsq) and launches jobs on [AWS Lambdas](#amazon-web-services).
 Those jobs can act in several ways, hence the name.
 See the [action dispatcher readme](../cmd/action-dispatcher/README.md) for more details about its flags.
 
@@ -204,7 +220,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 
 ```bash
 # Using the binary.
-./action-dispatcher  -u="172.17.0.100:6379"
+./action-dispatcher  -a="172.17.0.100:4161"
                       --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
                       --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
@@ -218,7 +234,7 @@ docker run  -d
             -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-action-dispatcher
-              --redis_url="172.17.0.100:6379"
+              --nsq-lookup-address="172.17.0.100:4161"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```

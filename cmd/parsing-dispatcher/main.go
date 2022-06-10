@@ -7,16 +7,17 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	_ "github.com/lib/pq"
-	"go.uber.org/ratelimit"
-
-	"github.com/adjust/rmq/v4"
-	"github.com/go-redis/redis/v8"
+	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
+	"go.uber.org/ratelimit"
 
+	_ "github.com/lib/pq"
+
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+
+	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/events"
@@ -44,8 +45,7 @@ func run() int {
 
 		flagJobsDB     string
 		flagEventsDB   string
-		flagRedisDB    int
-		flagRedisURL   string
+		flagNSQLookups []string
 		flagLambdaName string
 
 		flagOpenConnections   uint
@@ -61,8 +61,7 @@ func run() int {
 
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
-	pflag.StringVarP(&flagRedisURL, "redis-url", "u", "127.0.0.1:6379", "Redis server URL")
-	pflag.IntVarP(&flagRedisDB, "redis-database", "d", 1, "Redis database number")
+	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "address for NSQ lookup server to bootstrap consuming")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the Lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
@@ -83,6 +82,12 @@ func run() int {
 		return failure
 	}
 	log = log.Level(level)
+
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("could not load AWS configuration")
+		return failure
+	}
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
@@ -106,58 +111,37 @@ func run() int {
 	transferRepo := events.NewTransferRepository(eventsDB)
 	saleRepo := events.NewSaleRepository(eventsDB)
 
-	redisClient := redis.NewClient(&redis.Options{
-		Network: "tcp",
-		Addr:    flagRedisURL,
-		DB:      flagRedisDB,
-	})
-	failed := make(chan error)
-	rmqConnection, err := rmq.OpenConnectionWithRedisClient(params.PipelineIndexer, redisClient, failed)
+	config := nsq.NewConfig()
+	err = config.Set("max-in-flight", flagLambdaConcurrency*2)
 	if err != nil {
-		log.Error().Err(err).Str("redis_url", flagRedisURL).Msg("could not connect to redis server")
-		return failure
-	}
-	defer rmqConnection.StopAllConsuming()
-
-	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		log.Error().Err(err).Msg("could not load AWS configuration")
+		log.Error().Err(err).Uint("max-in-flight", 2*flagLambdaConcurrency).Msg("could not update NSQ configuration")
 		return failure
 	}
 
-	queue, err := rmqConnection.OpenQueue(params.QueueParsing)
+	consumer, err := nsq.NewConsumer(params.TopicParsing, params.ChannelDispatch, config)
 	if err != nil {
-		log.Error().Err(err).Msg("could not open queue")
+		log.Error().Err(err).Str("topic", params.TopicParsing).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
 	}
+	defer consumer.Stop()
+	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
-	err = queue.StartConsuming(int64(flagLambdaConcurrency), 200*time.Millisecond)
-	if err != nil {
-		log.Error().Err(err).Msg("could not start consuming queue")
-		return failure
-	}
-
-	// TODO: implement proper shutdown logic with context to propagate
-	client := lambda.NewFromConfig(cfg)
+	lambda := lambda.NewFromConfig(cfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	for i := uint(0); i < flagLambdaConcurrency; i++ {
-		consumer := pipeline.NewParsingConsumer(context.Background(), log, client, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, limit, flagDryRun)
-		_, err := queue.AddConsumer("parsing-consumer", consumer)
-		if err != nil {
-			log.Error().Err(err).Msg("could not add consumer")
-			return failure
-		}
+	handler := pipeline.NewParsingHandler(context.Background(), log, lambda, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, limit, flagDryRun)
+	consumer.AddConcurrentHandlers(handler, int(flagLambdaConcurrency))
+
+	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
+	if err != nil {
+		log.Error().Err(err).Strs("nsq_lookups", flagNSQLookups).Msg("could not connect to NSQ lookups")
+		return failure
 	}
 
 	log.Info().Msg("parsing dispatcher started")
 
-	select {
-	case <-sig:
-		log.Info().Msg("initialized shutdown")
-	case err = <-failed:
-		log.Error().Err(err).Msg("execution failed")
-		return failure
-	}
+	<-sig
+
+	log.Info().Msg("initialized shutdown")
 
 	go func() {
 		<-sig
