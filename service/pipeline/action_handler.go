@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/adjust/rmq/v4"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
+	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
@@ -25,10 +24,10 @@ import (
 	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
-type ActionConsumer struct {
+type ActionHandler struct {
 	ctx         context.Context
 	log         zerolog.Logger
-	client      *lambda.Client
+	lambda      *lambda.Client
 	name        string
 	actions     ActionStore
 	collections CollectionStore
@@ -39,10 +38,10 @@ type ActionConsumer struct {
 	dryRun      bool
 }
 
-func NewActionConsumer(
+func NewActionHandler(
 	ctx context.Context,
 	log zerolog.Logger,
-	client *lambda.Client,
+	lambda *lambda.Client,
 	name string,
 	actions ActionStore,
 	collections CollectionStore,
@@ -51,12 +50,12 @@ func NewActionConsumer(
 	traits TraitStore,
 	limit ratelimit.Limiter,
 	dryRun bool,
-) *ActionConsumer {
+) *ActionHandler {
 
-	a := ActionConsumer{
+	a := ActionHandler{
 		ctx:         ctx,
 		log:         log,
-		client:      client,
+		lambda:      lambda,
 		name:        name,
 		actions:     actions,
 		collections: collections,
@@ -70,23 +69,20 @@ func NewActionConsumer(
 	return &a
 }
 
-func (a *ActionConsumer) Consume(delivery rmq.Delivery) {
+func (a *ActionHandler) HandleMessage(m *nsq.Message) error {
+	m.DisableAutoResponse()
+	m.Finish()
 
-	payload := []byte(delivery.Payload())
-	err := delivery.Ack()
-	if err != nil {
-		log.Error().Err(err).Msg("could not acknowledge delivery")
-		return
-	}
-
-	err = a.process(payload)
+	err := a.process(m.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("could not process payload")
-		return
+		return err
 	}
+
+	return nil
 }
 
-func (a *ActionConsumer) process(payload []byte) error {
+func (a *ActionHandler) process(payload []byte) error {
 
 	var action jobs.Action
 	err := json.Unmarshal(payload, &action)
@@ -130,7 +126,7 @@ func (a *ActionConsumer) process(payload []byte) error {
 	return nil
 }
 
-func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) error {
+func (a *ActionHandler) processAddition(payload []byte, action *jobs.Action) error {
 
 	if a.dryRun {
 		return nil
@@ -150,52 +146,35 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 
 		a.limit.Take()
 
+		// invoke the lambda and retry on retriable errors
 		input := &lambda.InvokeInput{
 			FunctionName: aws.String(a.name),
 			Payload:      payload,
 		}
-		result, err := a.client.Invoke(a.ctx, input)
-
-		// retry if we ran out of Lambda requests
-		if err != nil && strings.Contains(err.Error(), "Too Many Requests") {
+		result, err := a.lambda.Invoke(a.ctx, input)
+		if results.Retriable(err) {
 			return fmt.Errorf("could not invoke lambda: %w", err)
 		}
-
-		// retry if we ran out of file handles
-		if err != nil && strings.Contains(err.Error(), "too many opion files") {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-
-		// retry if we failed the DNS request
-		if err != nil && strings.Contains(err.Error(), "no such host") {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-
-		// otherwise, fail permanently
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
 		}
 
-		// if the function has not failed, we are done
+		// check function error, if it is nil we are done
 		if result.FunctionError == nil {
 			output = result.Payload
 			return nil
 		}
 
-		// otherwise, process the function error
+		// otherwise, decode the function error
 		var execErr results.Error
 		err = json.Unmarshal(result.Payload, &execErr)
 		if err != nil {
 			return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
 		}
-
-		// retry if we ran out of requests on the node
-		if strings.Contains(execErr.Message, "Too Many Requests") {
-			return fmt.Errorf("could not execute lambda: %s", execErr.Message)
+		if results.Retriable(execErr) {
+			return fmt.Errorf("could not execute lambda: %w", execErr)
 		}
-
-		// all other errors should be permanent for now
-		return backoff.Permanent(fmt.Errorf("could not execute lambda: %s", execErr.Message))
+		return backoff.Permanent(fmt.Errorf("could not execute lambda: %w", execErr))
 	}, retry.Indefinite(), notify)
 	if err != nil {
 		return fmt.Errorf("could not successfully invoke parser: %w", err)
@@ -232,7 +211,7 @@ func (a *ActionConsumer) processAddition(payload []byte, action *jobs.Action) er
 	return nil
 }
 
-func (a *ActionConsumer) processOwnerChange(action *jobs.Action) error {
+func (a *ActionHandler) processOwnerChange(action *jobs.Action) error {
 
 	var inputs inputs.OwnerChange
 	err := json.Unmarshal(action.InputData, &inputs)

@@ -42,7 +42,6 @@ func NewSigningClient(ctx context.Context, url string, cfg aws.Config) (*ethclie
 			credentials: credentials,
 			region:      cfg.Region,
 		},
-		Timeout: 10 * time.Second,
 	}
 
 	rpc, err := rpc.DialHTTPWithClient(url, &client)

@@ -1,4 +1,3 @@
--- Creation of transfers table.
 CREATE TABLE transfers
 (
     id                  UUID PRIMARY KEY,
@@ -14,7 +13,10 @@ CREATE TABLE transfers
     created_at          TIMESTAMP DEFAULT NOW()
 );
 
--- Creation of sales table.
+CREATE INDEX transfers_collection_address_idx ON transfers(collection_address);
+
+CREATE INDEX transfers_token_id_idx ON transfers(token_id);
+
 CREATE TABLE sales
 (
     id                  UUID PRIMARY KEY,
@@ -31,3 +33,10 @@ CREATE TABLE sales
     emitted_at          TIMESTAMP    NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW()
 );
+
+
+CREATE INDEX sales_marketplace_address_idx ON sales(marketplace_address);
+
+CREATE INDEX sales_collection_address_idx ON sales(collection_address);
+
+CREATE INDEX sales_token_id_idx ON sales(token_id);

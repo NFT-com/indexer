@@ -15,18 +15,18 @@ type Job struct {
 	log      zerolog.Logger
 	parsings ParsingStore
 	actions  ActionStore
-	produce  *pipeline.Producer
+	creator  *pipeline.JobCreator
 	delay    time.Duration
 	close    chan struct{}
 }
 
-func New(log zerolog.Logger, parsings ParsingStore, actions ActionStore, produce *pipeline.Producer, delay time.Duration) *Job {
+func New(log zerolog.Logger, parsings ParsingStore, actions ActionStore, creator *pipeline.JobCreator, delay time.Duration) *Job {
 
 	j := Job{
 		log:      log.With().Str("component", "jobs_watcher").Logger(),
 		parsings: parsings,
 		actions:  actions,
-		produce:  produce,
+		creator:  creator,
 		delay:    delay,
 		close:    make(chan struct{}),
 	}
@@ -106,6 +106,15 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 
 	parsingIDs := make([]string, 0, len(parsings))
 	for _, parsing := range parsings {
+		parsingIDs = append(parsingIDs, parsing.ID)
+	}
+
+	err := j.parsings.Update(storage.Many(parsingIDs), storage.SetStatus(jobs.StatusQueued))
+	if err != nil {
+		return fmt.Errorf("could not update parsing jobs status: %w", err)
+	}
+
+	for _, parsing := range parsings {
 
 		log := j.log.With().
 			Uint64("chain_id", parsing.ChainID).
@@ -116,19 +125,12 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 			Str("job_status", string(parsing.JobStatus)).
 			Logger()
 
-		err := j.produce.PublishParsingJob(parsing)
+		err := j.creator.PublishParsingJob(parsing)
 		if err != nil {
 			return fmt.Errorf("could not publish parsing job: %w", err)
 		}
 
-		parsingIDs = append(parsingIDs, parsing.ID)
-
 		log.Info().Msg("parsing job published")
-	}
-
-	err := j.parsings.Update(storage.Many(parsingIDs), storage.SetStatus(jobs.StatusQueued))
-	if err != nil {
-		return fmt.Errorf("could not update parsing jobs status: %w", err)
 	}
 
 	return nil
@@ -137,6 +139,15 @@ func (j *Job) handleParsingJobs(parsings []*jobs.Parsing) error {
 func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 
 	actionIDs := make([]string, 0, len(actions))
+	for _, action := range actions {
+		actionIDs = append(actionIDs, action.ID)
+	}
+
+	err := j.actions.Update(storage.Many(actionIDs), storage.SetStatus(jobs.StatusQueued))
+	if err != nil {
+		return fmt.Errorf("could not update action jobs status: %w", err)
+	}
+
 	for _, action := range actions {
 
 		log := j.log.With().
@@ -148,19 +159,12 @@ func (j *Job) handleActionJobs(actions []*jobs.Action) error {
 			Str("job_status", action.JobStatus).
 			Logger()
 
-		err := j.produce.PublishActionJob(action)
+		err := j.creator.PublishActionJob(action)
 		if err != nil {
 			return fmt.Errorf("could not publish action job: %w", err)
 		}
 
-		actionIDs = append(actionIDs, action.ID)
-
 		log.Info().Msg("action job published")
-	}
-
-	err := j.actions.Update(storage.Many(actionIDs), storage.SetStatus(jobs.StatusQueued))
-	if err != nil {
-		return fmt.Errorf("could not update action jobs status: %w", err)
 	}
 
 	return nil
