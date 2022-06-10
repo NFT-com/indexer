@@ -71,6 +71,7 @@ func NewActionHandler(
 
 func (a *ActionHandler) HandleMessage(m *nsq.Message) error {
 	m.DisableAutoResponse()
+	m.Finish()
 
 	err := a.process(m.Body)
 	if err != nil {

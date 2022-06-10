@@ -65,6 +65,7 @@ func NewParsingHandler(
 
 func (p *ParsingHandler) HandleMessage(m *nsq.Message) error {
 	m.DisableAutoResponse()
+	m.Finish()
 
 	err := p.process(m.Body)
 	if err != nil {
