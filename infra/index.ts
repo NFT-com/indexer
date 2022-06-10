@@ -16,6 +16,8 @@ export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void =
   const publicSubnets = outMap.publicSubnetIds.value
   const vpcId = outMap.vpcId.value
   const webSGId = outMap.webSGId.value
+  const parserFunctionId = outMap.parserFunctionId.value
+  const actionFunctionId = outMap.actionFunctionId.value
   const sharedOutput: SharedInfraOutput = {
     assetBucket,
     assetBucketRole,
@@ -26,6 +28,8 @@ export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void =
     publicSubnets,
     vpcId,
     webSGId,
+    parserFunctionId,
+    actionFunctionId,
   }
   const file = upath.joinSafe(__dirname, sharedOutputFileName)
   fs.writeFileSync(file, JSON.stringify(sharedOutput))
