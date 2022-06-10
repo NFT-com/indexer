@@ -13,6 +13,12 @@ CREATE TABLE IF NOT EXISTS parsings
     updated_at         TIMESTAMP
 );
 
+CREATE INDEX parsings_contract_addresses_idx ON parsings(contract_addresses);
+
+CREATE INDEX parsings_event_hashes_idx ON parsings(event_hashes);
+
+CREATE INDEX parsings_job_status_idx ON parsings(job_status);
+
 CREATE TABLE IF NOT EXISTS actions
 (
     id               UUID PRIMARY KEY,
@@ -27,3 +33,5 @@ CREATE TABLE IF NOT EXISTS actions
     created_at       TIMESTAMP DEFAULT NOW(),
     updated_at       TIMESTAMP
 );
+
+CREATE INDEX actions_job_status_idx ON actions(job_status);
