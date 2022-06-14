@@ -59,6 +59,7 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 			transfer.TokenCount,
 			transfer.EmittedAt,
 		)
+		fmt.Println(transfer.TokenCount)
 	}
 
 	_, err := query.Exec()
