@@ -37,7 +37,7 @@ services:
       context: .
       dockerfile: cmd/jobs-watcher/Dockerfile
     restart: always
-    entrypoint: '/watcher -n nsqd:4150 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/watcher -q nsqd:4150 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - nsqd
@@ -62,7 +62,7 @@ services:
       context: .
       dockerfile: cmd/parsing-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher -a nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - nsqlookupd
@@ -75,7 +75,7 @@ services:
       context: .
       dockerfile: cmd/action-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher -a nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - nsqlookupd
