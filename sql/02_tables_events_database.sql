@@ -11,7 +11,8 @@ CREATE TABLE transfers
     receiver_address    VARCHAR(128) NOT NULL,
     token_count         NUMERIC      NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
-    created_at          TIMESTAMP DEFAULT NOW()
+    created_at          TIMESTAMP DEFAULT NOW(),
+    UNIQUE (block_number, transaction_hash, event_index)
 );
 
 CREATE INDEX transfers_collection_address_idx ON transfers(collection_address);
@@ -32,7 +33,8 @@ CREATE TABLE sales
     buyer_address       VARCHAR(128) NOT NULL,
     trade_price         NUMERIC      NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
-    created_at          TIMESTAMP DEFAULT NOW()
+    created_at          TIMESTAMP DEFAULT NOW(),
+    UNIQUE (block_number, transaction_hash, event_index)
 );
 
 CREATE INDEX sales_marketplace_address_idx ON sales(marketplace_address);
