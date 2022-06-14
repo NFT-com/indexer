@@ -15,5 +15,5 @@ type Transfer struct {
 	SenderAddress     string    `gorm:"column:sender_address" json:"sender_address"`
 	ReceiverAddress   string    `gorm:"column:receiver_address" json:"receiver_address"`
 	TokenCount        uint      `gorm:"column:token_count" json:"token_count"`
-	EmittedAt         time.Time `gorm:"column:emmitted_at" json:"emitted_at"`
+	EmittedAt         time.Time `gorm:"column:emitted_at" json:"emitted_at"`
 }
