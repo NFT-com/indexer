@@ -30,9 +30,21 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 	}
 
 	query := s.build.
-		Insert(TableSaleEvents).
-		Columns(ColumnsSaleEvents...).
-		Suffix(ConflictSaleEvents)
+		Insert("sales").
+		Columns(
+			"id",
+			"chain_id",
+			"marketplace_address",
+			"collection_address",
+			"token_id",
+			"block_number",
+			"transaction_hash",
+			"event_index",
+			"seller_address",
+			"buyer_address",
+			"trade_price",
+			"emitted_at",
+		)
 
 	for _, sale := range sales {
 		query = query.Values(
@@ -53,8 +65,7 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 
 	_, err := query.Exec()
 	if err != nil {
-		return fmt.Errorf("could not upsert sale event: %w",
-			err)
+		return fmt.Errorf("could not upsert sale event: %w", err)
 	}
 
 	return nil
