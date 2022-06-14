@@ -11,6 +11,7 @@ var (
 		"event_index",
 		"sender_address",
 		"receiver_address",
+		"token_count",
 		"emitted_at",
 	}
 

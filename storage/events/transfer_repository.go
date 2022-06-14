@@ -45,6 +45,7 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 			transfer.EventIndex,
 			transfer.SenderAddress,
 			transfer.ReceiverAddress,
+			transfer.TokenCount,
 			transfer.EmittedAt,
 		)
 	}

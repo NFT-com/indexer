@@ -9,6 +9,7 @@ CREATE TABLE transfers
     event_index         INTEGER      NOT NULL,
     sender_address      VARCHAR(128) NOT NULL,
     receiver_address    VARCHAR(128) NOT NULL,
+    token_count         NUMERIC      NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW()
 );
