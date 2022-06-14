@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
@@ -17,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
-	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -70,14 +67,23 @@ func NewActionHandler(
 }
 
 func (a *ActionHandler) HandleMessage(m *nsq.Message) error {
-	m.DisableAutoResponse()
-	m.Finish()
 
 	err := a.process(m.Body)
-	if err != nil {
-		log.Error().Err(err).Msg("could not process payload")
+	if results.Retriable(err) {
+		log.Warn().Err(err).Msg("could not process message")
 		return err
 	}
+	if err != nil {
+		log.Error().Err(err).Msg("could not process message")
+		// TODO: insert the failure into the DB
+		err = nil
+	}
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not persist failure")
+		return err
+	}
+
+	log.Trace().Msg("message processed")
 
 	return nil
 }
@@ -137,51 +143,31 @@ func (a *ActionHandler) processAddition(payload []byte, action *jobs.Action) err
 		return fmt.Errorf("could not get collection: %w", err)
 	}
 
-	notify := func(err error, dur time.Duration) {
-		log.Warn().Err(err).Dur("duration", dur).Msg("could not complete lambda invocation, retrying")
+	a.limit.Take()
+
+	// invoke the lambda and retry on retriable errors
+	input := &lambda.InvokeInput{
+		FunctionName: aws.String(a.name),
+		Payload:      payload,
+	}
+	output, err := a.lambda.Invoke(a.ctx, input)
+	if err != nil {
+		return fmt.Errorf("could not invoke lambda: %w", err)
 	}
 
-	var output []byte
-	err = backoff.RetryNotify(func() error {
-
-		a.limit.Take()
-
-		// invoke the lambda and retry on retriable errors
-		input := &lambda.InvokeInput{
-			FunctionName: aws.String(a.name),
-			Payload:      payload,
-		}
-		result, err := a.lambda.Invoke(a.ctx, input)
-		if results.Retriable(err) {
-			return fmt.Errorf("could not invoke lambda: %w", err)
-		}
-		if err != nil {
-			return backoff.Permanent(fmt.Errorf("could not invoke lambda: %w", err))
-		}
-
-		// check function error, if it is nil we are done
-		if result.FunctionError == nil {
-			output = result.Payload
-			return nil
-		}
-
-		// otherwise, decode the function error
-		var execErr results.Error
-		err = json.Unmarshal(result.Payload, &execErr)
-		if err != nil {
-			return backoff.Permanent(fmt.Errorf("could not decode error: %w", err))
-		}
-		if results.Retriable(execErr) {
-			return fmt.Errorf("could not execute lambda: %w", execErr)
-		}
-		return backoff.Permanent(fmt.Errorf("could not execute lambda: %w", execErr))
-	}, retry.Indefinite(), notify)
+	var execErr *results.Error
+	if output.FunctionError != nil {
+		err = json.Unmarshal(output.Payload, &execErr)
+	}
 	if err != nil {
-		return fmt.Errorf("could not successfully invoke parser: %w", err)
+		return fmt.Errorf("could not decode execution error: %w", err)
+	}
+	if execErr != nil {
+		return fmt.Errorf("could not execute lambda: %w", err)
 	}
 
 	var result results.Addition
-	err = json.Unmarshal(output, &result)
+	err = json.Unmarshal(output.Payload, &result)
 	if err != nil {
 		return fmt.Errorf("could not decode NFT: %w", err)
 	}
