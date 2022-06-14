@@ -34,7 +34,6 @@ CREATE TABLE sales
     created_at          TIMESTAMP DEFAULT NOW()
 );
 
-
 CREATE INDEX sales_marketplace_address_idx ON sales(marketplace_address);
 
 CREATE INDEX sales_collection_address_idx ON sales(collection_address);

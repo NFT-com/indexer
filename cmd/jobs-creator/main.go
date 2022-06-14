@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	_ "github.com/lib/pq"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
+
+	"github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
 	"github.com/NFT-com/indexer/storage/graph"
+
 	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
