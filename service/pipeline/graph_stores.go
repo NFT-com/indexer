@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"github.com/NFT-com/indexer/models/graph"
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type CollectionStore interface {
@@ -14,7 +15,8 @@ type NFTStore interface {
 }
 
 type OwnerStore interface {
-	AddCount(nftID string, owner string, count int) error
+	Add(additions ...*jobs.Addition) error
+	Change(modifications ...*jobs.Modification) error
 }
 
 type TraitStore interface {

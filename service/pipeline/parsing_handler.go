@@ -13,9 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
-	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/models/results"
-	storage "github.com/NFT-com/indexer/storage/jobs"
 )
 
 type ParsingHandler struct {
@@ -23,10 +22,10 @@ type ParsingHandler struct {
 	log       zerolog.Logger
 	lambda    *lambda.Client
 	name      string
-	parsings  ParsingStore
-	actions   ActionStore
 	transfers TransferStore
 	sales     SaleStore
+	owners    OwnerStore
+	pub       MultiPublisher
 	limit     ratelimit.Limiter
 	dryRun    bool
 }
@@ -36,10 +35,10 @@ func NewParsingHandler(
 	log zerolog.Logger,
 	lambda *lambda.Client,
 	name string,
-	parsings ParsingStore,
-	actions ActionStore,
 	transfers TransferStore,
 	sales SaleStore,
+	owners OwnerStore,
+	pub MultiPublisher,
 	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ParsingHandler {
@@ -49,10 +48,10 @@ func NewParsingHandler(
 		log:       log,
 		lambda:    lambda,
 		name:      name,
-		parsings:  parsings,
-		actions:   actions,
 		transfers: transfers,
 		sales:     sales,
+		owners:    owners,
+		pub:       pub,
 		limit:     limit,
 		dryRun:    dryRun,
 	}
@@ -84,49 +83,8 @@ func (p *ParsingHandler) HandleMessage(m *nsq.Message) error {
 
 func (p *ParsingHandler) process(payload []byte) error {
 
-	var parsing jobs.Parsing
-	err := json.Unmarshal(payload, &parsing)
-	if err != nil {
-		return fmt.Errorf("could not unmarshal parsing job: %w", err)
-	}
-
-	log := p.log.With().
-		Uint64("chain_id", parsing.ChainID).
-		Strs("contract_addresses", parsing.ContractAddresses).
-		Strs("event_hashes", parsing.EventHashes).
-		Uint64("start_height", parsing.StartHeight).
-		Uint64("end_height", parsing.EndHeight).
-		Logger()
-
-	err = p.parsings.Update(storage.One(parsing.ID), storage.SetStatus(jobs.StatusProcessing))
-	if err != nil {
-		return fmt.Errorf("could not update job status: %w", err)
-	}
-
-	result, err := p.processParsing(payload)
-	if err != nil {
-		log.Error().Err(err).Msg("parsing job failed")
-		err = p.parsings.Update(storage.One(parsing.ID), storage.SetStatus(jobs.StatusFailed), storage.SetMessage(err.Error()))
-	} else {
-		log.Info().
-			Int("transfers", len(result.Transfers)).
-			Int("sales", len(result.Sales)).
-			Int("actions", len(result.Actions)).
-			Msg("parsing job completed")
-		err = p.parsings.Update(storage.One(parsing.ID), storage.SetStatus(jobs.StatusFinished))
-	}
-
-	if err != nil {
-		return fmt.Errorf("could not update job status: %w", err)
-	}
-
-	return nil
-}
-
-func (p *ParsingHandler) processParsing(payload []byte) (*results.Parsing, error) {
-
 	if p.dryRun {
-		return &results.Parsing{}, nil
+		return nil
 	}
 
 	p.limit.Take()
@@ -138,7 +96,7 @@ func (p *ParsingHandler) processParsing(payload []byte) (*results.Parsing, error
 	}
 	output, err := p.lambda.Invoke(p.ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("could not invoke lambda: %w", err)
+		return fmt.Errorf("could not invoke lambda: %w", err)
 	}
 
 	var execErr *results.Error
@@ -146,31 +104,45 @@ func (p *ParsingHandler) processParsing(payload []byte) (*results.Parsing, error
 		err = json.Unmarshal(output.Payload, &execErr)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("could not decode execution error: %w", err)
+		return fmt.Errorf("could not decode execution error: %w", err)
 	}
 	if execErr != nil {
-		return nil, fmt.Errorf("could not execute lambda: %w", err)
+		return fmt.Errorf("could not execute lambda: %w", err)
 	}
 
 	var result results.Parsing
 	err = json.Unmarshal(output.Payload, &result)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode parsing result: %w", err)
+		return fmt.Errorf("could not decode parsing result: %w", err)
+	}
+
+	payloads := make([][]byte, 0, len(result.Additions))
+	for _, addition := range result.Additions {
+		payload, err := json.Marshal(addition)
+		if err != nil {
+			return fmt.Errorf("could not encode addition job: %w", err)
+		}
+		payloads = append(payloads, payload)
+	}
+
+	err = p.pub.MultiPublish(params.TopicAddition, payloads)
+	if err != nil {
+		return fmt.Errorf("could not publish addition jobs: %w", err)
 	}
 
 	err = p.transfers.Upsert(result.Transfers...)
 	if err != nil {
-		return nil, fmt.Errorf("could not upsert transfers: %w", err)
+		return fmt.Errorf("could not upsert transfers: %w", err)
 	}
 
 	err = p.sales.Upsert(result.Sales...)
 	if err != nil {
-		return nil, fmt.Errorf("could not upsert sales: %w", err)
+		return fmt.Errorf("could not upsert sales: %w", err)
 	}
 
-	err = p.actions.Insert(result.Actions...)
+	err = p.owners.Change(result.Modifications...)
 	if err != nil {
-		return nil, fmt.Errorf("could not upsert action jobs: %w", err)
+		return fmt.Errorf("could not change owners: %w", err)
 	}
 
 	// As we can't know in advance how many requests a Lambda will make, we will
@@ -179,5 +151,5 @@ func (p *ParsingHandler) processParsing(payload []byte) (*results.Parsing, error
 		p.limit.Take()
 	}
 
-	return &result, nil
+	return nil
 }
