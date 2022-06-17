@@ -40,7 +40,7 @@ func (e *EventRepository) ListForStandard(standardID string) ([]*graph.Event, er
 	}
 	defer result.Close()
 
-	events := make([]*graph.Event, 0)
+	var events []*graph.Event
 	for result.Next() {
 
 		if result.Err() != nil {

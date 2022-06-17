@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS latest
     contract_address   VARCHAR(128)   NOT NULL,
     event_hash         VARCHAR(256)   NOT NULL,
     block_height       NUMERIC        NOT NULL,
-    updated_at         TIMESTAMP      NOT NULL
+    last_id            UUID           NOT NULL,
+    created_at         TIMESTAMP      NOT NULL,
+    UNIQUE(chain_id, contract_address, event_hash)
 )
 
 CREATE TABLE IF NOT EXISTS parsings

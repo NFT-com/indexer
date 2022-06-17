@@ -4,10 +4,8 @@ package jobs
 type Parsing struct {
 	ID                string   `json:"id"`
 	ChainID           uint64   `json:"chain_id"`
-	ContractAddresses []string `json:"contract_addresses"`
-	EventHashes       []string `json:"event_hashes"`
 	StartHeight       uint64   `json:"start_height"`
 	EndHeight         uint64   `json:"end_height"`
-	JobStatus         string   `json:"job_status"`
-	InputData         []byte   `json:"input_data"`
+	ContractAddresses []string `json:"contract_addresses"`
+	EventHashes       []string `json:"event_hashes"`
 }
