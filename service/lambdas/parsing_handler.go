@@ -2,7 +2,6 @@ package lambdas
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/models/events"
-	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 	"github.com/NFT-com/indexer/network/ethereum"
@@ -29,64 +27,64 @@ const (
 
 type ParsingHandler struct {
 	log zerolog.Logger
+	url string
 }
 
-func NewParsingHandler(log zerolog.Logger) *ParsingHandler {
+func NewParsingHandler(log zerolog.Logger, url string) *ParsingHandler {
 
 	e := ParsingHandler{
 		log: log,
+		url: url,
 	}
 
 	return &e
 }
 
-func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*results.Parsing, error) {
+func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*results.Parsing, error) {
 
-	var parsing inputs.Parsing
-	err := json.Unmarshal(job.InputData, &parsing)
-	if err != nil {
-		return nil, fmt.Errorf("could not decode parsing inputs: %w", err)
-	}
+	log := p.log.With().
+		Str("job_id", parsing.ID).
+		Uint64("chain_id", parsing.ChainID).
+		Uint64("start_height", parsing.StartHeight).
+		Uint64("end_height", parsing.EndHeight).
+		Strs("contract_addresses", parsing.ContractAddresses).
+		Strs("event_hashes", parsing.EventHashes).
+		Logger()
 
-	requests := uint(0)
+	log.Info().
+		Str("node_url", p.url).
+		Msg("initiating connection to Ethereum node")
 
-	p.log.Debug().
-		Uint64("chain_id", job.ChainID).
-		Strs("contract_addresses", job.ContractAddresses).
-		Strs("event_hashes", job.EventHashes).
-		Uint64("start_height", job.StartHeight).
-		Uint64("end_height", job.EndHeight).
-		Msg("handling parsing job")
-
+	var err error
 	var api *ethclient.Client
 	close := func() {}
-	if strings.Contains(parsing.NodeURL, "ethereum.managedblockchain") {
+	if strings.Contains(p.url, "ethereum.managedblockchain") {
 		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
 		}
-		api, close, err = ethereum.NewSigningClient(ctx, parsing.NodeURL, cfg)
+		api, close, err = ethereum.NewSigningClient(ctx, p.url, cfg)
 		if err != nil {
-			return nil, fmt.Errorf("could not create signing client (url: %s): %w", parsing.NodeURL, err)
+			return nil, fmt.Errorf("could not create signing client (url: %s): %w", p.url, err)
 		}
 	} else {
-		api, err = ethclient.DialContext(ctx, parsing.NodeURL)
+		api, err = ethclient.DialContext(ctx, p.url)
 		if err != nil {
-			return nil, fmt.Errorf("could not create default client (url: %s): %w", parsing.NodeURL, err)
+			return nil, fmt.Errorf("could not create default client (url: %s): %w", p.url, err)
 		}
 	}
 	defer api.Close()
 	defer close()
 
-	p.log.Debug().
-		Str("node_url", parsing.NodeURL).
-		Msg("connected to node API")
+	log.Info().
+		Str("node_url", p.url).
+		Msg("connection to Ethereum node established")
 
 	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
-	requests++
-	logs, err := fetch.Logs(ctx, job.ContractAddresses, job.EventHashes, job.StartHeight, job.EndHeight)
+	requests := uint(1)
+	logs, err := fetch.Logs(ctx, parsing.ContractAddresses, parsing.EventHashes, parsing.StartHeight, parsing.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -214,78 +212,55 @@ func (p *ParsingHandler) Handle(ctx context.Context, job *jobs.Parsing) (*result
 
 	// Go through all logs and assign timestamp of emission
 	for _, transfer := range transfers {
-		transfer.ChainID = job.ChainID
+		transfer.ChainID = parsing.ChainID
 		transfer.EmittedAt = timestamps[transfer.BlockNumber]
 	}
 	for _, sale := range sales {
-		sale.ChainID = job.ChainID
+		sale.ChainID = parsing.ChainID
 		sale.EmittedAt = timestamps[sale.BlockNumber]
 	}
 
 	// Go through all transfers and convert them to mints/burns where appropriate.
-	var actions []*jobs.Action
+	var additions []*jobs.Addition
+	var modifications []*jobs.Modification
 	for _, transfer := range transfers {
 		switch {
 
 		case transfer.SenderAddress == zeroAddress:
 
-			inputs := inputs.Addition{
-				NodeURL:  parsing.NodeURL,
-				Standard: standards[transfer.ID],
-				Owner:    transfer.ReceiverAddress,
-				Number:   transfer.TokenCount,
-			}
-			data, err := json.Marshal(inputs)
-			if err != nil {
-				return nil, fmt.Errorf("could not encode addition inputs: %w", err)
-			}
-			action := jobs.Action{
+			addition := jobs.Addition{
 				ID:              uuid.NewString(),
 				ChainID:         transfer.ChainID,
 				ContractAddress: transfer.CollectionAddress,
 				TokenID:         transfer.TokenID,
-				ActionType:      jobs.ActionAddition,
-				BlockHeight:     transfer.BlockNumber,
-				JobStatus:       jobs.StatusCreated,
-				InputData:       data,
+				TokenStandard:   standards[transfer.ID],
+				OwnerAddress:    transfer.ReceiverAddress,
+				TokenCount:      transfer.TokenCount,
 			}
-			actions = append(actions, &action)
+			additions = append(additions, &addition)
 
 		default:
 
-			inputs := inputs.OwnerChange{
-				PrevOwner: transfer.SenderAddress,
-				NewOwner:  transfer.ReceiverAddress,
-				Number:    transfer.TokenCount,
-			}
-			data, err := json.Marshal(inputs)
-			if err != nil {
-				return nil, fmt.Errorf("could not encode owner change inputs: %w", err)
-			}
-			action := jobs.Action{
+			modification := jobs.Modification{
 				ID:              uuid.NewString(),
 				ChainID:         transfer.ChainID,
 				ContractAddress: transfer.CollectionAddress,
 				TokenID:         transfer.TokenID,
-				ActionType:      jobs.ActionOwnerChange,
-				BlockHeight:     transfer.BlockNumber,
-				JobStatus:       jobs.StatusCreated,
-				InputData:       data,
+				SenderAddress:   transfer.SenderAddress,
+				ReceiverAddress: transfer.ReceiverAddress,
+				TokenCount:      transfer.TokenCount,
 			}
-			actions = append(actions, &action)
+			modifications = append(modifications, &modification)
 		}
 	}
 
-	p.log.Info().
-		Int("actions", len(actions)).
-		Msg("downstream actions created")
-
 	// Put everything together for the result.
 	result := results.Parsing{
-		Sales:     sales,
-		Transfers: transfers,
-		Actions:   actions,
-		Requests:  requests,
+		Sales:         sales,
+		Transfers:     transfers,
+		Additions:     additions,
+		Modifications: modifications,
+		Requests:      requests,
 	}
 
 	return &result, nil

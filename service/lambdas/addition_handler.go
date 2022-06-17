@@ -2,7 +2,6 @@ package lambdas
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/models/graph"
-	"github.com/NFT-com/indexer/models/inputs"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 	"github.com/NFT-com/indexer/network/ethereum"
@@ -25,74 +23,69 @@ import (
 
 type AdditionHandler struct {
 	log zerolog.Logger
+	url string
 }
 
-func NewAdditionHandler(log zerolog.Logger) *AdditionHandler {
+func NewAdditionHandler(log zerolog.Logger, url string) *AdditionHandler {
 
 	a := AdditionHandler{
 		log: log,
+		url: url,
 	}
 
 	return &a
 }
 
-func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*results.Addition, error) {
+func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (*results.Addition, error) {
 
-	var addition inputs.Addition
-	err := json.Unmarshal(job.InputData, &addition)
-	if err != nil {
-		return nil, fmt.Errorf("could not decode addition inputs: %w", err)
-	}
+	log := a.log.With().
+		Str("job_id", addition.ID).
+		Uint64("chain_id", addition.ChainID).
+		Str("contract_address", addition.ContractAddress).
+		Str("token_id", addition.TokenID).
+		Str("token_standard", addition.TokenStandard).
+		Str("owner_address", addition.OwnerAddress).
+		Uint("token_count", addition.TokenCount).
+		Logger()
 
-	a.log.Debug().
-		Uint64("chain_id", job.ChainID).
-		Str("contract_address", job.ContractAddress).
-		Str("token_id", job.TokenID).
-		Uint64("block_height", job.BlockHeight).
-		Msg("handling addition job")
+	log.Info().
+		Str("node_url", a.url).
+		Msg("initiating connection to Ethereum node")
 
+	var err error
 	var api *ethclient.Client
 	close := func() {}
-	if strings.Contains(addition.NodeURL, "ethereum.managedblockchain") {
+	if strings.Contains(a.url, "ethereum.managedblockchain") {
 		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load AWS configuration: %w", err)
 		}
-		api, close, err = ethereum.NewSigningClient(ctx, addition.NodeURL, cfg)
+		api, close, err = ethereum.NewSigningClient(ctx, a.url, cfg)
 		if err != nil {
-			return nil, fmt.Errorf("could not create signing client (url: %s): %w", addition.NodeURL, err)
+			return nil, fmt.Errorf("could not create signing client (url: %s): %w", a.url, err)
 		}
 	} else {
-		api, err = ethclient.DialContext(ctx, addition.NodeURL)
+		api, err = ethclient.DialContext(ctx, a.url)
 		if err != nil {
-			return nil, fmt.Errorf("could not create default client (url: %s): %w", addition.NodeURL, err)
+			return nil, fmt.Errorf("could not create default client (url: %s): %w", a.url, err)
 		}
 	}
 	defer api.Close()
 	defer close()
 
-	a.log.Debug().
-		Str("node_url", addition.NodeURL).
-		Msg("connected to node API")
+	log.Info().
+		Str("node_url", a.url).
+		Msg("connection to Ethereum node established")
 
 	fetchURI := web3.NewURIFetcher(api)
 	fetchMetadata := web2.NewMetadataFetcher()
 
-	requests := uint(0)
 	var tokenURI string
-	switch addition.Standard {
+	switch addition.TokenStandard {
 
 	case jobs.StandardERC721:
 
-		requests++
-		tokenURI, err = fetchURI.ERC721(ctx, job.ContractAddress, job.TokenID)
-		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
-			requests++
-			tokenURI, err = fetchURI.ERC721Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
-		}
-		if err != nil && strings.Contains(err.Error(), "missing trie node") {
-			return nil, fmt.Errorf("node does not support archive mode (missing trie node)")
-		}
+		tokenURI, err = fetchURI.ERC721(ctx, addition.ContractAddress, addition.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
@@ -103,15 +96,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	case jobs.StandardERC1155:
 
-		requests++
-		tokenURI, err = fetchURI.ERC1155(ctx, job.ContractAddress, job.TokenID)
-		if err != nil && strings.Contains(err.Error(), "nonexistent token") {
-			requests++
-			tokenURI, err = fetchURI.ERC1155Archive(ctx, job.ContractAddress, job.BlockHeight, job.TokenID)
-		}
-		if err != nil && strings.Contains(err.Error(), "missing trie node") {
-			return nil, fmt.Errorf("node does not support archive mode (missing trie node)")
-		}
+		tokenURI, err = fetchURI.ERC1155(ctx, addition.ContractAddress, addition.TokenID)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
@@ -122,7 +107,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 
 	default:
 
-		return nil, fmt.Errorf("unknown addition standard (%s)", addition.Standard)
+		return nil, fmt.Errorf("unknown token standard (%s)", addition.TokenStandard)
 	}
 
 	token, err := fetchMetadata.Token(ctx, tokenURI)
@@ -137,12 +122,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 		Int("attributes", len(token.Attributes)).
 		Msg("token metadata fetched")
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", job.ChainID, job.ContractAddress, job.TokenID)))
+	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", addition.ChainID, addition.ContractAddress, addition.TokenID)))
 	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
 
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", job.ChainID, job.ContractAddress, job.TokenID, i)))
+		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", addition.ChainID, addition.ContractAddress, addition.TokenID, i)))
 		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
 		trait := graph.Trait{
 			ID:    traitID.String(),
@@ -157,19 +142,18 @@ func (a *AdditionHandler) Handle(ctx context.Context, job *jobs.Action) (*result
 	nft := graph.NFT{
 		ID: nftID.String(),
 		// CollectionID is populated after parsing
-		TokenID:     job.TokenID,
+		TokenID:     addition.TokenID,
 		Name:        token.Name,
 		URI:         tokenURI,
 		Image:       token.Image,
 		Description: token.Description,
-		Owner:       addition.Owner,
-		Number:      addition.Number,
+		Owner:       addition.OwnerAddress,
+		Number:      addition.TokenCount,
 	}
 
 	result := results.Addition{
-		NFT:      &nft,
-		Traits:   traits,
-		Requests: requests,
+		NFT:    &nft,
+		Traits: traits,
 	}
 
 	return &result, nil
