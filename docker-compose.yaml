@@ -19,7 +19,7 @@ services:
       - "4161:4161"
   nsqd:
     image: nsqio/nsq
-    entrypoint: /nsqd --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=host.docker.internal
+    entrypoint: /nsqd --lookupd-tcp-address=nsqlookupd:4160
     depends_on:
       - nsqlookupd
     ports:
