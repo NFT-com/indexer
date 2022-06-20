@@ -31,6 +31,22 @@ func (n *OwnerRepository) Add(additions ...*results.Addition) error {
 		return nil
 	}
 
+	set := make(map[string]*results.Addition, len(additions))
+	for _, addition := range additions {
+		key := fmt.Sprintf("%s-%s", addition.NFT.Owner, addition.NFT.ID)
+		existing, ok := set[key]
+		if ok {
+			existing.NFT.Number += addition.NFT.Number
+			continue
+		}
+		set[key] = addition
+	}
+
+	additions = make([]*results.Addition, 0, len(set))
+	for _, addition := range set {
+		additions = append(additions, addition)
+	}
+
 	query := n.build.
 		Insert("owners").
 		Columns(

@@ -30,6 +30,16 @@ func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
 		return nil
 	}
 
+	set := make(map[string]*jobs.Modification, len(modifications))
+	for _, modification := range modifications {
+		set[modification.NFTID()] = modification
+	}
+
+	modifications = make([]*jobs.Modification, 0, len(set))
+	for _, modification := range set {
+		modifications = append(modifications, modification)
+	}
+
 	query := n.build.
 		Insert("nfts").
 		Columns(
