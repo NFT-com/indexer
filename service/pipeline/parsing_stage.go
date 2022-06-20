@@ -7,7 +7,6 @@ import (
 
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -73,21 +72,19 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 	err := p.process(m.Body)
 	if results.Retriable(err) {
-		log.Warn().Err(err).Msg("could not process message, retrying")
+		p.log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
 	var message string
 	if err != nil {
-		log.Error().Err(err).Msg("could not process message, discarding")
+		p.log.Error().Err(err).Msg("could not process message, discarding")
 		message = err.Error()
 		err = p.failure(m.Body, message)
 	}
 	if err != nil {
-		log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
+		p.log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
 		return err
 	}
-
-	log.Trace().Msg("message processed")
 
 	return nil
 }

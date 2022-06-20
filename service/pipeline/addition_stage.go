@@ -7,7 +7,6 @@ import (
 
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"go.uber.org/ratelimit"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -66,17 +65,17 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 
 	err := a.process(m.Body)
 	if results.Retriable(err) {
-		log.Warn().Err(err).Msg("could not process message, retrying")
+		a.log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
 	var message string
 	if err != nil {
-		log.Error().Err(err).Msg("could not process message, discarding")
+		a.log.Error().Err(err).Msg("could not process message, discarding")
 		message = err.Error()
 		err = a.failure(m.Body, message)
 	}
 	if err != nil {
-		log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
+		a.log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
 		return err
 	}
 

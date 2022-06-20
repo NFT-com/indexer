@@ -150,6 +150,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	result := results.Addition{
+		Job:    addition,
 		NFT:    &nft,
 		Traits: traits,
 	}

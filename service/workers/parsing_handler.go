@@ -255,6 +255,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 	// Put everything together for the result.
 	result := results.Parsing{
+		Job:           parsing,
 		Sales:         sales,
 		Transfers:     transfers,
 		Additions:     additions,
