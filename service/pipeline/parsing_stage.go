@@ -160,9 +160,11 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 		payloads = append(payloads, payload)
 	}
-	err = p.additions.MultiPublish(params.TopicAddition, payloads)
-	if err != nil {
-		return fmt.Errorf("could not publish addition jobs: %w", err)
+	if len(payloads) > 0 {
+		err = p.additions.MultiPublish(params.TopicAddition, payloads)
+		if err != nil {
+			return fmt.Errorf("could not publish addition jobs: %w", err)
+		}
 	}
 
 	// In a second step, we insert all of the transfers and sales that were parsed
