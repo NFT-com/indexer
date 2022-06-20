@@ -140,13 +140,12 @@ func (a *AdditionStage) process(payload []byte) error {
 
 	a.log.Info().
 		Str("job_id", result.Job.ID).
+		Uint64("chain_id", result.Job.ChainID).
 		Str("contract_address", result.Job.ContractAddress).
 		Str("token_id", result.Job.TokenID).
 		Str("token_standard", result.Job.TokenStandard).
 		Str("owner_address", result.Job.OwnerAddress).
 		Uint("token_count", result.Job.TokenCount).
-		Str("collection_id", result.NFT.CollectionID).
-		Str("nft_id", result.NFT.ID).
 		Int("traits", len(result.Traits)).
 		Msg("addition job processed")
 
