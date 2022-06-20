@@ -141,7 +141,7 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not upsert sales: %w", err)
 	}
 
-	err = p.nfts.Touch(result.Modifications)
+	err = p.nfts.Touch(result.Modifications...)
 	if err != nil {
 		return fmt.Errorf("could not touch NFTs: %w", err)
 	}

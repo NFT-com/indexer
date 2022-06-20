@@ -18,7 +18,6 @@ import (
 
 	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
-	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/graph"
@@ -105,6 +104,8 @@ func run() int {
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
+	boundaryRepo := graph.NewBoundaryRepository(jobsDB)
+
 	// We currently only support websocket subscriptions without AWS Managed Blockchain.
 	api, err := ethclient.DialContext(ctx, flagWSURL)
 	if err != nil {
@@ -132,9 +133,8 @@ func run() int {
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
 		creator := pipeline.NewCreationStage(log, collectionRepo, marketplaceRepo, boundaryRepo, producer,
-			creator.WithChainID(network.ChainID),
-			creator.WithPendingLimit(flagPendingLimit),
-			creator.WithHeightRange(flagHeightRange),
+			pipeline.WithChainID(network.ChainID),
+			pipeline.WithHeightLimit(flagHeightRange),
 		)
 		creators = append(creators, creator)
 

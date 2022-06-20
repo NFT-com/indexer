@@ -21,7 +21,7 @@ func NewBoundaryRepository(db *sql.DB) *BoundaryRepository {
 	return &b
 }
 
-func (b *BoundaryRepository) ForCombination(chainID string, address string, event string) (uint64, error) {
+func (b *BoundaryRepository) ForCombination(chainID uint64, address string, event string) (uint64, error) {
 
 	result, err := b.build.
 		Select("last_height").
@@ -52,7 +52,7 @@ func (b *BoundaryRepository) ForCombination(chainID string, address string, even
 
 }
 
-func (b *BoundaryRepository) Upsert(chainID string, addresses []string, events []string, height uint64, jobID string) error {
+func (b *BoundaryRepository) Upsert(chainID uint64, addresses []string, events []string, height uint64, jobID string) error {
 
 	if len(addresses) == 0 || len(events) == 0 {
 		return nil

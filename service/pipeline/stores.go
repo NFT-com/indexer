@@ -21,7 +21,7 @@ type OwnerStore interface {
 }
 
 type BoundaryStore interface {
-	One(chainID uint64, address string, event string) (uint64, error)
+	ForCombination(chainID uint64, address string, event string) (uint64, error)
 	Upsert(chainID uint64, addresses []string, events []string, height uint64, jobID string) error
 }
 

@@ -6,7 +6,7 @@ CREATE TABLE boundaries
     last_height        NUMERIC        NOT NULL,
     last_id            UUID           NOT NULL,
     created_at         TIMESTAMP      NOT NULL,
-    PRIMARY KEY ((chain_id, contract_address, event_hash)
+    PRIMARY KEY (chain_id, contract_address, event_hash)
 );
 
 CREATE TABLE parsing_failures
