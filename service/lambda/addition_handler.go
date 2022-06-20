@@ -1,4 +1,4 @@
-package lambdas
+package lambda
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package creator
+package pipeline
 
 import (
 	"context"
@@ -16,24 +16,24 @@ import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
-type Creator struct {
+type CreationStage struct {
 	mutex        trylock.TryLocker
 	log          zerolog.Logger
 	collections  CollectionStore
 	marketplaces MarketplaceStore
 	boundaries   BoundaryStore
 	pub          Publisher
-	cfg          Config
+	cfg          CreationConfig
 }
 
-func New(log zerolog.Logger, collections CollectionStore, marketplaces MarketplaceStore, boundaries BoundaryStore, pub Publisher, options ...Option) *Creator {
+func NewCreationStage(log zerolog.Logger, collections CollectionStore, marketplaces MarketplaceStore, boundaries BoundaryStore, pub Publisher, options ...Option) *CreationStage {
 
-	cfg := DefaultConfig
+	cfg := DefaultCreationConfig
 	for _, option := range options {
 		option(&cfg)
 	}
 
-	c := Creator{
+	c := CreationStage{
 		mutex:        trylock.New(),
 		log:          log.With().Str("component", "jobs_creator").Logger(),
 		collections:  collections,
@@ -46,7 +46,7 @@ func New(log zerolog.Logger, collections CollectionStore, marketplaces Marketpla
 	return &c
 }
 
-func (c *Creator) Notify(height uint64) {
+func (c *CreationStage) Notify(height uint64) {
 	if !c.mutex.TryLock(context.Background()) {
 		c.log.Debug().Msg("skipping job creation (already in progress)")
 		return
@@ -60,7 +60,7 @@ func (c *Creator) Notify(height uint64) {
 	}
 }
 
-func (c *Creator) execute(height uint64) error {
+func (c *CreationStage) execute(height uint64) error {
 
 	var combinations []*jobs.Combination
 

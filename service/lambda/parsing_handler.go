@@ -1,4 +1,4 @@
-package lambdas
+package lambda
 
 import (
 	"context"
@@ -13,16 +13,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/network/web3"
 	"github.com/NFT-com/indexer/service/parsers"
-)
-
-const (
-	zeroAddress = "0x0000000000000000000000000000000000000000"
 )
 
 type ParsingHandler struct {
@@ -115,7 +112,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		eventType := log.Topics[0]
 		switch eventType.String() {
 
-		case ERC721TransferHash:
+		case params.HashERC721Transfer:
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
@@ -134,7 +131,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Uint("token_count", transfer.TokenCount).
 				Msg("ERC721 transfer parsed")
 
-		case ERC1155TransferHash:
+		case params.HashERC1155Transfer:
 
 			transfer, err := parsers.ERC1155Transfer(log)
 			if err != nil {
@@ -153,7 +150,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Uint("token_count", transfer.TokenCount).
 				Msg("ERC1155 transfer parsed")
 
-		case ERC1155BatchHash:
+		case params.HashERC1155Batch:
 
 			batch, err := parsers.ERC1155Batch(log)
 			if err != nil {
@@ -175,7 +172,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("ERC115 batch parsed")
 			}
 
-		case OpenSeaTradeHash:
+		case params.HashOpenSeaTrade:
 
 			sale, err := parsers.OpenSeaSale(log)
 			if err != nil {
@@ -226,7 +223,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	for _, transfer := range transfers {
 		switch {
 
-		case transfer.SenderAddress == zeroAddress:
+		case transfer.SenderAddress == params.AddressZero:
 
 			addition := jobs.Addition{
 				ID:              uuid.NewString(),

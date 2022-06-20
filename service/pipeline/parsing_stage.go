@@ -17,7 +17,7 @@ import (
 	"github.com/NFT-com/indexer/models/results"
 )
 
-type ParsingHandler struct {
+type ParsingStage struct {
 	ctx       context.Context
 	log       zerolog.Logger
 	lambda    *lambda.Client
@@ -25,12 +25,12 @@ type ParsingHandler struct {
 	transfers TransferStore
 	sales     SaleStore
 	owners    OwnerStore
-	pub       MultiPublisher
+	pub       BatchPublisher
 	limit     ratelimit.Limiter
 	dryRun    bool
 }
 
-func NewParsingHandler(
+func NewParsingStage(
 	ctx context.Context,
 	log zerolog.Logger,
 	lambda *lambda.Client,
@@ -38,12 +38,12 @@ func NewParsingHandler(
 	transfers TransferStore,
 	sales SaleStore,
 	owners OwnerStore,
-	pub MultiPublisher,
+	pub BatchPublisher,
 	limit ratelimit.Limiter,
 	dryRun bool,
-) *ParsingHandler {
+) *ParsingStage {
 
-	p := ParsingHandler{
+	p := ParsingStage{
 		ctx:       ctx,
 		log:       log,
 		lambda:    lambda,
@@ -59,7 +59,7 @@ func NewParsingHandler(
 	return &p
 }
 
-func (p *ParsingHandler) HandleMessage(m *nsq.Message) error {
+func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 	err := p.process(m.Body)
 	if results.Retriable(err) {
@@ -81,7 +81,7 @@ func (p *ParsingHandler) HandleMessage(m *nsq.Message) error {
 	return nil
 }
 
-func (p *ParsingHandler) process(payload []byte) error {
+func (p *ParsingStage) process(payload []byte) error {
 
 	if p.dryRun {
 		return nil

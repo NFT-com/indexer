@@ -17,7 +17,7 @@ import (
 	"github.com/NFT-com/indexer/models/results"
 )
 
-type AdditionHandler struct {
+type AdditionStage struct {
 	ctx         context.Context
 	log         zerolog.Logger
 	lambda      *lambda.Client
@@ -30,7 +30,7 @@ type AdditionHandler struct {
 	dryRun      bool
 }
 
-func NewAdditionHandler(
+func NewAdditionStage(
 	ctx context.Context,
 	log zerolog.Logger,
 	lambda *lambda.Client,
@@ -41,9 +41,9 @@ func NewAdditionHandler(
 	traits TraitStore,
 	limit ratelimit.Limiter,
 	dryRun bool,
-) *AdditionHandler {
+) *AdditionStage {
 
-	a := AdditionHandler{
+	a := AdditionStage{
 		ctx:         ctx,
 		log:         log,
 		lambda:      lambda,
@@ -59,7 +59,7 @@ func NewAdditionHandler(
 	return &a
 }
 
-func (a *AdditionHandler) HandleMessage(m *nsq.Message) error {
+func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 
 	err := a.process(m.Body)
 	if results.Retriable(err) {
@@ -81,7 +81,7 @@ func (a *AdditionHandler) HandleMessage(m *nsq.Message) error {
 	return nil
 }
 
-func (a *AdditionHandler) process(payload []byte) error {
+func (a *AdditionStage) process(payload []byte) error {
 
 	if a.dryRun {
 		return nil
