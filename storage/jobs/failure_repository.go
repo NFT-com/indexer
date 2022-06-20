@@ -57,7 +57,7 @@ func (b *FailureRepository) Parsing(parsing *jobs.Parsing, message string) error
 func (b *FailureRepository) Addition(addition *jobs.Addition, message string) error {
 
 	query := b.build.
-		Insert("parsing_failures").
+		Insert("addition_failures").
 		Columns(
 			"id",
 			"chain_id",
