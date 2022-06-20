@@ -5,26 +5,18 @@ import (
 )
 
 var DefaultConfig = Config{
-	NodeURL:      "ws://127.0.0.1:8545",
-	ChainID:      params.ChainEthereum,
-	PendingLimit: 1000,
-	HeightRange:  10,
+	ChainID:     params.ChainEthereum,
+	BatchSize:   100,
+	HeightLimit: 10,
 }
 
 type Config struct {
-	NodeURL      string
-	ChainID      uint64
-	PendingLimit uint
-	HeightRange  uint
+	ChainID     uint64 // what chain ID we are watching
+	BatchSize   uint   // how many jobs to create per combination per iteration
+	HeightLimit uint   // how many heights can be included in a single job
 }
 
 type Option func(*Config)
-
-func WithNodeURL(url string) Option {
-	return func(cfg *Config) {
-		cfg.NodeURL = url
-	}
-}
 
 func WithChainID(chain uint64) Option {
 	return func(cfg *Config) {
@@ -32,14 +24,14 @@ func WithChainID(chain uint64) Option {
 	}
 }
 
-func WithPendingLimit(limit uint) Option {
+func WithBatchSize(size uint) Option {
 	return func(cfg *Config) {
-		cfg.PendingLimit = limit
+		cfg.BatchSize = size
 	}
 }
 
-func WithHeightRange(hrange uint) Option {
+func WithHeightLimit(limit uint) Option {
 	return func(cfg *Config) {
-		cfg.HeightRange = hrange
+		cfg.HeightLimit = limit
 	}
 }
