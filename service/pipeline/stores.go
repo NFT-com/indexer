@@ -7,7 +7,7 @@ import (
 )
 
 type NFTStore interface {
-	Touch(nftID string, collectionID string, tokenID string) error
+	Touch(modifications ...*jobs.Modification) error
 	Insert(nft *graph.NFT) error
 }
 
@@ -21,8 +21,8 @@ type OwnerStore interface {
 }
 
 type BoundaryStore interface {
-	Last(chainID uint64, address string, event string) (uint64, error)
-	Upsert(chainID uint64, addresses []string, events []string, height uint64) error
+	One(chainID uint64, address string, event string) (uint64, error)
+	Upsert(chainID uint64, addresses []string, events []string, height uint64, jobID string) error
 }
 
 type CollectionStore interface {

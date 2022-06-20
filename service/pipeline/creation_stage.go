@@ -83,7 +83,7 @@ func (c *CreationStage) execute(height uint64) error {
 	// Then, we get the latest job for each combination in order to update the
 	// start height where necessary.
 	for _, combination := range combinations {
-		last, err := c.boundaries.Last(combination.ChainID, combination.ContractAddress, combination.EventHash)
+		last, err := c.boundaries.One(combination.ChainID, combination.ContractAddress, combination.EventHash)
 		if errors.Is(err, sql.ErrNoRows) {
 			c.log.Debug().
 				Uint64("chain_id", combination.ChainID).
@@ -173,7 +173,7 @@ func (c *CreationStage) execute(height uint64) error {
 
 		created++
 
-		err = c.boundaries.Upsert(c.cfg.ChainID, parsing.ContractAddresses, parsing.EventHashes, parsing.EndHeight)
+		err = c.boundaries.Upsert(c.cfg.ChainID, parsing.ContractAddresses, parsing.EventHashes, parsing.EndHeight, parsing.ID)
 		if err != nil {
 			return fmt.Errorf("could not update combination boundaries: %w", err)
 		}

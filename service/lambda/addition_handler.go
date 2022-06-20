@@ -122,16 +122,14 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		Int("attributes", len(token.Attributes)).
 		Msg("token metadata fetched")
 
-	nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", addition.ChainID, addition.ContractAddress, addition.TokenID)))
-	nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
-
+	nftID := addition.NFTID()
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
 		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", addition.ChainID, addition.ContractAddress, addition.TokenID, i)))
 		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
 		trait := graph.Trait{
 			ID:    traitID.String(),
-			NFTID: nftID.String(),
+			NFTID: nftID,
 			Name:  att.TraitType,
 			Type:  att.DisplayType,
 			Value: fmt.Sprint(att.Value),
@@ -140,7 +138,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	nft := graph.NFT{
-		ID: nftID.String(),
+		ID: nftID,
 		// CollectionID is populated after parsing
 		TokenID:     addition.TokenID,
 		Name:        token.Name,

@@ -24,6 +24,7 @@ type ParsingStage struct {
 	name      string
 	transfers TransferStore
 	sales     SaleStore
+	nfts      NFTStore
 	owners    OwnerStore
 	pub       BatchPublisher
 	limit     ratelimit.Limiter
@@ -138,6 +139,11 @@ func (p *ParsingStage) process(payload []byte) error {
 	err = p.sales.Upsert(result.Sales...)
 	if err != nil {
 		return fmt.Errorf("could not upsert sales: %w", err)
+	}
+
+	err = p.nfts.Touch(result.Modifications)
+	if err != nil {
+		return fmt.Errorf("could not touch NFTs: %w", err)
 	}
 
 	err = p.owners.Change(result.Modifications...)

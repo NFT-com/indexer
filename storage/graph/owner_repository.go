@@ -22,39 +22,62 @@ func NewOwnerRepository(db *sql.DB) *OwnerRepository {
 	return &n
 }
 
-// var inputs inputs.OwnerChange
-// err := json.Unmarshal(addition.InputData, &inputs)
-// if err != nil {
-// 	return fmt.Errorf("could not decode owner change inputs: %w", err)
-// }
+func (n *OwnerRepository) Add(additions ...*jobs.Addition) error {
 
-// collection, err := a.collections.One(addition.ChainID, addition.ContractAddress)
-// if err != nil {
-// 	return fmt.Errorf("could not retrieve collection: %w", err)
-// }
+	query := n.build.
+		Insert("owners").
+		Columns(
+			"owner",
+			"nft_id",
+			"number",
+		).
+		Suffix("ON CONFLICT (nft_id, owner) DO UPDATE SET " +
+			"number = (owners.number + EXCLUDED.number)")
 
-// nftHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s", addition.ChainID, addition.ContractAddress, addition.TokenID)))
-// nftID := uuid.Must(uuid.FromBytes(nftHash[:16]))
+	for _, addition := range additions {
+		query = query.Values(
+			addition.OwnerAddress,
+			addition.NFTID(),
+			addition.TokenCount,
+		)
+	}
 
-// err = a.nfts.Touch(nftID.String(), collection.ID, addition.TokenID)
-// if err != nil {
-// 	return fmt.Errorf("could not touch NFT: %w", err)
-// }
+	_, err := query.Exec()
+	if err != nil {
+		return fmt.Errorf("could not execute query: %w", err)
+	}
 
-// err = a.owners.AddCount(nftID.String(), inputs.PrevOwner, -int(inputs.Number))
-// if err != nil {
-// 	return fmt.Errorf("could not decrease previous owner count: %w", err)
-// }
-
-// err = a.owners.AddCount(nftID.String(), inputs.NewOwner, int(inputs.Number))
-// if err != nil {
-// 	return fmt.Errorf("could not increase new owner count: %w", err)
-// }
-
-func (n *OwnerRepository) Add(addition *jobs.Addition) error {
-	return fmt.Errorf("not implemented")
+	return nil
 }
 
 func (o *OwnerRepository) Change(modifications ...*jobs.Modification) error {
-	return fmt.Errorf("not implemented")
+
+	additions := make([]*jobs.Addition, 0, 2*len(modifications))
+	for _, modification := range modifications {
+
+		// First we add the count to the new owner.
+		addition := jobs.Addition{
+			// ID not needed
+			ChainID:         modification.ChainID,
+			ContractAddress: modification.ContractAddress,
+			TokenID:         modification.TokenID,
+			// TokenStandard not needed
+			OwnerAddress: modification.ReceiverAddress,
+			TokenCount:   modification.TokenCount,
+		}
+		additions = append(additions, &addition)
+
+		// Then we remove it from the old owner.
+		removal := addition
+		removal.OwnerAddress = modification.SenderAddress
+		removal.TokenCount = -removal.TokenCount
+		additions = append(additions, &removal)
+	}
+
+	err := o.Add(additions...)
+	if err != nil {
+		return fmt.Errorf("could not add counts: %w", err)
+	}
+
+	return nil
 }
