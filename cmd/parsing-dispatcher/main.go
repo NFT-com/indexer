@@ -103,6 +103,7 @@ func run() int {
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	collectionRepo := graph.NewCollectionRepository(graphDB)
+	nftRepo := graph.NewNFTRepository(graphDB)
 	ownerRepo := graph.NewOwnerRepository(graphDB)
 
 	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
@@ -151,7 +152,7 @@ func run() int {
 
 	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, ownerRepo, failureRepo, producer, limit, flagDryRun)
+	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit, flagDryRun)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
