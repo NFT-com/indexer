@@ -84,23 +84,23 @@ docker run  -d
             --network="indexer"
             -p "4160:4160"
             -p "4161:4161"
-            --entrypoint "/nsqlookupd"
             nsqio/nsq
+            /nsqlookupd
 
 
 docker run  -d
             --network="indexer"
             -p "4150:4150"
             -p "4151:4151"
-            --entrypoint "/nsqd --lookupd-tcp-address=nsqlookupd:4160"
             nsqio/nsq
+            /nsqd --lookupd-tcp-address=host.docker.internal:4160 --broadcast-address=host.docker.internal
 
 # If you want more visibility into the queue run the command bellow and check the http://localhost:4171.
 docker run  -d
             --network="indexer"
             -p "4171:4171"
-            --entrypoint "/nsqadmin --lookupd-http-address=nsqlookupd:4161"
             nsqio/nsq
+            /nsqadmin --lookupd-http-address=host.docker.internal:4161
 ```
 
 ### Docker
@@ -151,10 +151,9 @@ The jobs creator requires having access to an Ethereum node's API on both `WSS` 
 # Using Docker.
 docker run  -d
             --network="indexer"
-            --name="jobs-creator"
             indexer-jobs-creator
               --node-url="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
-              --websocket-url="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
+              --websocket-url="wss://mainnet.infura.io/ws/v3/522abfc7b0f04847bbb174f026a7f83e"
               --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
@@ -166,7 +165,7 @@ See the [jobs watcher readme](../cmd/jobs-watcher/README.md) for more details ab
 
 ```bash
 # Using the binary.
-./jobs-watcher  -n="172.17.0.100:4150"
+./jobs-watcher  --nsq-server="172.17.0.100:4150"
                 --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -174,9 +173,8 @@ See the [jobs watcher readme](../cmd/jobs-watcher/README.md) for more details ab
 # Using Docker.
 docker run  -d
             --network="indexer"
-            --name="jobs-watcher"
             indexer-jobs-watcher
-              --nsq-address="172.17.0.100:4150"
+              --nsq-server="172.17.0.100:4150"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
@@ -190,21 +188,20 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 
 ```bash
 # Using the binary.
-./parsing-dispatcher  -a="172.17.0.100:4161"
-                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                      --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+./parsing-dispatcher --nsq-lookups="172.17.0.100:4161"
+                     --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                     --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
             --network="indexer"
-            --name="parsing-dispatcher"
             -e AWS_REGION="eu-west-1"
             -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-parsing-dispatcher
-              --nsq-lookup-address="172.17.0.100:4161"
+              --nsq-lookups="172.17.0.100:4161"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
@@ -220,21 +217,20 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 
 ```bash
 # Using the binary.
-./action-dispatcher  -a="172.17.0.100:4161"
-                      --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                      --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+./action-dispatcher --nsq-lookups="172.17.0.100:4161"
+                    --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+                    --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
 
 ```bash
 # Using Docker.
 docker run  -d
             --network="indexer"
-            --name="action-dispatcher"
             -e AWS_REGION="eu-west-1"
             -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
             -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
             indexer-action-dispatcher
-              --nsq-lookup-address="172.17.0.100:4161"
+              --nsq-lookups="172.17.0.100:4161"
               --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
               --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
 ```
