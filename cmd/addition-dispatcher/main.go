@@ -19,6 +19,7 @@ import (
 
 	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/config/retry"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/graph"
 	"github.com/NFT-com/indexer/storage/jobs"
@@ -108,13 +109,7 @@ func run() int {
 
 	failureRepo := jobs.NewFailureRepository(jobsDB)
 
-	nsqCfg := nsq.NewConfig()
-	err = nsqCfg.Set("max-in-flight", 2*flagLambdaConcurrency)
-	if err != nil {
-		log.Error().Err(err).Msg("could not update NSQ configuration")
-		return failure
-	}
-
+	nsqCfg := retry.Pipeline(2 * flagLambdaConcurrency)
 	consumer, err := nsq.NewConsumer(params.TopicAddition, params.ChannelDispatch, nsqCfg)
 	if err != nil {
 		log.Error().Err(err).Str("topic", params.TopicAddition).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
