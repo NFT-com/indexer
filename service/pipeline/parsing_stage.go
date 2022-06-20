@@ -73,17 +73,17 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 	err := p.process(m.Body)
 	if results.Retriable(err) {
-		log.Warn().Err(err).Msg("could not process message")
+		log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
 	var message string
 	if err != nil {
-		log.Error().Err(err).Msg("could not process message")
+		log.Error().Err(err).Msg("could not process message, discarding")
 		message = err.Error()
 		err = p.failure(m.Body, message)
 	}
 	if err != nil {
-		log.Fatal().Err(err).Str("message", message).Msg("could not persist failure")
+		log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
 		return err
 	}
 
@@ -191,6 +191,19 @@ func (p *ParsingStage) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not change owners: %w", err)
 	}
+
+	p.log.Info().
+		Str("job_id", result.Job.ID).
+		Uint64("chain_id", result.Job.ChainID).
+		Uint64("start_height", result.Job.StartHeight).
+		Uint64("end_height", result.Job.EndHeight).
+		Strs("contract_addresses", result.Job.ContractAddresses).
+		Strs("event_hashes", result.Job.EventHashes).
+		Int("transfers", len(result.Transfers)).
+		Int("sales", len(result.Sales)).
+		Int("additions", len(result.Additions)).
+		Int("modifications", len(result.Modifications)).
+		Msg("parsing job processed")
 
 	// As we can't know in advance how many requests a Lambda will make, we will
 	// wait here to take up any requests above one that we needed.

@@ -66,21 +66,19 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 
 	err := a.process(m.Body)
 	if results.Retriable(err) {
-		log.Warn().Err(err).Msg("could not process message")
+		log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
 	var message string
 	if err != nil {
-		log.Error().Err(err).Msg("could not process message")
+		log.Error().Err(err).Msg("could not process message, discarding")
 		message = err.Error()
 		err = a.failure(m.Body, message)
 	}
 	if err != nil {
-		log.Fatal().Err(err).Str("message", message).Msg("could not persist failure")
+		log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
 		return err
 	}
-
-	log.Trace().Msg("message processed")
 
 	return nil
 }
@@ -140,6 +138,18 @@ func (a *AdditionStage) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not add owner: %w", err)
 	}
+
+	a.log.Info().
+		Str("job_id", result.Job.ID).
+		Str("contract_address", result.Job.ContractAddress).
+		Str("token_id", result.Job.TokenID).
+		Str("token_standard", result.Job.TokenStandard).
+		Str("owner_address", result.Job.OwnerAddress).
+		Uint("token_count", result.Job.TokenCount).
+		Str("collection_id", result.NFT.CollectionID).
+		Str("nft_id", result.NFT.ID).
+		Int("traits", len(result.Traits)).
+		Msg("addition job processed")
 
 	// As we can't know in advance how many requests a Lambda will make, we will
 	// wait here to take as many slots on the rate limiter as were needed.
