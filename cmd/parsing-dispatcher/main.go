@@ -88,7 +88,7 @@ func run() int {
 	}
 	log = log.Level(level)
 
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	awsCfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("could not load AWS configuration")
 		return failure
@@ -149,7 +149,7 @@ func run() int {
 	defer producer.Stop()
 	producer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
-	lambda := lambda.NewFromConfig(cfg)
+	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
 	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, ownerRepo, failureRepo, producer, limit, flagDryRun)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
