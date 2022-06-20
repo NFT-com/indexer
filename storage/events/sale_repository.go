@@ -44,7 +44,8 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			"buyer_address",
 			"trade_price",
 			"emitted_at",
-		)
+		).
+		Suffix("ON CONFLICT DO NOTHING")
 
 	for _, sale := range sales {
 		query = query.Values(
