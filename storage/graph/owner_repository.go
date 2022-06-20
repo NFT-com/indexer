@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"

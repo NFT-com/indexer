@@ -22,11 +22,11 @@ type CreationStage struct {
 	collections  CollectionStore
 	marketplaces MarketplaceStore
 	boundaries   BoundaryStore
-	pub          Publisher
+	parsings     Publisher
 	cfg          CreationConfig
 }
 
-func NewCreationStage(log zerolog.Logger, collections CollectionStore, marketplaces MarketplaceStore, boundaries BoundaryStore, pub Publisher, options ...Option) *CreationStage {
+func NewCreationStage(log zerolog.Logger, collections CollectionStore, marketplaces MarketplaceStore, boundaries BoundaryStore, parsings Publisher, options ...Option) *CreationStage {
 
 	cfg := DefaultCreationConfig
 	for _, option := range options {
@@ -39,7 +39,7 @@ func NewCreationStage(log zerolog.Logger, collections CollectionStore, marketpla
 		collections:  collections,
 		marketplaces: marketplaces,
 		boundaries:   boundaries,
-		pub:          pub,
+		parsings:     parsings,
 		cfg:          cfg,
 	}
 
@@ -166,7 +166,7 @@ func (c *CreationStage) execute(height uint64) error {
 		if err != nil {
 			return fmt.Errorf("could not encode parsing job: %w", err)
 		}
-		err = c.pub.Publish(params.TopicParsing, payload)
+		err = c.parsings.Publish(params.TopicParsing, payload)
 		if err != nil {
 			return fmt.Errorf("could not insert parsing job: %w", err)
 		}
