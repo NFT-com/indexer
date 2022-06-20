@@ -68,7 +68,7 @@ func run() int {
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
-	pflag.DurationVar(&flagWriteInterval, "write-interval", 200*time.Millisecond, "interval between checks for job writing")
+	pflag.DurationVar(&flagWriteInterval, "write-interval", 100*time.Millisecond, "interval between checks for job writing")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
 
 	pflag.Parse()

@@ -59,7 +59,7 @@ func run() int {
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "addresses for NSQ lookups to bootstrap consuming")
-	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "action-worker", "name of the Lambda function to invoke")
+	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "addition-worker", "name of the Lambda function to invoke")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
@@ -134,7 +134,7 @@ func run() int {
 		return failure
 	}
 
-	log.Info().Msg("action dispatcher started")
+	log.Info().Msg("addition dispatcher started")
 
 	<-sig
 
