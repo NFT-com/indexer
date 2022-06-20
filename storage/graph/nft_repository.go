@@ -26,6 +26,10 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 
 func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
 
+	if len(modifications) == 0 {
+		return nil
+	}
+
 	query := n.build.
 		Insert("nfts").
 		Columns(

@@ -27,6 +27,10 @@ func NewOwnerRepository(db *sql.DB) *OwnerRepository {
 
 func (n *OwnerRepository) Add(additions ...*results.Addition) error {
 
+	if len(additions) == 0 {
+		return nil
+	}
+
 	query := n.build.
 		Insert("owners").
 		Columns(
@@ -54,6 +58,10 @@ func (n *OwnerRepository) Add(additions ...*results.Addition) error {
 }
 
 func (o *OwnerRepository) Change(modifications ...*jobs.Modification) error {
+
+	if len(modifications) == 0 {
+		return nil
+	}
 
 	additions := make([]*results.Addition, 0, 2*len(modifications))
 	for _, modification := range modifications {
