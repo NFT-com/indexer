@@ -116,7 +116,7 @@ func (a *AdditionStage) process(payload []byte) error {
 		return fmt.Errorf("could not decode execution error: %w", err)
 	}
 	if execErr != nil {
-		return fmt.Errorf("could not execute lambda: %w", err)
+		return fmt.Errorf("could not execute lambda: %w", execErr)
 	}
 
 	// We then unmarshal the result.

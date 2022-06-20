@@ -123,7 +123,7 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not decode execution error: %w", err)
 	}
 	if execErr != nil {
-		return fmt.Errorf("could not execute lambda: %w", err)
+		return fmt.Errorf("could not execute lambda: %w", execErr)
 	}
 
 	// Then we can decode the result, which contains all the data we need to process.
