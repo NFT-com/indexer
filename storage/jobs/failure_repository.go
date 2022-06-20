@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/lib/pq"
 )
 
 type FailureRepository struct {
@@ -40,14 +41,14 @@ func (b *FailureRepository) Parsing(parsing *jobs.Parsing, message string) error
 			parsing.ChainID,
 			parsing.StartHeight,
 			parsing.EndHeight,
-			parsing.ContractAddresses,
-			parsing.EventHashes,
+			pq.Array(parsing.ContractAddresses),
+			pq.Array(parsing.EventHashes),
 			message,
 		)
 
 	_, err := query.Exec()
 	if err != nil {
-		return fmt.Errorf("could not insert parsing failure: %w", err)
+		return fmt.Errorf("could not execute query: %w", err)
 	}
 
 	return nil
@@ -80,7 +81,7 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 
 	_, err := query.Exec()
 	if err != nil {
-		return fmt.Errorf("could not insert addition failure: %w", err)
+		return fmt.Errorf("could not execute query: %w", err)
 	}
 
 	return nil
