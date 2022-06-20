@@ -15,8 +15,8 @@ CREATE TABLE parsing_failures
     chain_id            NUMERIC         NOT NULL,
     start_height        NUMERIC         NOT NULL,
     end_height          NUMERIC         NOT NULL,
-    contract_addresses  []VARCHAR(128)  NOT NULL,
-    event_hashes        []VARCHAR(256)  NOT NULL,
+    contract_addresses  VARCHAR(128)[]  NOT NULL,
+    event_hashes        VARCHAR(256)[]  NOT NULL,
     failure_message     TEXT            NOT NULL
 );
 
