@@ -1,4 +1,4 @@
-package graph
+package jobs
 
 import (
 	"database/sql"

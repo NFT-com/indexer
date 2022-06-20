@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 )
 
@@ -27,6 +28,7 @@ type ParsingStage struct {
 	sales       SaleStore
 	nfts        NFTStore
 	owners      OwnerStore
+	failures    FailureStore
 	additions   BatchPublisher
 	limit       ratelimit.Limiter
 	dryRun      bool
@@ -41,6 +43,7 @@ func NewParsingStage(
 	sales SaleStore,
 	collections CollectionStore,
 	owners OwnerStore,
+	failures FailureStore,
 	additions BatchPublisher,
 	limit ratelimit.Limiter,
 	dryRun bool,
@@ -55,6 +58,7 @@ func NewParsingStage(
 		sales:       sales,
 		collections: collections,
 		owners:      owners,
+		failures:    failures,
 		additions:   additions,
 		limit:       limit,
 		dryRun:      dryRun,
@@ -70,13 +74,14 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 		log.Warn().Err(err).Msg("could not process message")
 		return err
 	}
+	var message string
 	if err != nil {
 		log.Error().Err(err).Msg("could not process message")
-		// TODO: insert the failure into the DB
-		err = nil
+		message = err.Error()
+		err = p.failure(m.Body, message)
 	}
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not persist failure")
+		log.Fatal().Err(err).Str("message", message).Msg("could not persist failure")
 		return err
 	}
 
@@ -187,6 +192,25 @@ func (p *ParsingStage) process(payload []byte) error {
 	// wait here to take up any requests above one that we needed.
 	for i := 1; i < int(result.Requests); i++ {
 		p.limit.Take()
+	}
+
+	return nil
+}
+
+func (p *ParsingStage) failure(payload []byte, message string) error {
+
+	// Decode the payload into the failed parsing job.
+	var parsing jobs.Parsing
+	err := json.Unmarshal(payload, &parsing)
+	if err != nil {
+		return fmt.Errorf("could not decode parsing job: %w", err)
+	}
+
+	// Persist the parsing failure in the DB so it can be reviewed and potentially
+	// retried at a later point.
+	err = p.failures.Parsing(&parsing, message)
+	if err != nil {
+		return fmt.Errorf("could not persist parsing failure: %w", err)
 	}
 
 	return nil

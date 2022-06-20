@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
+	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 )
 
@@ -25,6 +26,7 @@ type AdditionStage struct {
 	nfts        NFTStore
 	owners      OwnerStore
 	traits      TraitStore
+	failures    FailureStore
 	limit       ratelimit.Limiter
 	dryRun      bool
 }
@@ -38,6 +40,7 @@ func NewAdditionStage(
 	nfts NFTStore,
 	owners OwnerStore,
 	traits TraitStore,
+	failures FailureStore,
 	limit ratelimit.Limiter,
 	dryRun bool,
 ) *AdditionStage {
@@ -51,6 +54,7 @@ func NewAdditionStage(
 		nfts:        nfts,
 		owners:      owners,
 		traits:      traits,
+		failures:    failures,
 		limit:       limit,
 		dryRun:      dryRun,
 	}
@@ -65,13 +69,14 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 		log.Warn().Err(err).Msg("could not process message")
 		return err
 	}
+	var message string
 	if err != nil {
 		log.Error().Err(err).Msg("could not process message")
-		// TODO: insert the failure into the DB
-		err = nil
+		message = err.Error()
+		err = a.failure(m.Body, message)
 	}
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not persist failure")
+		log.Fatal().Err(err).Str("message", message).Msg("could not persist failure")
 		return err
 	}
 
@@ -140,6 +145,25 @@ func (a *AdditionStage) process(payload []byte) error {
 	// wait here to take as many slots on the rate limiter as were needed.
 	for i := 0; i < int(result.Requests); i++ {
 		a.limit.Take()
+	}
+
+	return nil
+}
+
+func (a *AdditionStage) failure(payload []byte, message string) error {
+
+	// Decode the payload into the failed addition job.
+	var addition jobs.Addition
+	err := json.Unmarshal(payload, &addition)
+	if err != nil {
+		return fmt.Errorf("could not decode addition job: %w", err)
+	}
+
+	// Persist the addition failure in the DB so it can be reviewed and potentially
+	// retried at a later point.
+	err = a.failures.Addition(&addition, message)
+	if err != nil {
+		return fmt.Errorf("could not persist addition failure: %w", err)
 	}
 
 	return nil

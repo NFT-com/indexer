@@ -26,6 +26,11 @@ type BoundaryStore interface {
 	Upsert(chainID uint64, addresses []string, events []string, height uint64, jobID string) error
 }
 
+type FailureStore interface {
+	Parsing(parsing *jobs.Parsing, message string) error
+	Addition(addition *jobs.Addition, message string) error
+}
+
 type CollectionStore interface {
 	One(chainID uint64, address string) (*graph.Collection, error)
 	Combinations(chainID uint64) ([]*jobs.Combination, error)

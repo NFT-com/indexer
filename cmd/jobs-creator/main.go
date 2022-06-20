@@ -21,6 +21,7 @@ import (
 	"github.com/NFT-com/indexer/service/notifier"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/graph"
+	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (
@@ -104,7 +105,7 @@ func run() int {
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	boundaryRepo := graph.NewBoundaryRepository(jobsDB)
+	boundaryRepo := jobs.NewBoundaryRepository(jobsDB)
 
 	// We currently only support websocket subscriptions without AWS Managed Blockchain.
 	api, err := ethclient.DialContext(ctx, flagWSURL)

@@ -21,6 +21,7 @@ import (
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/graph"
+	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (
@@ -97,6 +98,16 @@ func run() int {
 	ownerRepo := graph.NewOwnerRepository(graphDB)
 	traitRepo := graph.NewTraitRepository(graphDB)
 
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	if err != nil {
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not open jobs database")
+		return failure
+	}
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+
+	failureRepo := jobs.NewFailureRepository(jobsDB)
+
 	nsqCfg := nsq.NewConfig()
 	err = nsqCfg.Set("max-in-flight", 2*flagLambdaConcurrency)
 	if err != nil {
@@ -114,7 +125,7 @@ func run() int {
 
 	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	stage := pipeline.NewAdditionStage(context.Background(), log, lambda, flagLambdaName, collectionRepo, nftRepo, ownerRepo, traitRepo, limit, flagDryRun)
+	stage := pipeline.NewAdditionStage(context.Background(), log, lambda, flagLambdaName, collectionRepo, nftRepo, ownerRepo, traitRepo, failureRepo, limit, flagDryRun)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)

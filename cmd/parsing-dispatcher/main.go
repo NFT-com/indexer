@@ -22,6 +22,7 @@ import (
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/events"
 	"github.com/NFT-com/indexer/storage/graph"
+	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (
@@ -44,6 +45,7 @@ func run() int {
 		flagLogLevel string
 
 		flagGraphDB    string
+		flagJobsDB     string
 		flagEventsDB   string
 		flagNSQLookups []string
 		flagNSQServer  string
@@ -61,6 +63,7 @@ func run() int {
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the Lambda function to invoke")
 	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "address for NSQ lookup server to bootstrap consuming")
@@ -113,6 +116,16 @@ func run() int {
 	transferRepo := events.NewTransferRepository(eventsDB)
 	saleRepo := events.NewSaleRepository(eventsDB)
 
+	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	if err != nil {
+		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not open jobs database")
+		return failure
+	}
+	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
+	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+
+	failureRepo := jobs.NewFailureRepository(jobsDB)
+
 	nsqCfg := nsq.NewConfig()
 	err = nsqCfg.Set("max-in-flight", flagLambdaConcurrency*2)
 	if err != nil {
@@ -138,7 +151,7 @@ func run() int {
 
 	lambda := lambda.NewFromConfig(cfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, ownerRepo, producer, limit, flagDryRun)
+	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, ownerRepo, failureRepo, producer, limit, flagDryRun)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
