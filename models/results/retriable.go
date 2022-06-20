@@ -13,29 +13,28 @@ func Retriable(err error) bool {
 	msg := err.Error()
 	switch {
 
-	// hitting the request limit on Lambda or Ethereum JSON RPC API
+	// failures to retrieve data from Ethereum Node
 	case strings.Contains(msg, "Too Many Requests"):
 		return true
-
-	// hitting the Lambda file descriptor limit
-	case strings.Contains(msg, "too many open files"):
+	case strings.Contains(msg, "Internal Server Error"):
+		return true
+	case strings.Contains(msg, "Gateway Timeout"):
 		return true
 
-	// also hitting the Lambda file descriptor limit;
-	// sometimes the DNS queries fail then
+	// failure due to Lambda file descriptor limit
+	case strings.Contains(msg, "too many open files"):
+		return true
 	case strings.Contains(msg, "no such host"):
 		return true
 
-	// hitting the HTTP timeout when fetching NFT information
+	// failure due to HTTP request issue
 	case strings.Contains(msg, "Client.Timeout exceeded while awaiting headers"):
 		return true
-
-	// hitting two conflicting transactions on Postgres
-	case strings.Contains(msg, "deadlock detected"):
+	case strings.Contains(msg, "bad response code"):
 		return true
 
-	// failing to retrieve token details over HTTP
-	case strings.Contains(msg, "bad response code"):
+	// failure due to conflicting SQL transactions
+	case strings.Contains(msg, "deadlock detected"):
 		return true
 
 	default:
