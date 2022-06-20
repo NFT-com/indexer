@@ -18,17 +18,18 @@ import (
 )
 
 type ParsingStage struct {
-	ctx       context.Context
-	log       zerolog.Logger
-	lambda    *lambda.Client
-	name      string
-	transfers TransferStore
-	sales     SaleStore
-	nfts      NFTStore
-	owners    OwnerStore
-	pub       BatchPublisher
-	limit     ratelimit.Limiter
-	dryRun    bool
+	ctx         context.Context
+	log         zerolog.Logger
+	lambda      *lambda.Client
+	name        string
+	collections CollectionStore
+	transfers   TransferStore
+	sales       SaleStore
+	nfts        NFTStore
+	owners      OwnerStore
+	additions   BatchPublisher
+	limit       ratelimit.Limiter
+	dryRun      bool
 }
 
 func NewParsingStage(
@@ -38,23 +39,25 @@ func NewParsingStage(
 	name string,
 	transfers TransferStore,
 	sales SaleStore,
+	collections CollectionStore,
 	owners OwnerStore,
-	pub BatchPublisher,
+	additions BatchPublisher,
 	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ParsingStage {
 
 	p := ParsingStage{
-		ctx:       ctx,
-		log:       log,
-		lambda:    lambda,
-		name:      name,
-		transfers: transfers,
-		sales:     sales,
-		owners:    owners,
-		pub:       pub,
-		limit:     limit,
-		dryRun:    dryRun,
+		ctx:         ctx,
+		log:         log,
+		lambda:      lambda,
+		name:        name,
+		transfers:   transfers,
+		sales:       sales,
+		collections: collections,
+		owners:      owners,
+		additions:   additions,
+		limit:       limit,
+		dryRun:      dryRun,
 	}
 
 	return &p
@@ -84,13 +87,16 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 func (p *ParsingStage) process(payload []byte) error {
 
+	// If we are doing a dry-run, we skip all of the processing here.
 	if p.dryRun {
 		return nil
 	}
 
+	// Take one slot from the rate limiter to make sure we don't overload the
+	// Ethereum node's API.
 	p.limit.Take()
 
-	// invoke the lambda and retry on retriable errors
+	// Invoke the AWS Lambda function that will retrieve the logs and parse them.
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(p.name),
 		Payload:      payload,
@@ -100,6 +106,8 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not invoke lambda: %w", err)
 	}
 
+	// Next to invocation errors, we need to handle errors that happened during
+	// execution, which are read from a separate field.
 	var execErr *results.Error
 	if output.FunctionError != nil {
 		err = json.Unmarshal(output.Payload, &execErr)
@@ -111,12 +119,34 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not execute lambda: %w", err)
 	}
 
+	// Then we can decode the result, which contains all the data we need to process.
 	var result results.Parsing
 	err = json.Unmarshal(output.Payload, &result)
 	if err != nil {
 		return fmt.Errorf("could not decode parsing result: %w", err)
 	}
 
+	// As the Lambda has no access to the DB, we need to fill in the collection ID
+	// for all addition and modification jobs here. This could be done in a batch
+	// request to improve performance, but it shouldn't have a big impact.
+	for _, addition := range result.Additions {
+		collection, err := p.collections.One(addition.ChainID, addition.ContractAddress)
+		if err != nil {
+			return fmt.Errorf("could not get collection for addition: %w", err)
+		}
+		addition.CollectionID = collection.ID
+	}
+	for _, modification := range result.Modifications {
+		collection, err := p.collections.One(modification.ChainID, modification.ContractAddress)
+		if err != nil {
+			return fmt.Errorf("could not get collection for modification: %w", err)
+		}
+		modification.CollectionID = collection.ID
+	}
+
+	// As a first step of processing the results, we want to push all of the addition
+	// jobs into the addition pipeline, so that the addition dispatcher can start
+	// its work as soon as possible.
 	payloads := make([][]byte, 0, len(result.Additions))
 	for _, addition := range result.Additions {
 		payload, err := json.Marshal(addition)
@@ -125,27 +155,29 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 		payloads = append(payloads, payload)
 	}
-
-	err = p.pub.MultiPublish(params.TopicAddition, payloads)
+	err = p.additions.MultiPublish(params.TopicAddition, payloads)
 	if err != nil {
 		return fmt.Errorf("could not publish addition jobs: %w", err)
 	}
 
+	// In a second step, we insert all of the transfers and sales that were parsed
+	// into the events database.
 	err = p.transfers.Upsert(result.Transfers...)
 	if err != nil {
 		return fmt.Errorf("could not upsert transfers: %w", err)
 	}
-
 	err = p.sales.Upsert(result.Sales...)
 	if err != nil {
 		return fmt.Errorf("could not upsert sales: %w", err)
 	}
 
+	// Finally, we make sure that we have all of the NFTs that were modified in the
+	// database already, at least as placeholders, and we apply the ownership changes
+	// for them in one batch operation.
 	err = p.nfts.Touch(result.Modifications...)
 	if err != nil {
 		return fmt.Errorf("could not touch NFTs: %w", err)
 	}
-
 	err = p.owners.Change(result.Modifications...)
 	if err != nil {
 		return fmt.Errorf("could not change owners: %w", err)

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
-	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 )
 
@@ -83,24 +82,16 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 
 func (a *AdditionStage) process(payload []byte) error {
 
+	// If we are doing a dry run, we skip any kind of processing.
 	if a.dryRun {
 		return nil
 	}
 
-	var addition jobs.Addition
-	err := json.Unmarshal(payload, &addition)
-	if err != nil {
-		return fmt.Errorf("could not decode addition job: %w", err)
-	}
-
-	collection, err := a.collections.One(addition.ChainID, addition.ContractAddress)
-	if err != nil {
-		return fmt.Errorf("could not get collection: %w", err)
-	}
-
+	// We then take up a slot in the rate limiter to make sure the Ethereum node
+	// API is not overloaded.
 	a.limit.Take()
 
-	// invoke the lambda and retry on retriable errors
+	// Next, we invoke the Lambda, which will get the token URI, query it and parse it.
 	input := &lambda.InvokeInput{
 		FunctionName: aws.String(a.name),
 		Payload:      payload,
@@ -110,6 +101,8 @@ func (a *AdditionStage) process(payload []byte) error {
 		return fmt.Errorf("could not invoke lambda: %w", err)
 	}
 
+	// Execution errors are handled separately from invocation errors, as they are
+	// returned as part of the result.
 	var execErr *results.Error
 	if output.FunctionError != nil {
 		err = json.Unmarshal(output.Payload, &execErr)
@@ -121,24 +114,24 @@ func (a *AdditionStage) process(payload []byte) error {
 		return fmt.Errorf("could not execute lambda: %w", err)
 	}
 
+	// We then unmarshal the result.
 	var result results.Addition
 	err = json.Unmarshal(output.Payload, &result)
 	if err != nil {
 		return fmt.Errorf("could not decode NFT: %w", err)
 	}
 
-	result.NFT.CollectionID = collection.ID
+	// Finally, we make the necessary changes to the DB: insert the NFT, the traits
+	// and apply the necessary ownership changes.
 	err = a.nfts.Insert(result.NFT)
 	if err != nil {
 		return fmt.Errorf("could not insert NFT: %w", err)
 	}
-
 	err = a.traits.Insert(result.Traits...)
 	if err != nil {
 		return fmt.Errorf("could not insert traits: %w", err)
 	}
-
-	err = a.owners.Add(&addition)
+	err = a.owners.Add(&result)
 	if err != nil {
 		return fmt.Errorf("could not add owner: %w", err)
 	}

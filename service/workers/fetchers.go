@@ -1,4 +1,4 @@
-package lambda
+package workers
 
 import (
 	"github.com/NFT-com/indexer/models/metadata"

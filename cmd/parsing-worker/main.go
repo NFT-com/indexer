@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"github.com/NFT-com/indexer/service/lambdas"
+	"github.com/NFT-com/indexer/service/workers"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 		log.Fatal().Msg("missing node URL, aborting execution")
 	}
 
-	handler := lambdas.NewParsingHandler(log, envNodeURL)
+	handler := workers.NewParsingHandler(log, envNodeURL)
 	lambda.Start(handler.Handle)
 
 	os.Exit(0)

@@ -21,7 +21,6 @@ import (
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/graph"
-	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (
@@ -85,16 +84,6 @@ func run() int {
 		return failure
 	}
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
-	if err != nil {
-		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not connect to jobs database")
-		return failure
-	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
-
-	actionRepo := jobs.NewActionRepository(jobsDB)
-
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
 		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not connect to graph database")
@@ -115,9 +104,9 @@ func run() int {
 		return failure
 	}
 
-	consumer, err := nsq.NewConsumer(params.TopicAction, params.ChannelDispatch, nsqCfg)
+	consumer, err := nsq.NewConsumer(params.TopicAddition, params.ChannelDispatch, nsqCfg)
 	if err != nil {
-		log.Error().Err(err).Str("topic", params.TopicAction).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
+		log.Error().Err(err).Str("topic", params.TopicAddition).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
 	}
 	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
@@ -125,8 +114,8 @@ func run() int {
 
 	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	handler := pipeline.NewActionHandler(context.Background(), log, lambda, flagLambdaName, actionRepo, collectionRepo, nftRepo, ownerRepo, traitRepo, limit, flagDryRun)
-	consumer.AddConcurrentHandlers(handler, int(flagLambdaConcurrency))
+	stage := pipeline.NewAdditionStage(context.Background(), log, lambda, flagLambdaName, collectionRepo, nftRepo, ownerRepo, traitRepo, limit, flagDryRun)
+	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
 	if err != nil {

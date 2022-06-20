@@ -1,4 +1,4 @@
-package lambda
+package workers
 
 import (
 	"context"
@@ -226,8 +226,9 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		case transfer.SenderAddress == params.AddressZero:
 
 			addition := jobs.Addition{
-				ID:              uuid.NewString(),
-				ChainID:         transfer.ChainID,
+				ID:      uuid.NewString(),
+				ChainID: transfer.ChainID,
+				// CollectionID added later
 				ContractAddress: transfer.CollectionAddress,
 				TokenID:         transfer.TokenID,
 				TokenStandard:   standards[transfer.ID],
@@ -239,8 +240,9 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		default:
 
 			modification := jobs.Modification{
-				ID:              uuid.NewString(),
-				ChainID:         transfer.ChainID,
+				ID:      uuid.NewString(),
+				ChainID: transfer.ChainID,
+				// CollectionID added later
 				ContractAddress: transfer.CollectionAddress,
 				TokenID:         transfer.TokenID,
 				SenderAddress:   transfer.SenderAddress,

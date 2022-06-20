@@ -7,6 +7,7 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	"github.com/NFT-com/indexer/models/graph"
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type NFTRepository struct {
@@ -23,9 +24,9 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 	return &n
 }
 
-func (n *NFTRepository) Touch(nftID string, collectionID string, tokenID string) error {
+func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
 
-	_, err := n.build.
+	query := n.build.
 		Insert("nfts").
 		Columns(
 			"id",
@@ -37,22 +38,25 @@ func (n *NFTRepository) Touch(nftID string, collectionID string, tokenID string)
 			"description",
 			"updated_at",
 		).
-		Values(
-			nftID,
-			collectionID,
-			tokenID,
+		Suffix("ON CONFLICT (id) DO UPDATE SET " +
+			"updated_at = NOW()")
+
+	for _, modification := range modifications {
+		query = query.Values(
+			modification.NFTID(),
+			modification.CollectionID,
+			modification.TokenID,
 			"",
 			"",
 			"",
 			"",
 			"NOW()",
-		).
-		Suffix("ON CONFLICT (id) DO UPDATE SET " +
-			"updated_at = NOW()").
-		Exec()
+		)
+	}
 
+	_, err := query.Exec()
 	if err != nil {
-		return fmt.Errorf("could not execute statement: %w", err)
+		return fmt.Errorf("could not execute query: %w", err)
 	}
 	return nil
 }

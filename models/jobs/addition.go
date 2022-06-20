@@ -7,6 +7,7 @@ import (
 type Addition struct {
 	ID              string `json:"id"`
 	ChainID         uint64 `json:"chain_id"`
+	CollectionID    string `json:"collection_id"`
 	ContractAddress string `json:"contract_address"`
 	TokenID         string `json:"token_id"`
 	TokenStandard   string `json:"token_standard"`

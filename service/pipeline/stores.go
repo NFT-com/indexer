@@ -4,6 +4,7 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/models/results"
 )
 
 type NFTStore interface {
@@ -16,7 +17,7 @@ type TraitStore interface {
 }
 
 type OwnerStore interface {
-	Add(additions ...*jobs.Addition) error
+	Add(additions ...*results.Addition) error
 	Change(modifications ...*jobs.Modification) error
 }
 

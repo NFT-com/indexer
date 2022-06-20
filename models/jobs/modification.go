@@ -1,10 +1,13 @@
 package jobs
 
-import "github.com/NFT-com/indexer/models/inputs"
+import (
+	"github.com/NFT-com/indexer/models/inputs"
+)
 
 type Modification struct {
 	ID              string `json:"id"`
 	ChainID         uint64 `json:"chain_id"`
+	CollectionID    string `json:"collection_id"`
 	ContractAddress string `json:"contract_address"`
 	TokenID         string `json:"token_id"`
 	SenderAddress   string `json:"sender_address"`

@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/models/results"
 )
 
 type OwnerRepository struct {
@@ -22,7 +24,7 @@ func NewOwnerRepository(db *sql.DB) *OwnerRepository {
 	return &n
 }
 
-func (n *OwnerRepository) Add(additions ...*jobs.Addition) error {
+func (n *OwnerRepository) Add(additions ...*results.Addition) error {
 
 	query := n.build.
 		Insert("owners").
@@ -36,9 +38,9 @@ func (n *OwnerRepository) Add(additions ...*jobs.Addition) error {
 
 	for _, addition := range additions {
 		query = query.Values(
-			addition.OwnerAddress,
-			addition.NFTID(),
-			addition.TokenCount,
+			addition.NFT.Owner,
+			addition.NFT.ID,
+			addition.NFT.Number,
 		)
 	}
 
@@ -52,26 +54,22 @@ func (n *OwnerRepository) Add(additions ...*jobs.Addition) error {
 
 func (o *OwnerRepository) Change(modifications ...*jobs.Modification) error {
 
-	additions := make([]*jobs.Addition, 0, 2*len(modifications))
+	additions := make([]*results.Addition, 0, 2*len(modifications))
 	for _, modification := range modifications {
 
 		// First we add the count to the new owner.
-		addition := jobs.Addition{
-			// ID not needed
-			ChainID:         modification.ChainID,
-			ContractAddress: modification.ContractAddress,
-			TokenID:         modification.TokenID,
-			// TokenStandard not needed
-			OwnerAddress: modification.ReceiverAddress,
-			TokenCount:   modification.TokenCount,
+		addition := graph.NFT{
+			ID:     modification.NFTID(),
+			Owner:  modification.ReceiverAddress,
+			Number: modification.TokenCount,
 		}
-		additions = append(additions, &addition)
+		additions = append(additions, &results.Addition{NFT: &addition})
 
 		// Then we remove it from the old owner.
 		removal := addition
-		removal.OwnerAddress = modification.SenderAddress
-		removal.TokenCount = -removal.TokenCount
-		additions = append(additions, &removal)
+		removal.Owner = modification.SenderAddress
+		removal.Number = -removal.Number
+		additions = append(additions, &results.Addition{NFT: &removal})
 	}
 
 	err := o.Add(additions...)

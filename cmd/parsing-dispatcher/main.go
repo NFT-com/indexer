@@ -21,7 +21,7 @@ import (
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/events"
-	"github.com/NFT-com/indexer/storage/jobs"
+	"github.com/NFT-com/indexer/storage/graph"
 )
 
 const (
@@ -43,9 +43,10 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagJobsDB     string
+		flagGraphDB    string
 		flagEventsDB   string
 		flagNSQLookups []string
+		flagNSQServer  string
 		flagLambdaName string
 
 		flagOpenConnections   uint
@@ -59,10 +60,11 @@ func run() int {
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "log level")
 
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
+	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
-	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "address for NSQ lookup server to bootstrap consuming")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "parsing-worker", "name of the Lambda function to invoke")
+	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "address for NSQ lookup server to bootstrap consuming")
+	pflag.StringVarP(&flagNSQServer, "nsq-server", "q", "127.0.0.1:4150", "address for NSQ server to produce messages")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
@@ -89,16 +91,16 @@ func run() int {
 		return failure
 	}
 
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
-		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not connect to jobs database")
+		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not open graph database")
 		return failure
 	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
+	graphDB.SetMaxOpenConns(int(flagOpenConnections))
+	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := jobs.NewParsingRepository(jobsDB)
-	actionRepo := jobs.NewActionRepository(jobsDB)
+	collectionRepo := graph.NewCollectionRepository(graphDB)
+	ownerRepo := graph.NewOwnerRepository(graphDB)
 
 	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
 	if err != nil {
@@ -111,14 +113,14 @@ func run() int {
 	transferRepo := events.NewTransferRepository(eventsDB)
 	saleRepo := events.NewSaleRepository(eventsDB)
 
-	config := nsq.NewConfig()
-	err = config.Set("max-in-flight", flagLambdaConcurrency*2)
+	nsqCfg := nsq.NewConfig()
+	err = nsqCfg.Set("max-in-flight", flagLambdaConcurrency*2)
 	if err != nil {
 		log.Error().Err(err).Uint("max-in-flight", 2*flagLambdaConcurrency).Msg("could not update NSQ configuration")
 		return failure
 	}
 
-	consumer, err := nsq.NewConsumer(params.TopicParsing, params.ChannelDispatch, config)
+	consumer, err := nsq.NewConsumer(params.TopicParsing, params.ChannelDispatch, nsqCfg)
 	if err != nil {
 		log.Error().Err(err).Str("topic", params.TopicParsing).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
 		return failure
@@ -126,10 +128,18 @@ func run() int {
 	defer consumer.Stop()
 	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
+	producer, err := nsq.NewProducer(flagNSQServer, nsqCfg)
+	if err != nil {
+		log.Error().Err(err).Str("nsq_address", flagNSQServer).Msg("could not create NSQ producer")
+		return failure
+	}
+	defer producer.Stop()
+	producer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
+
 	lambda := lambda.NewFromConfig(cfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	handler := pipeline.NewParsingHandler(context.Background(), log, lambda, flagLambdaName, parsingRepo, actionRepo, transferRepo, saleRepo, limit, flagDryRun)
-	consumer.AddConcurrentHandlers(handler, int(flagLambdaConcurrency))
+	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, ownerRepo, producer, limit, flagDryRun)
+	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
 	if err != nil {

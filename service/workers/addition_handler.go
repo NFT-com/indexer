@@ -1,4 +1,4 @@
-package lambda
+package workers
 
 import (
 	"context"
@@ -138,15 +138,15 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	nft := graph.NFT{
-		ID: nftID,
-		// CollectionID is populated after parsing
-		TokenID:     addition.TokenID,
-		Name:        token.Name,
-		URI:         tokenURI,
-		Image:       token.Image,
-		Description: token.Description,
-		Owner:       addition.OwnerAddress,
-		Number:      addition.TokenCount,
+		ID:           nftID,
+		CollectionID: addition.CollectionID,
+		TokenID:      addition.TokenID,
+		Name:         token.Name,
+		URI:          tokenURI,
+		Image:        token.Image,
+		Description:  token.Description,
+		Owner:        addition.OwnerAddress,
+		Number:       addition.TokenCount,
 	}
 
 	result := results.Addition{
