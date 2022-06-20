@@ -43,7 +43,7 @@ func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
 			"updated_at",
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
-			"updated_at = NOW()")
+			"updated_at = EXCLUDED.updated_at")
 
 	for _, modification := range modifications {
 		query = query.Values(
@@ -94,7 +94,7 @@ func (n *NFTRepository) Insert(nft *graph.NFT) error {
 			"uri = EXCLUDED.uri, " +
 			"image = EXCLUDED.image, " +
 			"description = EXCLUDED.description, " +
-			"created_at = NOW()").
+			"created_at = EXCLUDED.created_at").
 		Exec()
 	if err != nil {
 		return fmt.Errorf("could not execute query: %w", err)
