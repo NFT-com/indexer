@@ -8,8 +8,22 @@ export type AuroraOutput = {
   main: aws.rds.Cluster
 }
 
-const getSubnetGroup = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
-  return new aws.rds.SubnetGroup('aurora_subnet_group', {
+const getSubnetGroupJob = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
+  return new aws.rds.SubnetGroup('aurora_subnet_group_job', {
+    name: getResourceName('indexer-aurora'),
+    subnetIds: isProduction() ? vpc.privateSubnetIds : vpc.publicSubnetIds,
+  })
+}
+
+const getSubnetGroupEvent = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
+  return new aws.rds.SubnetGroup('aurora_subnet_group_event', {
+    name: getResourceName('indexer-aurora'),
+    subnetIds: isProduction() ? vpc.privateSubnetIds : vpc.publicSubnetIds,
+  })
+}
+
+const getSubnetGroupGraph = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
+  return new aws.rds.SubnetGroup('aurora_subnet_group_graph', {
     name: getResourceName('indexer-aurora'),
     subnetIds: isProduction() ? vpc.privateSubnetIds : vpc.publicSubnetIds,
   })
@@ -35,7 +49,7 @@ const createMainJobDb = (
     ],
   })
 
-  const subnetGroup = getSubnetGroup(vpc)
+  const subnetGroup = getSubnetGroupJob(vpc)
   const engineType = EngineType.AuroraPostgresql
   const cluster = new aws.rds.Cluster('aurora_main_cluster', {
     engine: engineType,
@@ -110,7 +124,7 @@ const createMainEventDb = (
     ],
   })
 
-  const subnetGroup = getSubnetGroup(vpc)
+  const subnetGroup = getSubnetGroupEvent(vpc)
   const engineType = EngineType.AuroraPostgresql
   const cluster = new aws.rds.Cluster('aurora_main_cluster', {
     engine: engineType,
@@ -185,7 +199,7 @@ const createMainGraphDb = (
     ],
   })
 
-  const subnetGroup = getSubnetGroup(vpc)
+  const subnetGroup = getSubnetGroupGraph(vpc)
   const engineType = EngineType.AuroraPostgresql
   const cluster = new aws.rds.Cluster('aurora_graph_cluster', {
     engine: engineType,
