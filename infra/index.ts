@@ -17,7 +17,7 @@ export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void =
   const vpcId = outMap.vpcId.value
   const webSGId = outMap.webSGId.value
   const parserFunctionId = outMap.parserFunctionId.value
-  const additionFunctionId = outMap.actionFunctionId.value
+  const additionFunctionId = outMap.additionFunctionId.value
   const sharedOutput: SharedInfraOutput = {
     assetBucket,
     assetBucketRole,
