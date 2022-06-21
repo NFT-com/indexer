@@ -51,7 +51,7 @@ const createMainJobDb = (
 
   const subnetGroup = getSubnetGroupJob(vpc)
   const engineType = EngineType.AuroraPostgresql
-  const cluster = new aws.rds.Cluster('aurora_main_cluster', {
+  const cluster = new aws.rds.Cluster('aurora_job_cluster', {
     engine: engineType,
     engineVersion: '13.4',
     availabilityZones: zones,
@@ -126,7 +126,7 @@ const createMainEventDb = (
 
   const subnetGroup = getSubnetGroupEvent(vpc)
   const engineType = EngineType.AuroraPostgresql
-  const cluster = new aws.rds.Cluster('aurora_main_cluster', {
+  const cluster = new aws.rds.Cluster('aurora_event_cluster', {
     engine: engineType,
     engineVersion: '13.4',
     availabilityZones: zones,
