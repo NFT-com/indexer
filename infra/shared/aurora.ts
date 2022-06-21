@@ -73,9 +73,10 @@ const createMain = (
   const instance = config.require('auroraMainInstance')
   const numInstances = parseInt(config.require('auroraMainInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
+  const indexerDbType = ['job','event','graph']
   for (let i = 0; i < numInstances; i++) {
     clusterInstances.push(new aws.rds.ClusterInstance(`aurora_main_instance_${i + 1}`, {
-      identifier: getResourceName(`indexer-main-${i+1}`),
+      identifier: getResourceName(`indexer-main-${i+1}-${indexerDbType[i]}`),
       clusterIdentifier: cluster.id,
       instanceClass: instance,
       engine: engineType,
@@ -91,6 +92,7 @@ const createMain = (
   return cluster
 }
 
+// spin up 3x databases for indexer (jobs, events, graph). All same configs 
 export const createAuroraClusters = (
   config: pulumi.Config,
   vpc: ec2.Vpc,
