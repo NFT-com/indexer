@@ -18,6 +18,8 @@ func Retriable(err error) bool {
 		return true
 	case strings.Contains(msg, "Internal Server Error"):
 		return true
+	case strings.Contains(msg, "Bad Gateway"):
+		return true
 	case strings.Contains(msg, "Gateway Timeout"):
 		return true
 
