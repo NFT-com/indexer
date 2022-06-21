@@ -26,14 +26,14 @@ runs:
       working-directory: infra/shared/stack
       shell: bash
       run: zip parsing.zip worker     
-    - name: Build Go Action Worker
+    - name: Build Go Addition Worker
       working-directory: infra/shared/stack
       shell: bash
       run: GOOS=linux GOARCH=amd64 go build -o worker ../../../cmd/addition-worker
-    - name: Zip Action Worker
+    - name: Zip Addition Worker
       working-directory: infra/shared/stack
       shell: bash
-      run: zip action.zip worker    
+      run: zip addition.zip worker    
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -67,17 +67,11 @@ runs:
         REPO: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.stage }}-indexer
       run: |
         export DOCKER_BUILDKIT=1
-
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-watcher/Dockerfile -t ${{ env.REPO }}:jobs-watcher -t ${{ env.REPO }}:jobs-watcher-${{ github.sha }} 
-        docker push ${{ env.REPO }}:jobs-watcher
-        docker push ${{ env.REPO }}:jobs-watcher-${{ github.sha }}
-
         
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile -t ${{ env.REPO }}:parsing-dispatcher -t ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:parsing-dispatcher
         docker push ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }}
 
-        
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/addition-dispatcher/Dockerfile -t ${{ env.REPO }}:addition-dispatcher -t ${{ env.REPO }}:addition-dispatcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:addition-dispatcher
         docker push ${{ env.REPO }}:addition-dispatcher-${{ github.sha }}

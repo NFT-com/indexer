@@ -20,14 +20,14 @@ export const createParsingWorker = (): aws.lambda.Function => {
     })
 }
 
-export const createActionWorker = (): aws.lambda.Function => {
-    return new aws.lambda.Function("action-worker", {
+export const createAdditionWorker = (): aws.lambda.Function => {
+    return new aws.lambda.Function("addition-worker", {
         architectures: ["x86_64"],
-        description: "action-web3",
+        description: "addition-web3",
         handler: "worker",
         memorySize: 128,
-        code: new pulumi.asset.FileArchive("./action.zip"),
-        name: "action-worker",
+        code: new pulumi.asset.FileArchive("./addition.zip"),
+        name: "addition-worker",
         reservedConcurrentExecutions: -1,
         role: "arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole",
         runtime: "go1.x",

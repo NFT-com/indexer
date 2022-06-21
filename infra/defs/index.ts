@@ -11,5 +11,5 @@ export type SharedInfraOutput = {
   webSGId: string
   indexerECRRepo: string
   parserFunctionId: string
-  actionFunctionId: string
+  additionFunctionId: string
 }
