@@ -29,7 +29,7 @@ runs:
     - name: Build Go Action Worker
       working-directory: infra/shared/stack
       shell: bash
-      run: GOOS=linux GOARCH=amd64 go build -o worker ../../../cmd/action-worker
+      run: GOOS=linux GOARCH=amd64 go build -o worker ../../../cmd/addition-worker
     - name: Zip Action Worker
       working-directory: infra/shared/stack
       shell: bash
@@ -78,9 +78,9 @@ runs:
         docker push ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }}
 
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/action-dispatcher/Dockerfile -t ${{ env.REPO }}:action-dispatcher -t ${{ env.REPO }}:action-dispatcher-${{ github.sha }} 
-        docker push ${{ env.REPO }}:action-dispatcher
-        docker push ${{ env.REPO }}:action-dispatcher-${{ github.sha }}
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/addition-dispatcher/Dockerfile -t ${{ env.REPO }}:addition-dispatcher -t ${{ env.REPO }}:addition-dispatcher-${{ github.sha }} 
+        docker push ${{ env.REPO }}:addition-dispatcher
+        docker push ${{ env.REPO }}:addition-dispatcher-${{ github.sha }}
         
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}:jobs-creator -t ${{ env.REPO }}:jobs-creator-${{ github.sha }} 
         docker push ${{ env.REPO }}:jobs-creator
