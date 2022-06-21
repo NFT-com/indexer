@@ -64,7 +64,7 @@ func (n *NetworkRepository) List() ([]*graph.Network, error) {
 	return networks, nil
 }
 
-func (n *NetworkRepository) Retrieve(chainID string) (*graph.Network, error) {
+func (n *NetworkRepository) ForChain(chainID string) (*graph.Network, error) {
 
 	result, err := n.build.
 		Select(

@@ -66,14 +66,14 @@ services:
     depends_on:
       - postgres
       - nsqlookupd
-  action-dispatcher:
+  addition-dispatcher:
     environment:
       - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
       - AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
     build:
       context: .
-      dockerfile: cmd/action-dispatcher/Dockerfile
+      dockerfile: cmd/addition-dispatcher/Dockerfile
     restart: always
     entrypoint: '/dispatcher -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:

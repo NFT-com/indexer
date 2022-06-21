@@ -6,25 +6,22 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/nsqio/go-nsq"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
-	"github.com/NFT-com/indexer/network/ethereum"
-	"github.com/NFT-com/indexer/service/creator"
 	"github.com/NFT-com/indexer/service/notifier"
+	"github.com/NFT-com/indexer/service/pipeline"
 	"github.com/NFT-com/indexer/storage/graph"
-
-	storage "github.com/NFT-com/indexer/storage/jobs"
+	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (
@@ -51,15 +48,14 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagGraphDB string
-		flagJobsDB  string
-		flagNodeURL string
-		flagWSURL   string
+		flagGraphDB   string
+		flagJobsDB    string
+		flagWSURL     string
+		flagNSQServer string
 
 		flagOpenConnections uint
 		flagIdleConnections uint
 		flagWriteInterval   time.Duration
-		flagPendingLimit    uint
 		flagHeightRange     uint
 	)
 
@@ -67,13 +63,12 @@ func run() int {
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringVarP(&flagNodeURL, "node-url", "n", "http://127.0.0.1:8545", "HTTP URL for Ethereum JSON RPC API connection")
 	pflag.StringVarP(&flagWSURL, "websocket-url", "w", "ws://127.0.0.1:8545", "Websocket URL for Ethereum JSON RPC API connection")
+	pflag.StringVarP(&flagNSQServer, "nsq-server", "q", "127.0.0.1:4150", "address for NSQ server to produce messages")
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
-	pflag.DurationVar(&flagWriteInterval, "write-interval", time.Second, "interval between checks for job writing")
-	pflag.UintVar(&flagPendingLimit, "pending-limit", 1000, "maximum number of pending jobs per combination")
+	pflag.DurationVar(&flagWriteInterval, "write-interval", 100*time.Millisecond, "interval between checks for job writing")
 	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
 
 	pflag.Parse()
@@ -108,42 +103,24 @@ func run() int {
 	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
 	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	parsingRepo := storage.NewParsingRepository(jobsDB)
+	boundaryRepo := jobs.NewBoundaryRepository(jobsDB)
 
-	// If we are using an AWS Managed Blockchain instance for for our node API, we
-	// should load the AWS configuration from the environment and use the related
-	// AWS signer on our requests.
-	var api *ethclient.Client
-	close := func() {}
-	if strings.Contains(flagNodeURL, "ethereum.managedblockchain") {
-
-		log.Info().Str("node_url", flagNodeURL).Msg("using AWS Managed Blockchain node")
-
-		// Load the AWS configuration from the environment. This will work on all EC2
-		// instances out of the box; otherwise, the necessary environment variables will
-		// need to be set manualy.
-		cfg, err := config.LoadDefaultConfig(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("could not load AWS configuration")
-			return failure
-		}
-
-		api, close, err = ethereum.NewSigningClient(ctx, flagNodeURL, cfg)
-		if err != nil {
-			log.Error().Str("node_url", flagNodeURL).Err(err).Msg("could not create signing client")
-			return failure
-		}
-
-	} else {
-
-		api, err = ethclient.DialContext(ctx, flagNodeURL)
-		if err != nil {
-			log.Error().Str("node_url", flagNodeURL).Err(err).Msg("could not create default client")
-			return failure
-		}
+	// We currently only support websocket subscriptions without AWS Managed Blockchain.
+	api, err := ethclient.DialContext(ctx, flagWSURL)
+	if err != nil {
+		log.Error().Str("ws_url", flagWSURL).Err(err).Msg("could not create default client")
+		return failure
 	}
 	defer api.Close()
-	defer close()
+
+	nsqCfg := nsq.NewConfig()
+	producer, err := nsq.NewProducer(flagNSQServer, nsqCfg)
+	if err != nil {
+		log.Error().Err(err).Str("nsq_address", flagNSQServer).Msg("could not create NSQ producer")
+		return failure
+	}
+	defer producer.Stop()
+	producer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
 
 	// Get all of the chain IDs from the graph database and initialize one creator
 	// for each of the networks.
@@ -154,11 +131,9 @@ func run() int {
 	}
 	creators := make([]notifier.Listener, 0, len(networks))
 	for _, network := range networks {
-		creator := creator.New(log, collectionRepo, marketplaceRepo, parsingRepo,
-			creator.WithNodeURL(flagNodeURL),
-			creator.WithChainID(network.ChainID),
-			creator.WithPendingLimit(flagPendingLimit),
-			creator.WithHeightRange(flagHeightRange),
+		creator := pipeline.NewCreationStage(log, collectionRepo, marketplaceRepo, boundaryRepo, producer,
+			pipeline.WithChainID(network.ChainID),
+			pipeline.WithHeightLimit(flagHeightRange),
 		)
 		creators = append(creators, creator)
 

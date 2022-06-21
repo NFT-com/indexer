@@ -1,25 +1,26 @@
 # Deployment Guide
 
-This guide's purpose is to allow you to deploy the Indexer architecture in order to fill its database, to be served by the Analytics API.
+This guide's purpose is to allow you to deploy the indexer architecture in order to fill its database, to be served by the Analytics API.
 
 1. [Pre-requisites](#pre-requisites)
    1. [Amazon Web Services](#amazon-web-services)
+      1. [Manually](#manually)
+      2. [Pulumi](#pulumi)
    2. [PostgreSQL](#postgresql)
    3. [NSQ](#nsq)
    4. [Docker](#docker)
       1. [Building the Images](#building-the-images)
 2. [Deployment](#deployment)
-   1. [Jobs Creator](#jobs-creator)
-   2. [Jobs Watcher](#jobs-watcher)
-   3. [Parsing Dispatcher](#parsing-dispatcher)
-   4. [Action Dispatcher](#action-dispatcher)
+   1. [Addition Dispatcher](#addition-dispatcher)
+   2. [Parsing Dispatcher](#parsing-dispatcher)
+   3. [Jobs Creator](#jobs-creator)
 
 ## Pre-requisites
 
-The Indexer requires two separate databases to function:
+The Indexer requires at least one database, and a pipeline for jobs.
 
-* [PostgreSQL](#postgresql), which is used to persist indexed data;
-* [NSQ](#nsq), which is used by RabbitMQ as the backend of the jobs queue.
+* [PostgreSQL](#postgresql), which is used to persist indexed data, job information and events.
+* [NSQ](#nsq), which provides a persistent at-least-once message queue for jobs.
 
 PostgreSQL and NSQ need to be deployed before any of the services described in the guide below.
 You are free to run them any way you want, as long as they are accessible on the network on which the Indexer services are deployed.
@@ -29,28 +30,48 @@ In order to use Docker images, it is required to set [Docker](https://docs.docke
 
 ### Amazon Web Services
 
-Since the Indexer pipeline uses [AWS Lambdas](https://aws.amazon.com/lambda/) to run its parsing and action workers, the functions used by those lambdas need to be deployed on the cloud before any worker can be instantiated.
+Since the Indexer pipeline uses [AWS Lambdas](https://aws.amazon.com/lambda/) to run its parsing and addition workers, the Lambda functions used by those workers need to be deployed on the cloud before any worker can be instantiated.
 
-Setting up the infrastructure to run this locally is very complex, so it is recommended to deploy the worker functions to AWS using the [`pipeline` branch](https://github.com/NFT-com/indexer/tree/pipeline) of this repository.
+Setting up the infrastructure to run this locally is very complex, so it is recommended to deploy the worker functions to AWS. This can be done manually, or by using Pelumi to deploy automatically.
 
-1. `git checkout pipeline`
-2. Make sure the branch is up-to-date with the branch you are working on
-   1. If it is not and that you are working with master, please rebase the branch against master and push your changes to the remote `pipeline` branch.
-   2. If it is not and that you are working with your own custom branch, please do not push anything on the remote `pipeline` branch and instead keep your changes local.
-3. `cd ./pipeline`
-4. `GOOS=linux GOARCH=amd64 go build -o worker ../cmd/parsing-worker`
-5. `zip parsing.zip worker`
-6. `GOOS=linux GOARCH=amd64 go build -o worker ../cmd/action-worker`
-7. `zip action.zip worker`
-8. Now, upload the two archives to AWS
-   1. Either by [following this guide](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-package.html) to do it manually
-   2. Or using the YAML scripts that are in the `pipeline` folder on the `pipeline` branch.
-      1. Install [Pulumi](https://www.pulumi.com/)
-      2. Run `run pulumi up`
+The [`pipeline` branch](https://github.com/NFT-com/indexer/tree/pipeline) of this repository contains example code on how to use Pelumi to automate deployment of Lambda functions.
+
+#### Manually
+
+In order to deploy the Lambda functions manually:
+
+1. Log into the AWS console
+2. Create one function named `parsing-worker` and one function named `addition-worker`
+3. Make sure that the entry point is changed from `hello` to `worker`
+4. We also recommend changing the timeout of the functions to 15 minutes
+5. Set the desired environment variables for `LOG_LEVEL` and `NODE_URL` on the settings
+6. Build the workers:
+   - `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o worker ../cmd/parsing-worker`
+   - `zip parsing.zip worker`
+   - `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o worker ../cmd/addition-worker`
+   - `zip addition.zip worker`
+7. Manually upload each zip to the respective Lambda function.
+
+More information is available in the [AWS docs](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-package.html).
+
+#### Pulumi
+
+If you want to use Pulumi, you should make sure that the `pipeline` branch is properly rebased on the branch that you want to deploy from.
+Alternatively, you can build the zip files, and then use the `pipeline` branch just for the Pulumi code.
+We recommend that you integrate the available scripts in your own deployment flow outside of the repository.
+Once everything is up-to-date, you should be able to simply execute `run pulumi up`.
 
 ### PostgreSQL
 
 You are free to run PostgreSQL however you want, but if you are unfamiliar with it, you can either get started by [downloading](https://www.postgresql.org/download/) and [installing it natively](https://www.postgresql.org/docs/current/tutorial-install.html) on your platform, or use the official [PostgreSQL Docker image](https://hub.docker.com/_/postgres).
+
+There are three different databases used by the different components:
+
+- graph data;
+- jobs data; and
+- events data.
+
+Ideally, each database should run on its own host, so that they can be scaled according to needs.
 
 > ⚠️ Warning! In order for the Indexer to work, the PostgreSQL database needs to be set up.
 > Tables have to be created, and some also should be populated.
@@ -80,27 +101,27 @@ Just like for PostgreSQL, NSQ just needs to be accessible by your services, so y
 If you want to use Docker, you first need to [set the network up](#docker) before you can run that command.
 
 ```bash
-docker run  -d
-            --network="indexer"
-            -p "4160:4160"
-            -p "4161:4161"
-            nsqio/nsq
-            /nsqlookupd
+docker run  -d \
+--network="indexer" \
+-p "4160:4160" \
+-p "4161:4161" \
+nsqio/nsq \
+/nsqlookupd
 
 
-docker run  -d
-            --network="indexer"
-            -p "4150:4150"
-            -p "4151:4151"
-            nsqio/nsq
-            /nsqd --lookupd-tcp-address=host.docker.internal:4160 --broadcast-address=host.docker.internal
+docker run  -d \
+--network="indexer" \
+-p "4150:4150" \
+-p "4151:4151" \
+nsqio/nsq \
+/nsqd --lookupd-tcp-address=host.docker.internal:4160 --broadcast-address=host.docker.internal
 
 # If you want more visibility into the queue run the command bellow and check the http://localhost:4171.
-docker run  -d
-            --network="indexer"
-            -p "4171:4171"
-            nsqio/nsq
-            /nsqadmin --lookupd-http-address=host.docker.internal:4161
+docker run  -d \
+--network="indexer" \
+-p "4171:4171" \
+nsqio/nsq \
+/nsqadmin --lookupd-http-address=host.docker.internal:4161
 ```
 
 ### Docker
@@ -131,6 +152,87 @@ done
 
 ## Deployment
 
+The order of deployment for the components is important.
+A NSQ consumer will create the topic and channel it listens on when it connects to NSQ.
+In order to not miss any messages, the consumer of a queue thus has to run before the producer.
+This means services have to be launched in the following order:
+
+1. addition dispatcher
+2. parsing dispatcher
+3. jobs creator
+
+It is also possible to create the queues manually using [NSQ admin](https://nsq.io/components/nsqadmin.html).
+In that case, the order of launching the services doesn't matter.
+
+### Addition Dispatcher
+
+The addition dispatcher consumes messages from the [addition queue](#nsq) and launches jobs on [AWS Lambdas](#amazon-web-services).
+See the [addition dispatcher readme](../cmd/addition-dispatcher/README.md) for more details about its flags.
+
+In order for the addition dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
+Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
+
+```bash
+# Using the binary.
+./addition-dispatcher \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+-j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+-k "nsq.domain.com:4161" \
+-n "addition-worker"
+```
+
+```bash
+# Using Docker.
+docker run -d \
+--network="indexer" \
+--name="addition-dispatcher" \
+-e AWS_REGION="eu-west-1" \
+-e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032" \
+-e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR" \
+indexer-addition-dispatcher \
+--graph-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+--jobs-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--nsq-lookups "nsq.domain.com:4161" \
+--lambda-name "addition-worker"
+```
+
+
+### Parsing Dispatcher
+
+The parsing dispatcher consumes messages from the [parsing queue](#nsq) and launches parsing jobs on [AWS Lambdas](#amazon-web-services).
+See the [parsing dispatcher readme](../cmd/parsing-dispatcher/README.md) for more details about its flags.
+
+In order for the parsing dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
+Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
+
+```bash
+# Using the binary.
+./parsing-dispatcher \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+-j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+-e "host=172.17.0.100 port=5432 user=immutable password=password dbname=events sslmode=disable" \
+-k "nsq.domain.com:4161" \
+-q "nsq.domain.com:4150" \
+-n "parsing-worker"
+```
+
+```bash
+# Using Docker.
+docker run -d \
+--network="indexer" \
+--name="parsing-dispatcher" \
+-e AWS_REGION="eu-west-1" \
+-e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032" \
+-e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR" \
+indexer-parsing-dispatcher \
+--graph-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+--jobs-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--events-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=events sslmode=disable" \
+--nsq-lookups "nsq.domain.com:4161" \
+--nsq-server "nsq.domain.com:4150" \
+--lambda-name "parsing-worker"
+```
+
 ### Jobs Creator
 
 The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
@@ -141,96 +243,21 @@ The jobs creator requires having access to an Ethereum node's API on both `WSS` 
 
 ```bash
 # Using the binary.
-./jobs-creator  -n="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
-                -w="wss://mainnet.infura.io/ws/v3/dc16acf06a1e7c0dbb5e7958983fb5ba"
-                --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+./jobs-creator \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
+-j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+-w="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
+-q "nsq.domain.com:4150"
 ```
 
 ```bash
 # Using Docker.
-docker run  -d
-            --network="indexer"
-            indexer-jobs-creator
-              --node-url="https://mainnet.infura.io/v3/522abfc7b0f04847bbb174f026a7f83e"
-              --websocket-url="wss://mainnet.infura.io/ws/v3/522abfc7b0f04847bbb174f026a7f83e"
-              --graph-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-```
-
-### Jobs Watcher
-
-The jobs watcher watches the [PostgreSQL database](#postgresql) for new jobs from the [jobs creator](#jobs-creator) and pushes them into their respective [queue](#nsq).
-See the [jobs watcher readme](../cmd/jobs-watcher/README.md) for more details about its flags.
-
-```bash
-# Using the binary.
-./jobs-watcher  --nsq-server="172.17.0.100:4150"
-                --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-```
-
-```bash
-# Using Docker.
-docker run  -d
-            --network="indexer"
-            indexer-jobs-watcher
-              --nsq-server="172.17.0.100:4150"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-```
-
-### Parsing Dispatcher
-
-The parsing dispatcher consumes messages from the [queue](#nsq) and launches parsing jobs on [AWS Lambdas](#amazon-web-services).
-See the [parsing dispatcher readme](../cmd/parsing-dispatcher/README.md) for more details about its flags.
-
-In order for the parsing dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
-Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
-
-```bash
-# Using the binary.
-./parsing-dispatcher --nsq-lookups="172.17.0.100:4161"
-                     --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                     --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-```
-
-```bash
-# Using Docker.
-docker run  -d
-            --network="indexer"
-            -e AWS_REGION="eu-west-1"
-            -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
-            -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
-            indexer-parsing-dispatcher
-              --nsq-lookups="172.17.0.100:4161"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-              --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-```
-
-### Action Dispatcher
-
-The action dispatcher consumes messages from the [queue](#nsq) and launches jobs on [AWS Lambdas](#amazon-web-services).
-Those jobs can act in several ways, hence the name.
-See the [action dispatcher readme](../cmd/action-dispatcher/README.md) for more details about its flags.
-
-In order for the action dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
-Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
-
-```bash
-# Using the binary.
-./action-dispatcher --nsq-lookups="172.17.0.100:4161"
-                    --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-                    --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-```
-
-```bash
-# Using Docker.
-docker run  -d
-            --network="indexer"
-            -e AWS_REGION="eu-west-1"
-            -e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032"
-            -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR"
-            indexer-action-dispatcher
-              --nsq-lookups="172.17.0.100:4161"
-              --jobs-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
-              --events-database="host=172.17.0.100 port=5432 user=admin password=mypassword dbname=postgres sslmode=disable"
+docker run  -d \
+--network="indexer" \
+--name="jobs-creator" \
+indexer-jobs-creator \
+--graph-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
+--jobs-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--websocket-url="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
+--nsq-server "nsq.domain.com:4150"
 ```
