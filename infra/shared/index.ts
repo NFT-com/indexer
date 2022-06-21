@@ -1,7 +1,7 @@
 import * as upath from 'upath'
 import * as pulumi from '@pulumi/pulumi'
 import { deployInfra } from '../helper'
-import { createAuroraClusters } from './aurora'
+import { createAuroraClustersJob, createAuroraClustersEvent, createAuroraClustersGraph } from './aurora'
 import { createRepositories } from './ecr'
 import { createCacheClusters } from './elasticache'
 import { createBuckets } from './s3'
@@ -15,7 +15,9 @@ const pulumiProgram = async (): Promise<Record<string, any> | void> => {
 
   const vpc = createVPC()
   const sgs = await createSecurityGroups(config, vpc)
-  const { main: dbMain } = createAuroraClusters(config, vpc, sgs.aurora, zones)
+  const { main: dbJob } = createAuroraClustersJob(config, vpc, sgs.aurora, zones)
+  const { main: dbEvent } = createAuroraClustersEvent(config, vpc, sgs.aurora, zones)
+  const { main: dbGraph } = createAuroraClustersGraph(config, vpc, sgs.aurora, zones)
   const { main: cacheMain } = createCacheClusters(config, vpc, sgs.redis, zones)
   const { asset, assetRole, deployApp } = createBuckets()
   const { indexer } = createRepositories()
@@ -25,7 +27,9 @@ const pulumiProgram = async (): Promise<Record<string, any> | void> => {
   return {
     assetBucket: asset.bucket,
     assetBucketRole: assetRole.arn,
-    dbHost: dbMain.endpoint,
+    jobDbHost: dbJob.endpoint,
+    eventDbHost: dbEvent.endpoint,
+    graphDbHost: dbGraph.endpoint,
     deployIndexerAppBucket: deployApp.bucket,
     indexerECRRepo: indexer.name,
     redisHost: cacheMain.cacheNodes[0].address,
