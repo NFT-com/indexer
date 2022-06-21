@@ -11,9 +11,9 @@ This guide's purpose is to allow you to deploy the indexer architecture in order
    4. [Docker](#docker)
       1. [Building the Images](#building-the-images)
 2. [Deployment](#deployment)
-   1. [Jobs Creator](#jobs-creator)
+   1. [Addition Dispatcher](#addition-dispatcher)
    2. [Parsing Dispatcher](#parsing-dispatcher)
-   3. [Addition Dispatcher](#addition-dispatcher)
+   3. [Jobs Creator](#jobs-creator)
 
 ## Pre-requisites
 
@@ -152,34 +152,50 @@ done
 
 ## Deployment
 
-### Jobs Creator
+The order of deployment for the components is important.
+A NSQ consumer will create the topic and channel it listens on when it connects to NSQ.
+In order to not miss any messages, the consumer of a queue thus has to run before the producer.
+This means services have to be launched in the following order:
 
-The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
-If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of `0`.
-See the [jobs creator readme](../cmd/jobs-creator/README.md) for more details about its flags.
+1. addition dispatcher
+2. parsing dispatcher
+3. jobs creator
 
-The jobs creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
+It is also possible to create the queues manually using [NSQ admin](https://nsq.io/components/nsqadmin.html).
+In that case, the order of launching the services doesn't matter.
+
+### Addition Dispatcher
+
+The addition dispatcher consumes messages from the [addition queue](#nsq) and launches jobs on [AWS Lambdas](#amazon-web-services).
+See the [addition dispatcher readme](../cmd/addition-dispatcher/README.md) for more details about its flags.
+
+In order for the addition dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
+Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
 
 ```bash
 # Using the binary.
-./jobs-creator \
--g "host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
+./addition-dispatcher \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
 -j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
--w="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
--q "nsq.domain.com:4150"
+-k "nsq.domain.com:4161" \
+-n "addition-worker"
 ```
 
 ```bash
 # Using Docker.
-docker run  -d \
+docker run -d \
 --network="indexer" \
---name="jobs-creator" \
-indexer-jobs-creator \
---graph-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
---jobs-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
---websocket-url="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
---nsq-server "nsq.domain.com:4150"
+--name="addition-dispatcher" \
+-e AWS_REGION="eu-west-1" \
+-e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032" \
+-e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR" \
+indexer-addition-dispatcher \
+--graph-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+--jobs-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--nsq-lookups "nsq.domain.com:4161" \
+--lambda-name "addition-worker"
 ```
+
 
 ### Parsing Dispatcher
 
@@ -217,34 +233,31 @@ indexer-parsing-dispatcher \
 --lambda-name "parsing-worker"
 ```
 
-### Addition Dispatcher
+### Jobs Creator
 
-The addition dispatcher consumes messages from the [addition queue](#nsq) and launches jobs on [AWS Lambdas](#amazon-web-services).
-See the [addition dispatcher readme](../cmd/addition-dispatcher/README.md) for more details about its flags.
+The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
+If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of `0`.
+See the [jobs creator readme](../cmd/jobs-creator/README.md) for more details about its flags.
 
-In order for the addition dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
-Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
+The jobs creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
 
 ```bash
 # Using the binary.
-./addition-dispatcher \
--g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+./jobs-creator \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
 -j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
--k "nsq.domain.com:4161" \
--n "addition-worker"
+-w="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
+-q "nsq.domain.com:4150"
 ```
 
 ```bash
 # Using Docker.
-docker run -d \
+docker run  -d \
 --network="indexer" \
---name="addition-dispatcher" \
--e AWS_REGION="eu-west-1" \
--e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032" \
--e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR" \
-indexer-addition-dispatcher \
---graph-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
---jobs-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
---nsq-lookups "nsq.domain.com:4161" \
---lambda-name "addition-worker"
+--name="jobs-creator" \
+indexer-jobs-creator \
+--graph-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
+--jobs-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--websocket-url="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
+--nsq-server "nsq.domain.com:4150"
 ```
