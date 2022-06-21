@@ -10,21 +10,21 @@ export type AuroraOutput = {
 
 const getSubnetGroupJob = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
   return new aws.rds.SubnetGroup('aurora_subnet_group_job', {
-    name: getResourceName('indexer-aurora'),
+    name: getResourceName('indexer-job-aurora'),
     subnetIds: isProduction() ? vpc.privateSubnetIds : vpc.publicSubnetIds,
   })
 }
 
 const getSubnetGroupEvent = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
   return new aws.rds.SubnetGroup('aurora_subnet_group_event', {
-    name: getResourceName('indexer-aurora'),
+    name: getResourceName('indexer-graph-aurora'),
     subnetIds: isProduction() ? vpc.privateSubnetIds : vpc.publicSubnetIds,
   })
 }
 
 const getSubnetGroupGraph = (vpc: ec2.Vpc): aws.rds.SubnetGroup => {
   return new aws.rds.SubnetGroup('aurora_subnet_group_graph', {
-    name: getResourceName('indexer-aurora'),
+    name: getResourceName('indexer-event-aurora'),
     subnetIds: isProduction() ? vpc.privateSubnetIds : vpc.publicSubnetIds,
   })
 }
