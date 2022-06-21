@@ -1,7 +1,7 @@
 package params
 
 const (
-	TopicAction    = "action"
 	TopicParsing   = "parsing"
+	TopicAddition  = "addition"
 	TopicDiscovery = "discovery"
 )

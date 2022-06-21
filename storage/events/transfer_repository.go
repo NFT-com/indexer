@@ -43,7 +43,8 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 			"receiver_address",
 			"token_count",
 			"emitted_at",
-		)
+		).
+		Suffix("ON CONFLICT DO NOTHING")
 
 	for _, transfer := range transfers {
 		query = query.Values(

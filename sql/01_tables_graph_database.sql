@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS networks
+CREATE TABLE networks
 (
     id          UUID PRIMARY KEY,
     chain_id    NUMERIC     NOT NULL UNIQUE,
@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS networks
     symbol      VARCHAR(16) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS marketplaces
+CREATE TABLE marketplaces
 (
     id          UUID PRIMARY KEY,
     name        TEXT NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS marketplaces
     website     TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS collections
+CREATE TABLE collections
 (
     id               UUID PRIMARY KEY,
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS collections
 
 CREATE INDEX collections_contract_address_idx ON collections(contract_address);
 
-CREATE TABLE IF NOT EXISTS nfts
+CREATE TABLE nfts
 (
     id            UUID PRIMARY KEY,
     collection_id UUID         NOT NULL REFERENCES collections ON DELETE CASCADE,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS nfts
     UNIQUE (collection_id, token_id)
 );
 
-CREATE TABLE IF NOT EXISTS owners
+CREATE TABLE owners
 (
     owner  VARCHAR(128) NOT NULL,
     nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS owners
 
 CREATE INDEX owners_nft_id_idx ON owners(nft_id);
 
-CREATE TABLE IF NOT EXISTS traits
+CREATE TABLE traits
 (
     id     UUID PRIMARY KEY,
     nft_id UUID NOT NULL REFERENCES nfts ON DELETE CASCADE,
@@ -67,20 +67,20 @@ CREATE TABLE IF NOT EXISTS traits
 
 CREATE INDEX traits_nft_id_idx ON traits(nft_id);
 
-CREATE TABLE IF NOT EXISTS standards
+CREATE TABLE standards
 (
     id   UUID PRIMARY KEY,
     name TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS events
+CREATE TABLE events
 (
     id         UUID PRIMARY KEY,
     event_hash VARCHAR(128) NOT NULL,
     name       TEXT         NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS networks_marketplaces
+CREATE TABLE networks_marketplaces
 (
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     marketplace_id   UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
@@ -89,28 +89,28 @@ CREATE TABLE IF NOT EXISTS networks_marketplaces
     PRIMARY KEY (network_id, marketplace_id, contract_address)
 );
 
-CREATE TABLE IF NOT EXISTS marketplaces_standards
+CREATE TABLE marketplaces_standards
 (
     marketplace_id UUID NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     standard_id    UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     PRIMARY KEY (marketplace_id, standard_id)
 );
 
-CREATE TABLE IF NOT EXISTS marketplaces_collections
+CREATE TABLE marketplaces_collections
 (
     marketplace_id UUID NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     collection_id  UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
     PRIMARY KEY (marketplace_id, collection_id)
 );
 
-CREATE TABLE IF NOT EXISTS collections_standards
+CREATE TABLE collections_standards
 (
     collection_id UUID NOT NULL REFERENCES collections ON DELETE CASCADE,
     standard_id   UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     PRIMARY KEY (collection_id, standard_id)
 );
 
-CREATE TABLE IF NOT EXISTS standards_events
+CREATE TABLE standards_events
 (
     standard_id UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
     event_id    UUID NOT NULL REFERENCES events ON DELETE CASCADE,

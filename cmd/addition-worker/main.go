@@ -16,11 +16,11 @@ func main() {
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-	envLogLevel, ok := os.LookupEnv("LOG_LEVEL")
+	envLevel, ok := os.LookupEnv("LOG_LEVEL")
 	if ok {
-		level, err := zerolog.ParseLevel(envLogLevel)
+		level, err := zerolog.ParseLevel(envLevel)
 		if err != nil {
-			log.Warn().Str("LOG_LEVEL", envLogLevel).Msg("invalid log level, using default")
+			log.Warn().Str("LOG_LEVEL", envLevel).Msg("invalid log level, using default")
 		} else {
 			log = log.Level(level)
 		}
@@ -31,7 +31,7 @@ func main() {
 		log.Fatal().Msg("missing node URL, aborting execution")
 	}
 
-	handler := workers.NewParsingHandler(log, envNodeURL)
+	handler := workers.NewAdditionHandler(log, envNodeURL)
 	lambda.Start(handler.Handle)
 
 	os.Exit(0)

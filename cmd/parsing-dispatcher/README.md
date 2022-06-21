@@ -1,19 +1,22 @@
 # Parsing Dispatcher
 
-The parsing dispatcher consumes messages from the queue and launches parsing jobs.
+The parsing dispatcher consumes messages from the parsing queue and launches jobs that parse blockchain logs for event information.
 
 ## Command Line Parameters
 
-The action dispatcher depends on the jobs database, the events database, at least one NSQ lookup server and the Lambda function name.
-These configuration parameters have to be passed with the following command line parameters.
+The parsing dispatcher depends on the graph database to store NFT information, on the events database to store transfers/sales and on the jobs database to persist failures.
+It also depends on a NSQ lookup to retrieve parsing jobs, and a NSQ server to publish downstream jobs to the addition queue.
+Finally, the Lambda name provides access to the corresponding parsing worker on AWS Lambda.
 
 ```
 Usage of parsing-dispatcher:
   -l, --log-level string                log level (default "info")
 
+  -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
   -e, --events-database string          Postgres connection details for events database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable")
-  -k, --nsq-lookups []string            addresses for NSQ lookups to bootstrap consuming (default "127.0.0.1:4150")
+  -k, --nsq-lookups []string            addresses for NSQ lookups to bootstrap consuming (default "127.0.0.1:4161")
+  -q, --nsq-server string               address for NSQ server to produce messages (default "127.0.0.1:4150")
   -n, --lambda-name string              name of the lambda function to invoke (default "parsing-worker")
 
       --db-connection-limit uint        maximum number of database connections, -1 for unlimited (default 128)
