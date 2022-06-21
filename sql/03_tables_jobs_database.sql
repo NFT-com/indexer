@@ -1,32 +1,34 @@
 CREATE TABLE boundaries
 (
-    chain_id           NUMERIC        NOT NULL,
-    contract_address   VARCHAR(128)   NOT NULL,
-    event_hash         VARCHAR(256)   NOT NULL,
-    last_height        NUMERIC        NOT NULL,
-    last_id            UUID           NOT NULL,
-    created_at         TIMESTAMP      NOT NULL,
+    chain_id         NUMERIC      NOT NULL,
+    contract_address VARCHAR(128) NOT NULL,
+    event_hash       VARCHAR(256) NOT NULL,
+    last_height      NUMERIC      NOT NULL,
+    last_id          UUID         NOT NULL,
+    created_at       TIMESTAMP    NOT NULL,
+    updated_at       TIMESTAMP,
     PRIMARY KEY (chain_id, contract_address, event_hash)
 );
 
 CREATE TABLE parsing_failures
 (
-    id                  UUID PRIMARY KEY,
-    chain_id            NUMERIC         NOT NULL,
-    start_height        NUMERIC         NOT NULL,
-    end_height          NUMERIC         NOT NULL,
-    contract_addresses  VARCHAR(128)[]  NOT NULL,
-    event_hashes        VARCHAR(256)[]  NOT NULL,
-    failure_message     TEXT            NOT NULL
+    id                 UUID PRIMARY KEY,
+    chain_id           NUMERIC        NOT NULL,
+    start_height       NUMERIC        NOT NULL,
+    end_height         NUMERIC        NOT NULL,
+    contract_addresses VARCHAR(128)[] NOT NULL,
+    event_hashes       VARCHAR(256)[] NOT NULL,
+    failure_message    TEXT           NOT NULL
 );
 
-CREATE TABLE addition_failures (
-    id                  UUID PRIMARY KEY,
-    chain_id            NUMERIC         NOT NULL,
-    contract_address    VARCHAR(128)    NOT NULL,
-    token_id            VARCHAR(256)    NOT NULL,
-    token_standard      VARCHAR(256)    NOT NULL,
-    owner_address       VARCHAR(128)    NOT NULL,
-    token_count         NUMERIC         NOT NULL,
-    failure_message     TEXT            NOT NULL
+CREATE TABLE addition_failures
+(
+    id               UUID PRIMARY KEY,
+    chain_id         NUMERIC      NOT NULL,
+    contract_address VARCHAR(128) NOT NULL,
+    token_id         VARCHAR(256) NOT NULL,
+    token_standard   VARCHAR(256) NOT NULL,
+    owner_address    VARCHAR(128) NOT NULL,
+    token_count      NUMERIC      NOT NULL,
+    failure_message  TEXT         NOT NULL
 );
