@@ -23,7 +23,7 @@ const createMainJobDb = (
   zones: string[],
 ): aws.rds.Cluster => {
   const paramFamily = 'aurora-postgresql13'
-  const clusterParameterGroup = new aws.rds.ClusterParameterGroup('aurora_main_cluster_param_group', {
+  const clusterParameterGroup = new aws.rds.ClusterParameterGroup('aurora_job_cluster_param_group', {
     name: getResourceName('indexer-job-cluster'),
     family: paramFamily,
     parameters: [
@@ -56,7 +56,7 @@ const createMainJobDb = (
     preferredBackupWindow: '07:00-09:00',
   })
 
-  const dbParameterGroup = new aws.rds.ParameterGroup('aurora_main_instance_param_group', {
+  const dbParameterGroup = new aws.rds.ParameterGroup('aurora_job_instance_param_group', {
     name: getResourceName('indexer-job-instance'),
     family: paramFamily,
     parameters: [
@@ -74,7 +74,7 @@ const createMainJobDb = (
   const numInstances = parseInt(config.require('auroraMainInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
   for (let i = 0; i < numInstances; i++) {
-    clusterInstances.push(new aws.rds.ClusterInstance(`aurora_main_instance_${i + 1}`, {
+    clusterInstances.push(new aws.rds.ClusterInstance(`aurora_job_instance_${i + 1}`, {
       identifier: getResourceName(`indexer-job-${i+1}`),
       clusterIdentifier: cluster.id,
       instanceClass: instance,
@@ -98,7 +98,7 @@ const createMainEventDb = (
   zones: string[],
 ): aws.rds.Cluster => {
   const paramFamily = 'aurora-postgresql13'
-  const clusterParameterGroup = new aws.rds.ClusterParameterGroup('aurora_main_cluster_param_group', {
+  const clusterParameterGroup = new aws.rds.ClusterParameterGroup('aurora_event_cluster_param_group', {
     name: getResourceName('indexer-event-cluster'),
     family: paramFamily,
     parameters: [
@@ -131,7 +131,7 @@ const createMainEventDb = (
     preferredBackupWindow: '07:00-09:00',
   })
 
-  const dbParameterGroup = new aws.rds.ParameterGroup('aurora_main_instance_param_group', {
+  const dbParameterGroup = new aws.rds.ParameterGroup('aurora_event_instance_param_group', {
     name: getResourceName('indexer-event-instance'),
     family: paramFamily,
     parameters: [
@@ -149,7 +149,7 @@ const createMainEventDb = (
   const numInstances = parseInt(config.require('auroraMainInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
   for (let i = 0; i < numInstances; i++) {
-    clusterInstances.push(new aws.rds.ClusterInstance(`aurora_main_instance_${i + 1}`, {
+    clusterInstances.push(new aws.rds.ClusterInstance(`aurora_event_instance_${i + 1}`, {
       identifier: getResourceName(`indexer-event-${i+1}`),
       clusterIdentifier: cluster.id,
       instanceClass: instance,
@@ -173,7 +173,7 @@ const createMainGraphDb = (
   zones: string[],
 ): aws.rds.Cluster => {
   const paramFamily = 'aurora-postgresql13'
-  const clusterParameterGroup = new aws.rds.ClusterParameterGroup('aurora_main_cluster_param_group', {
+  const clusterParameterGroup = new aws.rds.ClusterParameterGroup('aurora_graph_cluster_param_group', {
     name: getResourceName('indexer-graph-cluster'),
     family: paramFamily,
     parameters: [
@@ -187,7 +187,7 @@ const createMainGraphDb = (
 
   const subnetGroup = getSubnetGroup(vpc)
   const engineType = EngineType.AuroraPostgresql
-  const cluster = new aws.rds.Cluster('aurora_main_cluster', {
+  const cluster = new aws.rds.Cluster('aurora_graph_cluster', {
     engine: engineType,
     engineVersion: '13.4',
     availabilityZones: zones,
@@ -206,7 +206,7 @@ const createMainGraphDb = (
     preferredBackupWindow: '07:00-09:00',
   })
 
-  const dbParameterGroup = new aws.rds.ParameterGroup('aurora_main_instance_param_group', {
+  const dbParameterGroup = new aws.rds.ParameterGroup('aurora_graph_instance_param_group', {
     name: getResourceName('indexer-graph-instance'),
     family: paramFamily,
     parameters: [
@@ -224,7 +224,7 @@ const createMainGraphDb = (
   const numInstances = parseInt(config.require('auroraMainInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
   for (let i = 0; i < numInstances; i++) {
-    clusterInstances.push(new aws.rds.ClusterInstance(`aurora_main_instance_${i + 1}`, {
+    clusterInstances.push(new aws.rds.ClusterInstance(`aurora_graph_instance_${i + 1}`, {
       identifier: getResourceName(`indexer-graph-${i+1}`),
       clusterIdentifier: cluster.id,
       instanceClass: instance,
