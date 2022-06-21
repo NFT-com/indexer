@@ -1,9 +1,10 @@
-package inputs
+package jobs
 
 import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	"golang.org/x/crypto/sha3"
 )
 
