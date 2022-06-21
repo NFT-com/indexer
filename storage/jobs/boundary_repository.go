@@ -66,7 +66,7 @@ func (b *BoundaryRepository) Upsert(chainID uint64, addresses []string, events [
 			"event_hash",
 			"last_height",
 			"last_id",
-			"created_at",
+			"updated_at",
 		).
 		Suffix("ON CONFLICT (chain_id, contract_address, event_hash) DO UPDATE SET " +
 			"last_height = EXCLUDED.last_height, " +
