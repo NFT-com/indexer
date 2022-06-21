@@ -71,7 +71,7 @@ func (b *BoundaryRepository) Upsert(chainID uint64, addresses []string, events [
 		Suffix("ON CONFLICT (chain_id, contract_address, event_hash) DO UPDATE SET " +
 			"last_height = EXCLUDED.last_height, " +
 			"last_id = EXCLUDED.last_id, " +
-			"updated_at = NOW()")
+			"updated_at = EXCLUDED.updated_at")
 
 	for _, address := range addresses {
 		for _, event := range events {
