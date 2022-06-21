@@ -1,14 +1,12 @@
-# Action Dispatcher
+# Addition Dispatcher
 
-The action dispatcher consumes messages from the action queue and launches jobs that can execute a number of different actions:
-
-* **addition**: add a newly minted NFT to the graph database
-* **owner change**: update an NFT owner after a transfer
+The addition dispatcher consumes messages from the addition queue and launches jobs that can add the information for newly minted NFTs to the graph database.
 
 ## Command Line Parameters
 
-The action dispatcher depends on the graph database, the jobs database, at least one NSQ lookup server and the Lambda function name.
-These configuration parameters have to be passed with the following command line parameters.
+The action dispatcher depends on the graph database to store data and the jobs database to persist job failures.
+It also requires a NSQ lookup to consume jobs from the addition queue.
+Finally, the Lambda name provides access to the corresponding parsing worker on AWS Lambda.
 
 ```
 Usage of action-dispatcher:
@@ -16,7 +14,7 @@ Usage of action-dispatcher:
   
   -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
   -j, --jobs-database string            Postgres connection details for jobs database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable")
-  -k, --nsq-lookups []string            addresses for NSQ lookups to bootstrap consuming (default "127.0.0.1:4150")
+  -k, --nsq-lookups []string            addresses for NSQ lookups to bootstrap consuming (default "127.0.0.1:4161")
   -n, --lambda-name string              name of Lambda function for invocation (default "action-worker")
 
       --db-connection-limit uint        maximum number of open database connections (default 128)
