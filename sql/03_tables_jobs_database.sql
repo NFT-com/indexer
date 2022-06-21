@@ -5,8 +5,7 @@ CREATE TABLE boundaries
     event_hash       VARCHAR(256) NOT NULL,
     last_height      NUMERIC      NOT NULL,
     last_id          UUID         NOT NULL,
-    created_at       TIMESTAMP    NOT NULL,
-    updated_at       TIMESTAMP,
+    updated_at       TIMESTAMP    NOT NULL,
     PRIMARY KEY (chain_id, contract_address, event_hash)
 );
 
