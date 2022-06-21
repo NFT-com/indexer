@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 
@@ -125,10 +123,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	nftID := addition.NFTID()
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
-		traitHash := sha3.Sum256([]byte(fmt.Sprintf("%d-%s-%s-%d", addition.ChainID, addition.ContractAddress, addition.TokenID, i)))
-		traitID := uuid.Must(uuid.FromBytes(traitHash[:16]))
+		traitID := addition.TraitID(uint(i))
 		trait := graph.Trait{
-			ID:    traitID.String(),
+			ID:    traitID,
 			NFTID: nftID,
 			Name:  att.TraitType,
 			Type:  att.DisplayType,

@@ -1,5 +1,9 @@
 package jobs
 
+import (
+	"github.com/NFT-com/indexer/models/id"
+)
+
 type Addition struct {
 	ID              string `json:"id"`
 	ChainID         uint64 `json:"chain_id"`
@@ -12,5 +16,9 @@ type Addition struct {
 }
 
 func (a Addition) NFTID() string {
-	return NFTID(a.ChainID, a.ContractAddress, a.TokenID)
+	return id.NFT(a.ChainID, a.ContractAddress, a.TokenID)
+}
+
+func (a Addition) TraitID(index uint) string {
+	return id.Trait(a.ChainID, a.ContractAddress, a.TokenID, index)
 }
