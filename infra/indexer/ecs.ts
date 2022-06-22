@@ -299,7 +299,7 @@ const createEcsASG = (
         healthCheckType: 'EC2',
         launchConfiguration: createEcsAsgLaunchConfig(infraOutput),
         maxSize: 1,
-        minSize: 0,
+        minSize: 1,
         name: resourceName,
         serviceLinkedRoleArn: 'arn:aws:iam::016437323894:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling',
         tags: [
