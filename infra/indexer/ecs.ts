@@ -105,16 +105,16 @@ export const createParsingDispatcherTaskDefinition = (
                 portMappings: [],
                 secrets: [
                     {
-                        name: 'AWS_ACCESS_KEY_ID',
-                        value: process.env.AWS_ACCESS_KEY_ID
+                        Name: 'AWS_ACCESS_KEY_ID',
+                        ValueFrom: process.env.AWS_ACCESS_KEY_ID
                     },
                     {
-                        name: 'AWS_REGION',
-                        value: process.env.AWS_REGION
+                        Name: 'AWS_REGION',
+                        ValueFrom: process.env.AWS_REGION
                     },
                     {
-                        name: 'AWS_SECRET_ACCESS_KEY',
-                        value: process.env.AWS_SECRET_ACCESS_KEY
+                        Name: 'AWS_SECRET_ACCESS_KEY',
+                        ValueFrom: process.env.AWS_SECRET_ACCESS_KEY
                     },
                 ],
                 volumesFrom: []
@@ -153,16 +153,16 @@ export const createAdditionDispatcherTaskDefinition = (
                 portMappings: [],
                 secrets: [
                     {
-                        name: 'AWS_ACCESS_KEY_ID',
-                        value: process.env.AWS_ACCESS_KEY_ID
+                        Name: 'AWS_ACCESS_KEY_ID',
+                        ValueFrom: process.env.AWS_ACCESS_KEY_ID
                     },
                     {
-                        name: 'AWS_REGION',
-                        value: process.env.AWS_REGION
+                        Name: 'AWS_REGION',
+                        ValueFrom: process.env.AWS_REGION
                     },
                     {
-                        name: 'AWS_SECRET_ACCESS_KEY',
-                        value: process.env.AWS_SECRET_ACCESS_KEY
+                        Name: 'AWS_SECRET_ACCESS_KEY',
+                        ValueFrom: process.env.AWS_SECRET_ACCESS_KEY
                     },
                 ],
                 volumesFrom:[]
@@ -361,7 +361,7 @@ export const createEcsCluster = (
             name: 'containerInsights',
             value: 'enabled',
         }],
-        capacityProviders: [capacityProvider]
+        //capacityProviders: [capacityProvider]
     })
 
     new aws.ecs.ClusterCapacityProviders(`${resourceName}-ccp`, {
