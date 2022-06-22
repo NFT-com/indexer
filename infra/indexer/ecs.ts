@@ -20,7 +20,7 @@ export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
         containerDefinitions: JSON.stringify([
             {
                 cpu: 0,
-                entryPoint: '/nsqlookupd',
+                entryPoint: ['/nsqlookupd'],
                 environment: [],
                 essential: true,
                 image: 'nsqio/nsq',
@@ -56,7 +56,7 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
             {
                 command: ['--lookupd-tcp-address=3.88.22.8:4160','--broadcast-address=3.88.22.8'],
                 cpu: 0,
-                entryPoint: '/nsqd',
+                entryPoint: ['/nsqd'],
                 environment: [],
                 essential: true,
                 image: 'nsqio/nsq',
@@ -97,7 +97,7 @@ export const createParsingDispatcherTaskDefinition = (
             {
                 command: ['-n','parsing-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db],
                 cpu: 0,
-                entryPoint: '/dispatcher',
+                entryPoint: ['/dispatcher'],
                 environment: [],
                 essential: true,
                 image: ecrImage,
@@ -145,15 +145,15 @@ export const createAdditionDispatcherTaskDefinition = (
             {
                 command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ACTION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
                 cpu: 0,
-                entryPoint:'/dispatcher',
-                environment:[],
-                essential:true,
+                entryPoint: ['/dispatcher'],
+                environment: [],
+                essential: true,
                 image: ecrImage,
-                links:[],
+                links: [],
                 memoryReservation: 2048,
-                mountPoints:[],
+                mountPoints: [],
                 name: resourceName,
-                portMappings:[],
+                portMappings: [],
                 secrets: [
                     {
                         name: 'AWS_ACCESS_KEY_ID',
@@ -195,7 +195,7 @@ export const createJobCreatorTaskDefinition = (
             {
                 command: ['-q',`${process.env.EC2_PUBLIC_IP}:4150`,'-w',process.env.ZMOK_WS_URL,'-g',graph_db,'-j',job_db],
                 cpu: 0,
-                entryPoint:'/creator',
+                entryPoint: ['/creator'],
                 environment: [],
                 essential: true,
                 image: ecrImage,
