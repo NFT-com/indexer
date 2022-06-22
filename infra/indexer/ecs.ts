@@ -326,10 +326,10 @@ const createEcsASG = (
 const createEcsCapacityProvider = (
     config: pulumi.Config,
     infraOutput: SharedInfraOutput,
-): string => {
+): aws.ecs.CapacityProvider => {
     const resourceName = getResourceName('indexer-cp')
     const { arn: arn_asg } = createEcsASG(config, infraOutput)
-    const ecp =  new aws.ecs.CapacityProvider(resourceName, {
+    return new aws.ecs.CapacityProvider(resourceName, {
         autoScalingGroupProvider: {
             autoScalingGroupArn: arn_asg,
             managedScaling: {
@@ -343,7 +343,6 @@ const createEcsCapacityProvider = (
         },
         name: resourceName,
     })
-    return resourceName
 }
 
 export const createEcsCluster = (
@@ -351,7 +350,7 @@ export const createEcsCluster = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.Cluster => {
     const resourceName = getResourceName('indexer')
-    const capacityProvider = createEcsCapacityProvider(config, infraOutput)
+    const { name: capacityProvider } = createEcsCapacityProvider(config, infraOutput)
     const cluster = new aws.ecs.Cluster(resourceName, 
     {
         name: getResourceName(resourceName),
