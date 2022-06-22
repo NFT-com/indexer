@@ -79,3 +79,28 @@ runs:
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}:jobs-creator -t ${{ env.REPO }}:jobs-creator-${{ github.sha }} 
         docker push ${{ env.REPO }}:jobs-creator
         docker push ${{ env.REPO }}:jobs-creator-${{ github.sha }}
+    - name: Deploy Indexer ECS (Cluster and Task Definitions)
+      shell: bash
+      working-directory: infra
+      env:
+        STAGE: ${{ inputs.stage }}
+        PULUMI_CONFIG_PASSPHRASE: ""
+        AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
+        AWS_ACCESS_KEY_ID: ${{ fromJSON(inputs.secrets).AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ fromJSON(inputs.secrets).AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ fromJSON(inputs.secrets).AWS_REGION }}
+        ECR_REGISTRY: ${{ fromJSON(inputs.secrets).ECR_REGISTRY }}
+        DB_EVENT_HOST: ${{ fromJSON(inputs.secrets).DB_EVENT_HOST }}
+        DB_JOB_HOST: ${{ fromJSON(inputs.secrets).DB_JOB_HOST }} 
+        DB_GRAPH_HOST: ${{ fromJSON(inputs.secrets).DB_GRAPH_HOST }}
+        DB_PORT: ${{ fromJSON(inputs.secrets).DB_PORT }}
+        DB_NAME: ${{ fromJSON(inputs.secrets).DB_NAME }}
+        DB_USER: ${{ fromJSON(inputs.secrets).DB_USER }}
+        DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+        EC2_PUBLIC_IP: ${{ fromJSON(inputs.secrets).EC2_PUBLIC_IP }}
+        PARSER_HEIGHT_RANGE: ${{ fromJSON(inputs.secrets).PARSER_HEIGHT_RANGE }}
+        PARSER_RATE_LIMIT: ${{ fromJSON(inputs.secrets).PARSER_RATE_LIMIT }}
+        ADDITION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).ADDITION_RATE_LIMIT }}
+        ZMOK_HTTP_URL: ${{ fromJSON(inputs.secrets).ZMOK_HTTP_URL }}
+        ZMOK_WS_URL: ${{ fromJSON(inputs.secrets).ZMOK_WS_URL }}
+      run: npm run deploy:gql

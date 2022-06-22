@@ -5,6 +5,7 @@ import * as upath from 'upath'
 import * as pulumi from '@pulumi/pulumi'
 import { SharedInfraOutput, sharedOutputFileName } from './defs'
 import { createSharedInfra } from './shared'
+import { createIndexerEcsCluster } from './indexer'
 
 export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void => {
   const assetBucket = outMap.assetBucket.value
@@ -42,22 +43,15 @@ export const sharedOutToJSONFile = (outMap: pulumi.automation.OutputMap): void =
 const main = async (): Promise<any> => {
   const args = process.argv.slice(2)
   const deployShared = args?.[0] === 'deploy:shared' || false
-  const buildIndexerEnv = args?.[0] === 'indexer:env' || false
   const deployIndexer = args?.[0] === 'deploy:indexer' || false
 
   if (deployShared) {
     return createSharedInfra(true)
       .then(sharedOutToJSONFile)
   }
-
-  if (buildIndexerEnv) {
-    //updateIndexerEnvFile()
-    return
-  }
-
+  
   if (deployIndexer) {
-    //return createIndexerServer()
-    return
+    return createIndexerEcsCluster()
   }
 }
 

@@ -14,6 +14,11 @@ export const createParsingWorker = (): aws.lambda.Function => {
         role: "arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole",
         runtime: "go1.x",
         timeout: 600,
+        environment: {
+            variables: {
+                NODE_URL: "https://api.zmok.io/custom1/qkher8p6hmchaxni",
+            },
+        },
         tracingConfig: {
             mode: "PassThrough",
         },
@@ -32,6 +37,11 @@ export const createAdditionWorker = (): aws.lambda.Function => {
         role: "arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole",
         runtime: "go1.x",
         timeout: 600,
+        environment: {
+            variables: {
+                NODE_URL: "https://api.zmok.io/custom1/qkher8p6hmchaxni",
+            },
+        },
         tracingConfig: {
             mode: "PassThrough",
         },
