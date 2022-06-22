@@ -1,7 +1,6 @@
 {
   "name": "nftcom-infra",
   "scripts": {
-    "build:indexer:env": "ts-node index.ts indexer:env",
     "deploy:shared": "ts-node index.ts deploy:shared",
     "deploy:indexer": "ts-node index.ts deploy:indexer"
   },

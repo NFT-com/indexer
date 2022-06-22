@@ -103,4 +103,4 @@ runs:
         ADDITION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).ADDITION_RATE_LIMIT }}
         ZMOK_HTTP_URL: ${{ fromJSON(inputs.secrets).ZMOK_HTTP_URL }}
         ZMOK_WS_URL: ${{ fromJSON(inputs.secrets).ZMOK_WS_URL }}
-      run: npm run deploy:gql
+      run: npm run deploy:indexer
