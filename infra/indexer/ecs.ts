@@ -360,10 +360,10 @@ export const createEcsCluster = (
             name: 'containerInsights',
             value: 'enabled',
         }],
-        //capacityProviders: [capacityProvider]
+        capacityProviders: [capacityProvider]
     })
 
-    new aws.ecs.ClusterCapacityProviders(`${resourceName}-ccp`, {
+    /*new aws.ecs.ClusterCapacityProviders(`${resourceName}-ccp`, {
         clusterName: cluster.name,
         capacityProviders: [capacityProvider],
         defaultCapacityProviderStrategies: [
@@ -372,6 +372,6 @@ export const createEcsCluster = (
             capacityProvider: capacityProvider,
           },
         ],
-    })
+    })*/
     return cluster 
 }
