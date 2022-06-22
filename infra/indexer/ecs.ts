@@ -95,7 +95,6 @@ export const createParsingDispatcherTaskDefinition = (
                 command: ['-n','parsing-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
-                environment: [],
                 essential: true,
                 image: ecrImage,
                 links: [],
@@ -103,18 +102,18 @@ export const createParsingDispatcherTaskDefinition = (
                 mountPoints: [],
                 name: resourceName,
                 portMappings: [],
-                secrets: [
+                environment: [
                     {
                         Name: 'AWS_ACCESS_KEY_ID',
-                        ValueFrom: process.env.AWS_ACCESS_KEY_ID
+                        Value: process.env.AWS_ACCESS_KEY_ID
                     },
                     {
                         Name: 'AWS_REGION',
-                        ValueFrom: process.env.AWS_REGION
+                        Value: process.env.AWS_REGION
                     },
                     {
                         Name: 'AWS_SECRET_ACCESS_KEY',
-                        ValueFrom: process.env.AWS_SECRET_ACCESS_KEY
+                        Value: process.env.AWS_SECRET_ACCESS_KEY
                     },
                 ],
                 volumesFrom: []
@@ -143,7 +142,6 @@ export const createAdditionDispatcherTaskDefinition = (
                 command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
-                environment: [],
                 essential: true,
                 image: ecrImage,
                 links: [],
@@ -151,18 +149,18 @@ export const createAdditionDispatcherTaskDefinition = (
                 mountPoints: [],
                 name: resourceName,
                 portMappings: [],
-                secrets: [
+                environment: [
                     {
                         Name: 'AWS_ACCESS_KEY_ID',
-                        ValueFrom: process.env.AWS_ACCESS_KEY_ID
+                        Value: process.env.AWS_ACCESS_KEY_ID
                     },
                     {
                         Name: 'AWS_REGION',
-                        ValueFrom: process.env.AWS_REGION
+                        Value: process.env.AWS_REGION
                     },
                     {
                         Name: 'AWS_SECRET_ACCESS_KEY',
-                        ValueFrom: process.env.AWS_SECRET_ACCESS_KEY
+                        Value: process.env.AWS_SECRET_ACCESS_KEY
                     },
                 ],
                 volumesFrom:[]
