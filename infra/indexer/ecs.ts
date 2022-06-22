@@ -353,7 +353,7 @@ export const createEcsCluster = (
     const { name: capacityProvider } = createEcsCapacityProvider(config, infraOutput)
     const cluster = new aws.ecs.Cluster(resourceName, 
     {
-        name: getResourceName(resourceName),
+        name: resourceName,
         settings: [
             {
             name: 'containerInsights',
