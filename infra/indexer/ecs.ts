@@ -1,6 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-
 import { getResourceName } from '../helper'
 import { SharedInfraOutput } from '../defs'
 
@@ -9,13 +8,10 @@ const job_db = `host=${process.env.DB_JOB_HOST} port=${process.env.DB_PORT} user
 const graph_db = `host=${process.env.DB_GRAPH_HOST} port=${process.env.DB_PORT} user=${process.env.DB_USER} password=${process.env.DB_PASSWORD} dbname=${process.env.DB_NAME}`
 const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
 const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
-const ec2UserData =
-`#!/bin/bash
-echo ECS_CLUSTER=dev-indexer >> /etc/ecs/ecs.config
-echo ECS_BACKEND_HOST= >> /etc/ecs/ecs.config`
 
 export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
-    return new aws.ecs.TaskDefinition('nsqlookupd', 
+    const resourceName = 'nsqlookupd'
+    return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
             {
@@ -27,7 +23,7 @@ export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
                 links: [],
                 memoryReservation: 256,
                 mountPoints: [],
-                name: 'nsqlookupd',
+                name: resourceName,
                 portMappings: [
                     { 
                         containerPort: 4160,
@@ -43,18 +39,19 @@ export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
                 volumesFrom: []
         }]),
         executionRoleArn: execRole,
-        family: 'nsqlookupd',
+        family: resourceName,
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
 }
 
 export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
-    return new aws.ecs.TaskDefinition('nsqd', 
+    const resourceName = 'nsqd'
+    return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['--lookupd-tcp-address=3.88.22.8:4160','--broadcast-address=3.88.22.8'],
+                command: [`--lookupd-tcp-address=${process.env.EC2_PUBLIC_IP}:4160','--broadcast-address=${process.env.EC2_PUBLIC_IP}`],
                 cpu: 0,
                 entryPoint: ['/nsqd'],
                 environment: [],
@@ -63,7 +60,7 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
                 links: [],
                 memoryReservation: 256,
                 mountPoints: [],
-                name: 'nsq',
+                name: resourceName,
                 portMappings: [
                     { 
                         containerPort: 4150,
@@ -79,7 +76,7 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
                 volumesFrom: []
         }]),
         executionRoleArn: execRole,
-        family: 'nsqd',
+        family: resourceName,
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -88,10 +85,10 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
 export const createParsingDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
-    const resourceName = getResourceName('indexer-parsing-dispatcher')
+    const resourceName = getResourceName('indexer-td-parsing-dispatcher')
     const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:parsing-dispatcher`
     
-    return new aws.ecs.TaskDefinition('indexer-parsing-dispatcher', 
+    return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
             {
@@ -136,14 +133,14 @@ export const createAdditionDispatcherTaskDefinition = (
 ): aws.ecs.TaskDefinition => {
     const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
     const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
-    const resourceName = getResourceName('indexer-addition-dispatcher')
+    const resourceName = getResourceName('indexer-td-addition-dispatcher')
     const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:addition-dispatcher`
 
-    return new aws.ecs.TaskDefinition('indexer-addition-dispatcher', 
+    return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ACTION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
+                command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 environment: [],
@@ -179,17 +176,15 @@ export const createAdditionDispatcherTaskDefinition = (
     })
 }
 
-        
-
 export const createJobCreatorTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
     const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
     const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
-    const resourceName = getResourceName('indexer-jobs-creator')
+    const resourceName = getResourceName('indexer-td-jobs-creator')
     const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:jobs-creator`
 
-    return new aws.ecs.TaskDefinition('indexer-jobs-creator', 
+    return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
             {
@@ -215,117 +210,126 @@ export const createJobCreatorTaskDefinition = (
     })
 }
 
-export const createEc2SecurityGroup = (
+export const createEcsSecurityGroup = (
     infraOutput: SharedInfraOutput,
 ): aws.ec2.SecurityGroup => {
-return new aws.ec2.SecurityGroup("ec2_ci_sg", {
-    description: "ECS Allowed Ports",
+const resourceName = getResourceName('indexer-sg')
+return new aws.ec2.SecurityGroup(resourceName, {
+    description: 'ECS Allowed Ports',
     egress: [{
-        cidrBlocks: ["0.0.0.0/0"],
+        cidrBlocks: ['0.0.0.0/0'],
         fromPort: 0,
-        protocol: "-1",
+        protocol: '-1',
         toPort: 0,
     }],
     ingress: [
         {
-            cidrBlocks: ["0.0.0.0/0"],
+            cidrBlocks: ['0.0.0.0/0'],
             fromPort: 4160,
-            protocol: "tcp",
+            protocol: 'tcp',
             toPort: 4160,
         },
         {
-            cidrBlocks: ["0.0.0.0/0"],
+            cidrBlocks: ['0.0.0.0/0'],
             fromPort: 4151,
-            protocol: "tcp",
+            protocol: 'tcp',
             toPort: 4151,
         },
         {
-            cidrBlocks: ["0.0.0.0/0"],
+            cidrBlocks: ['0.0.0.0/0'],
             fromPort: 4150,
-            protocol: "tcp",
+            protocol: 'tcp',
             toPort: 4150,
         },
         {
-            cidrBlocks: ["0.0.0.0/0"],
+            cidrBlocks: ['0.0.0.0/0'],
             fromPort: 4161,
-            protocol: "tcp",
+            protocol: 'tcp',
             toPort: 4161,
         },
         {
-            cidrBlocks: ["0.0.0.0/0"],
+            cidrBlocks: ['0.0.0.0/0'],
             fromPort: 22,
-            protocol: "tcp",
+            protocol: 'tcp',
             toPort: 22,
         },
     ],
-    name: "EC2ContainerService-dev-indexer-EcsSecurityGroup-19WMAN457GTFK",
+    name: resourceName,
     vpcId: infraOutput.vpcId,
-})
+    })
 }
 
-const ecsAsgLaunchConfig = (
+const createEcsAsgLaunchConfig = (
     infraOutput: SharedInfraOutput,
 ): aws.ec2.LaunchConfiguration => {
-    const { id: launchConfigSG } = createEc2SecurityGroup(infraOutput)
-    return new aws.ec2.LaunchConfiguration("dev-indexer-ecs-launchconfig", {
+    const { id: launchConfigSG } = createEcsSecurityGroup(infraOutput)
+    const clusterName = getResourceName('indexer')
+    const resourceName = getResourceName('indexer-asg-launchconfig')
+    const ec2UserData =
+    `#!/bin/bash
+    echo ECS_CLUSTER=${clusterName} >> /etc/ecs/ecs.config
+    echo ECS_BACKEND_HOST= >> /etc/ecs/ecs.config`
+
+    return new aws.ec2.LaunchConfiguration(resourceName, {
         associatePublicIpAddress: true,
-        iamInstanceProfile: "arn:aws:iam::016437323894:instance-profile/ecsInstanceRole",
-        imageId: "ami-0f863d7367abe5d6f",  //latest amzn linux 2 ecs-optimized ami in us-east-1
-        instanceType: "m6id.large",
-        keyName: "indexer_dev_key",
-        name: "EC2ContainerService-dev-indexer-EcsInstanceLc-LD7MujggcNTl",
+        iamInstanceProfile: 'arn:aws:iam::016437323894:instance-profile/ecsInstanceRole',
+        imageId: 'ami-0f863d7367abe5d6f',  //latest amzn linux 2 ecs-optimized ami in us-east-1
+        instanceType: 'm6id.large',
+        keyName: 'indexer_dev_key',
+        name: resourceName,
         rootBlockDevice: {
             deleteOnTermination: false,
             volumeSize: 30,
-            volumeType: "gp2",
+            volumeType: 'gp2',
         },
         securityGroups: [launchConfigSG],
         userData: ec2UserData,
-})
+    })
 }
 
-const ecsClusterASG = (
+const createEcsASG = (
     config: pulumi.Config,
     infraOutput: SharedInfraOutput,
 ): aws.autoscaling.Group => {
-    return new aws.autoscaling.Group("dev-indexer-ecs-asg", {
+    const resourceName = getResourceName('indexer-asg')
+    return new aws.autoscaling.Group(resourceName, {
         availabilityZones: [config.require('availabilityZones')],
         defaultCooldown: 300,
         desiredCapacity: 1,
         healthCheckGracePeriod: 0,
-        healthCheckType: "EC2",
-        launchConfiguration: ecsAsgLaunchConfig(infraOutput),
+        healthCheckType: 'EC2',
+        launchConfiguration: createEcsAsgLaunchConfig(infraOutput),
         maxSize: 1,
         minSize: 0,
-        name: "EC2ContainerService-dev-indexer-EcsInstanceAsg-5NQSZP3BD1JV",
-        serviceLinkedRoleArn: "arn:aws:iam::016437323894:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+        name: resourceName,
+        serviceLinkedRoleArn: 'arn:aws:iam::016437323894:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling',
         tags: [
             {
-                key: "Description",
+                key: 'Description',
                 propagateAtLaunch: true,
-                value: "This instance is the part of the Auto Scaling group which was created through ECS Console",
+                value: 'This instance is the part of the Auto Scaling group which was created through ECS Console',
             },
             {
-                key: "AmazonECSManaged",
+                key: 'AmazonECSManaged',
                 propagateAtLaunch: true,
-                value: "",
+                value: '',
             },
             {
-                key: "Name",
+                key: 'Name',
                 propagateAtLaunch: true,
-                value: "ECS Instance - EC2ContainerService-dev-indexer",
+                value: 'ECS Instance - EC2ContainerService-dev-indexer',
             },
         ],
         vpcZoneIdentifiers: infraOutput.publicSubnets,
     })
 }
 
-const ecsCapacityProvider = (
+const createEcsCapacityProvider = (
     config: pulumi.Config,
     infraOutput: SharedInfraOutput,
 ): string => {
-    const resourceName = getResourceName('indexer-capacity-provider')
-    const { arn: arn_asg } = ecsClusterASG(config, infraOutput)
+    const resourceName = getResourceName('indexer-cp')
+    const { arn: arn_asg } = createEcsASG(config, infraOutput)
     const ecp =  new aws.ecs.CapacityProvider(resourceName, {
         autoScalingGroupProvider: {
             autoScalingGroupArn: arn_asg,
@@ -348,7 +352,7 @@ export const createEcsCluster = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.Cluster => {
     const resourceName = getResourceName('indexer')
-    const capacityProvider = ecsCapacityProvider(config, infraOutput)
+    const capacityProvider = createEcsCapacityProvider(config, infraOutput)
     const cluster = new aws.ecs.Cluster(resourceName, 
     {
         name: getResourceName(resourceName),
@@ -360,7 +364,7 @@ export const createEcsCluster = (
         capacityProviders: [capacityProvider]
     })
 
-    new aws.ecs.ClusterCapacityProviders('indexer-cluster-capacity-provider', {
+    new aws.ecs.ClusterCapacityProviders(`${resourceName}-ccp`, {
         clusterName: cluster.name,
         capacityProviders: [capacityProvider],
         defaultCapacityProviderStrategies: [
