@@ -293,7 +293,6 @@ const createEcsASG = (
 ): aws.autoscaling.Group => {
     const resourceName = getResourceName('indexer-asg')
     return new aws.autoscaling.Group(resourceName, {
-        availabilityZones: [config.require('availabilityZones')],
         defaultCooldown: 300,
         desiredCapacity: 1,
         healthCheckGracePeriod: 0,
