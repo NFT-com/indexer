@@ -1,5 +1,5 @@
 name: Deploy Indexer Env
-description: Deploys the indexer infrastrcuture and apps to an environment
+description: Deploys the indexer infrastructure and apps to an environment
 inputs:
   stage:
     description: Indexer Environment to deploy on
@@ -104,3 +104,4 @@ runs:
         ZMOK_HTTP_URL: ${{ fromJSON(inputs.secrets).ZMOK_HTTP_URL }}
         ZMOK_WS_URL: ${{ fromJSON(inputs.secrets).ZMOK_WS_URL }}
       run: npm run deploy:indexer
+      

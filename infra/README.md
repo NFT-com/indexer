@@ -2,7 +2,6 @@
 
 ![nftcom_arch-Page-5](https://user-images.githubusercontent.com/5006941/175179454-0936c204-1be9-4172-8460-41ecfcf2fdf2.png)
 
-
 Our indexer infrastructure is deployed using Pulumi
 
 ## Indexer Infrastructure 
@@ -18,32 +17,32 @@ Our indexer infrastructure is deployed using Pulumi
 ### Indexer AWS Infrastructure Components 
 - Elastic Container Service (ECS) Cluster & Task Definitions
 - ECS EC2 Capacity Provider (w/ASG & LaunchConfig)
-- Elastic Container Registry
+- Elastic Container Registry (ECR)
 - Lambda
 - 3x Aurora Postgres RDS (Databases for Graph, Event and Jobs)
 - ElastiCache Redis (not curr used)
 - IAM Roles as Needed for EB, EC2
 
 ### Indexer Deployment Notes
-- After deployment is triggered, github actions will run through a script to build/zip the lambda workers, deploy the shared infra including the lambda workers, build the latest images and push to aws ecr, and finally deploy the ecs cluster including the task definitions to instantiate the indexer components (nsqd, nsqlookupd, parserDispatcher, additionDispatcher) 
+- After deployment is triggered, github actions will run through a script to build/zip the lambda workers, deploy the shared infra including the lambda workers, build the latest images and push to AWS ECR, and finally deploy the ECS cluster including the task definitions to instantiate the indexer components (nsqd, nsqlookupd, parserDispatcher, additionDispatcher) 
 - The deployment only triggers updates to the task definitions but does not enable/start anything. When we are ready to automate 24/7 run of the indexer we will add an ECS service to keep the tasks up. For now we want to manually control the runs and thus this approach works best for testing and running the historical sync. 
 
 ### Secrets / Environment Variables via Doppler
-- AWS_ACCOUNT_ID = 
-- AWS_REGION = 
-- AWS_ACCESS_KEY = 
-- AWS_SECRET_ACCESS_KEY = 
-- EC2_PUBLIC_IP = 
-- DB_EVENT_HOST = 
-- DB_GRAPH_HOST = 
-- DB_JOB_HOST = 
-- DB_USER = 
-- DB_NAME = 
-- DB_PASSWORD 
-- DB_PORT = 
-- REDIS_PORT = 
-- ADDITION_RATE_LIMIT = 
-- PARSER_HEIGHT_RANGE = 
+- AWS_ACCOUNT_ID
+- AWS_REGION
+- AWS_ACCESS_KEY
+- AWS_SECRET_ACCESS_KEY
+- EC2_PUBLIC_IP
+- DB_EVENT_HOST
+- DB_GRAPH_HOST
+- DB_JOB_HOST
+- DB_USER
+- DB_NAME
+- DB_PASSWORD
+- DB_PORT
+- REDIS_PORT
+- ADDITION_RATE_LIMIT
+- PARSER_HEIGHT_RANGE
 - PARSER_RATE_LIMIT
 - ZMOK_HTTP_URL
 - ZMOK_WS_URL
