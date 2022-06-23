@@ -1,13 +1,13 @@
 # NFT.com Indexer Infra 
 
-![image](https://user-images.githubusercontent.com/5006941/159491381-a056fb1e-11c9-4fa7-9365-5adf560b252c.png)
+![nftcom_arch-Page-5](https://user-images.githubusercontent.com/5006941/175179454-0936c204-1be9-4172-8460-41ecfcf2fdf2.png)
 
 
 Our indexer infrastructure is deployed using Pulumi
 
 ## Indexer Infrastructure 
 - CICD Pipeline with GitHub, GitHub Actions, Node/Typescript and Pulumi
-- Multi-env: Dev, Staging, Prod (special security settings for Prod)
+- Multi-env: Dev, Staging, Prod (manual permission required for deployments to Staging and Prod)
 - Secrets managed in Doppler, flow into GitHub Secrets and used in GitHub actions (secrets —> env variables)
 
 ### GitHub Deployment Process 
@@ -16,35 +16,35 @@ Our indexer infrastructure is deployed using Pulumi
 - Tagging the main branch starting with ‘release’ triggers deployment to the prod environment (nftcom-indexer-prod)
 
 ### Indexer AWS Infrastructure Components 
-- Elastic Beanstalk
+- Elastic Container Service (ECS) Cluster & Task Definitions
+- ECS EC2 Capacity Provider (w/ASG & LaunchConfig)
 - Elastic Container Registry
-- S3
-- Aurora Postgres RDS
-- ElastiCache Redis
+- Lambda
+- 3x Aurora Postgres RDS (Databases for Graph, Event and Jobs)
+- ElastiCache Redis (not curr used)
 - IAM Roles as Needed for EB, EC2
 
-### Permissions
-- Lambda role (to use in SAM template for functions)
-    - ARN: arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole
-    - Basic permissions for pushing logs to CloudWatch Logs
-- EC2 Role
-    - arn:aws:iam::016437323894:instance-profile/dev-indexer-eb-ec2-profile-role
-    - Includes permissions to execute a SAM template incl permissions for CloudFormation, Lambda, IAM, etc. Defined in the Pulumi code.
+### Indexer Deployment Notes
+- After deployment is triggered, github actions will run through a script to build/zip the lambda workers, deploy the shared infra including the lambda workers, build the latest images and push to aws ecr, and finally deploy the ecs cluster including the task definitions to instantiate the indexer components (nsqd, nsqlookupd, parserDispatcher, additionDispatcher) 
+- The deployment only triggers updates to the task definitions but does not enable/start anything. When we are ready to automate 24/7 run of the indexer we will add an ECS service to keep the tasks up. For now we want to manually control the runs and thus this approach works best for testing and running the historical sync. 
 
 ### Secrets / Environment Variables via Doppler
-- DB_PASSWORD = <hidden>
-- DB_PORT = 10030
-- REDIS_PORT = 10020
-- AWS_ACCOUNT_ID = 016437323894
-- AWS_REGION = us-east-1
-- AWS_ACCESS_KEY & AWS_SECRET_ACCESS_KEY = <hidden, used for CICD deployment>
-
-### ETH Node Details 
-2x m6.xlarge instances setup - can be upgraded if necessary 
-
-Instances setup to connect on web3 via ports 6342 (http) and 6343 (ws)
-
-1. 44.202.45.109
-2. 44.201.249.143
-
-ETH Nodes are currently firewalled - inform when ready to launch and can open up 
+- AWS_ACCOUNT_ID = 
+- AWS_REGION = 
+- AWS_ACCESS_KEY = 
+- AWS_SECRET_ACCESS_KEY = 
+- EC2_PUBLIC_IP = 
+- DB_EVENT_HOST = 
+- DB_GRAPH_HOST = 
+- DB_JOB_HOST = 
+- DB_USER = 
+- DB_NAME = 
+- DB_PASSWORD 
+- DB_PORT = 
+- REDIS_PORT = 
+- ADDITION_RATE_LIMIT = 
+- PARSER_HEIGHT_RANGE = 
+- PARSER_RATE_LIMIT
+- ZMOK_HTTP_URL
+- ZMOK_WS_URL
+    
