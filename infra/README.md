@@ -5,29 +5,34 @@
 Our indexer infrastructure is deployed using Pulumi
 
 ## Indexer Infrastructure 
+
 - CICD Pipeline with GitHub, GitHub Actions, Node/Typescript and Pulumi
-- Multi-env: Dev, Staging, Prod (manual permission required for deployments to Staging and Prod)
+- Multi-env: Dev, Staging, Prod (manual permission required for deployments to any env)
 - Secrets managed in Doppler, flow into GitHub Secrets and used in GitHub actions (secrets —> env variables)
 
 ### GitHub Deployment Process 
-- Branches starting with ‘fix/’ or ‘feat/’ and pushed will trigger a deployment to the dev environment (nftcom-indexer-dev)
-- Merge branch starting with ‘fix/’ or ‘feat/ into main will trigger a deployment to the staging environment (nftcom-indexer-staging)
-- Tagging the main branch starting with ‘release’ triggers deployment to the prod environment (nftcom-indexer-prod)
+
+- Pushed branches starting with `fix/` or `feat/` triggers a deployment to the dev environment (nftcom-indexer-dev)
+- Merged branches starting with `fix/` or `feat/` into main triggers a deployment to the staging environment (nftcom-indexer-staging)
+- Tagging the main branch starting with `rel` triggers deployment to the prod environment (nftcom-indexer-prod)
 
 ### Indexer AWS Infrastructure Components 
+
 - Elastic Container Service (ECS) Cluster & Task Definitions
 - ECS EC2 Capacity Provider (w/ASG & LaunchConfig)
 - Elastic Container Registry (ECR)
 - Lambda
 - 3x Aurora Postgres RDS (Databases for Graph, Event and Jobs)
-- ElastiCache Redis (not curr used)
+- ElastiCache Redis (not currently used)
 - IAM Roles as Needed for EB, EC2
 
 ### Indexer Deployment Notes
-- After deployment is triggered, github actions will run through a script to build/zip the lambda workers, deploy the shared infra including the lambda workers, build the latest images and push to AWS ECR, and finally deploy the ECS cluster including the task definitions to instantiate the indexer components (nsqd, nsqlookupd, parserDispatcher, additionDispatcher) 
-- The deployment only triggers updates to the task definitions but does not enable/start anything. When we are ready to automate 24/7 run of the indexer we will add an ECS service to keep the tasks up. For now we want to manually control the runs and thus this approach works best for testing and running the historical sync. 
+
+- After deployment is triggered, github actions executes the script (action.yml) to build/zip the lambda workers, deploy the shared infra including the lambda workers, build the latest images and push to AWS ECR, and finally deploy the ECS cluster including the task definitions to instantiate the indexer tasks on ECS (nsqd, nsqlookupd, parserDispatcher, additionDispatcher) 
+- The deployment only triggers updates to the infra, images and ECS task definitions but does not enable/start anything. When we are ready to automate 24/7 run of the indexer we will add an ECS service to keep the tasks up indefinitely. For now we want to manually control the runs and thus this approach works best for testing and running the historical sync. 
 
 ### Secrets / Environment Variables via Doppler
+
 - AWS_ACCOUNT_ID
 - AWS_REGION
 - AWS_ACCESS_KEY
@@ -46,4 +51,4 @@ Our indexer infrastructure is deployed using Pulumi
 - PARSER_RATE_LIMIT
 - ZMOK_HTTP_URL
 - ZMOK_WS_URL
-    
+  
