@@ -12,16 +12,6 @@ jobs:
         with:
           secrets: ${{ toJSON(secrets) }}
           stage: dev
-  deploy-staging:
-    if: ${{ github.ref_name == 'main' }}
-    runs-on: ubuntu-20.04
-    environment: nftcom_indexer_staging
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/deploy-env
-        with:
-          secrets: ${{ toJSON(secrets) }}
-          stage: staging
   deploy-prod:
     if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'rel') }}
     runs-on: ubuntu-20.04
