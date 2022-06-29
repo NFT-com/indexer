@@ -41,6 +41,10 @@ func Retriable(err error) bool {
 	case strings.Contains(msg, "deadlock detected"):
 		return true
 
+	// HTTPS node syncing slower than WebSocket node
+	case strings.Contains(msg, "could not get header: not found"):
+		return true
+
 	default:
 		return false
 	}
