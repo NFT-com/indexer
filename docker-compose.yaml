@@ -19,7 +19,7 @@ services:
       - "4161:4161"
   nsqd:
     image: nsqio/nsq
-    entrypoint: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+    entrypoint: /nsqd --lookupd-tcp-address=nsqlookupd:4160 -msg-timeout 10m0s
     depends_on:
       - nsqlookupd
     ports:

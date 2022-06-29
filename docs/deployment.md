@@ -114,7 +114,7 @@ docker run  -d \
 -p "4150:4150" \
 -p "4151:4151" \
 nsqio/nsq \
-/nsqd --lookupd-tcp-address=host.docker.internal:4160 --broadcast-address=host.docker.internal
+/nsqd --lookupd-tcp-address=host.docker.internal:4160 --broadcast-address=host.docker.internal -msg-timeout 10m0s
 
 # If you want more visibility into the queue run the command bellow and check the http://localhost:4171.
 docker run  -d \
