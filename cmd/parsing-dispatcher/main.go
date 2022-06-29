@@ -79,8 +79,8 @@ func run() int {
 	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
 	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 
-	pflag.DurationVar(&flagMinBackoff, "min-backoff", 20*time.Second, "minimum backoff duration for NSQ consumers")
-	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 10*time.Minute, "maximum backoff duration for NSQ consumers")
+	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
+	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 15*time.Minute, "maximum backoff duration for NSQ consumers")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
