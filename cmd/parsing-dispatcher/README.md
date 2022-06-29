@@ -25,6 +25,9 @@ Usage of parsing-dispatcher:
       --rate-limit uint                 maximum number of API requests per second (default 10)
       --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 100)
 
+      --min-backoff duration            minimum backoff duration for NSQ consumers (default "20s")
+      --max-backoff duration            makimum backoff duration for NSQ consumers (default "10m")
+
       --dry-run                         executing as dry run disables invocation of Lambda function
 ```
 
