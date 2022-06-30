@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -94,7 +93,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	var transfers []*events.Transfer
 	var sales []*events.Sale
 	timestamps := make(map[uint64]time.Time)
-	standards := make(map[string]string)
 	for _, log := range logs {
 
 		// skip logs for reverted transactions
@@ -119,7 +117,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				return nil, fmt.Errorf("could not parse ERC721 transfer: %w", err)
 			}
 			transfers = append(transfers, transfer)
-			standards[transfer.ID] = jobs.StandardERC721
 
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
@@ -138,7 +135,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 			transfers = append(transfers, transfer)
-			standards[transfer.ID] = jobs.StandardERC1155
 
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
@@ -158,8 +154,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 			}
 			transfers = append(transfers, batch...)
 			for _, transfer := range batch {
-
-				standards[transfer.ID] = jobs.StandardERC1155
 
 				p.log.Trace().
 					Str("transaction", log.TxHash.Hex()).
@@ -217,50 +211,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		sale.EmittedAt = timestamps[sale.BlockNumber]
 	}
 
-	// Go through all transfers and convert them to mints/burns where appropriate.
-	var additions []*jobs.Addition
-	var modifications []*jobs.Modification
-	for _, transfer := range transfers {
-		switch {
-
-		case transfer.SenderAddress == params.AddressZero:
-
-			addition := jobs.Addition{
-				ID:      uuid.NewString(),
-				ChainID: transfer.ChainID,
-				// CollectionID added later
-				ContractAddress: transfer.CollectionAddress,
-				TokenID:         transfer.TokenID,
-				TokenStandard:   standards[transfer.ID],
-				OwnerAddress:    transfer.ReceiverAddress,
-				TokenCount:      transfer.TokenCount,
-			}
-			additions = append(additions, &addition)
-
-		default:
-
-			modification := jobs.Modification{
-				ID:      uuid.NewString(),
-				ChainID: transfer.ChainID,
-				// CollectionID added later
-				ContractAddress: transfer.CollectionAddress,
-				TokenID:         transfer.TokenID,
-				SenderAddress:   transfer.SenderAddress,
-				ReceiverAddress: transfer.ReceiverAddress,
-				TokenCount:      transfer.TokenCount,
-			}
-			modifications = append(modifications, &modification)
-		}
-	}
-
 	// Put everything together for the result.
 	result := results.Parsing{
-		Job:           parsing,
-		Sales:         sales,
-		Transfers:     transfers,
-		Additions:     additions,
-		Modifications: modifications,
-		Requests:      requests,
+		Job:       parsing,
+		Sales:     sales,
+		Transfers: transfers,
+		Requests:  requests,
 	}
 
 	return &result, nil

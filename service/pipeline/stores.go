@@ -4,21 +4,19 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
-	"github.com/NFT-com/indexer/models/results"
 )
 
 type NFTStore interface {
-	Touch(modifications ...*jobs.Modification) error
-	Insert(nft *graph.NFT) error
+	Touch(nfts ...*graph.NFT) error
+	Upsert(nft *graph.NFT) error
 }
 
 type TraitStore interface {
-	Insert(traits ...*graph.Trait) error
+	Upsert(traits ...*graph.Trait) error
 }
 
 type OwnerStore interface {
-	Add(additions ...*results.Addition) error
-	Change(modifications ...*jobs.Modification) error
+	Upsert(transfers ...*events.Transfer) error
 }
 
 type BoundaryStore interface {

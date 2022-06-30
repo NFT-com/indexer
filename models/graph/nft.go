@@ -8,6 +8,4 @@ type NFT struct {
 	URI          string `json:"uri"`
 	Image        string `json:"image"`
 	Description  string `json:"description"`
-	Owner        string `json:"owner"`
-	Number       uint   `json:"number"`
 }

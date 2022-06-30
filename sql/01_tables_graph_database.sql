@@ -50,8 +50,9 @@ CREATE TABLE owners
 (
     owner  VARCHAR(128) NOT NULL,
     nft_id UUID         NOT NULL REFERENCES nfts ON DELETE CASCADE,
+    event_id UUID       NOT NULL,
     number NUMERIC      NOT NULL,
-    PRIMARY KEY (owner, nft_id)
+    PRIMARY KEY (owner, nft_id, event_id)
 );
 
 CREATE INDEX owners_nft_id_idx ON owners(nft_id);

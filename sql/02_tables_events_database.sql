@@ -2,6 +2,7 @@ CREATE TABLE transfers
 (
     id                  UUID PRIMARY KEY,
     chain_id            NUMERIC      NOT NULL,
+    token_standard      VARCHAR(128) NOT NULL,
     collection_address  VARCHAR(128) NOT NULL,
     token_id            VARCHAR(128) NOT NULL,
     block_number        NUMERIC      NOT NULL,

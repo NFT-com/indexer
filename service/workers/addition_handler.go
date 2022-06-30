@@ -42,8 +42,6 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		Str("contract_address", addition.ContractAddress).
 		Str("token_id", addition.TokenID).
 		Str("token_standard", addition.TokenStandard).
-		Str("owner_address", addition.OwnerAddress).
-		Uint("token_count", addition.TokenCount).
 		Logger()
 
 	log.Info().
@@ -142,8 +140,6 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		URI:          tokenURI,
 		Image:        token.Image,
 		Description:  token.Description,
-		Owner:        addition.OwnerAddress,
-		Number:       addition.TokenCount,
 	}
 
 	result := results.Addition{

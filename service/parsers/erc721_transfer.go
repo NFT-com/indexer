@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
@@ -24,6 +25,7 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 	transfer := events.Transfer{
 		ID: transferID.String(),
 		// ChainID set after parsing
+		TokenStandard:     jobs.StandardERC721,
 		CollectionAddress: log.Address.Hex(),
 		TokenID:           log.Topics[3].Big().String(),
 		BlockNumber:       log.BlockNumber,

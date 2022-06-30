@@ -7,7 +7,6 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	"github.com/NFT-com/indexer/models/graph"
-	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type NFTRepository struct {
@@ -24,20 +23,20 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 	return &n
 }
 
-func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
+func (n *NFTRepository) Touch(nfts ...*graph.NFT) error {
 
-	if len(modifications) == 0 {
+	if len(nfts) == 0 {
 		return nil
 	}
 
-	set := make(map[string]*jobs.Modification, len(modifications))
-	for _, modification := range modifications {
-		set[modification.NFTID()] = modification
+	set := make(map[string]*graph.NFT, len(nfts))
+	for _, nft := range nfts {
+		set[nft.ID] = nft
 	}
 
-	modifications = make([]*jobs.Modification, 0, len(set))
-	for _, modification := range set {
-		modifications = append(modifications, modification)
+	nfts = make([]*graph.NFT, 0, len(set))
+	for _, nft := range set {
+		nfts = append(nfts, nft)
 	}
 
 	query := n.build.
@@ -55,11 +54,11 @@ func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"updated_at = EXCLUDED.updated_at")
 
-	for _, modification := range modifications {
+	for _, nft := range nfts {
 		query = query.Values(
-			modification.NFTID(),
-			modification.CollectionID,
-			modification.TokenID,
+			nft.ID,
+			nft.CollectionID,
+			nft.TokenID,
 			"",
 			"",
 			"",
@@ -75,7 +74,7 @@ func (n *NFTRepository) Touch(modifications ...*jobs.Modification) error {
 	return nil
 }
 
-func (n *NFTRepository) Insert(nft *graph.NFT) error {
+func (n *NFTRepository) Upsert(nft *graph.NFT) error {
 
 	_, err := n.build.
 		Insert("nfts").

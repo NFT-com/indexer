@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"go.uber.org/ratelimit"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 )
@@ -130,35 +132,48 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not decode parsing result: %w", err)
 	}
 
-	// As the Lambda has no access to the DB, we need to fill in the collection ID
-	// for all addition and modification jobs here. This could be done in a batch
-	// request to improve performance, but it shouldn't have a big impact.
-	for _, addition := range result.Additions {
-		collection, err := p.collections.One(addition.ChainID, addition.ContractAddress)
-		if err != nil {
-			return fmt.Errorf("could not get collection for addition: %w", err)
-		}
-		addition.CollectionID = collection.ID
-	}
-	for _, modification := range result.Modifications {
-		collection, err := p.collections.One(modification.ChainID, modification.ContractAddress)
-		if err != nil {
-			return fmt.Errorf("could not get collection for modification: %w", err)
-		}
-		modification.CollectionID = collection.ID
-	}
+	// We can go through the transfers and process those with zero address as mints.
+	var touches []*graph.NFT
+	var payloads [][]byte
+	for _, transfer := range result.Transfers {
 
-	// As a first step of processing the results, we want to push all of the addition
-	// jobs into the addition pipeline, so that the addition dispatcher can start
-	// its work as soon as possible.
-	payloads := make([][]byte, 0, len(result.Additions))
-	for _, addition := range result.Additions {
+		// Skip transfers that do not originate from the zero address so we process
+		// only mints.
+		if transfer.SenderAddress != params.AddressZero {
+			continue
+		}
+
+		// Get the collection ID based on chain ID and collection address, so we can
+		// reference it directly for the addition job and the NFT insertion.
+		collection, err := p.collections.One(transfer.ChainID, transfer.CollectionAddress)
+		if err != nil {
+			return fmt.Errorf("could not get collection for transfer: %w", err)
+		}
+
+		// Create a placeholder NFT that we will create in the DB.
+		touch := graph.NFT{
+			ID:           transfer.NFTID(),
+			CollectionID: collection.ID,
+			TokenID:      transfer.TokenID,
+		}
+		touches = append(touches, &touch)
+
+		// Create an addition job to complete the data for the NFT.
+		addition := jobs.Addition{
+			ID:              uuid.NewString(),
+			ChainID:         transfer.ChainID,
+			CollectionID:    collection.ID,
+			ContractAddress: transfer.CollectionAddress,
+			TokenID:         transfer.TokenID,
+			TokenStandard:   transfer.TokenStandard,
+		}
 		payload, err := json.Marshal(addition)
 		if err != nil {
 			return fmt.Errorf("could not encode addition job: %w", err)
 		}
 		payloads = append(payloads, payload)
 	}
+
 	if len(payloads) > 0 {
 		err = p.additions.MultiPublish(params.TopicAddition, payloads)
 		if err != nil {
@@ -166,8 +181,14 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 	}
 
-	// In a second step, we insert all of the transfers and sales that were parsed
-	// into the events database.
+	// Touch all the NFTs that have been created, so that we can apply owner changes
+	// out of order, before the full NFT information is available from the addition.
+	err = p.nfts.Touch(touches...)
+	if err != nil {
+		return fmt.Errorf("could not touch NFTs: %w", err)
+	}
+
+	// Next, we can store all the raw events for transfers and sales.
 	err = p.transfers.Upsert(result.Transfers...)
 	if err != nil {
 		return fmt.Errorf("could not upsert transfers: %w", err)
@@ -177,16 +198,10 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not upsert sales: %w", err)
 	}
 
-	// Finally, we make sure that we have all of the NFTs that were modified in the
-	// database already, at least as placeholders, and we apply the ownership changes
-	// for them in one batch operation.
-	err = p.nfts.Touch(result.Modifications...)
+	// Last but not least, we can upsert the owner change updates for each transfer.
+	err = p.owners.Upsert(result.Transfers...)
 	if err != nil {
-		return fmt.Errorf("could not touch NFTs: %w", err)
-	}
-	err = p.owners.Change(result.Modifications...)
-	if err != nil {
-		return fmt.Errorf("could not change owners: %w", err)
+		return fmt.Errorf("could not upsert owners: %w", err)
 	}
 
 	p.log.Info().
@@ -198,8 +213,6 @@ func (p *ParsingStage) process(payload []byte) error {
 		Strs("event_hashes", result.Job.EventHashes).
 		Int("transfers", len(result.Transfers)).
 		Int("sales", len(result.Sales)).
-		Int("additions", len(result.Additions)).
-		Int("modifications", len(result.Modifications)).
 		Msg("parsing job processed")
 
 	// As we can't know in advance how many requests a Lambda will make, we will
