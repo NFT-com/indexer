@@ -133,9 +133,20 @@ func (p *ParsingStage) process(payload []byte) error {
 	}
 
 	// We can go through the transfers and process those with zero address as mints.
-	var touches []*graph.NFT
+	var dummies []*graph.NFT
 	var payloads [][]byte
 	for _, transfer := range result.Transfers {
+
+		p.log.Debug().
+			Str("sender_address", transfer.SenderAddress).
+			Uint64("chain_id", transfer.ChainID).
+			Str("collection_address", transfer.CollectionAddress).
+			Str("token_id", transfer.TokenID).
+			Str("nft_id", transfer.NFTID()).
+			Str("tx_hash", transfer.TransactionHash).
+			Uint("event_index", transfer.EventIndex).
+			Str("event_id", transfer.EventID()).
+			Msg("transfer details")
 
 		// Skip transfers that do not originate from the zero address so we process
 		// only mints.
@@ -151,12 +162,14 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 
 		// Create a placeholder NFT that we will create in the DB.
-		touch := graph.NFT{
+		dummy := graph.NFT{
 			ID:           transfer.NFTID(),
 			CollectionID: collection.ID,
 			TokenID:      transfer.TokenID,
 		}
-		touches = append(touches, &touch)
+		dummies = append(dummies, &dummy)
+
+		p.log.Debug().Str("dummy_id", dummy.ID).Msg("dummy details")
 
 		// Create an addition job to complete the data for the NFT.
 		addition := jobs.Addition{
@@ -181,18 +194,11 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 	}
 
-	for _, touch := range touches {
-		p.log.Debug().Str("touch_id", touch.ID).Msg("touching NFT ID")
-	}
-	for _, transfer := range result.Transfers {
-		p.log.Debug().Str("transfer_id", transfer.NFTID()).Msg("transfer NFT ID")
-	}
-
 	// Touch all the NFTs that have been created, so that we can apply owner changes
 	// out of order, before the full NFT information is available from the addition.
-	err = p.nfts.Touch(touches...)
+	err = p.nfts.Touch(dummies...)
 	if err != nil {
-		return fmt.Errorf("could not touch NFTs: %w", err)
+		return fmt.Errorf("could not touch dummies: %w", err)
 	}
 
 	// Next, we can store all the raw events for transfers and sales.
