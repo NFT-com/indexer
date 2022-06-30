@@ -137,23 +137,6 @@ func (p *ParsingStage) process(payload []byte) error {
 	var payloads [][]byte
 	for _, transfer := range result.Transfers {
 
-		p.log.Debug().
-			Str("sender_address", transfer.SenderAddress).
-			Uint64("chain_id", transfer.ChainID).
-			Str("collection_address", transfer.CollectionAddress).
-			Str("token_id", transfer.TokenID).
-			Str("nft_id", transfer.NFTID()).
-			Str("tx_hash", transfer.TransactionHash).
-			Uint("event_index", transfer.EventIndex).
-			Str("event_id", transfer.EventID()).
-			Msg("transfer details")
-
-		// Skip transfers that do not originate from the zero address so we process
-		// only mints.
-		if transfer.SenderAddress != params.AddressZero {
-			continue
-		}
-
 		// Get the collection ID based on chain ID and collection address, so we can
 		// reference it directly for the addition job and the NFT insertion.
 		collection, err := p.collections.One(transfer.ChainID, transfer.CollectionAddress)
@@ -170,6 +153,23 @@ func (p *ParsingStage) process(payload []byte) error {
 		dummies = append(dummies, &dummy)
 
 		p.log.Debug().Str("dummy_id", dummy.ID).Msg("dummy details")
+
+		p.log.Debug().
+			Str("sender_address", transfer.SenderAddress).
+			Uint64("chain_id", transfer.ChainID).
+			Str("collection_address", transfer.CollectionAddress).
+			Str("token_id", transfer.TokenID).
+			Str("nft_id", transfer.NFTID()).
+			Str("tx_hash", transfer.TransactionHash).
+			Uint("event_index", transfer.EventIndex).
+			Str("event_id", transfer.EventID()).
+			Msg("transfer details")
+
+		// Skip transfers that do not originate from the zero address so we process
+		// only mints.
+		if transfer.SenderAddress != params.AddressZero {
+			continue
+		}
 
 		// Create an addition job to complete the data for the NFT.
 		addition := jobs.Addition{
