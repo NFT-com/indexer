@@ -80,7 +80,7 @@ Ideally, each database should run on its own host, so that they can be scaled ac
 
 If you want to use Docker, you first need to [set the network up](#docker) before you can run that command.
 
-```bash
+```sh
 docker run  -d
             --name="postgres"
             --network="indexer"
@@ -100,21 +100,26 @@ Just like for PostgreSQL, NSQ just needs to be accessible by your services, so y
 
 If you want to use Docker, you first need to [set the network up](#docker) before you can run that command.
 
-```bash
+```sh
 docker run  -d \
 --network="indexer" \
 -p "4160:4160" \
 -p "4161:4161" \
 nsqio/nsq \
 /nsqlookupd
+```
 
-
+```sh
 docker run  -d \
 --network="indexer" \
 -p "4150:4150" \
 -p "4151:4151" \
 nsqio/nsq \
-/nsqd --lookupd-tcp-address=host.docker.internal:4160 --broadcast-address=host.docker.internal
+/nsqd \
+--lookupd-tcp-address=host.docker.internal:4160 \
+--broadcast-address=host.docker.internal \
+--msg-timeout 15m \
+--max-msg-timeout 15m
 
 # If you want more visibility into the queue run the command bellow and check the http://localhost:4171.
 docker run  -d \
@@ -129,7 +134,7 @@ nsqio/nsq \
 When using Docker, it is essential to start by creating a network on which the services should run.
 Then, each `docker run` command should be given the `--network=indexer` parameter.
 
-```bash
+```sh
 docker network create "indexer"
 ```
 
@@ -139,7 +144,7 @@ The next step is to build the Docker images for each of the services.
 You need to build and tag an image for each of the Dockerfiles within the `./cmd/*` directories.
 The following command does that for you, and ignores the directories for workers, which do not contain Dockerfiles.
 
-```bash
+```sh
 for d in cmd/* ;
 do ;
    name=$(echo "$d" | cut -c 5-) ;
@@ -172,7 +177,7 @@ See the [addition dispatcher readme](../cmd/addition-dispatcher/README.md) for m
 In order for the addition dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
 Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
 
-```bash
+```sh
 # Using the binary.
 ./addition-dispatcher \
 -g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
@@ -181,7 +186,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 -n "addition-worker"
 ```
 
-```bash
+```sh
 # Using Docker.
 docker run -d \
 --network="indexer" \
@@ -205,7 +210,7 @@ See the [parsing dispatcher readme](../cmd/parsing-dispatcher/README.md) for mor
 In order for the parsing dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
 Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
 
-```bash
+```sh
 # Using the binary.
 ./parsing-dispatcher \
 -g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
@@ -216,7 +221,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 -n "parsing-worker"
 ```
 
-```bash
+```sh
 # Using Docker.
 docker run -d \
 --network="indexer" \
@@ -241,7 +246,7 @@ See the [jobs creator readme](../cmd/jobs-creator/README.md) for more details ab
 
 The jobs creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
 
-```bash
+```sh
 # Using the binary.
 ./jobs-creator \
 -g "host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
@@ -250,7 +255,7 @@ The jobs creator requires having access to an Ethereum node's API on both `WSS` 
 -q "nsq.domain.com:4150"
 ```
 
-```bash
+```sh
 # Using Docker.
 docker run  -d \
 --network="indexer" \
