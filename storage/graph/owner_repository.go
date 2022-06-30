@@ -37,7 +37,7 @@ func (n *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 			"event_id",
 			"number",
 		).
-		Suffix("ON CONFLICT (owner, nft_id, event_id) DO UPDATE SET number = owners.number + EXCLUDED.number")
+		Suffix("ON CONFLICT DO NOTHING")
 
 	for _, transfer := range transfers {
 

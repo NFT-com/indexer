@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/NFT-com/indexer/config/params"
+	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -135,7 +136,15 @@ func (p *ParsingStage) process(payload []byte) error {
 	// We can go through the transfers and process those with zero address as mints.
 	var dummies []*graph.NFT
 	var payloads [][]byte
+	var owners []*events.Transfer
 	for _, transfer := range result.Transfers {
+
+		if transfer.SenderAddress == transfer.ReceiverAddress {
+			continue
+		}
+
+		// Collect transfers that are not no-ops for owner changes.
+		owners = append(owners, transfer)
 
 		// Get the collection ID based on chain ID and collection address, so we can
 		// reference it directly for the addition job and the NFT insertion.
@@ -199,7 +208,7 @@ func (p *ParsingStage) process(payload []byte) error {
 	}
 
 	// Last but not least, we can upsert the owner change updates for each transfer.
-	err = p.owners.Upsert(result.Transfers...)
+	err = p.owners.Upsert(owners...)
 	if err != nil {
 		return fmt.Errorf("could not upsert owners: %w", err)
 	}
