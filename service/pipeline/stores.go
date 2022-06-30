@@ -7,7 +7,7 @@ import (
 )
 
 type NFTStore interface {
-	Touch(nfts ...*graph.NFT) error
+	Touch(dummies ...*graph.NFT) error
 	Upsert(nft *graph.NFT) error
 }
 

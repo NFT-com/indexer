@@ -23,20 +23,20 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 	return &n
 }
 
-func (n *NFTRepository) Touch(nfts ...*graph.NFT) error {
+func (n *NFTRepository) Touch(dummies ...*graph.NFT) error {
 
-	if len(nfts) == 0 {
+	if len(dummies) == 0 {
 		return nil
 	}
 
-	set := make(map[string]*graph.NFT, len(nfts))
-	for _, nft := range nfts {
-		set[nft.ID] = nft
+	set := make(map[string]*graph.NFT, len(dummies))
+	for _, dummy := range dummies {
+		set[dummy.ID] = dummy
 	}
 
-	nfts = make([]*graph.NFT, 0, len(set))
-	for _, nft := range set {
-		nfts = append(nfts, nft)
+	dummies = make([]*graph.NFT, 0, len(set))
+	for _, dummy := range set {
+		dummies = append(dummies, dummy)
 	}
 
 	query := n.build.
@@ -54,11 +54,11 @@ func (n *NFTRepository) Touch(nfts ...*graph.NFT) error {
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"updated_at = EXCLUDED.updated_at")
 
-	for _, nft := range nfts {
+	for _, dummy := range dummies {
 		query = query.Values(
-			nft.ID,
-			nft.CollectionID,
-			nft.TokenID,
+			dummy.ID,
+			dummy.CollectionID,
+			dummy.TokenID,
 			"",
 			"",
 			"",
