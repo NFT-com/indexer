@@ -137,13 +137,6 @@ func (p *ParsingStage) process(payload []byte) error {
 	var payloads [][]byte
 	for _, transfer := range result.Transfers {
 
-		// We skip transfers from and to the same address; for mints, this should
-		// never be the case, or they never really exist. For everything else, we
-		// already have an addition job and we don't need to change owner info.
-		if transfer.SenderAddress == transfer.ReceiverAddress {
-			continue
-		}
-
 		// Get the collection ID based on chain ID and collection address, so we can
 		// reference it directly for the addition job and the NFT insertion.
 		collection, err := p.collections.One(transfer.ChainID, transfer.CollectionAddress)

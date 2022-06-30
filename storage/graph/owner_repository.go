@@ -40,12 +40,19 @@ func (n *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 		Suffix("ON CONFLICT DO NOTHING")
 
 	for _, transfer := range transfers {
+
+		// skip transfers that have same sender & receiver
+		if transfer.SenderAddress == transfer.ReceiverAddress {
+			continue
+		}
+
 		query = query.Values(
 			transfer.SenderAddress,
 			transfer.NFTID(),
 			transfer.EventID(),
 			-int(transfer.TokenCount),
 		)
+
 		query = query.Values(
 			transfer.ReceiverAddress,
 			transfer.NFTID(),
