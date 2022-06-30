@@ -45,7 +45,8 @@ func (b *FailureRepository) Parsing(parsing *jobs.Parsing, message string) error
 			pq.Array(parsing.ContractAddresses),
 			pq.Array(parsing.EventHashes),
 			message,
-		)
+		).
+		Suffix("ON CONFLICT (id) DO UPDATE SET failure_message = EXCLUDED.failure_message")
 
 	_, err := query.Exec()
 	if err != nil {
@@ -78,7 +79,8 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 			addition.OwnerAddress,
 			addition.TokenCount,
 			message,
-		)
+		).
+		Suffix("ON CONFLICT (id) DO UPDATE SET failure_message = EXCLUDED.failure_message")
 
 	_, err := query.Exec()
 	if err != nil {
