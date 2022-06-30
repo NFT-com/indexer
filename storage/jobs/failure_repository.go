@@ -66,8 +66,6 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 			"contract_address",
 			"token_id",
 			"token_standard",
-			"owner_address",
-			"token_count",
 			"failure_message",
 		).
 		Values(

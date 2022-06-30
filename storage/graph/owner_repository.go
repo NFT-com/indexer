@@ -41,11 +41,6 @@ func (n *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 
 	for _, transfer := range transfers {
 
-		// skip transfers that have same sender & receiver
-		if transfer.SenderAddress == transfer.ReceiverAddress {
-			continue
-		}
-
 		query = query.Values(
 			transfer.SenderAddress,
 			transfer.NFTID(),
