@@ -9,6 +9,6 @@ import (
 
 func Event(hash string, index uint) string {
 	eventHash := sha3.Sum256([]byte(fmt.Sprintf("%s-%d", hash, index)))
-	eventID := uuid.Must(uuid.FromBytes(eventHash[:]))
+	eventID := uuid.Must(uuid.FromBytes(eventHash[:16]))
 	return eventID.String()
 }
