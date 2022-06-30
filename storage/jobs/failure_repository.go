@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/lib/pq"
+
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type FailureRepository struct {

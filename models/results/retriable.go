@@ -25,10 +25,12 @@ func Retriable(err error) bool {
 	case strings.Contains(msg, "Gateway Timeout"):
 		return true
 
-	// failure due to Lambda file descriptor limit
+	// failure due to Lambda file descriptor limit or rate limit
 	case strings.Contains(msg, "too many open files"):
 		return true
 	case strings.Contains(msg, "no such host"):
+		return true
+	case strings.Contains(msg, "Rate Exceeded."):
 		return true
 
 	// failure due to HTTP request issue
