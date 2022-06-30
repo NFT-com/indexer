@@ -30,7 +30,7 @@ CREATE TABLE collections
     UNIQUE (network_id, contract_address)
 );
 
-CREATE INDEX collections_contract_address_idx ON collections(contract_address);
+CREATE INDEX collections_contract_address_idx ON collections(LOWER(contract_address));
 
 CREATE TABLE nfts
 (

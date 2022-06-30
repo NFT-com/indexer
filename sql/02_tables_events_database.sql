@@ -16,7 +16,7 @@ CREATE TABLE transfers
     UNIQUE (block_number, transaction_hash, event_index)
 );
 
-CREATE INDEX transfers_collection_address_idx ON transfers(collection_address);
+CREATE INDEX transfers_collection_address_idx ON transfers(LOWER(collection_address));
 
 CREATE INDEX transfers_token_id_idx ON transfers(token_id);
 
@@ -38,8 +38,8 @@ CREATE TABLE sales
     UNIQUE (block_number, transaction_hash, event_index)
 );
 
-CREATE INDEX sales_marketplace_address_idx ON sales(marketplace_address);
+CREATE INDEX sales_marketplace_address_idx ON sales(LOWER(marketplace_address));
 
-CREATE INDEX sales_collection_address_idx ON sales(collection_address);
+CREATE INDEX sales_collection_address_idx ON sales(LOWER(collection_address));
 
 CREATE INDEX sales_token_id_idx ON sales(token_id);
