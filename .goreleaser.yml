@@ -1,0 +1,38 @@
+# By default, builds only for darwin and linux, which works for us since FlowGo does not support
+# Windows builds. We also can only build on amd64 architectures since all others are also not
+# supported at the moment.
+builds:
+  - id: addition-dispatcher
+    binary: addition-dispatcher
+    main: ./cmd/addition-dispatcher
+
+  - id: addition-worker
+    binary: addition-worker
+    main: ./cmd/addition-worker
+
+  - id: jobs-creator
+    binary: jobs-creator
+    main: ./cmd/jobs-creator
+
+  - id: parsing-dispatcher
+    binary: parsing-dispatcher
+    main: ./cmd/parsing-dispatcher
+
+  - id: parsing-worker
+    binary: parsing-worker
+    main: ./cmd/parsing-worker
+
+archives:
+  - replacements:
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
