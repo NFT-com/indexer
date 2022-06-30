@@ -181,6 +181,13 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 	}
 
+	for _, touch := range touches {
+		p.log.Debug().Str("touch_id", touch.ID).Msg("touching NFT ID")
+	}
+	for _, transfer := range result.Transfers {
+		p.log.Debug().Str("transfer_id", transfer.NFTID()).Msg("transfer NFT ID")
+	}
+
 	// Touch all the NFTs that have been created, so that we can apply owner changes
 	// out of order, before the full NFT information is available from the addition.
 	err = p.nfts.Touch(touches...)
