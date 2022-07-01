@@ -85,3 +85,34 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 
 	return nil
 }
+
+func (b *FailureRepository) Completion(completion *jobs.Completion, message string) error {
+
+	query := b.build.
+		Insert("completion_failures").
+		Columns(
+			"id",
+			"sale_id",
+			"chain_id",
+			"block_number",
+			"transaction_hash",
+			"event_hashes",
+			"failure_message",
+		).
+		Values(
+			completion.ID,
+			completion.SaleID,
+			completion.ChainID,
+			completion.BlockNumber,
+			completion.TransactionHash,
+			pq.Array(completion.EventHashes),
+			message,
+		)
+
+	_, err := query.Exec()
+	if err != nil {
+		return fmt.Errorf("could not execute query: %w", err)
+	}
+
+	return nil
+}

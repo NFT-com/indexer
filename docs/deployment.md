@@ -11,6 +11,7 @@ This guide's purpose is to allow you to deploy the indexer architecture in order
    4. [Docker](#docker)
       1. [Building the Images](#building-the-images)
 2. [Deployment](#deployment)
+   1. [Completion Dispatcher](#completion-dispatcher)
    1. [Addition Dispatcher](#addition-dispatcher)
    2. [Parsing Dispatcher](#parsing-dispatcher)
    3. [Jobs Creator](#jobs-creator)
@@ -168,6 +169,39 @@ This means services have to be launched in the following order:
 
 It is also possible to create the queues manually using [NSQ admin](https://nsq.io/components/nsqadmin.html).
 In that case, the order of launching the services doesn't matter.
+
+### Completion Dispatcher
+
+The completion dispatcher consumes messages from the [completion queue](#nsq) and launches jobs on [AWS Lambdas](#amazon-web-services).
+See the [completion dispatcher readme](../cmd/completion-dispatcher/README.md) for more details about its flags.
+
+In order for the completion dispatcher to be allowed to instantiate workers on AWS Lambda, it requires credentials to authenticate.
+Those [credentials should be set in the environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the machine that runs the dispatcher.
+
+```bash
+# Using the binary.
+./completion-dispatcher \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+-j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+-k "nsq.domain.com:4161" \
+-n "completion-worker"
+```
+
+```bash
+# Using Docker.
+docker run -d \
+--network="indexer" \
+--name="completion-dispatcher" \
+-e AWS_REGION="eu-west-1" \
+-e AWS_ACCESS_KEY_ID="E283E205A2CA9FE4A032" \
+-e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR" \
+indexer-completion-dispatcher \
+--graph-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+--jobs-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--nsq-lookups "nsq.domain.com:4161" \
+--lambda-name "completion-worker"
+```
+
 
 ### Addition Dispatcher
 
