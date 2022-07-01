@@ -34,6 +34,7 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 		Columns(
 			"id",
 			"chain_id",
+			"token_standard",
 			"collection_address",
 			"token_id",
 			"block_number",
@@ -50,6 +51,7 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 		query = query.Values(
 			transfer.ID,
 			transfer.ChainID,
+			transfer.TokenStandard,
 			transfer.CollectionAddress,
 			transfer.TokenID,
 			transfer.BlockNumber,

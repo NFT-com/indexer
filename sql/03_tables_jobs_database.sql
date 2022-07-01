@@ -27,7 +27,5 @@ CREATE TABLE addition_failures
     contract_address VARCHAR(128) NOT NULL,
     token_id         VARCHAR(256) NOT NULL,
     token_standard   VARCHAR(256) NOT NULL,
-    owner_address    VARCHAR(128) NOT NULL,
-    token_count      NUMERIC      NOT NULL,
     failure_message  TEXT         NOT NULL
 );

@@ -125,17 +125,13 @@ func (a *AdditionStage) process(payload []byte) error {
 
 	// Finally, we make the necessary changes to the DB: insert the NFT, the traits
 	// and apply the necessary ownership changes.
-	err = a.nfts.Insert(result.NFT)
+	err = a.nfts.Upsert(result.NFT)
 	if err != nil {
 		return fmt.Errorf("could not insert NFT: %w", err)
 	}
-	err = a.traits.Insert(result.Traits...)
+	err = a.traits.Upsert(result.Traits...)
 	if err != nil {
 		return fmt.Errorf("could not insert traits: %w", err)
-	}
-	err = a.owners.Add(&result)
-	if err != nil {
-		return fmt.Errorf("could not add owner: %w", err)
 	}
 
 	a.log.Info().
@@ -144,8 +140,6 @@ func (a *AdditionStage) process(payload []byte) error {
 		Str("contract_address", result.Job.ContractAddress).
 		Str("token_id", result.Job.TokenID).
 		Str("token_standard", result.Job.TokenStandard).
-		Str("owner_address", result.Job.OwnerAddress).
-		Uint("token_count", result.Job.TokenCount).
 		Int("traits", len(result.Traits)).
 		Msg("addition job processed")
 

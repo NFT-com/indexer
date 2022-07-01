@@ -66,8 +66,6 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 			"contract_address",
 			"token_id",
 			"token_standard",
-			"owner_address",
-			"token_count",
 			"failure_message",
 		).
 		Values(
@@ -76,8 +74,6 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 			addition.ContractAddress,
 			addition.TokenID,
 			addition.TokenStandard,
-			addition.OwnerAddress,
-			addition.TokenCount,
 			message,
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET failure_message = EXCLUDED.failure_message")

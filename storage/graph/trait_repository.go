@@ -23,7 +23,7 @@ func NewTraitRepository(db *sql.DB) *TraitRepository {
 	return &s
 }
 
-func (t *TraitRepository) Insert(traits ...*graph.Trait) error {
+func (t *TraitRepository) Upsert(traits ...*graph.Trait) error {
 
 	if len(traits) == 0 {
 		return nil

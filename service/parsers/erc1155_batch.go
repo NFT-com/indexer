@@ -13,6 +13,7 @@ import (
 
 	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
@@ -47,6 +48,7 @@ func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 		transfer := events.Transfer{
 			ID: transferID.String(),
 			// ChainID set after parsing
+			TokenStandard:     jobs.StandardERC1155,
 			CollectionAddress: log.Address.Hex(),
 			TokenID:           tokenID.String(),
 			BlockNumber:       log.BlockNumber,
