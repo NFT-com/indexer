@@ -24,8 +24,12 @@ func Retriable(err error) bool {
 		return true
 	case strings.Contains(msg, "Gateway Timeout"):
 		return true
+	case strings.Contains(msg, "could not execute contract call: execution aborted"):
+		return true
+	case strings.Contains(msg, "could not get header: not found"):
+		return true
 
-	// failure due to Lambda file descriptor limit or rate limit
+	// failures to successfully execute the Lammda
 	case strings.Contains(msg, "too many open files"):
 		return true
 	case strings.Contains(msg, "no such host"):
@@ -33,18 +37,14 @@ func Retriable(err error) bool {
 	case strings.Contains(msg, "Rate Exceeded."):
 		return true
 
-	// failure due to HTTP request issue
+	// failure to retrieve data with HTTP client
 	case strings.Contains(msg, "Client.Timeout exceeded while awaiting headers"):
 		return true
 	case strings.Contains(msg, "bad response code"):
 		return true
 
-	// failure due to conflicting SQL transactions
+	// failure to insert data into the database
 	case strings.Contains(msg, "deadlock detected"):
-		return true
-
-	// HTTPS node syncing slower than WebSocket node
-	case strings.Contains(msg, "could not get header: not found"):
 		return true
 
 	default:
