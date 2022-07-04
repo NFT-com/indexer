@@ -114,13 +114,13 @@ func (a *CompletionStage) process(payload []byte) error {
 	var result results.Completion
 	err = json.Unmarshal(output.Payload, &result)
 	if err != nil {
-		return fmt.Errorf("could not decode NFT: %w", err)
+		return fmt.Errorf("could not decode completion result: %w", err)
 	}
 
 	// Finally, we make the necessary changes to the DB: update sale event.
 	err = a.sales.Update(result.Sale)
 	if err != nil {
-		return fmt.Errorf("could not insert NFT: %w", err)
+		return fmt.Errorf("could not update sale event: %w", err)
 	}
 
 	a.log.Info().

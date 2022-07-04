@@ -135,7 +135,7 @@ func (p *ParsingStage) process(payload []byte) error {
 
 	// We can go through the transfers and process those with zero address as mints.
 	var dummies []*graph.NFT
-	var additionPayloads [][]byte
+	var additions [][]byte
 	var owners []*events.Transfer
 	for _, transfer := range result.Transfers {
 
@@ -180,18 +180,18 @@ func (p *ParsingStage) process(payload []byte) error {
 		if err != nil {
 			return fmt.Errorf("could not encode addition job: %w", err)
 		}
-		additionPayloads = append(additionPayloads, payload)
+		additions = append(additions, payload)
 	}
 
-	if len(additionPayloads) > 0 {
-		err = p.publisher.MultiPublish(params.TopicAddition, additionPayloads)
+	if len(additions) > 0 {
+		err = p.publisher.MultiPublish(params.TopicAddition, additions)
 		if err != nil {
 			return fmt.Errorf("could not publish addition jobs: %w", err)
 		}
 	}
 
 	// We can go through the sales and process the completion.
-	var completionPayloads [][]byte
+	var completions [][]byte
 	for _, sale := range result.Sales {
 
 		// Create a completion job to complete the data for the sale event.
@@ -207,11 +207,11 @@ func (p *ParsingStage) process(payload []byte) error {
 		if err != nil {
 			return fmt.Errorf("could not encode addition job: %w", err)
 		}
-		completionPayloads = append(completionPayloads, payload)
+		completions = append(completions, payload)
 	}
 
-	if len(completionPayloads) > 0 {
-		err = p.publisher.MultiPublish(params.TopicCompletion, completionPayloads)
+	if len(completions) > 0 {
+		err = p.publisher.MultiPublish(params.TopicCompletion, completions)
 		if err != nil {
 			return fmt.Errorf("could not publish completion jobs: %w", err)
 		}
