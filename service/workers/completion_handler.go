@@ -102,7 +102,6 @@ parsing:
 		// skip logs for reverted transactions
 		if log.Removed {
 			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
 				Msg("skipping log for reverted transaction")
 			continue
@@ -110,9 +109,8 @@ parsing:
 
 		if strings.ToLower(log.TxHash.Hex()) != strings.ToLower(completion.TransactionHash) {
 			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Msg("skipping log for not belonging in transaction")
+				Msg("skipping log, it not owned by wanted transaction")
 			continue
 		}
 
@@ -122,23 +120,26 @@ parsing:
 		case params.HashERC721Transfer:
 
 			if len(log.Topics) != 4 {
+				p.log.Trace().
+					Uint("index", log.Index).
+					Int("topics", len(log.Topics)).
+					Msg("skipping log invalid topic length")
 				continue
 			}
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC721 transfer: %w", err)
+				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 			}
 
 			sale.CollectionAddress = transfer.CollectionAddress
 			sale.TokenID = transfer.TokenID
 
 			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
 				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
-				Msg("ERC721 transfer parsed")
+				Msg("sale ERC721 transfer parsed")
 
 			break parsing
 
@@ -153,20 +154,13 @@ parsing:
 			sale.TokenID = transfer.TokenID
 
 			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
 				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
-				Msg("ERC1155 transfer parsed")
+				Msg("sale ERC1155 transfer parsed")
 
 			break parsing
 
-		case params.HashERC1155Batch:
-
-			p.log.Info().
-				Str("transaction", log.TxHash.Hex()).
-				Uint("index", log.Index).
-				Msg("skipping currently ERC115 batch sales")
 		}
 	}
 
