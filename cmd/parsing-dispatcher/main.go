@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"math"
 	"os"
 	"os/signal"
@@ -95,6 +96,12 @@ func run() int {
 	}
 	log = log.Level(level)
 
+	err = verifyAWSEnvVars()
+	if err != nil {
+		log.Error().Err(err).Msg("invalid AWS configuration")
+		return failure
+	}
+
 	awsCfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("could not load AWS configuration")
@@ -180,4 +187,35 @@ func run() int {
 	log.Info().Msg("shutdown complete")
 
 	return success
+}
+
+func verifyAWSEnvVars() error {
+	accessKeyID, ok := os.LookupEnv("AWS_ACCESS_KEY_ID")
+	if !ok {
+		return errors.New("missing aws access key id, aborting execution")
+	}
+
+	if accessKeyID == "" {
+		return errors.New("empty aws access key id, aborting execution")
+	}
+
+	secretAccessKey, ok := os.LookupEnv("AWS_SECRET_ACCESS_KEY")
+	if !ok {
+		return errors.New("missing aws secret access key, aborting execution")
+	}
+
+	if secretAccessKey == "" {
+		return errors.New("empty aws secret access key, aborting execution")
+	}
+
+	defaultRegion, ok := os.LookupEnv("AWS_DEFAULT_REGION")
+	if !ok {
+		return errors.New("missing aws default region, aborting execution")
+	}
+
+	if defaultRegion == "" {
+		return errors.New("empty aws default region, aborting execution")
+	}
+
+	return nil
 }
