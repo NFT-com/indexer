@@ -161,7 +161,7 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 		dummies = append(dummies, &dummy)
 
-		// Skip transfers that do not originate from the zero address so we process
+		// Skip transfers that do not originate from the zero address, so we process
 		// only mints.
 		if transfer.SenderAddress != params.AddressZero {
 			continue
@@ -269,7 +269,7 @@ func (p *ParsingStage) failure(payload []byte, message string) error {
 		return fmt.Errorf("could not decode parsing job: %w", err)
 	}
 
-	// Persist the parsing failure in the DB so it can be reviewed and potentially
+	// Persist the parsing failure in the DB, so it can be reviewed and potentially
 	// retried at a later point.
 	err = p.failures.Parsing(&parsing, message)
 	if err != nil {

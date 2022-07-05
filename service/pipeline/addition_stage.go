@@ -161,7 +161,7 @@ func (a *AdditionStage) failure(payload []byte, message string) error {
 		return fmt.Errorf("could not decode addition job: %w", err)
 	}
 
-	// Persist the addition failure in the DB so it can be reviewed and potentially
+	// Persist the addition failure in the DB, so it can be reviewed and potentially
 	// retried at a later point.
 	err = a.failures.Addition(&addition, message)
 	if err != nil {
