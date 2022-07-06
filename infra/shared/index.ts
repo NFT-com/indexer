@@ -7,7 +7,7 @@ import { createCacheClusters } from './elasticache'
 import { createBuckets } from './s3'
 import { createSecurityGroups } from './security-group'
 import { createVPC } from './vpc'
-import { createParsingWorker, createAdditionWorker } from './lambda'
+import { createParsingWorker, createAdditionWorker, createCompletionWorker } from './lambda'
 
 const pulumiProgram = async (): Promise<Record<string, any> | void> => {
   const config = new pulumi.Config()
@@ -23,6 +23,7 @@ const pulumiProgram = async (): Promise<Record<string, any> | void> => {
   const { indexer } = createRepositories()
   const lambdaParser = createParsingWorker()
   const lambdaAddition = createAdditionWorker()
+  const lambdaCompletion = createCompletionWorker()
 
   return {
     assetBucket: asset.bucket,
@@ -38,6 +39,7 @@ const pulumiProgram = async (): Promise<Record<string, any> | void> => {
     webSGId: sgs.web.id,
     parserFunctionId: lambdaParser.id,
     additionFunctionId: lambdaAddition.id,
+    completionFunctionId: lambdaCompletion.id,
   }
 }
 

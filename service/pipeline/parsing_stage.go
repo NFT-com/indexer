@@ -31,7 +31,7 @@ type ParsingStage struct {
 	nfts        NFTStore
 	owners      OwnerStore
 	failures    FailureStore
-	additions   BatchPublisher
+	publisher   BatchPublisher
 	limit       ratelimit.Limiter
 	dryRun      bool
 }
@@ -47,7 +47,7 @@ func NewParsingStage(
 	nfts NFTStore,
 	owners OwnerStore,
 	failures FailureStore,
-	additions BatchPublisher,
+	publisher BatchPublisher,
 	limit ratelimit.Limiter,
 	dryRun bool,
 ) *ParsingStage {
@@ -63,7 +63,7 @@ func NewParsingStage(
 		nfts:        nfts,
 		owners:      owners,
 		failures:    failures,
-		additions:   additions,
+		publisher:   publisher,
 		limit:       limit,
 		dryRun:      dryRun,
 	}
@@ -135,7 +135,7 @@ func (p *ParsingStage) process(payload []byte) error {
 
 	// We can go through the transfers and process those with zero address as mints.
 	var dummies []*graph.NFT
-	var payloads [][]byte
+	var additions [][]byte
 	var owners []*events.Transfer
 	for _, transfer := range result.Transfers {
 
@@ -161,7 +161,7 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 		dummies = append(dummies, &dummy)
 
-		// Skip transfers that do not originate from the zero address so we process
+		// Skip transfers that do not originate from the zero address, so we process
 		// only mints.
 		if transfer.SenderAddress != params.AddressZero {
 			continue
@@ -180,13 +180,42 @@ func (p *ParsingStage) process(payload []byte) error {
 		if err != nil {
 			return fmt.Errorf("could not encode addition job: %w", err)
 		}
-		payloads = append(payloads, payload)
+		additions = append(additions, payload)
 	}
 
-	if len(payloads) > 0 {
-		err = p.additions.MultiPublish(params.TopicAddition, payloads)
+	if len(additions) > 0 {
+		err = p.publisher.MultiPublish(params.TopicAddition, additions)
 		if err != nil {
 			return fmt.Errorf("could not publish addition jobs: %w", err)
+		}
+	}
+
+	// We can go through the sales and process the completion.
+	var completions [][]byte
+	for _, sale := range result.Sales {
+
+		// Create a completion job to complete the data for the sale event.
+		completion := jobs.Completion{
+			ID:              uuid.NewString(),
+			ChainID:         sale.ChainID,
+			BlockNumber:     sale.BlockNumber,
+			TransactionHash: sale.TransactionHash,
+			EventHashes:     result.Job.EventHashes,
+			SaleID:          sale.ID,
+			Seller:          sale.SellerAddress,
+			Buyer:           sale.BuyerAddress,
+		}
+		payload, err := json.Marshal(completion)
+		if err != nil {
+			return fmt.Errorf("could not encode addition job: %w", err)
+		}
+		completions = append(completions, payload)
+	}
+
+	if len(completions) > 0 {
+		err = p.publisher.MultiPublish(params.TopicCompletion, completions)
+		if err != nil {
+			return fmt.Errorf("could not publish completion jobs: %w", err)
 		}
 	}
 
@@ -242,7 +271,7 @@ func (p *ParsingStage) failure(payload []byte, message string) error {
 		return fmt.Errorf("could not decode parsing job: %w", err)
 	}
 
-	// Persist the parsing failure in the DB so it can be reviewed and potentially
+	// Persist the parsing failure in the DB, so it can be reviewed and potentially
 	// retried at a later point.
 	err = p.failures.Parsing(&parsing, message)
 	if err != nil {

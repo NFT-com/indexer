@@ -27,6 +27,7 @@ type BoundaryStore interface {
 type FailureStore interface {
 	Parsing(parsing *jobs.Parsing, message string) error
 	Addition(addition *jobs.Addition, message string) error
+	Completion(completion *jobs.Completion, message string) error
 }
 
 type CollectionStore interface {
@@ -44,4 +45,5 @@ type TransferStore interface {
 
 type SaleStore interface {
 	Upsert(sales ...*events.Sale) error
+	Update(sale *events.Sale) error
 }

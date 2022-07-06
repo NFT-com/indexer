@@ -33,7 +33,15 @@ runs:
     - name: Zip Addition Worker
       working-directory: infra/shared/stack
       shell: bash
-      run: zip addition.zip worker    
+      run: zip addition.zip worker
+    - name: Build Go Completion Worker
+      working-directory: infra/shared/stack
+      shell: bash
+      run: GOOS=linux GOARCH=amd64 go build -o worker ../../../cmd/completion-worker
+    - name: Zip Completion Worker
+      working-directory: infra/shared/stack
+      shell: bash
+      run: zip completion.zip worker    
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -75,6 +83,10 @@ runs:
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/addition-dispatcher/Dockerfile -t ${{ env.REPO }}:addition-dispatcher -t ${{ env.REPO }}:addition-dispatcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:addition-dispatcher
         docker push ${{ env.REPO }}:addition-dispatcher-${{ github.sha }}
+
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/completion-dispatcher/Dockerfile -t ${{ env.REPO }}:completion-dispatcher -t ${{ env.REPO }}:completion-dispatcher-${{ github.sha }} 
+        docker push ${{ env.REPO }}:completion-dispatcher
+        docker push ${{ env.REPO }}:completion-dispatcher-${{ github.sha }}
         
         docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}:jobs-creator -t ${{ env.REPO }}:jobs-creator-${{ github.sha }} 
         docker push ${{ env.REPO }}:jobs-creator
