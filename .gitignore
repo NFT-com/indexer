@@ -2,6 +2,10 @@
 /cmd/addition-worker/addition-worker
 /cmd/addition-worker/worker
 /cmd/addition-worker/addition.zip
+/cmd/completion-dispatcher/completion-dispatcher
+/cmd/completion-worker/completion-worker
+/cmd/completion-worker/worker
+/cmd/completion-worker/completion.zip
 /cmd/jobs-creator/jobs-creator
 /cmd/jobs-watcher/jobs-watcher
 /cmd/parsing-dispatcher/parsing-dispatcher
