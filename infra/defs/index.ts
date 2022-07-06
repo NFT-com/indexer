@@ -14,4 +14,5 @@ export type SharedInfraOutput = {
   indexerECRRepo: string
   parserFunctionId: string
   additionFunctionId: string
+  completionFunctionId: string
 }

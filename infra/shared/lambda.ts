@@ -47,3 +47,26 @@ export const createAdditionWorker = (): aws.lambda.Function => {
         },
     })
 }
+
+export const createCompletionWorker = (): aws.lambda.Function => {
+    return new aws.lambda.Function("completion-worker", {
+        architectures: ["x86_64"],
+        description: "completion-web3",
+        handler: "worker",
+        memorySize: 128,
+        code: new pulumi.asset.FileArchive("./completion.zip"),
+        name: "completion-worker",
+        reservedConcurrentExecutions: -1,
+        role: "arn:aws:iam::016437323894:role/AWSLambdaBasicExecutionRole",
+        runtime: "go1.x",
+        timeout: 600,
+        environment: {
+            variables: {
+                NODE_URL: "https://api.zmok.io/custom1/qkher8p6hmchaxni",
+            },
+        },
+        tracingConfig: {
+            mode: "PassThrough",
+        },
+    })
+}

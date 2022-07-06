@@ -174,6 +174,53 @@ export const createAdditionDispatcherTaskDefinition = (
     })
 }
 
+export const createCompletionDispatcherTaskDefinition = (
+    infraOutput: SharedInfraOutput,
+): aws.ecs.TaskDefinition => {
+    const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
+    const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
+    const resourceName = getResourceName('indexer-td-completion-dispatcher')
+    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:completion-dispatcher`
+
+    return new aws.ecs.TaskDefinition(resourceName,
+    {
+        containerDefinitions: JSON.stringify([
+            {
+                command: ['-n','completion-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
+                cpu: 0,
+                entryPoint: ['/dispatcher'],
+                essential: true,
+                image: ecrImage,
+                links: [],
+                memoryReservation: 2048,
+                mountPoints: [],
+                name: resourceName,
+                portMappings: [],
+                environment: [
+                    {
+                        Name: 'AWS_ACCESS_KEY_ID',
+                        Value: process.env.AWS_ACCESS_KEY_ID
+                    },
+                    {
+                        Name: 'AWS_REGION',
+                        Value: process.env.AWS_REGION
+                    },
+                    {
+                        Name: 'AWS_SECRET_ACCESS_KEY',
+                        Value: process.env.AWS_SECRET_ACCESS_KEY
+                    },
+                ],
+                volumesFrom:[]
+        }]),
+        executionRoleArn: execRole,
+        family: resourceName,
+        cpu: '512',
+        memory: '2048',
+        requiresCompatibilities: ['EC2'],
+        taskRoleArn: taskRole,
+    })
+}
+
 export const createJobCreatorTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
