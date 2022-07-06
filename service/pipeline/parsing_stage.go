@@ -197,11 +197,13 @@ func (p *ParsingStage) process(payload []byte) error {
 		// Create a completion job to complete the data for the sale event.
 		completion := jobs.Completion{
 			ID:              uuid.NewString(),
-			SaleID:          sale.ID,
 			ChainID:         sale.ChainID,
 			BlockNumber:     sale.BlockNumber,
 			TransactionHash: sale.TransactionHash,
 			EventHashes:     result.Job.EventHashes,
+			SaleID:          sale.ID,
+			Seller:          sale.SellerAddress,
+			Buyer:           sale.BuyerAddress,
 		}
 		payload, err := json.Marshal(completion)
 		if err != nil {

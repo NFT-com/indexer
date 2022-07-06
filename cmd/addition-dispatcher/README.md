@@ -30,8 +30,8 @@ Usage of action-dispatcher:
 
 ## Environment Variables
 
-In addition tho the command line parameters, the action dispatcher depends on living in a valid AWS environment.
-You need to make sure the role associated with the container has the necessary access to invoke Lambdas.
+Additionally to command line parameters, the addition dispatcher requires a valid AWS environment.
+Please make sure that the role associated with the container has the necessary permissions to invoke Lambdas.
 Otherwise, you need to make sure that valid credentials are provided, and the region needs to be set regardless.
 
 ```sh
@@ -43,7 +43,7 @@ export AWS_SECRET_ACCESS_KEY="AbCdEfGhIkLmNoPqRsTuVw12345+AbCdEfGhI+Ab"
 ## Database Address — Data Source Name
 
 The database addresses are given in DSN (Data Source Name) format, which is a string that describes the parameters of the connection to the database.
-The string's format is the following:
+The format is the following:
 
 ```
 host=localhost user=database-user password=password dbname=database-name port=5432 sslmode=disable

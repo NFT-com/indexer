@@ -1,6 +1,6 @@
 # Completion Worker
 
-Completion Workers are invoked with new sale events to complete sale events.
+Completion Workers are invoked with new sale events to complete sale events data.
 
 ## Usage
 

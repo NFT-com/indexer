@@ -33,8 +33,8 @@ Usage of parsing-dispatcher:
 
 ## Environment Variables
 
-In addition tho the command line parameters, the parsing dispatcher depends on living in a valid AWS environment.
-You need to make sure the role associated with the container has the necessary access to invoke Lambdas.
+Additionally to command line parameters, the parsing dispatcher requires a valid AWS environment.
+Please make sure that the role associated with the container has the necessary permissions to invoke Lambdas.
 Otherwise, you need to make sure that valid credentials are provided, and the region needs to be set regardless.
 
 ```sh

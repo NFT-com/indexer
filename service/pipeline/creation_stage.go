@@ -132,7 +132,7 @@ func (c *CreationStage) execute(height uint64) error {
 			break
 		}
 
-		// Now we want to include all the contract addresses and all the event hashes
+		// Now we want to include all of the contract addresses and all of the event hashes
 		// that have a start height at or below our end height.
 		addressSet := make(map[string]struct{})
 		hashSet := make(map[string]struct{})

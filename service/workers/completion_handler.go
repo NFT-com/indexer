@@ -93,10 +93,12 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		TokenID:           "",
 		BlockNumber:       completion.BlockNumber,
 		TransactionHash:   completion.TransactionHash,
+		SellerAddress:     completion.Seller,
+		BuyerAddress:      completion.Buyer,
 	}
 
 	// For each log, try to parse it into the respective events.
-parsing:
+	var transferCount int
 	for _, log := range logs {
 
 		// skip logs for reverted transactions
@@ -107,10 +109,11 @@ parsing:
 			continue
 		}
 
+		// skip logs that are not related to the transaction hash we are looking for
 		if strings.ToLower(log.TxHash.Hex()) != strings.ToLower(completion.TransactionHash) {
 			p.log.Trace().
 				Uint("index", log.Index).
-				Msg("skipping log, it not owned by wanted transaction")
+				Msg("skipping log unrelated to transaction of interest")
 			continue
 		}
 
@@ -120,7 +123,7 @@ parsing:
 		case params.HashERC721Transfer:
 
 			if len(log.Topics) != 4 {
-				p.log.Trace().
+				p.log.Warn().
 					Uint("index", log.Index).
 					Int("topics", len(log.Topics)).
 					Msg("skipping log invalid topic length")
@@ -132,16 +135,25 @@ parsing:
 				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 			}
 
+			if transfer.SenderAddress != completion.Seller ||
+				transfer.ReceiverAddress != completion.Buyer {
+				p.log.Trace().
+					Uint("index", log.Index).
+					Int("topics", len(log.Topics)).
+					Msg("skipping log unrelated seller and buyer")
+				continue
+			}
+
 			sale.CollectionAddress = transfer.CollectionAddress
 			sale.TokenID = transfer.TokenID
+
+			transferCount++
 
 			p.log.Trace().
 				Uint("index", log.Index).
 				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
 				Msg("sale ERC721 transfer parsed")
-
-			break parsing
 
 		case params.HashERC1155Transfer:
 
@@ -150,18 +162,34 @@ parsing:
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
+			if transfer.SenderAddress != completion.Seller ||
+				transfer.ReceiverAddress != completion.Buyer {
+				p.log.Trace().
+					Uint("index", log.Index).
+					Int("topics", len(log.Topics)).
+					Msg("skipping log unrelated seller and buyer")
+				continue
+			}
+
 			sale.CollectionAddress = transfer.CollectionAddress
 			sale.TokenID = transfer.TokenID
+
+			transferCount++
 
 			p.log.Trace().
 				Uint("index", log.Index).
 				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
 				Msg("sale ERC1155 transfer parsed")
-
-			break parsing
-
 		}
+	}
+
+	if transferCount == 0 {
+		return nil, fmt.Errorf("could not complete sale event: not transfer event found")
+	}
+
+	if transferCount > 1 {
+		return nil, fmt.Errorf("could not complete sale event: multiple transfer event found")
 	}
 
 	// Put everything together for the result.

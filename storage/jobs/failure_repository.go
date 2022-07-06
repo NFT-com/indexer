@@ -92,20 +92,20 @@ func (b *FailureRepository) Completion(completion *jobs.Completion, message stri
 		Insert("completion_failures").
 		Columns(
 			"id",
-			"sale_id",
 			"chain_id",
 			"block_number",
 			"transaction_hash",
 			"event_hashes",
+			"sale_id",
 			"failure_message",
 		).
 		Values(
 			completion.ID,
-			completion.SaleID,
 			completion.ChainID,
 			completion.BlockNumber,
 			completion.TransactionHash,
 			pq.Array(completion.EventHashes),
+			completion.SaleID,
 			message,
 		)
 
