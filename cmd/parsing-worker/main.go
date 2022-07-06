@@ -27,6 +27,7 @@ func main() {
 	}
 
 	envNodeURL, ok := os.LookupEnv("NODE_URL")
+	ok = true
 	if !ok {
 		log.Fatal().Msg("missing node URL, aborting execution")
 	}

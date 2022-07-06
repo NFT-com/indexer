@@ -166,9 +166,22 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("ERC115 batch parsed")
 			}
 
-		case params.HashOpenSeaTrade:
+		case params.HashOpenSeaWyvernTrade:
 
-			sale, err := parsers.OpenSeaSale(log)
+			sale, err := parsers.OpenSeaWyvernSale(log)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse OpenSea sale: %w", err)
+			}
+			sales = append(sales, sale)
+
+			p.log.Trace().
+				Str("transaction", log.TxHash.Hex()).
+				Uint("index", log.Index).
+				Msg("OpenSea sale parsed")
+
+		case params.HashOpenSeaSeaportTrade:
+
+			sale, err := parsers.OpenSeaSeaportSale(log)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse OpenSea sale: %w", err)
 			}

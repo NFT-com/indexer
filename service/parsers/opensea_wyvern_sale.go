@@ -15,17 +15,17 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 )
 
-func OpenSeaSale(log types.Log) (*events.Sale, error) {
+func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.OpenSea.UnpackIntoMap(fields, "OrdersMatched", log.Data)
+	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, "OrdersMatched", log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
 	price, ok := fields["price"].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"id\" field (%T)", fields["price"])
+		return nil, fmt.Errorf("invalid type for \"price\" field (%T)", fields["price"])
 	}
 
 	data := make([]byte, 8+32+8)
@@ -39,8 +39,9 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 		ID: saleID.String(),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
-		CollectionAddress:  "", // TODO
-		TokenID:            "", // TODO
+		CollectionAddress:  "",
+		TokenID:            "",
+		TokenCount:         0,
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
 		EventIndex:         log.Index,
@@ -48,6 +49,7 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 		BuyerAddress:       common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 		TradePrice:         price.String(),
 		// EmittedAt set after parsing
+		NeedsCompletion: true,
 	}
 
 	return &sale, nil
