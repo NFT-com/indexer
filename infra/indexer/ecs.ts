@@ -88,7 +88,7 @@ export const createNsqadminTaskDefinition = (): aws.ecs.TaskDefinition => {
     {
         containerDefinitions: JSON.stringify([
             {
-                command: [`--lookupd-tcp-address=${process.env.EC2_PUBLIC_IP}:4161`],
+                command: [`--lookupd-http-address=${process.env.EC2_PUBLIC_IP}:4161`],
                 cpu: 0,
                 entryPoint: ['/nsqadmin'],
                 environment: [],
