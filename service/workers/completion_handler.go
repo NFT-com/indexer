@@ -185,11 +185,11 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	}
 
 	if transferCount == 0 {
-		return nil, fmt.Errorf("could not complete sale event: not transfer event found")
+		return nil, fmt.Errorf("no transfer event found for sale")
 	}
 
 	if transferCount > 1 {
-		return nil, fmt.Errorf("could not complete sale event: multiple transfer event found")
+		return nil, fmt.Errorf("multiple transfer events found for sale")
 	}
 
 	// Put everything together for the result.
