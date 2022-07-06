@@ -121,7 +121,7 @@ export const createParsingDispatcherTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '2048',
+        memory: '1028',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -130,8 +130,6 @@ export const createParsingDispatcherTaskDefinition = (
 export const createAdditionDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
-    const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
-    const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
     const resourceName = getResourceName('indexer-td-addition-dispatcher')
     const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:addition-dispatcher`
 
@@ -168,7 +166,7 @@ export const createAdditionDispatcherTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '2048',
+        memory: '1028',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -177,8 +175,6 @@ export const createAdditionDispatcherTaskDefinition = (
 export const createCompletionDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
-    const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
-    const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
     const resourceName = getResourceName('indexer-td-completion-dispatcher')
     const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:completion-dispatcher`
 
@@ -215,7 +211,7 @@ export const createCompletionDispatcherTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '2048',
+        memory: '1028',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -224,8 +220,6 @@ export const createCompletionDispatcherTaskDefinition = (
 export const createJobCreatorTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
-    const execRole = 'arn:aws:iam::016437323894:role/ecsTaskExecutionRole'
-    const taskRole = 'arn:aws:iam::016437323894:role/ECSServiceTask'
     const resourceName = getResourceName('indexer-td-jobs-creator')
     const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:jobs-creator`
 
@@ -249,7 +243,7 @@ export const createJobCreatorTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '2048',
+        memory: '1028',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
