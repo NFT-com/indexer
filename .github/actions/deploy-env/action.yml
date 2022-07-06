@@ -67,6 +67,7 @@ runs:
         STAGE: ${{ inputs.stage }}
         PULUMI_CONFIG_PASSPHRASE: ""
         AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
+        ZMOK_HTTP_URL: ${{ fromJSON(inputs.secrets).ZMOK_HTTP_URL }}
         DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
       run: npm run deploy:shared
     - name: Build and Push Indexer Docker Image(s)
@@ -109,6 +110,8 @@ runs:
         DB_NAME: ${{ fromJSON(inputs.secrets).DB_NAME }}
         DB_USER: ${{ fromJSON(inputs.secrets).DB_USER }}
         DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+        INDEXER_LOG_LEVEL: ${{ fromJSON(inputs.secrets).INDEXER_LOG_LEVEL }}
+        COMPLETION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).COMPLETION_RATE_LIMIT }}
         EC2_PUBLIC_IP: ${{ fromJSON(inputs.secrets).EC2_PUBLIC_IP }}
         PARSER_HEIGHT_RANGE: ${{ fromJSON(inputs.secrets).PARSER_HEIGHT_RANGE }}
         PARSER_RATE_LIMIT: ${{ fromJSON(inputs.secrets).PARSER_RATE_LIMIT }}

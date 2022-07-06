@@ -1,6 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
+const ZMOK_HTTP_URL = 'https://api.zmok.io/custom1/qkher8p6hmchaxni'
 
 export const createParsingWorker = (): aws.lambda.Function => {
     return new aws.lambda.Function("parsing-worker", {
@@ -16,7 +17,7 @@ export const createParsingWorker = (): aws.lambda.Function => {
         timeout: 600,
         environment: {
             variables: {
-                NODE_URL: "https://api.zmok.io/custom1/qkher8p6hmchaxni",
+                NODE_URL: ZMOK_HTTP_URL,
             },
         },
         tracingConfig: {
@@ -39,7 +40,7 @@ export const createAdditionWorker = (): aws.lambda.Function => {
         timeout: 600,
         environment: {
             variables: {
-                NODE_URL: "https://api.zmok.io/custom1/qkher8p6hmchaxni",
+                NODE_URL: ZMOK_HTTP_URL,
             },
         },
         tracingConfig: {
@@ -62,7 +63,7 @@ export const createCompletionWorker = (): aws.lambda.Function => {
         timeout: 600,
         environment: {
             variables: {
-                NODE_URL: "https://api.zmok.io/custom1/qkher8p6hmchaxni",
+                NODE_URL: ZMOK_HTTP_URL,
             },
         },
         tracingConfig: {
