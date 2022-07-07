@@ -128,8 +128,7 @@ func (a *CompletionStage) process(payload []byte) error {
 		Uint64("chain_id", result.Job.ChainID).
 		Uint64("start_height", result.Job.StartHeight).
 		Uint64("end_height", result.Job.EndHeight).
-		Strs("sale_ids", result.Job.SaleIDs()).
-		Strs("transaction_hashes", result.Job.TransactionHashes()).
+		Int("sales", len(result.Job.Sales)).
 		Msg("completion job processed")
 
 	// As we can't know in advance how many requests a Lambda will make, we will
