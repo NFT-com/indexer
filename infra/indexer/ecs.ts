@@ -182,7 +182,7 @@ export const createCompletionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','completion-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
+                command: ['-n','completion-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
