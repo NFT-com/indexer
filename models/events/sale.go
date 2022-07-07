@@ -2,6 +2,8 @@ package events
 
 import (
 	"time"
+
+	"golang.org/x/crypto/sha3"
 )
 
 type Sale struct {
@@ -17,4 +19,9 @@ type Sale struct {
 	BuyerAddress       string    `json:"buyer_address"`
 	TradePrice         string    `json:"trade_price"`
 	EmittedAt          time.Time `json:"emitted_at"`
+}
+
+func (s Sale) Hash() string {
+	hash := sha3.Sum256([]byte(s.TransactionHash + s.SellerAddress + s.BuyerAddress))
+	return string(hash[:])
 }

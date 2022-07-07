@@ -91,7 +91,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	// Create a transaction hash look-up.
 	hashLookup := make(map[string]struct{})
 	for _, sale := range completion.Sales {
-		hashLookup[sale.TransactionHash] = struct{}{}
+		hashLookup[sale.Hash()] = struct{}{}
 	}
 
 	// Convert all logs we can parse to transfers.
@@ -131,7 +131,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 			}
 
-			transferLookup[txHash] = append(transferLookup[txHash], transfer)
+			transferLookup[transfer.Hash()] = append(transferLookup[txHash], transfer)
 
 		case params.HashERC1155Transfer:
 
@@ -140,7 +140,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			transferLookup[txHash] = append(transferLookup[txHash], transfer)
+			transferLookup[transfer.Hash()] = append(transferLookup[txHash], transfer)
 
 		default:
 			continue
@@ -151,7 +151,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	for _, sale := range completion.Sales {
 
 		// ... and get the transfers for each sale according to its transaction hash.
-		transfers, ok := transferLookup[sale.TransactionHash]
+		transfers, ok := transferLookup[sale.Hash()]
 		if !ok {
 			p.log.Warn().Msg("no transfers for transaction found")
 			continue
