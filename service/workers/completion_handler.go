@@ -132,6 +132,10 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				continue
 			}
 
+			if len(log.Topics) == 0 {
+				continue
+			}
+
 			eventHash := log.Topics[0].String()
 			switch eventHash {
 
