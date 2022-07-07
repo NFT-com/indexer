@@ -44,6 +44,7 @@ func run() int {
 		flagLogLevel string
 
 		flagGraphDB    string
+		flagEventsDB   string
 		flagJobsDB     string
 		flagNSQLookups []string
 		flagLambdaName string
@@ -62,6 +63,7 @@ func run() int {
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
+	pflag.StringVarP(&flagEventsDB, "events-database", "e", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=events sslmode=disable", "Postgres connection details for events database")
 	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
 	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "addresses for NSQ lookups to bootstrap consuming")
 	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "completion-worker", "name of the Lambda function to invoke")
@@ -102,7 +104,16 @@ func run() int {
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	collectionRepo := graph.NewCollectionRepository(graphDB)
-	saleRepo := events.NewSaleRepository(graphDB)
+
+	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
+	if err != nil {
+		log.Error().Err(err).Str("events_database", flagEventsDB).Msg("could not connect to graph database")
+		return failure
+	}
+	graphDB.SetMaxOpenConns(int(flagOpenConnections))
+	graphDB.SetMaxIdleConns(int(flagIdleConnections))
+
+	saleRepo := events.NewSaleRepository(eventsDB)
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
