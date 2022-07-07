@@ -89,10 +89,23 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Int("logs", len(logs)).
 		Msg("event logs fetched")
 
-		// First, we create a lookup for logs by transaction hash.
+	// Create a transaction hash look-up.
+	hashLookup := make(map[string]struct{})
+	for _, sale := range completion.Sales {
+		hashLookup[sale.TransactionHash] = struct{}{}
+	}
+
+	// First, we create a lookup for logs by transaction hash.
 	logLookup := make(map[string][]types.Log)
 	for _, log := range logs {
+
+		// Skip logs for transactions we don't care about.
 		txHash := log.TxHash.Hex()
+		_, ok := hashLookup[txHash]
+		if !ok {
+			continue
+		}
+
 		logLookup[txHash] = append(logLookup[txHash], log)
 	}
 
