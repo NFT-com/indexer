@@ -11,10 +11,10 @@ This guide's purpose is to allow you to deploy the indexer architecture in order
    4. [Docker](#docker)
       1. [Building the Images](#building-the-images)
 2. [Deployment](#deployment)
-   1. [Parsing Dispatcher](#parsing-dispatcher)
-   2. [Addition Dispatcher](#addition-dispatcher)
-   3. [Completion Dispatcher](#completion-dispatcher)
-   4. [Jobs Creator](#jobs-creator)
+   1. [Jobs Creator](#jobs-creator)
+   2. [Parsing Dispatcher](#parsing-dispatcher)
+   3. [Addition Dispatcher](#addition-dispatcher)
+   4. [Completion Dispatcher](#completion-dispatcher)
 
 ## Pre-requisites
 
@@ -158,17 +158,42 @@ done
 
 ## Deployment
 
-The order of deployment for the components is important.
 A NSQ consumer will create the topic and channel it listens on when it connects to NSQ.
-In order to not miss any messages, the consumer of a queue thus has to run before the producer.
-This means services have to be launched in the following order:
+A NSQ producer will create the topic when it produces messages.
+If a topic is created before the channels, the first channel for that topic gets all messages.
+Any subsequent channels will no longer receive queued / old messages.
+It might be a good idea to create the queues manually using [NSQ admin](https://nsq.io/components/nsqadmin.html).
+In that case, all messages remain queued for each channel until they are consumed.
 
-1. addition dispatcher
-2. parsing dispatcher
-3. jobs creator
+### Jobs Creator
 
-It is also possible to create the queues manually using [NSQ admin](https://nsq.io/components/nsqadmin.html).
-In that case, the order of launching the services doesn't matter.
+The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
+If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of `0`.
+See the [jobs creator readme](../cmd/jobs-creator/README.md) for more details about its flags.
+
+The jobs creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
+
+```sh
+# Using the binary.
+./jobs-creator \
+-g "host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
+-j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+-w="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
+-q "nsq.domain.com:4150"
+```
+
+```sh
+# Using Docker.
+docker run  -d \
+--network="indexer" \
+--name="jobs-creator" \
+indexer-jobs-creator \
+--graph-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
+--jobs-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
+--websocket-url="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
+--nsq-server "nsq.domain.com:4150"
+```
+
 
 ### Parsing Dispatcher
 
@@ -250,6 +275,7 @@ Those [credentials should be set in the environment](https://docs.aws.amazon.com
 # Using the binary.
 ./completion-dispatcher \
 -g "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+-e "host=172.17.0.100 port=5432 user=immutable password=password dbname=events sslmode=disable" \
 -j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
 -k "nsq.domain.com:4161" \
 -n "completion-worker"
@@ -265,36 +291,8 @@ docker run -d \
 -e AWS_SECRET_ACCESS_KEY="XDklicgtXc8Wgx0x9Rmlpdrfybn+Gjxh3YyWz+fR" \
 indexer-completion-dispatcher \
 --graph-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=gaph sslmode=disable" \
+--events-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=events sslmode=disable" \
 --jobs-database "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
 --nsq-lookups "nsq.domain.com:4161" \
 --lambda-name "completion-worker"
-```
-
-### Jobs Creator
-
-The jobs creator's role is to watch the chain and instantiate parsing jobs to process and persist the chain's data into an index.
-If the jobs creator stops, it retrieves the last job saved in the API upon restarting and starts from that height instead of `0`.
-See the [jobs creator readme](../cmd/jobs-creator/README.md) for more details about its flags.
-
-The jobs creator requires having access to an Ethereum node's API on both `WSS` and `HTTPS` and a populated [PostgreSQL](#postgresql) instance.
-
-```sh
-# Using the binary.
-./jobs-creator \
--g "host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
--j "host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
--w="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
--q "nsq.domain.com:4150"
-```
-
-```sh
-# Using Docker.
-docker run  -d \
---network="indexer" \
---name="jobs-creator" \
-indexer-jobs-creator \
---graph-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=graph sslmode=disable" \
---jobs-database="host=172.17.0.100 port=5432 user=immutable password=password dbname=jobs sslmode=disable" \
---websocket-url="wss://mainnet.infura.io/ws/v3/1234567890abcdef1234567890" \
---nsq-server "nsq.domain.com:4150"
 ```
