@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/rs/zerolog"
 
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/config/params"
@@ -95,9 +94,17 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		hashLookup[sale.TransactionHash] = struct{}{}
 	}
 
-	// First, we create a lookup for logs by transaction hash.
-	logLookup := make(map[string][]types.Log)
+	// Convert all logs we can parse to transfers.
+	transferLookup := make(map[string][]*events.Transfer)
 	for _, log := range logs {
+
+		if len(log.Topics) == 0 {
+			continue
+		}
+
+		if log.Removed {
+			continue
+		}
 
 		// Skip logs for transactions we don't care about.
 		txHash := log.TxHash.Hex()
@@ -106,83 +113,59 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 			continue
 		}
 
-		logLookup[txHash] = append(logLookup[txHash], log)
+		eventHash := log.Topics[0].String()
+		switch eventHash {
+
+		case params.HashERC721Transfer:
+
+			if len(log.Topics) != 4 {
+				p.log.Warn().
+					Uint("index", log.Index).
+					Int("topics", len(log.Topics)).
+					Msg("skipping log with invalid topic length")
+				continue
+			}
+
+			transfer, err := parsers.ERC721Transfer(log)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
+			}
+
+			transferLookup[txHash] = append(transferLookup[txHash], transfer)
+
+		case params.HashERC1155Transfer:
+
+			transfer, err := parsers.ERC1155Transfer(log)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
+			}
+
+			transferLookup[txHash] = append(transferLookup[txHash], transfer)
+
+		default:
+			continue
+		}
 	}
 
 	// Then we go through each sale...
 	for _, sale := range completion.Sales {
 
-		// ... and get the logs for each sale according to its transaction hash.
-		logs, ok := logLookup[sale.TransactionHash]
+		// ... and get the transfers for each sale according to its transaction hash.
+		transfers, ok := transferLookup[sale.TransactionHash]
 		if !ok {
-			p.log.Warn().Msg("no logs for transaction found")
+			p.log.Warn().Msg("no transfers for transaction found")
 			continue
 		}
 
-		// Next, we go through each log for that transaction hash and identify
-		// all transfers that are potential matches.
-		var matches []*events.Transfer
-		for _, log := range logs {
-
-			// skip logs for reverted transactions
-			if log.Removed {
-				p.log.Trace().
-					Uint("index", log.Index).
-					Msg("skipping log for reverted transaction")
-				continue
-			}
-
-			if len(log.Topics) == 0 {
-				continue
-			}
-
-			eventHash := log.Topics[0].String()
-			switch eventHash {
-
-			case params.HashERC721Transfer:
-
-				if len(log.Topics) != 4 {
-					p.log.Warn().
-						Uint("index", log.Index).
-						Int("topics", len(log.Topics)).
-						Msg("skipping log with invalid topic length")
-					continue
-				}
-
-				transfer, err := parsers.ERC721Transfer(log)
-				if err != nil {
-					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
-				}
-
-				matches = append(matches, transfer)
-
-			case params.HashERC1155Transfer:
-
-				transfer, err := parsers.ERC1155Transfer(log)
-				if err != nil {
-					return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
-				}
-
-				matches = append(matches, transfer)
-
-			default:
-
-				p.log.Debug().Str("event_hash", eventHash).Msg("skipping unknown event hash")
-			}
-		}
-
 		// Finally, we assign the data to the sale if we have exactly one match.
-		if len(matches) > 1 {
+		if len(transfers) > 1 {
 			p.log.Warn().Msg("found multiple matching transfers for sale, skipping")
 			continue
 		}
 
-		if len(matches) == 0 {
-			p.log.Warn().Msg("found no matching transfers for sale, skipping")
-		}
-
-		sale.CollectionAddress = matches[0].CollectionAddress
-		sale.TokenID = matches[0].TokenID
+		transfer := transfers[0]
+		sale.CollectionAddress = transfer.CollectionAddress
+		sale.TokenID = transfer.TokenID
 	}
 
 	// Put everything together for the result.
