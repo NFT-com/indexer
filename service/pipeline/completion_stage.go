@@ -118,7 +118,7 @@ func (a *CompletionStage) process(payload []byte) error {
 	}
 
 	// Finally, we make the necessary changes to the DB: update sale event.
-	err = a.sales.Update(result.Sale)
+	err = a.sales.Update(result.Job.Sales...)
 	if err != nil {
 		return fmt.Errorf("could not update sale event: %w", err)
 	}
@@ -126,9 +126,10 @@ func (a *CompletionStage) process(payload []byte) error {
 	a.log.Info().
 		Str("job_id", result.Job.ID).
 		Uint64("chain_id", result.Job.ChainID).
-		Str("sale_id", result.Job.SaleID).
-		Str("collection_address", result.Sale.CollectionAddress).
-		Str("token_id", result.Sale.CollectionAddress).
+		Uint64("start_height", result.Job.StartHeight).
+		Uint64("end_height", result.Job.EndHeight).
+		Strs("sale_ids", result.Job.SaleIDs()).
+		Strs("transaction_hashes", result.Job.TransactionHashes()).
 		Msg("completion job processed")
 
 	// As we can't know in advance how many requests a Lambda will make, we will

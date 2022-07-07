@@ -88,24 +88,36 @@ func (b *FailureRepository) Addition(addition *jobs.Addition, message string) er
 
 func (b *FailureRepository) Completion(completion *jobs.Completion, message string) error {
 
+	txHashes := make([]string, 0, len(completion.Sales))
+	for _, sale := range completion.Sales {
+		txHashes = append(txHashes, sale.TransactionHash)
+	}
+
+	saleIDs := make([]string, 0, len(completion.Sales))
+	for _, sale := range completion.Sales {
+		saleIDs = append(saleIDs, sale.ID)
+	}
+
 	query := b.build.
 		Insert("completion_failures").
 		Columns(
 			"id",
 			"chain_id",
-			"block_number",
-			"transaction_hash",
+			"start_height",
+			"end_height",
 			"event_hashes",
-			"sale_id",
+			"transaction_hashes",
+			"sale_ids",
 			"failure_message",
 		).
 		Values(
 			completion.ID,
 			completion.ChainID,
-			completion.BlockNumber,
-			completion.TransactionHash,
+			completion.StartHeight,
+			completion.EndHeight,
 			pq.Array(completion.EventHashes),
-			completion.SaleID,
+			pq.Array(txHashes),
+			pq.Array(saleIDs),
 			message,
 		)
 

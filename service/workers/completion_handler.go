@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/rs/zerolog"
 
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/NFT-com/indexer/config/params"
@@ -39,9 +40,11 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	log := p.log.With().
 		Str("job_id", completion.ID).
 		Uint64("chain_id", completion.ChainID).
-		Uint64("block_number", completion.BlockNumber).
-		Str("transaction_hash", completion.TransactionHash).
+		Uint64("start_height", completion.StartHeight).
+		Uint64("end_height", completion.EndHeight).
 		Strs("event_hashes", completion.EventHashes).
+		Strs("sale_ids", completion.SaleIDs()).
+		Strs("transaction_hashes", completion.TransactionHashes()).
 		Logger()
 
 	log.Info().
@@ -77,7 +80,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
 	requests := uint(1)
-	logs, err := fetch.Logs(ctx, nil, completion.EventHashes, completion.BlockNumber, completion.BlockNumber)
+	logs, err := fetch.Logs(ctx, nil, completion.EventHashes, completion.StartHeight, completion.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -86,116 +89,88 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Int("logs", len(logs)).
 		Msg("event logs fetched")
 
-	sale := events.Sale{
-		ID:                completion.SaleID,
-		ChainID:           completion.ChainID,
-		CollectionAddress: "",
-		TokenID:           "",
-		BlockNumber:       completion.BlockNumber,
-		TransactionHash:   completion.TransactionHash,
-		SellerAddress:     completion.Seller,
-		BuyerAddress:      completion.Buyer,
-	}
-
-	// For each log, try to parse it into the respective events.
-	var transferCount int
+		// First, we create a lookup for logs by transaction hash.
+	logLookup := make(map[string][]types.Log)
 	for _, log := range logs {
+		txHash := log.TxHash.Hex()
+		logLookup[txHash] = append(logLookup[txHash], log)
+	}
 
-		// skip logs for reverted transactions
-		if log.Removed {
-			p.log.Trace().
-				Uint("index", log.Index).
-				Msg("skipping log for reverted transaction")
+	// Then we go through each sale...
+	for _, sale := range completion.Sales {
+
+		// ... and get the logs for each sale according to its transaction hash.
+		logs, ok := logLookup[sale.TransactionHash]
+		if !ok {
+			p.log.Warn().Msg("no logs for transaction found")
 			continue
 		}
 
-		// skip logs that are not related to the transaction hash we are looking for
-		if strings.ToLower(log.TxHash.Hex()) != strings.ToLower(completion.TransactionHash) {
-			p.log.Trace().
-				Uint("index", log.Index).
-				Msg("skipping log unrelated to transaction of interest")
+		// Next, we go through each log for that transaction hash and identify
+		// all transfers that are potential matches.
+		var matches []*events.Transfer
+		for _, log := range logs {
+
+			// skip logs for reverted transactions
+			if log.Removed {
+				p.log.Trace().
+					Uint("index", log.Index).
+					Msg("skipping log for reverted transaction")
+				continue
+			}
+
+			eventHash := log.Topics[0].String()
+			switch eventHash {
+
+			case params.HashERC721Transfer:
+
+				if len(log.Topics) != 4 {
+					p.log.Warn().
+						Uint("index", log.Index).
+						Int("topics", len(log.Topics)).
+						Msg("skipping log with invalid topic length")
+					continue
+				}
+
+				transfer, err := parsers.ERC721Transfer(log)
+				if err != nil {
+					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
+				}
+
+				matches = append(matches, transfer)
+
+			case params.HashERC1155Transfer:
+
+				transfer, err := parsers.ERC1155Transfer(log)
+				if err != nil {
+					return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
+				}
+
+				matches = append(matches, transfer)
+
+			default:
+
+				p.log.Debug().Str("event_hash", eventHash).Msg("skipping unknown event hash")
+			}
+		}
+
+		// Finally, we assign the data to the sale if we have exactly one match.
+		if len(matches) > 1 {
+			p.log.Warn().Msg("found multiple matching transfers for sale, skipping")
 			continue
 		}
 
-		eventType := log.Topics[0]
-		switch eventType.String() {
-
-		case params.HashERC721Transfer:
-
-			if len(log.Topics) != 4 {
-				p.log.Warn().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log invalid topic length")
-				continue
-			}
-
-			transfer, err := parsers.ERC721Transfer(log)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
-			}
-
-			if transfer.SenderAddress != completion.Seller ||
-				transfer.ReceiverAddress != completion.Buyer {
-				p.log.Trace().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log unrelated seller and buyer")
-				continue
-			}
-
-			sale.CollectionAddress = transfer.CollectionAddress
-			sale.TokenID = transfer.TokenID
-
-			transferCount++
-
-			p.log.Trace().
-				Uint("index", log.Index).
-				Str("collection_address", transfer.CollectionAddress).
-				Str("token_id", transfer.TokenID).
-				Msg("sale ERC721 transfer parsed")
-
-		case params.HashERC1155Transfer:
-
-			transfer, err := parsers.ERC1155Transfer(log)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
-			}
-
-			if transfer.SenderAddress != completion.Seller ||
-				transfer.ReceiverAddress != completion.Buyer {
-				p.log.Trace().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log unrelated seller and buyer")
-				continue
-			}
-
-			sale.CollectionAddress = transfer.CollectionAddress
-			sale.TokenID = transfer.TokenID
-
-			transferCount++
-
-			p.log.Trace().
-				Uint("index", log.Index).
-				Str("collection_address", transfer.CollectionAddress).
-				Str("token_id", transfer.TokenID).
-				Msg("sale ERC1155 transfer parsed")
+		if len(matches) == 0 {
+			p.log.Warn().Msg("found no matching transfers for sale, skipping")
 		}
-	}
 
-	if transferCount == 0 {
-		return nil, fmt.Errorf("no transfer event found for sale")
-	}
-
-	if transferCount > 1 {
-		return nil, fmt.Errorf("multiple transfer events found for sale")
+		sale.CollectionAddress = matches[0].CollectionAddress
+		sale.TokenID = matches[0].TokenID
 	}
 
 	// Put everything together for the result.
 	result := results.Completion{
 		Job:      completion,
-		Sale:     &sale,
 		Requests: requests,
 	}
 
