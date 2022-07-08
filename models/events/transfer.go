@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/NFT-com/indexer/models/id"
+	"golang.org/x/crypto/sha3"
 )
 
 type Transfer struct {
@@ -27,4 +28,9 @@ func (t Transfer) NFTID() string {
 
 func (t Transfer) EventID() string {
 	return id.Event(t.TransactionHash, t.EventIndex)
+}
+
+func (t Transfer) Hash() string {
+	hash := sha3.Sum256([]byte(t.TransactionHash + t.SenderAddress + t.ReceiverAddress))
+	return string(hash[:])
 }

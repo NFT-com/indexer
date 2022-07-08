@@ -39,9 +39,11 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	log := p.log.With().
 		Str("job_id", completion.ID).
 		Uint64("chain_id", completion.ChainID).
-		Uint64("block_number", completion.BlockNumber).
-		Str("transaction_hash", completion.TransactionHash).
+		Uint64("start_height", completion.StartHeight).
+		Uint64("end_height", completion.EndHeight).
 		Strs("event_hashes", completion.EventHashes).
+		Strs("sale_ids", completion.SaleIDs()).
+		Strs("transaction_hashes", completion.TransactionHashes()).
 		Logger()
 
 	log.Info().
@@ -77,7 +79,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
 	requests := uint(1)
-	logs, err := fetch.Logs(ctx, nil, completion.EventHashes, completion.BlockNumber, completion.BlockNumber)
+	logs, err := fetch.Logs(ctx, nil, completion.EventHashes, completion.StartHeight, completion.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -86,39 +88,33 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Int("logs", len(logs)).
 		Msg("event logs fetched")
 
-	sale := events.Sale{
-		ID:                completion.SaleID,
-		ChainID:           completion.ChainID,
-		CollectionAddress: "",
-		TokenID:           "",
-		BlockNumber:       completion.BlockNumber,
-		TransactionHash:   completion.TransactionHash,
-		SellerAddress:     completion.Seller,
-		BuyerAddress:      completion.Buyer,
+	// Create a transaction hash look-up.
+	hashLookup := make(map[string]struct{})
+	for _, sale := range completion.Sales {
+		hashLookup[sale.Hash()] = struct{}{}
 	}
 
-	// For each log, try to parse it into the respective events.
-	var transferCount int
+	// Convert all logs we can parse to transfers.
+	transferLookup := make(map[string][]*events.Transfer)
 	for _, log := range logs {
 
-		// skip logs for reverted transactions
+		if len(log.Topics) == 0 {
+			continue
+		}
+
 		if log.Removed {
-			p.log.Trace().
-				Uint("index", log.Index).
-				Msg("skipping log for reverted transaction")
 			continue
 		}
 
-		// skip logs that are not related to the transaction hash we are looking for
-		if strings.ToLower(log.TxHash.Hex()) != strings.ToLower(completion.TransactionHash) {
-			p.log.Trace().
-				Uint("index", log.Index).
-				Msg("skipping log unrelated to transaction of interest")
+		// Skip logs for transactions we don't care about.
+		txHash := log.TxHash.Hex()
+		_, ok := hashLookup[txHash]
+		if !ok {
 			continue
 		}
 
-		eventType := log.Topics[0]
-		switch eventType.String() {
+		eventHash := log.Topics[0].String()
+		switch eventHash {
 
 		case params.HashERC721Transfer:
 
@@ -126,7 +122,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				p.log.Warn().
 					Uint("index", log.Index).
 					Int("topics", len(log.Topics)).
-					Msg("skipping log invalid topic length")
+					Msg("skipping log with invalid topic length")
 				continue
 			}
 
@@ -135,25 +131,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 			}
 
-			if transfer.SenderAddress != completion.Seller ||
-				transfer.ReceiverAddress != completion.Buyer {
-				p.log.Trace().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log unrelated seller and buyer")
-				continue
-			}
-
-			sale.CollectionAddress = transfer.CollectionAddress
-			sale.TokenID = transfer.TokenID
-
-			transferCount++
-
-			p.log.Trace().
-				Uint("index", log.Index).
-				Str("collection_address", transfer.CollectionAddress).
-				Str("token_id", transfer.TokenID).
-				Msg("sale ERC721 transfer parsed")
+			transferLookup[transfer.Hash()] = append(transferLookup[txHash], transfer)
 
 		case params.HashERC1155Transfer:
 
@@ -162,40 +140,37 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			if transfer.SenderAddress != completion.Seller ||
-				transfer.ReceiverAddress != completion.Buyer {
-				p.log.Trace().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log unrelated seller and buyer")
-				continue
-			}
+			transferLookup[transfer.Hash()] = append(transferLookup[txHash], transfer)
 
-			sale.CollectionAddress = transfer.CollectionAddress
-			sale.TokenID = transfer.TokenID
-
-			transferCount++
-
-			p.log.Trace().
-				Uint("index", log.Index).
-				Str("collection_address", transfer.CollectionAddress).
-				Str("token_id", transfer.TokenID).
-				Msg("sale ERC1155 transfer parsed")
+		default:
+			continue
 		}
 	}
 
-	if transferCount == 0 {
-		return nil, fmt.Errorf("no transfer event found for sale")
-	}
+	// Then we go through each sale...
+	for _, sale := range completion.Sales {
 
-	if transferCount > 1 {
-		return nil, fmt.Errorf("multiple transfer events found for sale")
+		// ... and get the transfers for each sale according to its transaction hash.
+		transfers, ok := transferLookup[sale.Hash()]
+		if !ok {
+			p.log.Warn().Msg("no transfers for transaction found")
+			continue
+		}
+
+		// Finally, we assign the data to the sale if we have exactly one match.
+		if len(transfers) > 1 {
+			p.log.Warn().Msg("found multiple matching transfers for sale, skipping")
+			continue
+		}
+
+		transfer := transfers[0]
+		sale.CollectionAddress = transfer.CollectionAddress
+		sale.TokenID = transfer.TokenID
 	}
 
 	// Put everything together for the result.
 	result := results.Completion{
 		Job:      completion,
-		Sale:     &sale,
 		Requests: requests,
 	}
 
