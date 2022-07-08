@@ -32,11 +32,12 @@ CREATE TABLE addition_failures
 
 CREATE TABLE completion_failures
 (
-    id               UUID PRIMARY KEY,
-    chain_id         NUMERIC        NOT NULL,
-    block_number     NUMERIC        NOT NULL,
-    transaction_hash VARCHAR(128)   NOT NULL,
-    event_hashes     VARCHAR(256)[] NOT NULL,
-    sale_id          UUID           NOT NULL,
-    failure_message  TEXT           NOT NULL
+    id                  UUID PRIMARY KEY,
+    chain_id            NUMERIC        NOT NULL,
+    start_height        NUMERIC        NOT NULL,
+    end_height          NUMERIC        NOT NULL,
+    event_hashes        VARCHAR(256)[] NOT NULL,
+    transaction_hashes  VARCHAR(128)[] NOT NULL,
+    sale_ids            UUID[]         NOT NULL,
+    failure_message     TEXT           NOT NULL
 );

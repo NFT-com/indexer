@@ -45,5 +45,5 @@ type TransferStore interface {
 
 type SaleStore interface {
 	Upsert(sales ...*events.Sale) error
-	Update(sale *events.Sale) error
+	Update(sales ...*events.Sale) error
 }

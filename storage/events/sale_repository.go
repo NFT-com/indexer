@@ -72,17 +72,21 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 	return nil
 }
 
-func (s *SaleRepository) Update(sale *events.Sale) error {
+func (s *SaleRepository) Update(sales ...*events.Sale) error {
 
-	query := s.build.
-		Update("sales").
-		Set("collection_address", sale.CollectionAddress).
-		Set("token_id", sale.TokenID).
-		Where("id = ?", sale.ID)
+	for _, sale := range sales {
 
-	_, err := query.Exec()
-	if err != nil {
-		return fmt.Errorf("could not update sale event: %w", err)
+		query := s.build.
+			Update("sales").
+			Set("collection_address", sale.CollectionAddress).
+			Set("token_id", sale.TokenID).
+			Where("id = ?", sale.ID)
+
+		_, err := query.Exec()
+		if err != nil {
+			return fmt.Errorf("could not update sale event (id: %s): %w", sale.ID, err)
+		}
+
 	}
 
 	return nil
