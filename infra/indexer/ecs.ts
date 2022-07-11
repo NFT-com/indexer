@@ -82,6 +82,38 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
     })
 }
 
+export const createNsqadminTaskDefinition = (): aws.ecs.TaskDefinition => {
+    const resourceName = 'nsqadmin'
+    return new aws.ecs.TaskDefinition(resourceName, 
+    {
+        containerDefinitions: JSON.stringify([
+            {
+                command: [`--lookupd-http-address=${process.env.EC2_PUBLIC_IP}:4161`],
+                cpu: 0,
+                entryPoint: ['/nsqadmin'],
+                environment: [],
+                essential: true,
+                image: 'nsqio/nsq',
+                links: [],
+                memoryReservation: 256,
+                mountPoints: [],
+                name: resourceName,
+                portMappings: [
+                    { 
+                        containerPort: 4171,
+                        hostPort: 4171,
+                        protocol: 'tcp'
+                    }
+                ],
+                volumesFrom: []
+        }]),
+        executionRoleArn: execRole,
+        family: resourceName,
+        requiresCompatibilities: ['EC2'],
+        taskRoleArn: taskRole,
+    })
+}
+
 export const createParsingDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
@@ -92,13 +124,13 @@ export const createParsingDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','parsing-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db],
+                command: ['-n','parsing-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
                 image: ecrImage,
                 links: [],
-                memoryReservation: 2048,
+                memoryReservation: 1024,
                 mountPoints: [],
                 name: resourceName,
                 portMappings: [],
@@ -121,7 +153,7 @@ export const createParsingDispatcherTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '1028',
+        memory: '1024',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -137,13 +169,13 @@ export const createAdditionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db],
+                command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
                 image: ecrImage,
                 links: [],
-                memoryReservation: 2048,
+                memoryReservation: 1024,
                 mountPoints: [],
                 name: resourceName,
                 portMappings: [],
@@ -166,7 +198,7 @@ export const createAdditionDispatcherTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '1028',
+        memory: '1024',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -182,13 +214,13 @@ export const createCompletionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','completion-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db],
+                command: ['-n','completion-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
                 image: ecrImage,
                 links: [],
-                memoryReservation: 2048,
+                memoryReservation: 1024,
                 mountPoints: [],
                 name: resourceName,
                 portMappings: [],
@@ -211,7 +243,7 @@ export const createCompletionDispatcherTaskDefinition = (
         executionRoleArn: execRole,
         family: resourceName,
         cpu: '512',
-        memory: '1028',
+        memory: '1024',
         requiresCompatibilities: ['EC2'],
         taskRoleArn: taskRole,
     })
@@ -227,14 +259,14 @@ export const createJobCreatorTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-q',`${process.env.EC2_PUBLIC_IP}:4150`,'-w',process.env.ZMOK_WS_URL,'-g',graph_db,'-j',job_db],
+                command: ['-q',`${process.env.EC2_PUBLIC_IP}:4150`,'-w',process.env.ZMOK_WS_URL,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/creator'],
                 environment: [],
                 essential: true,
                 image: ecrImage,
                 links: [],
-                memoryReservation: 2048,
+                memoryReservation: 1024,
                 mountPoints: [],
                 name: resourceName,
                 portMappings: [],
@@ -267,6 +299,12 @@ return new aws.ec2.SecurityGroup(resourceName, {
             fromPort: 4160,
             protocol: 'tcp',
             toPort: 4160,
+        },
+        {
+            cidrBlocks: ['0.0.0.0/0'],
+            fromPort: 4171,
+            protocol: 'tcp',
+            toPort: 4171,
         },
         {
             cidrBlocks: ['0.0.0.0/0'],
@@ -330,7 +368,7 @@ const createEcsASG = (
     config: pulumi.Config,
     infraOutput: SharedInfraOutput,
 ): aws.autoscaling.Group => {
-    const resourceName = getResourceName('indexer-asg')
+    const resourceName = getResourceName('indexer-ec2')
     return new aws.autoscaling.Group(resourceName, {
         defaultCooldown: 300,
         desiredCapacity: 1,
@@ -355,7 +393,7 @@ const createEcsASG = (
             {
                 key: 'Name',
                 propagateAtLaunch: true,
-                value: 'ECS Instance - EC2ContainerService-dev-indexer',
+                value: resourceName,
             },
         ],
         vpcZoneIdentifiers: infraOutput.publicSubnets,
@@ -401,15 +439,5 @@ export const createEcsCluster = (
         capacityProviders: [capacityProvider]
     })
 
-    /*new aws.ecs.ClusterCapacityProviders(`${resourceName}-ccp`, {
-        clusterName: cluster.name,
-        capacityProviders: [capacityProvider],
-        defaultCapacityProviderStrategies: [
-          {
-            weight: 100,
-            capacityProvider: capacityProvider,
-          },
-        ],
-    })*/
     return cluster 
 }
