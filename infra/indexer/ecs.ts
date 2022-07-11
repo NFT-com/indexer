@@ -281,65 +281,10 @@ export const createJobCreatorTaskDefinition = (
     })
 }
 
-export const createEcsSecurityGroup = (
-    infraOutput: SharedInfraOutput,
-): aws.ec2.SecurityGroup => {
-const resourceName = getResourceName('indexer-sg')
-return new aws.ec2.SecurityGroup(resourceName, {
-    description: 'ECS Allowed Ports',
-    egress: [{
-        cidrBlocks: ['0.0.0.0/0'],
-        fromPort: 0,
-        protocol: '-1',
-        toPort: 0,
-    }],
-    ingress: [
-        {
-            cidrBlocks: ['0.0.0.0/0'],
-            fromPort: 4160,
-            protocol: 'tcp',
-            toPort: 4160,
-        },
-        {
-            cidrBlocks: ['0.0.0.0/0'],
-            fromPort: 4171,
-            protocol: 'tcp',
-            toPort: 4171,
-        },
-        {
-            cidrBlocks: ['0.0.0.0/0'],
-            fromPort: 4151,
-            protocol: 'tcp',
-            toPort: 4151,
-        },
-        {
-            cidrBlocks: ['0.0.0.0/0'],
-            fromPort: 4150,
-            protocol: 'tcp',
-            toPort: 4150,
-        },
-        {
-            cidrBlocks: ['0.0.0.0/0'],
-            fromPort: 4161,
-            protocol: 'tcp',
-            toPort: 4161,
-        },
-        {
-            cidrBlocks: ['0.0.0.0/0'],
-            fromPort: 22,
-            protocol: 'tcp',
-            toPort: 22,
-        },
-    ],
-    name: resourceName,
-    vpcId: infraOutput.vpcId,
-    })
-}
-
 const createEcsAsgLaunchConfig = (
     infraOutput: SharedInfraOutput,
 ): aws.ec2.LaunchConfiguration => {
-    const { id: launchConfigSG } = createEcsSecurityGroup(infraOutput)
+    const launchConfigSG = infraOutput.webSGId
     const clusterName = getResourceName('indexer')
     const resourceName = getResourceName('indexer-asg-launchconfig')
     const ec2UserData =

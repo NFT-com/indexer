@@ -43,14 +43,21 @@ const buildEgressRule = (
   cidrBlocks: new ec2.AnyIPv4Location().cidrBlocks,
 })
 
-export const createSecurityGroups = (config: pulumi.Config, vpc: ec2.Vpc): SGOutput => {
+export const createSecurityGroups = (
+  config: pulumi.Config, 
+  vpc: ec2.Vpc
+  ): SGOutput => {
   const web = new awsEC2.SecurityGroup('sg_web', {
     description: 'Allow traffic from/to web',
     name: getResourceName('indexer-web'),
     vpcId: vpc.id,
     ingress: [
-      buildIngressRule(443),
-      buildIngressRule(80),
+      buildIngressRule(22),
+      buildIngressRule(4150),
+      buildIngressRule(4151),
+      buildIngressRule(4160),
+      buildIngressRule(4161),
+      buildIngressRule(4171),
     ],
     egress: [
       buildEgressRule(0, '-1'),
