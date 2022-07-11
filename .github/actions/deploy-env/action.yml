@@ -111,6 +111,9 @@ runs:
         DB_NAME: ${{ fromJSON(inputs.secrets).DB_NAME }}
         DB_USER: ${{ fromJSON(inputs.secrets).DB_USER }}
         DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+        PARSING_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).PARSING_LAMBDA_NAME }}
+        ADDITION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).ADDITION_LAMBDA_NAME }}
+        COMPLETION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).COMPLETION_LAMBDA_NAME }}
         INDEXER_LOG_LEVEL: ${{ fromJSON(inputs.secrets).INDEXER_LOG_LEVEL }}
         COMPLETION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).COMPLETION_RATE_LIMIT }}
         EC2_PUBLIC_IP: ${{ fromJSON(inputs.secrets).EC2_PUBLIC_IP }}

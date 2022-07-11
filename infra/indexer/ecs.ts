@@ -124,7 +124,7 @@ export const createParsingDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','parsing-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-n',process.env.PARSING_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
@@ -169,7 +169,7 @@ export const createAdditionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','addition-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-n',process.env.ADDITION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
@@ -214,7 +214,7 @@ export const createCompletionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n','completion-worker','-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-n',process.env.COMPLETION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 essential: true,
