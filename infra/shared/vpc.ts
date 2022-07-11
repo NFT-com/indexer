@@ -8,8 +8,8 @@ export const createVPC = (): ec2.Vpc => {
     numberOfAvailabilityZones: 3,
     numberOfNatGateways: 0,
     subnets: [
-      { type: 'public', name: `${stage}-indexer` },
-      { type: 'private', name: `${stage}-indexer` },
+      { type: 'public', name: stage },
+      { type: 'private', name: stage},
     ],
   })
 }
