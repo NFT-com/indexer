@@ -1,5 +1,5 @@
 import { ec2 } from '@pulumi/awsx'
-import { getStage, getResourceName } from '../helper'
+import { getStage } from '../helper'
 
 export const createVPC = (): ec2.Vpc => {
   const stage = getStage()
@@ -9,7 +9,7 @@ export const createVPC = (): ec2.Vpc => {
     numberOfNatGateways: 0,
     subnets: [
       { type: 'public', name: stage },
-      { type: 'private', name: stage},
+      { type: 'private', name: stage },
     ],
   })
 }
