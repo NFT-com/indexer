@@ -296,7 +296,7 @@ const createEcsAsgLaunchConfig = (
         associatePublicIpAddress: true,
         iamInstanceProfile: 'arn:aws:iam::016437323894:instance-profile/ecsInstanceRole',
         imageId: 'ami-0f863d7367abe5d6f',  //latest amzn linux 2 ecs-optimized ami in us-east-1
-        instanceType: 'm6g.xlarge',
+        instanceType: 'm6i.xlarge',
         keyName: 'indexer_dev_key',
         name: resourceName,
         rootBlockDevice: {
