@@ -69,6 +69,7 @@ runs:
         AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
         ZMOK_HTTP_URL: ${{ fromJSON(inputs.secrets).ZMOK_HTTP_URL }}
         DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
+        VPC_CIDR: ${{ fromJSON(inputs.secrets).VPC_CIDR }}
       run: npm run deploy:shared
     - name: Build and Push Indexer Docker Image(s)
       shell: bash
