@@ -18,6 +18,7 @@ type Sale struct {
 	SellerAddress      string    `json:"seller_address"`
 	BuyerAddress       string    `json:"buyer_address"`
 	TradePrice         string    `json:"trade_price"`
+	PaymentToken       string    `json:"payment_token"`
 	EmittedAt          time.Time `json:"emitted_at"`
 }
 

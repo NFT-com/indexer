@@ -33,6 +33,7 @@ CREATE TABLE sales
     seller_address      VARCHAR(128) NOT NULL,
     buyer_address       VARCHAR(128) NOT NULL,
     trade_price         NUMERIC      NOT NULL,
+    payment_token       VARCHAR(128) NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW(),
     UNIQUE (block_number, transaction_hash, event_index)

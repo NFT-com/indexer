@@ -25,7 +25,12 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 
 	price, ok := fields["price"].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"id\" field (%T)", fields["price"])
+		return nil, fmt.Errorf("invalid type for \"price\" field (%T)", fields["price"])
+	}
+
+	paymentToken, ok := fields["paymentToken"].(*common.Address)
+	if !ok {
+		return nil, fmt.Errorf("invalid type for \"paymentToken\" field (%T)", fields["paymentToken"])
 	}
 
 	data := make([]byte, 8+32+8)
@@ -39,14 +44,15 @@ func OpenSeaSale(log types.Log) (*events.Sale, error) {
 		ID: saleID.String(),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
-		CollectionAddress:  "", // TODO
-		TokenID:            "", // TODO
+		CollectionAddress:  "", // Populated in separate pipeline
+		TokenID:            "", // Populated in separate pipeline
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
 		EventIndex:         log.Index,
 		SellerAddress:      common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
 		BuyerAddress:       common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 		TradePrice:         price.String(),
+		PaymentToken:       paymentToken.Hex(),
 		// EmittedAt set after parsing
 	}
 
