@@ -13,7 +13,7 @@ jobs:
           secrets: ${{ toJSON(secrets) }}
           stage: dev
   deploy-prod:
-    if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'rel') }}
+    if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
     runs-on: ubuntu-20.04
     environment: nftcom_indexer_prod
     steps:
