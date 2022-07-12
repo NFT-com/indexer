@@ -1,0 +1,4 @@
+encryptionsalt: v1:xJ7vSgvW8Vg=:v1:NLC98+YC3JHkQrC5:D32j5/8ZxgsXo4LBygka1hSi7Mmn/Q==
+config:
+  aws:region: us-east-1
+  nftcom:region: us-east-1
