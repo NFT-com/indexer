@@ -16,14 +16,6 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 )
 
-// ItemTypes:
-// 0: ETH on mainnet, MATIC on polygon, etc.
-// 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)
-// 2: ERC721 items
-// 3: ERC1155 items
-// 4: ERC721 items where a number of tokenIds are supported
-// 5: ERC1155 items where a number of ids are supported
-
 type offer struct {
 	ItemType   uint8          `json:"itemType"`
 	Token      common.Address `json:"token"`
@@ -74,7 +66,18 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("could not get \"consideration\" field: %w", err)
 	}
 
+	// filter out fees paid to the opensea market
 	considerations = filterFees(considerations, offer.Token, offer.Identifier)
+
+	// ItemTypes:
+	// 0: ETH on mainnet, MATIC on polygon, etc.
+	// 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)
+	// 2: ERC721 items
+	// 3: ERC1155 items
+	// 4: ERC721 items where a number of tokenIds are supported
+	// 5: ERC1155 items where a number of ids are supported
+	// if the offer type is greater than two means this is a sell order not a buy order, meaning the offer will be the
+	// nft instead of the payment
 	if offer.ItemType >= 2 {
 		considerations = append(considerations[:1], filterFees(considerations[1:], considerations[0].Token, considerations[0].Identifier)...)
 	}
@@ -88,7 +91,17 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
 	switch {
 
+	// ItemTypes:
+	// 0: ETH on mainnet, MATIC on polygon, etc.
+	// 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)
+	// 2: ERC721 items
+	// 3: ERC1155 items
+	// 4: ERC721 items where a number of tokenIds are supported
+	// 5: ERC1155 items where a number of ids are supported
+	// if the offer type is greater than two means this is a sell order not a buy order, meaning the offer will be the
+	// nft instead of the payment
 	case offer.ItemType >= 2:
+		// in this case the offer var represents the nft being sold and the consideration the payment for it.
 
 		sale := events.Sale{
 			ID: saleID(log),
@@ -110,6 +123,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		return &sale, nil
 
 	default:
+		// in this case the consideration var represents the nft being sold and the offer the payment for it.
 
 		sale := events.Sale{
 			ID: saleID(log),
