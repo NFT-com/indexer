@@ -47,7 +47,7 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 		EventIndex:         log.Index,
 		SellerAddress:      common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
 		BuyerAddress:       common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
-		TradePrice:         price.String(),
+		CurrencyValue:      price.String(),
 		// EmittedAt set after parsing
 		NeedsCompletion: true,
 	}

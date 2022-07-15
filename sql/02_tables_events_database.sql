@@ -34,20 +34,20 @@ CREATE TYPE currency AS
 
 CREATE TABLE sales
 (
-    id                   UUID PRIMARY KEY,
-    chain_id             NUMERIC        NOT NULL,
-    marketplace_address  VARCHAR(128)   NOT NULL,
-    collection_addresses VARCHAR(128)[] NOT NULL,
-    token_ids            VARCHAR(128)[] NOT NULL,
-    block_number         NUMERIC        NOT NULL,
-    transaction_hash     VARCHAR(128)   NOT NULL,
-    event_index          INTEGER        NOT NULL,
-    seller_address       VARCHAR(128)   NOT NULL,
-    buyer_address        VARCHAR(128)   NOT NULL,
-    currency_addresses   VARCHAR(128)[] NOT NULL,
-    currency_amounts     VARCHAR(128)[] NOT NULL,
-    emitted_at           TIMESTAMP      NOT NULL,
-    created_at           TIMESTAMP DEFAULT NOW(),
+    id                  UUID PRIMARY KEY,
+    chain_id            NUMERIC      NOT NULL,
+    marketplace_address VARCHAR(128) NOT NULL,
+    collection_address  VARCHAR(128) NOT NULL,
+    token_id            VARCHAR(128) NOT NULL,
+    block_number        NUMERIC      NOT NULL,
+    transaction_hash    VARCHAR(128) NOT NULL,
+    event_index         INTEGER      NOT NULL,
+    seller_address      VARCHAR(128) NOT NULL,
+    buyer_address       VARCHAR(128) NOT NULL,
+    currency_address    VARCHAR(128) NOT NULL,
+    currency_value      NUMERIC      NOT NULL,
+    emitted_at          TIMESTAMP    NOT NULL,
+    created_at          TIMESTAMP DEFAULT NOW(),
     UNIQUE (block_number, transaction_hash, event_index)
 );
 

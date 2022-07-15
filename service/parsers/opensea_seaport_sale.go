@@ -115,7 +115,8 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 			EventIndex:         log.Index,
 			SellerAddress:      common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
 			BuyerAddress:       recipient.Hex(),
-			TradePrice:         consideration.Amount.String(),
+			CurrencyAddress:    consideration.Token.String(),
+			CurrencyValue:      consideration.Amount.String(),
 			// EmittedAt set after parsing
 			NeedsCompletion: false,
 		}
@@ -137,7 +138,8 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 			EventIndex:         log.Index,
 			SellerAddress:      common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
 			BuyerAddress:       recipient.Hex(),
-			TradePrice:         offer.Amount.String(),
+			CurrencyAddress:    offer.Token.String(),
+			CurrencyValue:      offer.Amount.String(),
 			// EmittedAt set after parsing
 			NeedsCompletion: false,
 		}
