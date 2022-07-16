@@ -56,7 +56,7 @@ func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 			TransactionHash:   log.TxHash.Hex(),
 			SenderAddress:     common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 			ReceiverAddress:   common.BytesToAddress(log.Topics[3].Bytes()).Hex(),
-			TokenCount:        uint(count.Uint64()),
+			TokenCount:        count.String(),
 			// EmittedAt set after parsing
 		}
 		transfers = append(transfers, &transfer)

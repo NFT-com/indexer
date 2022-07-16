@@ -33,7 +33,7 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 		TransactionHash:   log.TxHash.Hex(),
 		SenderAddress:     common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
 		ReceiverAddress:   common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
-		TokenCount:        1,
+		TokenCount:        "1",
 		// EmittedAt set after parsing
 	}
 
