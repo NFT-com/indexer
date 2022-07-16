@@ -51,7 +51,6 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 		BuyerAddress:       common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 		CurrencyAddress:    "", // Done in completion pipeline
 		CurrencyValue:      price.String(),
-		EmittedAt:          time.Time{},
 		// EmittedAt set after parsing
 		NeedsCompletion: true,
 	}

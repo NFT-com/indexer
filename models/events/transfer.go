@@ -18,7 +18,7 @@ type Transfer struct {
 	EventIndex        uint      `json:"event_index"`
 	SenderAddress     string    `json:"sender_address"`
 	ReceiverAddress   string    `json:"receiver_address"`
-	TokenCount        uint      `json:"token_count"`
+	TokenCount        string    `json:"token_count"`
 	EmittedAt         time.Time `json:"emitted_at"`
 }
 

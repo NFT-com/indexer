@@ -5,30 +5,26 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/NFT-com/indexer/models/abis"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
-func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
+func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.ERC1155.UnpackIntoMap(fields, "TransferSingle", log.Data)
+	err := abis.ERC20.UnpackIntoMap(fields, "Transfer", log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	tokenID, ok := fields["id"].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("invalid type for \"id\" field (%T)", fields["id"])
-	}
-	count, ok := fields["value"].(*big.Int)
+	value, ok := fields["value"].(*big.Int)
 	if !ok {
 		return nil, fmt.Errorf("invalid type for \"value\" field (%T)", fields["value"])
 	}
@@ -43,15 +39,14 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	transfer := events.Transfer{
 		ID: transferID.String(),
 		// ChainID set after parsing
-		TokenStandard:     jobs.StandardERC1155,
+		TokenStandard:     jobs.StandardERC20,
 		CollectionAddress: log.Address.Hex(),
-		TokenID:           tokenID.String(),
 		BlockNumber:       log.BlockNumber,
 		EventIndex:        log.Index,
 		TransactionHash:   log.TxHash.Hex(),
-		SenderAddress:     common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
-		ReceiverAddress:   common.BytesToAddress(log.Topics[3].Bytes()).Hex(),
-		TokenCount:        count.String(),
+		SenderAddress:     common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
+		ReceiverAddress:   common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
+		TokenCount:        value.String(),
 		// EmittedAt set after parsing
 	}
 

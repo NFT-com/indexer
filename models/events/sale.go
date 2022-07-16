@@ -18,8 +18,9 @@ type Sale struct {
 	EventIndex         uint      `json:"event_index"`
 	SellerAddress      string    `json:"seller_address"`
 	BuyerAddress       string    `json:"buyer_address"`
-	CurrencyAddress    string    `json:"currency_address"`
 	CurrencyValue      string    `json:"currency_value"`
+	CurrencyAddress    string    `json:"currency_address"`
+	CurrencySymbol     string    `json:"currency_symbol"`
 	EmittedAt          time.Time `json:"emitted_at"`
 	NeedsCompletion    bool      `json:"completion"`
 }
