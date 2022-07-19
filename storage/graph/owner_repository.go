@@ -45,14 +45,14 @@ func (n *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 			transfer.SenderAddress,
 			transfer.NFTID(),
 			transfer.EventID(),
-			-int(transfer.TokenCount),
+			fmt.Sprintf("-%s", transfer.TokenCount),
 		)
 
 		query = query.Values(
 			transfer.ReceiverAddress,
 			transfer.NFTID(),
 			transfer.EventID(),
-			int(transfer.TokenCount),
+			transfer.TokenCount,
 		)
 	}
 

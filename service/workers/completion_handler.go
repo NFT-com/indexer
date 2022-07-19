@@ -107,7 +107,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 		case params.HashERC721Transfer:
 
-			if len(log.Topics) != 3 || len(log.Topics) != 4 {
+			if len(log.Topics) < 3 && len(log.Topics) > 4 {
 				p.log.Warn().
 					Uint("index", log.Index).
 					Int("topics", len(log.Topics)).
@@ -133,7 +133,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 				}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+				nftTransferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
 
 		case params.HashERC1155Transfer:
 
@@ -142,7 +142,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+			nftTransferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
 
 		default:
 			continue
@@ -157,7 +157,9 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 		// Finally, we assign the data to the sale if we have exactly one match.
 		if len(coinTransfers) > 1 {
-			p.log.Warn().Msg("found multiple matching nft transfers for sale, skipping")
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("found multiple matching nft transfers for sale, skipping")
 			continue
 		}
 
@@ -174,30 +176,39 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		if coinTransfer.TokenCount != sale.CurrencyValue ||
 			coinTransfer.SenderAddress != sale.SellerAddress ||
 			coinTransfer.ReceiverAddress != sale.BuyerAddress {
-			p.log.Warn().Msg("no erc20 transaction found with the required fields, skipping")
-			continue
-		}
-
-		symbol, err := p.fetchERC20Symbol(ctx, fetchSymbol, sale)
-		if err != nil {
-			p.log.Warn().Err(err).Msg("token symbol not found, skipping")
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("no erc20 transaction found with the required fields, skipping")
 			continue
 		}
 
 		sale.CurrencyValue = coinTransfer.TokenCount
 		sale.CurrencyAddress = coinTransfer.CollectionAddress
+
+		symbol, err := p.fetchERC20Symbol(ctx, fetchSymbol, sale)
+		if err != nil {
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Err(err).Msg("token symbol not found, skipping")
+			continue
+		}
+
 		sale.CurrencySymbol = symbol
 
 		// ... and get the nft transfers for each sale according to its transaction hash.
-		nftTransfers, ok := nftTransferLookup[sale.Hash()]
+		nftTransfers, ok := nftTransferLookup[sale.TransactionHash]
 		if !ok {
-			p.log.Warn().Msg("no nft transfers for transaction found")
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("no nft transfers for transaction found, skipping")
 			continue
 		}
 
 		// Finally, we assign the data to the sale if we have exactly one match.
 		if len(nftTransfers) > 1 {
-			p.log.Warn().Msg("found multiple matching nft transfers for sale, skipping")
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("found multiple matching nft transfers for sale, skipping")
 			continue
 		}
 
@@ -205,7 +216,9 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 		if coinTransfer.SenderAddress != sale.SellerAddress ||
 			coinTransfer.ReceiverAddress != sale.BuyerAddress {
-			p.log.Warn().Msg("no nft transaction found with the required fields, skipping")
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("no nft transaction found with the required fields, skipping")
 			continue
 		}
 
