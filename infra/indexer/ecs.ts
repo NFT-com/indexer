@@ -17,15 +17,6 @@ export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
             {
                 cpu: 0,
                 entryPoint: ['/nsqlookupd'],
-                logConfiguration: {
-                    logDriver: 'awslogs',
-                    options: {
-                      'awslogs-create-group': 'True',
-                      'awslogs-group': `/ecs/${process.env.STAGE}-nsqlookupd`,
-                      'awslogs-region': 'us-east-1',
-                      'awslogs-stream-prefix': 'indexer',
-                    },
-                },
                 environment: [],
                 essential: true,
                 image: 'nsqio/nsq',
