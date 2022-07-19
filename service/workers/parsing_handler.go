@@ -125,7 +125,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Str("token_id", transfer.TokenID).
 				Str("sender_address", transfer.SenderAddress).
 				Str("receiver_address", transfer.ReceiverAddress).
-				Uint("token_count", transfer.TokenCount).
+				Str("token_count", transfer.TokenCount).
 				Msg("ERC721 transfer parsed")
 
 		case params.HashERC1155Transfer:
@@ -143,7 +143,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Str("token_id", transfer.TokenID).
 				Str("sender_address", transfer.SenderAddress).
 				Str("receiver_address", transfer.ReceiverAddress).
-				Uint("token_count", transfer.TokenCount).
+				Str("token_count", transfer.TokenCount).
 				Msg("ERC1155 transfer parsed")
 
 		case params.HashERC1155Batch:
@@ -162,7 +162,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Str("token_id", transfer.TokenID).
 					Str("sender_address", transfer.SenderAddress).
 					Str("receiver_address", transfer.ReceiverAddress).
-					Uint("token_count", transfer.TokenCount).
+					Str("token_count", transfer.TokenCount).
 					Msg("ERC115 batch parsed")
 			}
 

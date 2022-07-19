@@ -43,8 +43,9 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			"seller_address",
 			"buyer_address",
 			"token_count",
-			"currency_address",
 			"currency_value",
+			"currency_address",
+			"currency_symbol",
 			"emitted_at",
 		).
 		Suffix("ON CONFLICT DO NOTHING")
@@ -62,8 +63,9 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			sale.SellerAddress,
 			sale.BuyerAddress,
 			sale.TokenCount,
-			sale.CurrencyAddress,
 			sale.CurrencyValue,
+			sale.CurrencyAddress,
+			sale.CurrencySymbol,
 			sale.EmittedAt,
 		)
 	}
