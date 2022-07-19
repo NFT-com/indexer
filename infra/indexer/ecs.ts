@@ -17,6 +17,15 @@ export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
             {
                 cpu: 0,
                 entryPoint: ['/nsqlookupd'],
+                logConfiguration: {
+                    logDriver: 'awslogs',
+                    options: {
+                      'awslogs-create-group': 'True',
+                      'awslogs-group': `/ecs/${process.env.STAGE}-nsqlookupd`,
+                      'awslogs-region': 'us-east-1',
+                      'awslogs-stream-prefix': 'indexer',
+                    },
+                },
                 environment: [],
                 essential: true,
                 image: 'nsqio/nsq',
@@ -53,6 +62,15 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
             {
                 command: [`--lookupd-tcp-address=${process.env.EC2_PUBLIC_IP}:4160`,`--broadcast-address=${process.env.EC2_PUBLIC_IP}`,`--msg-timeout=15m`,`--max-msg-timeout=15m`],
                 cpu: 0,
+                logConfiguration: {
+                    logDriver: 'awslogs',
+                    options: {
+                      'awslogs-create-group': 'True',
+                      'awslogs-group': `/ecs/${process.env.STAGE}-nsqd`,
+                      'awslogs-region': 'us-east-1',
+                      'awslogs-stream-prefix': 'indexer',
+                    },
+                },
                 entryPoint: ['/nsqd'],
                 environment: [],
                 essential: true,
@@ -126,6 +144,15 @@ export const createParsingDispatcherTaskDefinition = (
             {
                 command: ['-n',process.env.PARSING_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
+                logConfiguration: {
+                    logDriver: 'awslogs',
+                    options: {
+                      'awslogs-create-group': 'True',
+                      'awslogs-group': `/ecs/${process.env.STAGE}-parsing-dispatcher`,
+                      'awslogs-region': 'us-east-1',
+                      'awslogs-stream-prefix': 'indexer',
+                    },
+                },
                 entryPoint: ['/dispatcher'],
                 essential: true,
                 image: ecrImage,
@@ -171,6 +198,15 @@ export const createAdditionDispatcherTaskDefinition = (
             {
                 command: ['-n',process.env.ADDITION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
+                logConfiguration: {
+                    logDriver: 'awslogs',
+                    options: {
+                      'awslogs-create-group': 'True',
+                      'awslogs-group': `/ecs/${process.env.STAGE}-addition-dispatcher`,
+                      'awslogs-region': 'us-east-1',
+                      'awslogs-stream-prefix': 'indexer',
+                    },
+                },
                 entryPoint: ['/dispatcher'],
                 essential: true,
                 image: ecrImage,
@@ -217,6 +253,15 @@ export const createCompletionDispatcherTaskDefinition = (
                 command: ['-n',process.env.COMPLETION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
+                logConfiguration: {
+                    logDriver: 'awslogs',
+                    options: {
+                      'awslogs-create-group': 'True',
+                      'awslogs-group': `/ecs/${process.env.STAGE}-completion-dispatcher`,
+                      'awslogs-region': 'us-east-1',
+                      'awslogs-stream-prefix': 'indexer',
+                    },
+                },
                 essential: true,
                 image: ecrImage,
                 links: [],
@@ -262,6 +307,15 @@ export const createJobCreatorTaskDefinition = (
                 command: ['-q',`${process.env.EC2_PUBLIC_IP}:4150`,'-w',process.env.ZMOK_WS_URL,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/creator'],
+                logConfiguration: {
+                    logDriver: 'awslogs',
+                    options: {
+                      'awslogs-create-group': 'True',
+                      'awslogs-group': `/ecs/${process.env.STAGE}-job-creator`,
+                      'awslogs-region': 'us-east-1',
+                      'awslogs-stream-prefix': 'indexer',
+                    },
+                },
                 environment: [],
                 essential: true,
                 image: ecrImage,
