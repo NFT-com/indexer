@@ -74,7 +74,7 @@ func NewParsingStage(
 func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 	err := p.process(m.Body)
-	if results.Retriable(err) {
+	if !results.Permanent(err) {
 		p.log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
