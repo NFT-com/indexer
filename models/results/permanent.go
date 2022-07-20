@@ -7,7 +7,7 @@ import (
 func Permanent(err error) bool {
 
 	if err == nil {
-		return false
+		return true
 	}
 
 	msg := err.Error()
@@ -15,9 +15,9 @@ func Permanent(err error) bool {
 
 	// failure to retrieve token uri
 	case strings.Contains(msg, "tokenURI: URI query for nonexistent token"):
-		return false
+		return true
 
 	default:
-		return true
+		return false
 	}
 }
