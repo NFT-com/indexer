@@ -29,3 +29,8 @@ func (s Sale) Hash() string {
 	hash := sha3.Sum256([]byte(s.TransactionHash + s.SellerAddress + s.BuyerAddress))
 	return string(hash[:])
 }
+
+func (s Sale) PaymentHash() string {
+	hash := sha3.Sum256([]byte(s.TransactionHash + s.BuyerAddress + s.SellerAddress))
+	return string(hash[:])
+}
