@@ -187,7 +187,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		sale.CurrencyAddress = coinTransfer.CollectionAddress
 
 		// ... and get the nft transfers for each sale according to its transaction hash.
-		nftTransfers, ok := nftTransferLookup[sale.TransactionHash]
+		nftTransfers, ok := nftTransferLookup[sale.Hash()]
 		if !ok {
 			p.log.Warn().
 				Str("sale_id", sale.ID).
