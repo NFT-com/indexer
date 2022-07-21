@@ -131,7 +131,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 			}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[txHash], transfer)
+			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
 
 		case params.HashERC1155Transfer:
 
@@ -140,7 +140,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[txHash], transfer)
+			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
 
 		default:
 			continue
