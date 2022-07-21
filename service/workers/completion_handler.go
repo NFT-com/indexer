@@ -133,7 +133,9 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 				}
 
-				nftTransferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+				nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
+
+			}
 
 		case params.HashERC1155Transfer:
 
@@ -142,7 +144,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			nftTransferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+			nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
 
 		default:
 			continue
@@ -153,7 +155,10 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	for _, sale := range completion.Sales {
 
 		// ... and get the coin transfers for each sale according to its transaction hash.
-		coinTransfers, _ := coinsTransferLookup[sale.Hash()]
+		coinTransfers, ok := coinsTransferLookup[sale.PaymentHash()]
+		if !ok {
+			coinTransfers, _ = coinsTransferLookup[sale.Hash()]
+		}
 
 		// Finally, we assign the data to the sale if we have exactly one match.
 		if len(coinTransfers) > 1 {
@@ -173,12 +178,10 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 			coinTransfer = coinTransfers[0]
 		}
 
-		if coinTransfer.TokenCount != sale.CurrencyValue ||
-			coinTransfer.SenderAddress != sale.SellerAddress ||
-			coinTransfer.ReceiverAddress != sale.BuyerAddress {
+		if coinTransfer.TokenCount != sale.CurrencyValue {
 			p.log.Warn().
 				Str("sale_id", sale.ID).
-				Msg("no erc20 transaction found with the required fields, skipping")
+				Msg("no erc20 transaction found with the required value, skipping")
 			continue
 		}
 
@@ -196,7 +199,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		sale.CurrencySymbol = symbol
 
 		// ... and get the nft transfers for each sale according to its transaction hash.
-		nftTransfers, ok := nftTransferLookup[sale.TransactionHash]
+		nftTransfers, ok := nftTransferLookup[sale.Hash()]
 		if !ok {
 			p.log.Warn().
 				Str("sale_id", sale.ID).
@@ -213,15 +216,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		}
 
 		nftTransfer := nftTransfers[0]
-
-		if coinTransfer.SenderAddress != sale.SellerAddress ||
-			coinTransfer.ReceiverAddress != sale.BuyerAddress {
-			p.log.Warn().
-				Str("sale_id", sale.ID).
-				Msg("no nft transaction found with the required fields, skipping")
-			continue
-		}
-
 		sale.CollectionAddress = nftTransfer.CollectionAddress
 		sale.TokenID = nftTransfer.TokenID
 	}
