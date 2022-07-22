@@ -88,10 +88,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Int("logs", len(logs)).
 		Msg("event logs fetched")
 
-	// Get All logs for transaction
-	// Make it on its own sales
-	// Check if we want them
-
 	// Convert all logs we can parse to transfer.
 	coinsTransferLookup := make(map[string][]*events.Transfer)
 	nftTransferLookup := make(map[string][]*events.Transfer)
