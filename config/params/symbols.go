@@ -1,5 +1,5 @@
 package params
 
 const (
-	EthSymbol = "ETH"
+	SymbolETH = "ETH"
 )

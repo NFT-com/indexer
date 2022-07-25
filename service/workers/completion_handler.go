@@ -231,7 +231,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 func (p *CompletionHandler) fetchERC20Symbol(ctx context.Context, fetcher *web3.SymbolFetcher, sale *events.Sale) (string, error) {
 	if sale.CurrencyAddress == params.AddressZero {
-		return params.EthSymbol, nil
+		return params.SymbolETH, nil
 	}
 
 	symbol, err := fetcher.ERC20(ctx, sale.CurrencyAddress)
