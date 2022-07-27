@@ -42,7 +42,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	// Get the buys from the event.
 	recipient, ok := fields["recipient"].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"recipient\" field (%T)", fields["offer"])
+		return nil, fmt.Errorf("invalid type for \"recipient\" field (%T)", fields["recipient"])
 	}
 
 	// Retrieve the offers from the event.
@@ -52,7 +52,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("could not get \"offer\" field: %w", err)
 	}
 
-	// Currently, will ignore all the events with multiple currencies.
+	// Currently we will ignore all events with multiple currencies.
 	if len(offers) > 1 {
 		return nil, fmt.Errorf("could not parse event: multiple offers not supported")
 	}
@@ -66,23 +66,18 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("could not get \"consideration\" field: %w", err)
 	}
 
+	if len(considerations) == 0 {
+		return nil, fmt.Errorf("could not get considerations: considerations are empty")
+	}
+
 	// filter out fees paid to the opensea market
 	considerations = filterFees(considerations, offer.Token, offer.Identifier)
 
-	// ItemTypes:
-	// 0: ETH on mainnet, MATIC on polygon, etc.
-	// 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)
-	// 2: ERC721 items
-	// 3: ERC1155 items
-	// 4: ERC721 items where a number of tokenIds are supported
-	// 5: ERC1155 items where a number of ids are supported
-	// if the offer type is greater than two means this is a sell order not a buy order, meaning the offer will be the
-	// nft instead of the payment
-	if offer.ItemType >= 2 {
+	if isSaleOrder(offer) {
 		considerations = append(considerations[:1], filterFees(considerations[1:], considerations[0].Token, considerations[0].Identifier)...)
 	}
 
-	// Currently, will ignore all the events with multiple tokens sold.
+	// Currently we will ignore all events with multiple tokens sold.
 	if len(considerations) > 1 {
 		return nil, fmt.Errorf("could not parse event: multiple considerations per sale not supported")
 	}
@@ -90,18 +85,9 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	consideration := considerations[0]
 
 	switch {
-
-	// ItemTypes:
-	// 0: ETH on mainnet, MATIC on polygon, etc.
-	// 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)
-	// 2: ERC721 items
-	// 3: ERC1155 items
-	// 4: ERC721 items where a number of tokenIds are supported
-	// 5: ERC1155 items where a number of ids are supported
-	// if the offer type is greater than two means this is a sell order not a buy order, meaning the offer will be the
-	// nft instead of the payment
-	case offer.ItemType >= 2:
-		// in this case the offer var represents the nft being sold and the consideration the payment for it.
+	
+	case isSaleOrder(offer):
+		// in this case the offer var represents the nft being sold and the consideration represents the payment for it.
 
 		sale := events.Sale{
 			ID: saleID(log),
@@ -148,10 +134,23 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	}
 }
 
+func isSaleOrder(offer offer) bool {
+	// ItemTypes:
+	// 0: ETH on mainnet, MATIC on polygon, etc.
+	// 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)
+	// 2: ERC721 items
+	// 3: ERC1155 items
+	// 4: ERC721 items where a number of tokenIds are supported
+	// 5: ERC1155 items where a number of ids are supported
+	// if the offer type is greater than two means this is a sell order not a buy order, meaning the offer will be the
+	// nft instead of the payment
+	return offer.ItemType >= 2
+}
+
 func getCompositeData(field interface{}, out interface{}) error {
 	data, err := json.Marshal(field)
 	if err != nil {
-		return fmt.Errorf("could not marshar composite data: %w", err)
+		return fmt.Errorf("could not marshal composite data: %w", err)
 	}
 
 	err = json.Unmarshal(data, out)
@@ -166,7 +165,7 @@ func filterFees(considerations []consideration, token common.Address, identifier
 	filtered := make([]consideration, 0)
 
 	for _, consideration := range considerations {
-		// if the contract addresses are the same remove it as it are fees
+		// if the contract addresses are the same remove it as it represents fees
 		if consideration.Token.Hex() == token.Hex() &&
 			consideration.Identifier.Cmp(identifier) == 0 {
 			continue

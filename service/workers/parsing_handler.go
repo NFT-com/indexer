@@ -177,7 +177,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Msg("OpenSea sale parsed")
+				Msg("OpenSea Wyvern sale parsed")
 
 		case params.HashOpenSeaSeaportTrade:
 
@@ -190,7 +190,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Msg("OpenSea sale parsed")
+				Msg("OpenSea Seaport sale parsed")
 		}
 	}
 

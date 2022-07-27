@@ -44,6 +44,7 @@ CREATE TABLE sales
     event_index         INTEGER      NOT NULL,
     seller_address      VARCHAR(128) NOT NULL,
     buyer_address       VARCHAR(128) NOT NULL,
+    token_count         NUMERIC      NOT NULL,
     currency_address    VARCHAR(128) NOT NULL,
     currency_value      NUMERIC      NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
