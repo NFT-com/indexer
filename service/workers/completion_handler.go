@@ -164,7 +164,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		if len(coinTransfers) > 1 {
 			p.log.Warn().
 				Str("sale_id", sale.ID).
-				Msg("found multiple matching nft transfers for sale, skipping")
+				Msg("found multiple matching erc20 transfers for sale, skipping")
 			continue
 		}
 
