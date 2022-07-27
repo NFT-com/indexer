@@ -58,7 +58,7 @@ func NewCompletionStage(
 func (a *CompletionStage) HandleMessage(m *nsq.Message) error {
 
 	err := a.process(m.Body)
-	if results.Retriable(err) {
+	if !results.Permanent(err) {
 		a.log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
