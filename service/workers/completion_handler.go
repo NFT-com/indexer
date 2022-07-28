@@ -76,7 +76,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Msg("connection to Ethereum node established")
 
 	fetch := web3.NewLogsFetcher(api)
-	fetchSymbol := web3.NewSymbolFetcher(api)
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
 	requests := uint(1)
@@ -188,16 +187,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		sale.CurrencyValue = coinTransfer.TokenCount
 		sale.CurrencyAddress = coinTransfer.CollectionAddress
 
-		symbol, err := p.fetchERC20Symbol(ctx, fetchSymbol, sale)
-		if err != nil {
-			p.log.Warn().
-				Str("sale_id", sale.ID).
-				Err(err).Msg("token symbol not found, skipping")
-			continue
-		}
-
-		sale.CurrencySymbol = symbol
-
 		// ... and get the nft transfers for each sale according to its transaction hash.
 		nftTransfers, ok := nftTransferLookup[sale.Hash()]
 		if !ok {
@@ -227,17 +216,4 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	}
 
 	return &result, nil
-}
-
-func (p *CompletionHandler) fetchERC20Symbol(ctx context.Context, fetcher *web3.SymbolFetcher, sale *events.Sale) (string, error) {
-	if sale.CurrencyAddress == params.AddressZero {
-		return params.SymbolETH, nil
-	}
-
-	symbol, err := fetcher.ERC20(ctx, sale.CurrencyAddress)
-	if err != nil {
-		return "", err
-	}
-
-	return symbol, nil
 }
