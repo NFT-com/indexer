@@ -110,7 +110,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		eventType := log.Topics[0]
 		switch eventType.String() {
 
-		case params.HashERC721Transfer:
+		case params.HashERCTransfer:
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
