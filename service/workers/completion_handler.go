@@ -133,7 +133,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				}
 
 				nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
-
 			}
 
 		case params.HashERC1155Transfer:
