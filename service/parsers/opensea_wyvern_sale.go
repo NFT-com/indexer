@@ -16,17 +16,22 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 )
 
+const (
+	eventOrdersMatched = "OrdersMatched"
+	fieldPrice         = "price"
+)
+
 func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, "OrdersMatched", log.Data)
+	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, eventOrdersMatched, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	price, ok := fields["price"].(*big.Int)
+	price, ok := fields[fieldPrice].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"price\" field (%T)", fields["price"])
+		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldPrice, fields[fieldPrice])
 	}
 
 	data := make([]byte, 8+32+8)
@@ -38,7 +43,6 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 
 	sale := events.Sale{
 		ID:      saleID.String(),
-		ChainID: 0,
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  "", // Done in completion pipeline
