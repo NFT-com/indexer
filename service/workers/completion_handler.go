@@ -104,7 +104,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		eventHash := log.Topics[0].String()
 		switch eventHash {
 
-		case params.HashERC721Transfer:
+		case params.HashERCTransfer:
 
 			if len(log.Topics) < 3 && len(log.Topics) > 4 {
 				p.log.Warn().
