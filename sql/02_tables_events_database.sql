@@ -35,7 +35,6 @@ CREATE TABLE sales
     token_count         NUMERIC      NOT NULL,
     currency_value      NUMERIC      NOT NULL,
     currency_address    VARCHAR(128) NOT NULL,
-    currency_symbol     VARCHAR(128) NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW(),
     UNIQUE (block_number, transaction_hash, event_index)

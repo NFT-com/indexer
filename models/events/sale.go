@@ -20,7 +20,6 @@ type Sale struct {
 	BuyerAddress       string    `json:"buyer_address"`
 	CurrencyValue      string    `json:"currency_value"`
 	CurrencyAddress    string    `json:"currency_address"`
-	CurrencySymbol     string    `json:"currency_symbol"`
 	EmittedAt          time.Time `json:"emitted_at"`
 	NeedsCompletion    bool      `json:"completion"`
 }
