@@ -16,17 +16,22 @@ import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
+const (
+	eventTransfer = "Transfer"
+	fieldValue    = "value"
+)
+
 func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.ERC20.UnpackIntoMap(fields, "Transfer", log.Data)
+	err := abis.ERC20.UnpackIntoMap(fields, eventTransfer, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	value, ok := fields["value"].(*big.Int)
+	value, ok := fields[fieldValue].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"value\" field (%T)", fields["value"])
+		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldValue, fields[fieldValue])
 	}
 
 	data := make([]byte, 8+32+8)

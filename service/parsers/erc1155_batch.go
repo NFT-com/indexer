@@ -16,21 +16,27 @@ import (
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
+const (
+	eventTransferBatch = "TransferBatch"
+	fieldsIDs          = "ids"
+	fieldsValues       = "values"
+)
+
 func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.ERC1155.UnpackIntoMap(fields, "TransferSingle", log.Data)
+	err := abis.ERC1155.UnpackIntoMap(fields, eventTransferBatch, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	tokenIDs, ok := fields["ids"].([]*big.Int)
+	tokenIDs, ok := fields[fieldsIDs].([]*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"ids\" field (%T)", fields["ids"])
+		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldsIDs, fields[fieldsIDs])
 	}
-	counts, ok := fields["values"].([]*big.Int)
+	counts, ok := fields[fieldsValues].([]*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"counts\" field (%T)", fields["counts"])
+		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldsValues, fields[fieldsValues])
 	}
 
 	var transfers []*events.Transfer
