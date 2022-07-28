@@ -85,9 +85,9 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	consideration := considerations[0]
 
 	switch {
-	
+
+	// in this case the offer var represents the nft being sold and the consideration represents the payment for it.
 	case isSaleOrder(offer):
-		// in this case the offer var represents the nft being sold and the consideration represents the payment for it.
 
 		sale := events.Sale{
 			ID: saleID(log),
