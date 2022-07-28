@@ -86,6 +86,8 @@ func (s *SaleRepository) Update(sales ...*events.Sale) error {
 			Update("sales").
 			Set("collection_address", sale.CollectionAddress).
 			Set("token_id", sale.TokenID).
+			Set("currency_value", sale.CurrencyValue).
+			Set("currency_address", sale.CurrencyAddress).
 			Where("id = ?", sale.ID)
 
 		_, err := query.Exec()
