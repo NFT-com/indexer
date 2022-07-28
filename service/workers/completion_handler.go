@@ -90,14 +90,12 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Msg("event logs fetched")
 
 	// This orders for the case that we have multiple sales per transfer.
-	saleLookup := make(map[string][]*events.Sale) // TODO: var name
+	saleLookup := make(map[string][]*events.Sale) // FIXME: var name
 	for _, sale := range completion.Sales {
 		saleLookup[sale.TransactionHash] = append(saleLookup[sale.TransactionHash], sale)
 	}
 
-	// Convert all logs we can parse to transfer.
-	coinsTransferLookup := make(map[string][]*events.Transfer)
-	nftTransferLookup := make(map[string][]*events.Transfer)
+	transferLookup := make(map[string][]*events.Transfer)
 	for _, log := range logs {
 
 		if len(log.Topics) == 0 {
@@ -130,7 +128,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 					return nil, fmt.Errorf("could not parse sale ERC20 transfer: %w", err)
 				}
 
-				coinsTransferLookup[transfer.TransactionHash] = append(nftTransferLookup[transfer.TransactionHash], transfer)
+				transferLookup[transfer.TransactionHash] = append(transferLookup[transfer.TransactionHash], transfer)
 
 			case len(log.Topics) == 4:
 
@@ -139,7 +137,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 				}
 
-				nftTransferLookup[transfer.TransactionHash] = append(nftTransferLookup[transfer.TransactionHash], transfer)
+				transferLookup[transfer.TransactionHash] = append(transferLookup[transfer.TransactionHash], transfer)
 
 			}
 
@@ -150,7 +148,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			nftTransferLookup[transfer.TransactionHash] = append(nftTransferLookup[transfer.TransactionHash], transfer)
+			transferLookup[transfer.TransactionHash] = append(transferLookup[transfer.TransactionHash], transfer)
 
 		default:
 			continue
@@ -159,18 +157,14 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	for transactionHash, sales := range saleLookup {
 		// Get the events for this transaction
-		coinTransactionTransfers, _ := coinsTransferLookup[transactionHash]
-		nftTransactionTransfers, _ := nftTransferLookup[transactionHash]
+		transactionTransfers, _ := transferLookup[transactionHash]
 
 		// Sort everything by log index
 		sort.Slice(sales, func(i, j int) bool {
 			return sales[i].EventIndex < sales[i].EventIndex
 		})
-		sort.Slice(coinTransactionTransfers, func(i, j int) bool {
-			return coinTransactionTransfers[i].EventIndex < coinTransactionTransfers[i].EventIndex
-		})
-		sort.Slice(nftTransactionTransfers, func(i, j int) bool {
-			return nftTransactionTransfers[i].EventIndex < nftTransactionTransfers[i].EventIndex
+		sort.Slice(transactionTransfers, func(i, j int) bool {
+			return transactionTransfers[i].EventIndex < transactionTransfers[i].EventIndex
 		})
 
 		lastSaleIndex := uint(0)
@@ -178,8 +172,8 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		for _, sale := range sales {
 
 			// Link coins transfers
-			coinTransfers := make([]*events.Transfer, 0)
-			for _, transfer := range coinTransactionTransfers {
+			transfers := make([]*events.Transfer, 0)
+			for _, transfer := range transactionTransfers {
 				if transfer.EventIndex >= sale.EventIndex {
 					break
 				}
@@ -192,15 +186,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 					continue
 				}
 
-				coinTransfers = append(coinTransfers, transfer)
-			}
-
-			// Finally, we assign the data to the sale if we have exactly one match.
-			if len(coinTransfers) > 1 {
-				p.log.Warn().
-					Str("sale_id", sale.ID).
-					Msg("found multiple matching erc20 transfers for sale, skipping")
-				continue
+				transfers = append(transfers, transfer)
 			}
 
 			coinTransfer := &events.Transfer{
@@ -222,40 +208,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 			sale.CurrencyValue = coinTransfer.TokenCount
 			sale.CurrencyAddress = coinTransfer.CollectionAddress
-
-			nftTransfers := make([]*events.Transfer, 0)
-			// Link transaction transfers
-			for _, transfer := range nftTransactionTransfers {
-				if transfer.EventIndex >= sale.EventIndex {
-					break
-				}
-
-				if sale.Hash() != transfer.Hash() {
-					continue
-				}
-
-				if transfer.EventIndex <= lastSaleIndex {
-					continue
-				}
-
-				nftTransfers = append(nftTransfers, transfer)
-			}
-
-			// If no nft transfer is found skip it.
-			if len(nftTransfers) == 0 {
-				p.log.Warn().
-					Str("sale_id", sale.ID).
-					Msg("no nft transfers for transaction found, skipping")
-				continue
-			}
-
-			// Finally, we assign the data to the sale if we have exactly one match.
-			if len(nftTransfers) > 1 {
-				p.log.Warn().
-					Str("sale_id", sale.ID).
-					Msg("found multiple matching nft transfers for sale, skipping")
-				continue
-			}
 
 			nftTransfer := nftTransfers[0]
 			sale.CollectionAddress = nftTransfer.CollectionAddress
