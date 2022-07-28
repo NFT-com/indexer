@@ -46,7 +46,7 @@ export const createNsqlookupTaskDefinition = (): aws.ecs.TaskDefinition => {
 }
 
 export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
-    const resourceName = 'nsqd'
+    const resourceName = getResourceName('nsqd')
     return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
@@ -92,7 +92,7 @@ export const createNsqdTaskDefinition = (): aws.ecs.TaskDefinition => {
 }
 
 export const createNsqadminTaskDefinition = (): aws.ecs.TaskDefinition => {
-    const resourceName = 'nsqadmin'
+    const resourceName = getResourceName('nsqadmin')
     return new aws.ecs.TaskDefinition(resourceName, 
     {
         containerDefinitions: JSON.stringify([
