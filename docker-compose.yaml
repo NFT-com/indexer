@@ -83,3 +83,13 @@ services:
     depends_on:
       - postgres
       - nsqlookupd
+  api:
+    build:
+      context: .
+      dockerfile: cmd/api/Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    entrypoint: '/api -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    depends_on:
+      - addition-dispatcher

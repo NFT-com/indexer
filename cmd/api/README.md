@@ -6,9 +6,8 @@ Initial use case:
 - addition worker - queue job to call an endpoint to query and populate NFT metadata
 
 Other Potential use cases:
-- intrumentation
 - reporting
-- control panel / ops management
+- control panel
 
 ## Command Line Parameters
 
