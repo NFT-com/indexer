@@ -1,13 +1,12 @@
 package main
 
 import (
-	"crypto/subtle"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
-	"net/http"
 	"os"
 	"os/signal"
+
+	"github.com/NFT-com/indexer/service/api"
 )
 
 const (
@@ -19,20 +18,6 @@ func main() {
 	os.Exit(run())
 }
 
-func pingPong(c echo.Context) error {
-	return c.String(http.StatusOK, "pong")
-}
-
-func refreshTokenMetaData(c echo.Context) error {
-	// Get contractAddress and tokenId
-	contractAddress := c.FormValue("contractAddress")
-	tokenId := c.FormValue("tokenId")
-
-	// TODO: Enqueue a job to refresh metadata for token/tokenId
-
-	return c.String(http.StatusOK, "contractAddress:"+contractAddress+", tokenId:"+tokenId)
-}
-
 func run() int {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -42,8 +27,7 @@ func run() int {
 		flagPassword string
 
 		flagLogLevel string
-
-		flagGraphDB string
+		flagGraphDB  string
 	)
 
 	pflag.StringVarP(&flagUsername, "username", "u", "admin", "Basic HTTP Auth Username")
@@ -52,24 +36,11 @@ func run() int {
 	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
 	pflag.Parse()
 
-	// Start HTTP Server
-	e := echo.New()
+	err := api.Server(flagUsername, flagPassword, flagGraphDB, flagLogLevel)
 
-	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		// Be careful to use constant time comparison to prevent timing attacks
-		if subtle.ConstantTimeCompare([]byte(username), []byte(flagUsername)) == 1 &&
-			subtle.ConstantTimeCompare([]byte(password), []byte(flagPassword)) == 1 {
-			return true, nil
-		}
-		return false, nil
-	}))
-
-	// Ping - Health Check
-	e.GET("/ping", pingPong)
-	// Single endpoint to enqueue a job for a given NFT
-	e.POST("/metadata/refresh", refreshTokenMetaData)
-
-	e.Logger.Fatal(e.Start(":8080"))
-
+	if err != nil {
+		log.Error().Err(err).Str("api", "server").Msg("error running HTTP server")
+		return failure
+	}
 	return success
 }
