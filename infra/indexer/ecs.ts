@@ -326,6 +326,43 @@ export const createJobCreatorTaskDefinition = (
     })
 }
 
+
+export const createApiTaskDefinition = (
+    infraOutput: SharedInfraOutput,
+): aws.ecs.TaskDefinition => {
+    const resourceName = getResourceName('api')
+    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:api`
+
+    return new aws.ecs.TaskDefinition(resourceName,
+        {
+            containerDefinitions: JSON.stringify([
+                {
+                    command: ['-g',graph_db,'-u',process.env.API_USERNAME,'-p',process.env.API_PASSWORD],
+                    cpu: 0,
+                    entryPoint: ['/api'],
+                    environment: [],
+                    essential: true,
+                    image: ecrImage,
+                    links: [],
+                    memoryReservation: 256,
+                    mountPoints: [],
+                    name: resourceName,
+                    portMappings: [
+                        {
+                            containerPort: 8080,
+                            hostPort: 8080,
+                            protocol: 'tcp'
+                        }
+                    ],
+                    volumesFrom: []
+                }]),
+            executionRoleArn: execRole,
+            family: resourceName,
+            requiresCompatibilities: ['EC2'],
+            taskRoleArn: taskRole,
+        })
+}
+
 const createEcsAsgLaunchConfig = (
     infraOutput: SharedInfraOutput,
 ): aws.ec2.LaunchConfiguration => {
