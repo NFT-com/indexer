@@ -11,11 +11,22 @@ Other Potential use cases:
 
 ## Command Line Parameters
 
-TODO - creds, etc
+```
+Usage of action-dispatcher:
+  -l, --log-level string                severity level for log output (default "info")
+  -g, --graph-database string           Postgres connection details for graph database (default "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable")
+  -u, --username string                 Basic HTTP Authentication Username (default "admin")
+  -p, --password string                 Basic HTTP Authentication Password (default "admin")
+```
 
 ## Environment Variables
 
-TODO
+In dev/prod environments, set HTTP Basic Auth username/password in Doppler secrets
+
+```
+API_USERNAME=<username>
+API_PASSWORD=<password>
+```
 
 ## Database Address — Data Source Name
 

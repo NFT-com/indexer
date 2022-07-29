@@ -16,3 +16,6 @@ It uses AWS Lambda functions to do some heavy lifting, so the service can scale 
 This index can then be used by the [Analytics API](https://github.com/NFT-com/analytics) to expose NFT analytics data.
 
 * [Deployment Guide](./docs/deployment.md)
+
+There is also an API availble here to trigger the refresh of NFT token metadata
+- [Metadata Refresh API](./cmd/api)
