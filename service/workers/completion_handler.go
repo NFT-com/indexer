@@ -153,6 +153,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		transfer := transfers[0]
 		sale.CollectionAddress = transfer.CollectionAddress
 		sale.TokenID = transfer.TokenID
+		sale.TokenCount = transfer.TokenCount
 	}
 
 	// Put everything together for the result.

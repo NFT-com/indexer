@@ -192,6 +192,14 @@ func (p *ParsingStage) process(payload []byte) error {
 
 	// We can go through the sales and process the completion.
 	if len(result.Sales) > 0 {
+		completions := make([]*events.Sale, 0, len(result.Sales))
+		for _, sale := range result.Sales {
+			if !sale.NeedsCompletion {
+				continue
+			}
+
+			completions = append(completions, sale)
+		}
 
 		completion := jobs.Completion{
 			ID:          uuid.NewString(),
@@ -199,7 +207,7 @@ func (p *ParsingStage) process(payload []byte) error {
 			StartHeight: result.Job.StartHeight,
 			EndHeight:   result.Job.EndHeight,
 			EventHashes: result.Job.EventHashes,
-			Sales:       result.Sales,
+			Sales:       completions,
 		}
 
 		payload, err := json.Marshal(completion)
