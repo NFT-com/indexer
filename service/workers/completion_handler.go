@@ -171,9 +171,22 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		// Link transfers to a specific sale
 		for _, sale := range sales {
 
-			// Link coins transfers
+			// Get all transfers for the current sale
 			transfers := make([]*events.Transfer, 0)
+
+			// if there is only one transfer it means native token was used to pay
+			if sale.EventIndex-lastSaleIndex == 1 {
+
+				transfers = append(transfers, &events.Transfer{
+					CollectionAddress: params.AddressZero,
+					TokenCount:        sale.CurrencyValue,
+					SenderAddress:     sale.SellerAddress,
+					ReceiverAddress:   sale.BuyerAddress,
+				})
+			}
+
 			for _, transfer := range transactionTransfers {
+
 				if transfer.EventIndex >= sale.EventIndex {
 					break
 				}
@@ -189,31 +202,65 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				transfers = append(transfers, transfer)
 			}
 
-			coinTransfer := &events.Transfer{
-				CollectionAddress: params.AddressZero,
-				TokenCount:        sale.CurrencyValue,
-				SenderAddress:     sale.SellerAddress,
-				ReceiverAddress:   sale.BuyerAddress,
-			}
-			if len(coinTransfers) != 0 {
-				coinTransfer = coinTransfers[0]
-			}
+			lastSaleIndex = sale.EventIndex
 
-			if coinTransfer.TokenCount != sale.CurrencyValue {
-				p.log.Warn().
-					Str("sale_id", sale.ID).
-					Msg("no erc20 transaction found with the required value, skipping")
+			// if there is more than 1 nft transfer and 1 token transfer
+			// (could be 2 nft transfers next cases will cover this)
+			if len(transfers) > 2 {
 				continue
 			}
 
-			sale.CurrencyValue = coinTransfer.TokenCount
-			sale.CurrencyAddress = coinTransfer.CollectionAddress
+			switch len(transfers) {
 
-			nftTransfer := nftTransfers[0]
-			sale.CollectionAddress = nftTransfer.CollectionAddress
-			sale.TokenID = nftTransfer.TokenID
+			case 2:
 
-			lastSaleIndex = sale.EventIndex
+				var currencyTransfer *events.Transfer
+				var nftTransfer *events.Transfer
+
+				switch {
+
+				case transfers[0].TokenCount == sale.CurrencyValue:
+
+					// the transfer with the index 0 is the currency transfer
+					currencyTransfer = transfers[0]
+					nftTransfer = transfers[1]
+
+				case transfers[1].TokenCount == sale.CurrencyValue:
+
+					// the transfer with the index 1 is the currency transfer
+					currencyTransfer = transfers[1]
+					nftTransfer = transfers[0]
+
+				default:
+
+					p.log.Warn().
+						Str("sale_id", sale.ID).
+						Msg("invalid transfers found, skipping")
+
+					continue
+				}
+
+				sale.TokenID = nftTransfer.TokenID
+				sale.CollectionAddress = nftTransfer.CollectionAddress
+
+				sale.CurrencyAddress = currencyTransfer.CollectionAddress
+
+			case 1:
+
+				p.log.Warn().
+					Str("sale_id", sale.ID).
+					Msg("not all transfers were found, skipping")
+
+				continue
+
+			default:
+
+				p.log.Warn().
+					Str("sale_id", sale.ID).
+					Msg("no transfers found, skipping")
+
+				continue
+			}
 		}
 	}
 
