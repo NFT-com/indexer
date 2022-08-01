@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
@@ -42,7 +41,7 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 	saleID := uuid.Must(uuid.FromBytes(hash[:16]))
 
 	sale := events.Sale{
-		ID:      saleID.String(),
+		ID: saleID.String(),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  "", // Done in completion pipeline
