@@ -16,6 +16,13 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 )
 
+const (
+	eventOrdersFulfilled = "OrderFulfilled"
+	fieldRecipient       = "recipient"
+	fieldOffer           = "offer"
+	fieldConsideration   = "consideration"
+)
+
 type offer struct {
 	ItemType   uint8          `json:"itemType"`
 	Token      common.Address `json:"token"`
@@ -34,22 +41,22 @@ type consideration struct {
 func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.OpenSeaSeaport.UnpackIntoMap(fields, "OrderFulfilled", log.Data)
+	err := abis.OpenSeaSeaport.UnpackIntoMap(fields, eventOrdersFulfilled, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
 	// Get the buys from the event.
-	recipient, ok := fields["recipient"].(common.Address)
+	recipient, ok := fields[fieldRecipient].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"recipient\" field (%T)", fields["recipient"])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldRecipient, fields[fieldRecipient])
 	}
 
 	// Retrieve the offers from the event.
 	offers := make([]offer, 0)
-	err = getCompositeData(fields["offer"], &offers)
+	err = getCompositeData(fields[fieldOffer], &offers)
 	if err != nil {
-		return nil, fmt.Errorf("could not get \"offer\" field: %w", err)
+		return nil, fmt.Errorf("could not get %q field: %w", fieldOffer, err)
 	}
 
 	// Currently we will ignore all events with multiple currencies.
@@ -61,9 +68,9 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
 	// Retrieve consideration items.
 	considerations := make([]consideration, 0)
-	err = getCompositeData(fields["consideration"], &considerations)
+	err = getCompositeData(fields[fieldConsideration], &considerations)
 	if err != nil {
-		return nil, fmt.Errorf("could not get \"consideration\" field: %w", err)
+		return nil, fmt.Errorf("could not get %q field: %w", fieldConsideration, err)
 	}
 
 	if len(considerations) == 0 {

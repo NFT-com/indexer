@@ -18,8 +18,7 @@ import (
 
 const (
 	eventTransferSingle = "TransferSingle"
-	fieldsID            = "ids"
-	fieldsValue         = "values"
+	fieldID             = "ids"
 )
 
 func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
@@ -30,13 +29,13 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	tokenID, ok := fields[fieldsID].(*big.Int)
+	tokenID, ok := fields[fieldID].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldsID, fields[fieldsID])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldID, fields[fieldID])
 	}
-	count, ok := fields[fieldsValue].(*big.Int)
+	count, ok := fields[fieldValue].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldsValue, fields[fieldsValue])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldValue, fields[fieldValue])
 	}
 
 	data := make([]byte, 8+32+8)
