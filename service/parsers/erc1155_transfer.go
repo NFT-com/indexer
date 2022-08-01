@@ -18,7 +18,7 @@ import (
 
 const (
 	eventTransferSingle = "TransferSingle"
-	fieldID             = "ids"
+	fieldID             = "id"
 )
 
 func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
