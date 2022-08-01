@@ -18,8 +18,8 @@ import (
 
 const (
 	eventTransferBatch = "TransferBatch"
-	fieldsIDs          = "ids"
-	fieldsValues       = "values"
+	fieldIDs           = "ids"
+	fieldValues        = "values"
 )
 
 func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
@@ -30,13 +30,13 @@ func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	tokenIDs, ok := fields[fieldsIDs].([]*big.Int)
+	tokenIDs, ok := fields[fieldIDs].([]*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldsIDs, fields[fieldsIDs])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldIDs, fields[fieldIDs])
 	}
-	counts, ok := fields[fieldsValues].([]*big.Int)
+	counts, ok := fields[fieldValues].([]*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldsValues, fields[fieldsValues])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldValues, fields[fieldValues])
 	}
 
 	var transfers []*events.Transfer
