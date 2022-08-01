@@ -32,11 +32,11 @@ func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 
 	tokenIDs, ok := fields[fieldsIDs].([]*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldsIDs, fields[fieldsIDs])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldsIDs, fields[fieldsIDs])
 	}
 	counts, ok := fields[fieldsValues].([]*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldsValues, fields[fieldsValues])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldsValues, fields[fieldsValues])
 	}
 
 	var transfers []*events.Transfer

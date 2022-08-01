@@ -31,7 +31,7 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 
 	price, ok := fields[fieldPrice].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldPrice, fields[fieldPrice])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldPrice, fields[fieldPrice])
 	}
 
 	data := make([]byte, 8+32+8)

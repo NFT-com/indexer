@@ -31,7 +31,7 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 
 	value, ok := fields[fieldValue].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"%s\" field (%T)", fieldValue, fields[fieldValue])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldValue, fields[fieldValue])
 	}
 
 	data := make([]byte, 8+32+8)
