@@ -167,7 +167,14 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 			return transactionTransfers[i].EventIndex < transactionTransfers[i].EventIndex
 		})
 
-		lastSaleIndex := uint(0)
+		if len(transactionTransfers) == 0 {
+			log.Warn().
+				Str("transaction", transactionHash).
+				Msg("no transfers found for transaction")
+			continue
+		}
+
+		lastSaleIndex := transactionTransfers[0].EventIndex - 1
 		// Link transfers to a specific sale
 		for _, sale := range sales {
 
@@ -175,7 +182,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 			transfers := make([]*events.Transfer, 0)
 
 			// if there is only one transfer it means native token was used to pay
-			if sale.EventIndex-lastSaleIndex == 1 {
+			if sale.EventIndex-lastSaleIndex == 2 {
 
 				transfers = append(transfers, &events.Transfer{
 					CollectionAddress: params.AddressZero,
@@ -191,7 +198,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 					break
 				}
 
-				if sale.Hash() != transfer.Hash() || sale.PaymentHash() != transfer.Hash() {
+				if sale.Hash() != transfer.Hash() && sale.PaymentHash() != transfer.Hash() {
 					continue
 				}
 
