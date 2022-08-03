@@ -106,14 +106,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 		case params.HashERCTransfer:
 
-			if len(log.Topics) < 3 && len(log.Topics) > 4 {
-				p.log.Warn().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log with invalid topic length")
-				continue
-			}
-
 			switch {
 
 			case len(log.Topics) == 3:
@@ -133,6 +125,14 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				}
 
 				nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
+
+			default:
+
+				p.log.Warn().
+					Uint("index", log.Index).
+					Int("topics", len(log.Topics)).
+					Msg("skipping log with invalid topic length")
+				continue
 			}
 
 		case params.HashERC1155Transfer:
@@ -196,7 +196,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		}
 
 		// Finally, we assign the data to the sale if we have exactly one match.
-		if len(nftTransfers) > 1 {
+		if len(nftTransfers) != 1 {
 			p.log.Warn().
 				Str("sale_id", sale.ID).
 				Msg("found multiple matching nft transfers for sale, skipping")

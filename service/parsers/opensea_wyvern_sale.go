@@ -1,12 +1,8 @@
 package parsers
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math/big"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -33,15 +29,8 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldPrice, fields[fieldPrice])
 	}
 
-	data := make([]byte, 8+32+8)
-	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
-	copy(data[8:40], log.TxHash[:])
-	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
-	hash := sha3.Sum256(data)
-	saleID := uuid.Must(uuid.FromBytes(hash[:16]))
-
 	sale := events.Sale{
-		ID: saleID.String(),
+		ID: id(log),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  "", // Done in completion pipeline

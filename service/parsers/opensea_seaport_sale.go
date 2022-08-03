@@ -1,13 +1,9 @@
 package parsers
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/big"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -97,7 +93,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	case isSaleOrder(offer):
 
 		sale := events.Sale{
-			ID: saleID(log),
+			ID: id(log),
 			// ChainID set after parsing
 			MarketplaceAddress: log.Address.Hex(),
 			CollectionAddress:  offer.Token.Hex(),
@@ -120,7 +116,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		// in this case the consideration var represents the nft being sold and the offer the payment for it.
 
 		sale := events.Sale{
-			ID: saleID(log),
+			ID: id(log),
 			// ChainID set after parsing
 			MarketplaceAddress: log.Address.Hex(),
 			CollectionAddress:  consideration.Token.Hex(),
@@ -182,15 +178,4 @@ func filterFees(considerations []consideration, token common.Address, identifier
 	}
 
 	return filtered
-}
-
-func saleID(log types.Log) string {
-	data := make([]byte, 8+32+8)
-	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
-	copy(data[8:40], log.TxHash[:])
-	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
-	hash := sha3.Sum256(data)
-	saleID := uuid.Must(uuid.FromBytes(hash[:16]))
-
-	return saleID.String()
 }

@@ -34,15 +34,8 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldValue, fields[fieldValue])
 	}
 
-	data := make([]byte, 8+32+8)
-	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
-	copy(data[8:40], log.TxHash[:])
-	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
-	hash := sha3.Sum256(data)
-	transferID := uuid.Must(uuid.FromBytes(hash[:16]))
-
 	transfer := events.Transfer{
-		ID: transferID.String(),
+		ID: id(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC20,
 		CollectionAddress: log.Address.Hex(),
@@ -56,4 +49,15 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 	}
 
 	return &transfer, nil
+}
+
+func id(log types.Log) string {
+	data := make([]byte, 8+32+8)
+	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
+	copy(data[8:40], log.TxHash[:])
+	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
+	hash := sha3.Sum256(data)
+	transferID := uuid.Must(uuid.FromBytes(hash[:16]))
+
+	return transferID.String()
 }
