@@ -93,7 +93,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	case isSaleOrder(offer):
 
 		sale := events.Sale{
-			ID: id(log),
+			ID: logID(log),
 			// ChainID set after parsing
 			MarketplaceAddress: log.Address.Hex(),
 			CollectionAddress:  offer.Token.Hex(),
@@ -116,7 +116,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		// in this case the consideration var represents the nft being sold and the offer the payment for it.
 
 		sale := events.Sale{
-			ID: id(log),
+			ID: logID(log),
 			// ChainID set after parsing
 			MarketplaceAddress: log.Address.Hex(),
 			CollectionAddress:  consideration.Token.Hex(),

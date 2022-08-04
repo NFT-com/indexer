@@ -30,7 +30,7 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 	}
 
 	sale := events.Sale{
-		ID: id(log),
+		ID: logID(log),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  "", // Done in completion pipeline

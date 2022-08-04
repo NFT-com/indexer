@@ -35,7 +35,7 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 	}
 
 	transfer := events.Transfer{
-		ID: id(log),
+		ID: logID(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC20,
 		CollectionAddress: log.Address.Hex(),
@@ -51,7 +51,7 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 	return &transfer, nil
 }
 
-func id(log types.Log) string {
+func logID(log types.Log) string {
 	data := make([]byte, 8+32+8)
 	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
 	copy(data[8:40], log.TxHash[:])

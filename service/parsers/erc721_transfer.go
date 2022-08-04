@@ -11,7 +11,7 @@ import (
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 
 	transfer := events.Transfer{
-		ID: id(log),
+		ID: logID(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC721,
 		CollectionAddress: log.Address.Hex(),

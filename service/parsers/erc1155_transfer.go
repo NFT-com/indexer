@@ -35,7 +35,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	}
 
 	transfer := events.Transfer{
-		ID: id(log),
+		ID: logID(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC1155,
 		CollectionAddress: log.Address.Hex(),
