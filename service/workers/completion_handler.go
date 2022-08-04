@@ -41,7 +41,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Uint64("chain_id", completion.ChainID).
 		Uint64("start_height", completion.StartHeight).
 		Uint64("end_height", completion.EndHeight).
-		Strs("event_hashes", completion.EventHashes).
 		Strs("sale_ids", completion.SaleIDs()).
 		Strs("transaction_hashes", completion.TransactionHashes()).
 		Logger()
@@ -79,7 +78,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
 	requests := uint(1)
-	logs, err := fetch.Logs(ctx, nil, completion.EventHashes, completion.StartHeight, completion.EndHeight)
+	logs, err := fetch.Logs(ctx, nil, params.AllEventHashes, completion.StartHeight, completion.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}

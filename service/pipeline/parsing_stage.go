@@ -206,7 +206,6 @@ func (p *ParsingStage) process(payload []byte) error {
 			ChainID:     result.Job.ChainID,
 			StartHeight: result.Job.StartHeight,
 			EndHeight:   result.Job.EndHeight,
-			EventHashes: result.Job.EventHashes,
 			Sales:       completions,
 		}
 

@@ -7,3 +7,13 @@ const (
 	HashOpenSeaWyvernTrade  = "0xc4109843e0b7d514e4c093114b863f8e7d8d9a458c372cd51bfe526b588006c9"
 	HashOpenSeaSeaportTrade = "0x9d9af8e38d66c62e2c12f0225249fd9d721c54b83f48d9352c97c6cacdcb6f31"
 )
+
+var (
+	AllEventHashes = []string{
+		HashERCTransfer,
+		HashERC1155Transfer,
+		HashERC1155Batch,
+		HashOpenSeaWyvernTrade,
+		HashOpenSeaSeaportTrade,
+	}
+)
