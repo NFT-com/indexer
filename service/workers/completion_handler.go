@@ -90,7 +90,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Msg("event logs fetched")
 
 	// This orders for the case that we have multiple sales per transfer.
-	saleLookup := make(map[string][]*events.Sale) // FIXME: var name
+	saleLookup := make(map[string][]*events.Sale)
 	for _, sale := range completion.Sales {
 		saleLookup[sale.TransactionHash] = append(saleLookup[sale.TransactionHash], sale)
 	}
@@ -157,7 +157,13 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	for transactionHash, sales := range saleLookup {
 		// Get the events for this transaction
-		transactionTransfers, _ := transferLookup[transactionHash]
+		transactionTransfers, ok := transferLookup[transactionHash]
+		if !ok {
+			log.Warn().
+				Str("transaction", transactionHash).
+				Msg("no transfers found for transaction")
+			continue
+		}
 
 		// Sort everything by log index
 		sort.Slice(sales, func(i, j int) bool {
@@ -167,19 +173,12 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 			return transactionTransfers[i].EventIndex < transactionTransfers[i].EventIndex
 		})
 
-		if len(transactionTransfers) == 0 {
-			log.Warn().
-				Str("transaction", transactionHash).
-				Msg("no transfers found for transaction")
-			continue
-		}
-
 		lastSaleIndex := transactionTransfers[0].EventIndex - 1
 		// Link transfers to a specific sale
 		for _, sale := range sales {
 
 			// Get all transfers for the current sale
-			transfers := make([]*events.Transfer, 0)
+			var transfers []*events.Transfer
 
 			// if there is only one transfer it means native token was used to pay
 			if sale.EventIndex-lastSaleIndex == 2 {
