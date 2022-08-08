@@ -135,7 +135,7 @@ func (p *ParsingStage) process(payload []byte) error {
 
 	// We can go through the transfers and process those with zero address as mints.
 	var dummies []*graph.NFT
-	var additions [][]byte
+	var additionPayloads [][]byte
 	var owners []*events.Transfer
 	for _, transfer := range result.Transfers {
 
@@ -180,41 +180,43 @@ func (p *ParsingStage) process(payload []byte) error {
 		if err != nil {
 			return fmt.Errorf("could not encode addition job: %w", err)
 		}
-		additions = append(additions, payload)
+		additionPayloads = append(additionPayloads, payload)
 	}
 
-	if len(additions) > 0 {
-		err = p.publisher.MultiPublish(params.TopicAddition, additions)
+	if len(additionPayloads) > 0 {
+		err = p.publisher.MultiPublish(params.TopicAddition, additionPayloads)
 		if err != nil {
 			return fmt.Errorf("could not publish addition jobs: %w", err)
 		}
 	}
 
 	// We can go through the sales and process the completion.
-	if len(result.Sales) > 0 {
-		completions := make([]*events.Sale, 0, len(result.Sales))
-		for _, sale := range result.Sales {
-			if !sale.NeedsCompletion {
-				continue
-			}
-
-			completions = append(completions, sale)
+	salesMap := make(map[uint64][]*events.Sale)
+	for _, sale := range result.Sales {
+		if !sale.NeedsCompletion {
+			continue
 		}
+		salesMap[sale.BlockNumber] = append(salesMap[sale.BlockNumber], sale)
+	}
 
+	var completionPayloads [][]byte
+	for height, sales := range salesMap {
 		completion := jobs.Completion{
 			ID:          uuid.NewString(),
 			ChainID:     result.Job.ChainID,
-			StartHeight: result.Job.StartHeight,
-			EndHeight:   result.Job.EndHeight,
-			Sales:       completions,
+			StartHeight: height,
+			EndHeight:   height,
+			Sales:       sales,
 		}
-
 		payload, err := json.Marshal(completion)
 		if err != nil {
 			return fmt.Errorf("could not encode completion job: %w", err)
 		}
+		completionPayloads = append(completionPayloads, payload)
+	}
 
-		err = p.publisher.Publish(params.TopicCompletion, payload)
+	if len(completionPayloads) > 0 {
+		err = p.publisher.MultiPublish(params.TopicCompletion, completionPayloads)
 		if err != nil {
 			return fmt.Errorf("could not publish completion job: %w", err)
 		}
