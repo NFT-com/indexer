@@ -117,3 +117,13 @@ CREATE TABLE standards_events
     event_id    UUID NOT NULL REFERENCES events ON DELETE CASCADE,
     PRIMARY KEY (standard_id, event_id)
 );
+
+CREATE TABLE currencies
+(
+    id       UUID PRIMARY KEY,
+    name     TEXT           NOT NULL,
+    symbol   VARCHAR(16)    NOT NULL,
+    address  VARCHAR(128)   NOT NULL,
+    decimals INTEGER        NOT NULL,
+    endpoint TEXT           NOT NULL
+);
