@@ -57,7 +57,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
 	// Currently we will ignore all events with multiple currencies.
 	if len(offers) > 1 {
-		return nil, fmt.Errorf("could not parse event: multiple offers not supported")
+		return nil, fmt.Errorf("multiple offers not supported")
 	}
 
 	offer := offers[0]
@@ -70,7 +70,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	}
 
 	if len(considerations) == 0 {
-		return nil, fmt.Errorf("could not get considerations: considerations are empty")
+		return nil, fmt.Errorf("considerations are empty")
 	}
 
 	// filter out fees paid to the opensea market
@@ -82,7 +82,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
 	// Currently we will ignore all events with multiple tokens sold.
 	if len(considerations) > 1 {
-		return nil, fmt.Errorf("could not parse event: multiple considerations per sale not supported")
+		return nil, fmt.Errorf("multiple considerations per sale not supported")
 	}
 
 	consideration := considerations[0]

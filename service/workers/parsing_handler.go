@@ -170,7 +170,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			sale, err := parsers.OpenSeaWyvernSale(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse OpenSea sale: %w", err)
+				return nil, fmt.Errorf("could not parse sale: %w", err)
 			}
 			sales = append(sales, sale)
 
@@ -183,7 +183,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			sale, err := parsers.OpenSeaSeaportSale(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse OpenSea sale: %w", err)
+				return nil, fmt.Errorf("could not parse sale: %w", err)
 			}
 			sales = append(sales, sale)
 

@@ -22,6 +22,8 @@ func Permanent(err error) bool {
 		return true
 	case strings.Contains(msg, "considerations are empty"):
 		return true
+	case strings.Contains(msg, "multiple considerations per sale not supported"):
+		return true
 
 	default:
 		return false

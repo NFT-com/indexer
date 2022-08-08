@@ -154,7 +154,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		// ... and get the coin transfers for each sale according to its transaction hash.
 		coinTransfers, ok := coinsTransferLookup[sale.PaymentHash()]
 		if !ok {
-			coinTransfers, _ = coinsTransferLookup[sale.Hash()]
+			coinTransfers = coinsTransferLookup[sale.Hash()]
 		}
 
 		// Finally, we assign the data to the sale if we have exactly one match.
