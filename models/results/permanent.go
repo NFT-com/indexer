@@ -13,16 +13,20 @@ func Permanent(err error) bool {
 	msg := err.Error()
 	switch {
 
-	// failure to retrieve token uri
+	// retrieval of URI for deleted NFT
 	case strings.Contains(msg, "URI query for nonexistent token"):
 		return true
 
-	// unsupported OpenSea events
+	// unsupported complex OpenSea edge cases
 	case strings.Contains(msg, "multiple offers not supported"):
 		return true
 	case strings.Contains(msg, "considerations are empty"):
 		return true
-	case strings.Contains(msg, "multiple considerations per sale not supported"):
+	case strings.Contains(msg, "multiple considerations not supported"):
+		return true
+
+	// too many logs returned from node API
+	case strings.Contains(msg, "the message response is too large"):
 		return true
 
 	default:

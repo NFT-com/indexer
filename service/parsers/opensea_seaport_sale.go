@@ -82,7 +82,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
 	// Currently we will ignore all events with multiple tokens sold.
 	if len(considerations) > 1 {
-		return nil, fmt.Errorf("multiple considerations per sale not supported")
+		return nil, fmt.Errorf("multiple considerations not supported")
 	}
 
 	consideration := considerations[0]
