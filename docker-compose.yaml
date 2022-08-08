@@ -53,7 +53,7 @@ services:
       context: .
       dockerfile: cmd/parsing-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher --rate-limit 40 --lambda-name parsing-worker-currency -q nsqd:4150 -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -q nsqd:4150 -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - nsqlookupd
@@ -79,7 +79,7 @@ services:
       context: .
       dockerfile: cmd/completion-dispatcher/Dockerfile
     restart: always
-    entrypoint: '/dispatcher --lambda-name completion-worker-currency -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
+    entrypoint: '/dispatcher -k nsqlookupd:4161 -j "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -e "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable" -g "host=postgres port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"'
     depends_on:
       - postgres
       - nsqlookupd
