@@ -20,18 +20,6 @@ CREATE INDEX transfers_collection_address_idx ON transfers (LOWER(collection_add
 
 CREATE INDEX transfers_token_id_idx ON transfers (token_id);
 
-CREATE TYPE token AS
-(
-    collection_address VARCHAR(128),
-    token_id           VARCHAR(128)
-);
-
-CREATE TYPE currency AS
-(
-    address VARCHAR(128),
-    amount  NUMERIC
-);
-
 CREATE TABLE sales
 (
     id                  UUID PRIMARY KEY,
@@ -45,8 +33,8 @@ CREATE TABLE sales
     seller_address      VARCHAR(128) NOT NULL,
     buyer_address       VARCHAR(128) NOT NULL,
     token_count         NUMERIC      NOT NULL,
-    currency_address    VARCHAR(128) NOT NULL,
     currency_value      NUMERIC      NOT NULL,
+    currency_address    VARCHAR(128) NOT NULL,
     emitted_at          TIMESTAMP    NOT NULL,
     created_at          TIMESTAMP DEFAULT NOW(),
     UNIQUE (block_number, transaction_hash, event_index)

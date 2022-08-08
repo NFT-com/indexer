@@ -3,6 +3,7 @@ package workers
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -88,7 +89,12 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Int("logs", len(logs)).
 		Msg("event logs fetched")
 
-	// Convert all logs we can parse to transfers.
+	// This orders for the case that we have multiple sales per transfer.
+	saleLookup := make(map[string][]*events.Sale)
+	for _, sale := range completion.Sales {
+		saleLookup[sale.TransactionHash] = append(saleLookup[sale.TransactionHash], sale)
+	}
+
 	transferLookup := make(map[string][]*events.Transfer)
 	for _, log := range logs {
 
@@ -103,9 +109,9 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		eventHash := log.Topics[0].String()
 		switch eventHash {
 
-		case params.HashERC721Transfer:
+		case params.HashERCTransfer:
 
-			if len(log.Topics) != 4 {
+			if len(log.Topics) < 3 && len(log.Topics) > 4 {
 				p.log.Warn().
 					Uint("index", log.Index).
 					Int("topics", len(log.Topics)).
@@ -113,12 +119,27 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				continue
 			}
 
-			transfer, err := parsers.ERC721Transfer(log)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
-			}
+			switch {
 
-			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+			case len(log.Topics) == 3:
+
+				transfer, err := parsers.ERC20Transfer(log)
+				if err != nil {
+					return nil, fmt.Errorf("could not parse sale ERC20 transfer: %w", err)
+				}
+
+				transferLookup[transfer.TransactionHash] = append(transferLookup[transfer.TransactionHash], transfer)
+
+			case len(log.Topics) == 4:
+
+				transfer, err := parsers.ERC721Transfer(log)
+				if err != nil {
+					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
+				}
+
+				transferLookup[transfer.TransactionHash] = append(transferLookup[transfer.TransactionHash], transfer)
+
+			}
 
 		case params.HashERC1155Transfer:
 
@@ -127,33 +148,126 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+			transferLookup[transfer.TransactionHash] = append(transferLookup[transfer.TransactionHash], transfer)
 
 		default:
 			continue
 		}
 	}
 
-	// Then we go through each sale...
-	for _, sale := range completion.Sales {
-
-		// ... and get the transfers for each sale according to its transaction hash.
-		transfers, ok := transferLookup[sale.Hash()]
+	for transactionHash, sales := range saleLookup {
+		// Get the events for this transaction
+		transactionTransfers, ok := transferLookup[transactionHash]
 		if !ok {
-			p.log.Warn().Msg("no transfers for transaction found")
+			log.Warn().
+				Str("transaction", transactionHash).
+				Msg("no transfers found for transaction")
 			continue
 		}
 
-		// Finally, we assign the data to the sale if we have exactly one match.
-		if len(transfers) > 1 {
-			p.log.Warn().Msg("found multiple matching transfers for sale, skipping")
-			continue
-		}
+		// Sort everything by log index
+		sort.Slice(sales, func(i, j int) bool {
+			return sales[i].EventIndex < sales[i].EventIndex
+		})
+		sort.Slice(transactionTransfers, func(i, j int) bool {
+			return transactionTransfers[i].EventIndex < transactionTransfers[i].EventIndex
+		})
 
-		transfer := transfers[0]
-		sale.CollectionAddress = transfer.CollectionAddress
-		sale.TokenID = transfer.TokenID
-		sale.TokenCount = transfer.TokenCount
+		lastSaleIndex := transactionTransfers[0].EventIndex - 1
+		// Link transfers to a specific sale
+		for _, sale := range sales {
+
+			// Get all transfers for the current sale
+			var transfers []*events.Transfer
+
+			// if there is only one transfer it means native token was used to pay
+			if sale.EventIndex-lastSaleIndex == 2 {
+
+				transfers = append(transfers, &events.Transfer{
+					CollectionAddress: params.AddressZero,
+					TokenCount:        sale.CurrencyValue,
+					SenderAddress:     sale.SellerAddress,
+					ReceiverAddress:   sale.BuyerAddress,
+				})
+			}
+
+			for _, transfer := range transactionTransfers {
+
+				if transfer.EventIndex >= sale.EventIndex {
+					break
+				}
+
+				if sale.Hash() != transfer.Hash() && sale.PaymentHash() != transfer.Hash() {
+					continue
+				}
+
+				if transfer.EventIndex <= lastSaleIndex {
+					continue
+				}
+
+				transfers = append(transfers, transfer)
+			}
+
+			lastSaleIndex = sale.EventIndex
+
+			// if there is more than 1 nft transfer and 1 token transfer
+			// (could be 2 nft transfers next cases will cover this)
+			if len(transfers) > 2 {
+				continue
+			}
+
+			switch len(transfers) {
+
+			case 2:
+
+				var currencyTransfer *events.Transfer
+				var nftTransfer *events.Transfer
+
+				switch {
+
+				case transfers[0].TokenCount == sale.CurrencyValue:
+
+					// the transfer with the index 0 is the currency transfer
+					currencyTransfer = transfers[0]
+					nftTransfer = transfers[1]
+
+				case transfers[1].TokenCount == sale.CurrencyValue:
+
+					// the transfer with the index 1 is the currency transfer
+					currencyTransfer = transfers[1]
+					nftTransfer = transfers[0]
+
+				default:
+
+					p.log.Warn().
+						Str("sale_id", sale.ID).
+						Msg("invalid transfers found, skipping")
+
+					continue
+				}
+
+				sale.TokenID = nftTransfer.TokenID
+				sale.CollectionAddress = nftTransfer.CollectionAddress
+
+				sale.CurrencyAddress = currencyTransfer.CollectionAddress
+
+			case 1:
+
+				p.log.Warn().
+					Str("sale_id", sale.ID).
+					Msg("not all transfers were found, skipping")
+
+				continue
+
+			default:
+
+				p.log.Warn().
+					Str("sale_id", sale.ID).
+					Msg("no transfers found, skipping")
+
+				continue
+			}
+		}
 	}
 
 	// Put everything together for the result.

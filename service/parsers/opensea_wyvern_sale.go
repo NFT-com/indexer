@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/sha3"
@@ -16,17 +15,22 @@ import (
 	"github.com/NFT-com/indexer/models/events"
 )
 
+const (
+	eventOrdersMatched = "OrdersMatched"
+	fieldPrice         = "price"
+)
+
 func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 
 	fields := make(map[string]interface{})
-	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, "OrdersMatched", log.Data)
+	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, eventOrdersMatched, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	price, ok := fields["price"].(*big.Int)
+	price, ok := fields[fieldPrice].(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"price\" field (%T)", fields["price"])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldPrice, fields[fieldPrice])
 	}
 
 	data := make([]byte, 8+32+8)
@@ -37,8 +41,7 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 	saleID := uuid.Must(uuid.FromBytes(hash[:16]))
 
 	sale := events.Sale{
-		ID:      saleID.String(),
-		ChainID: 0,
+		ID: saleID.String(),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  "", // Done in completion pipeline
@@ -51,7 +54,6 @@ func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 		BuyerAddress:       common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
 		CurrencyAddress:    "", // Done in completion pipeline
 		CurrencyValue:      price.String(),
-		EmittedAt:          time.Time{},
 		// EmittedAt set after parsing
 		NeedsCompletion: true,
 	}
