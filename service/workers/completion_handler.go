@@ -78,7 +78,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
 	requests := uint(1)
-	logs, err := fetch.Logs(ctx, nil, params.AllEventHashes, completion.StartHeight, completion.EndHeight)
+	logs, err := fetch.Logs(ctx, nil, params.TransferHashes, completion.StartHeight, completion.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -101,40 +101,29 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		}
 
 		eventHash := log.Topics[0].String()
-		switch eventHash {
+		switch {
 
-		case params.HashERCTransfer:
+		// ERC20 and ERC721 have the same hash, so we need to check topics length
+		case eventHash == params.HashERC20Transfer && len(log.Topics) == 3:
 
-			switch {
-
-			case len(log.Topics) == 3:
-
-				transfer, err := parsers.ERC20Transfer(log)
-				if err != nil {
-					return nil, fmt.Errorf("could not parse sale ERC20 transfer: %w", err)
-				}
-
-				coinsTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
-
-			case len(log.Topics) == 4:
-
-				transfer, err := parsers.ERC721Transfer(log)
-				if err != nil {
-					return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
-				}
-
-				nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
-
-			default:
-
-				p.log.Warn().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log with invalid topic length")
-				continue
+			transfer, err := parsers.ERC20Transfer(log)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse sale ERC20 transfer: %w", err)
 			}
 
-		case params.HashERC1155Transfer:
+			coinsTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
+
+		// ERC20 and ERC721 have the same hash, so we need to check topics length
+		case eventHash == params.HashERC721Transfer && len(log.Topics) == 4:
+
+			transfer, err := parsers.ERC721Transfer(log)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
+			}
+
+			nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
+
+		case eventHash == params.HashERC1155Transfer:
 
 			transfer, err := parsers.ERC1155Transfer(log)
 			if err != nil {
