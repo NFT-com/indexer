@@ -55,7 +55,10 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("could not get %q field: %w", fieldOffer, err)
 	}
 
-	// Currently we will ignore all events with multiple currencies.
+	if len(offers) == 0 {
+		return nil, fmt.Errorf("offers are empty")
+	}
+
 	if len(offers) > 1 {
 		return nil, fmt.Errorf("multiple offers not supported")
 	}
@@ -74,10 +77,10 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	}
 
 	// filter out fees paid to the opensea market
-	considerations = filterFees(considerations, offer.Token, offer.Identifier)
-
 	if isSaleOrder(offer) {
 		considerations = append(considerations[:1], filterFees(considerations[1:], considerations[0].Token, considerations[0].Identifier)...)
+	} else {
+		considerations = filterFees(considerations, offer.Token, offer.Identifier)
 	}
 
 	// Currently we will ignore all events with multiple tokens sold.

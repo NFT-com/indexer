@@ -18,6 +18,8 @@ func Permanent(err error) bool {
 		return true
 
 	// unsupported complex OpenSea edge cases
+	case strings.Contains(msg, "offers are empty"):
+		return true
 	case strings.Contains(msg, "multiple offers not supported"):
 		return true
 	case strings.Contains(msg, "considerations are empty"):
