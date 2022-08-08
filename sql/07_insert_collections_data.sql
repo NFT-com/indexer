@@ -30,7 +30,7 @@ VALUES
     '37f5eff7-e355-4d8b-9a35-8bfa4f819fef',
     '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
     '0x87E738a3d5E5345d6212D8982205A564289e6324',
-    114113471,
+    14113471,
     'Fighter',
     'The on-chain idle MMO.',
     'FIGHTER',
