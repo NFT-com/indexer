@@ -1,19 +1,22 @@
 package parsers
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/big"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
+)
+
+const (
+	eventOrdersFulfilled = "OrderFulfilled"
+	fieldRecipient       = "recipient"
+	fieldOffer           = "offer"
+	fieldConsideration   = "consideration"
 )
 
 type offer struct {
@@ -33,53 +36,60 @@ type consideration struct {
 
 func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
+	if len(log.Topics) != 2 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 2)
+	}
+
 	fields := make(map[string]interface{})
-	err := abis.OpenSeaSeaport.UnpackIntoMap(fields, "OrderFulfilled", log.Data)
+	err := abis.OpenSeaSeaport.UnpackIntoMap(fields, eventOrdersFulfilled, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
 	// Get the buys from the event.
-	recipient, ok := fields["recipient"].(common.Address)
+	recipient, ok := fields[fieldRecipient].(common.Address)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for \"recipient\" field (%T)", fields["recipient"])
+		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldRecipient, fields[fieldRecipient])
 	}
 
 	// Retrieve the offers from the event.
 	offers := make([]offer, 0)
-	err = getCompositeData(fields["offer"], &offers)
+	err = getCompositeData(fields[fieldOffer], &offers)
 	if err != nil {
-		return nil, fmt.Errorf("could not get \"offer\" field: %w", err)
+		return nil, fmt.Errorf("could not get %q field: %w", fieldOffer, err)
 	}
 
-	// Currently we will ignore all events with multiple currencies.
+	if len(offers) == 0 {
+		return nil, fmt.Errorf("offers are empty")
+	}
+
 	if len(offers) > 1 {
-		return nil, fmt.Errorf("could not parse event: multiple offers not supported")
+		return nil, fmt.Errorf("multiple offers not supported")
 	}
 
 	offer := offers[0]
 
 	// Retrieve consideration items.
 	considerations := make([]consideration, 0)
-	err = getCompositeData(fields["consideration"], &considerations)
+	err = getCompositeData(fields[fieldConsideration], &considerations)
 	if err != nil {
-		return nil, fmt.Errorf("could not get \"consideration\" field: %w", err)
+		return nil, fmt.Errorf("could not get %q field: %w", fieldConsideration, err)
 	}
 
 	if len(considerations) == 0 {
-		return nil, fmt.Errorf("could not get considerations: considerations are empty")
+		return nil, fmt.Errorf("considerations are empty")
 	}
 
 	// filter out fees paid to the opensea market
-	considerations = filterFees(considerations, offer.Token, offer.Identifier)
-
 	if isSaleOrder(offer) {
 		considerations = append(considerations[:1], filterFees(considerations[1:], considerations[0].Token, considerations[0].Identifier)...)
+	} else {
+		considerations = filterFees(considerations, offer.Token, offer.Identifier)
 	}
 
 	// Currently we will ignore all events with multiple tokens sold.
 	if len(considerations) > 1 {
-		return nil, fmt.Errorf("could not parse event: multiple considerations per sale not supported")
+		return nil, fmt.Errorf("multiple considerations not supported")
 	}
 
 	consideration := considerations[0]
@@ -90,7 +100,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 	case isSaleOrder(offer):
 
 		sale := events.Sale{
-			ID: saleID(log),
+			ID: logID(log),
 			// ChainID set after parsing
 			MarketplaceAddress: log.Address.Hex(),
 			CollectionAddress:  offer.Token.Hex(),
@@ -113,7 +123,7 @@ func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 		// in this case the consideration var represents the nft being sold and the offer the payment for it.
 
 		sale := events.Sale{
-			ID: saleID(log),
+			ID: logID(log),
 			// ChainID set after parsing
 			MarketplaceAddress: log.Address.Hex(),
 			CollectionAddress:  consideration.Token.Hex(),
@@ -175,15 +185,4 @@ func filterFees(considerations []consideration, token common.Address, identifier
 	}
 
 	return filtered
-}
-
-func saleID(log types.Log) string {
-	data := make([]byte, 8+32+8)
-	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
-	copy(data[8:40], log.TxHash[:])
-	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
-	hash := sha3.Sum256(data)
-	saleID := uuid.Must(uuid.FromBytes(hash[:16]))
-
-	return saleID.String()
 }

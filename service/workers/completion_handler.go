@@ -41,7 +41,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Uint64("chain_id", completion.ChainID).
 		Uint64("start_height", completion.StartHeight).
 		Uint64("end_height", completion.EndHeight).
-		Strs("event_hashes", completion.EventHashes).
 		Strs("sale_ids", completion.SaleIDs()).
 		Strs("transaction_hashes", completion.TransactionHashes()).
 		Logger()
@@ -79,7 +78,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
 	requests := uint(1)
-	logs, err := fetch.Logs(ctx, nil, completion.EventHashes, completion.StartHeight, completion.EndHeight)
+	logs, err := fetch.Logs(ctx, nil, params.TransferHashes, completion.StartHeight, completion.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
@@ -88,8 +87,9 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		Int("logs", len(logs)).
 		Msg("event logs fetched")
 
-	// Convert all logs we can parse to transfers.
-	transferLookup := make(map[string][]*events.Transfer)
+	// Convert all logs we can parse to transfer.
+	coinsTransferLookup := make(map[string][]*events.Transfer)
+	nftTransferLookup := make(map[string][]*events.Transfer)
 	for _, log := range logs {
 
 		if len(log.Topics) == 0 {
@@ -101,33 +101,36 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		}
 
 		eventHash := log.Topics[0].String()
-		switch eventHash {
+		switch {
 
-		case params.HashERC721Transfer:
+		// ERC20 and ERC721 have the same hash, so we need to check topics length
+		case eventHash == params.HashERC20Transfer && len(log.Topics) == 3:
 
-			if len(log.Topics) != 4 {
-				p.log.Warn().
-					Uint("index", log.Index).
-					Int("topics", len(log.Topics)).
-					Msg("skipping log with invalid topic length")
-				continue
+			transfer, err := parsers.ERC20Transfer(log)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse sale ERC20 transfer: %w", err)
 			}
+
+			coinsTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
+
+		// ERC20 and ERC721 have the same hash, so we need to check topics length
+		case eventHash == params.HashERC721Transfer && len(log.Topics) == 4:
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse sale ERC721 transfer: %w", err)
 			}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+			nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
 
-		case params.HashERC1155Transfer:
+		case eventHash == params.HashERC1155Transfer:
 
 			transfer, err := parsers.ERC1155Transfer(log)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
 			}
 
-			transferLookup[transfer.Hash()] = append(transferLookup[transfer.Hash()], transfer)
+			nftTransferLookup[transfer.Hash()] = append(nftTransferLookup[transfer.Hash()], transfer)
 
 		default:
 			continue
@@ -137,23 +140,60 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	// Then we go through each sale...
 	for _, sale := range completion.Sales {
 
-		// ... and get the transfers for each sale according to its transaction hash.
-		transfers, ok := transferLookup[sale.Hash()]
+		// ... and get the coin transfers for each sale according to its transaction hash.
+		coinTransfers, ok := coinsTransferLookup[sale.PaymentHash()]
 		if !ok {
-			p.log.Warn().Msg("no transfers for transaction found")
+			coinTransfers = coinsTransferLookup[sale.Hash()]
+		}
+
+		// Finally, we assign the data to the sale if we have exactly one match.
+		if len(coinTransfers) > 1 {
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("found multiple matching erc20 transfers for sale, skipping")
+			continue
+		}
+
+		coinTransfer := &events.Transfer{
+			CollectionAddress: params.AddressZero,
+			TokenCount:        sale.CurrencyValue,
+			SenderAddress:     sale.SellerAddress,
+			ReceiverAddress:   sale.BuyerAddress,
+		}
+		if len(coinTransfers) != 0 {
+			coinTransfer = coinTransfers[0]
+		}
+
+		if coinTransfer.TokenCount != sale.CurrencyValue {
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("no erc20 transaction found with the required value, skipping")
+			continue
+		}
+
+		sale.CurrencyValue = coinTransfer.TokenCount
+		sale.CurrencyAddress = coinTransfer.CollectionAddress
+
+		// ... and get the nft transfers for each sale according to its transaction hash.
+		nftTransfers, ok := nftTransferLookup[sale.Hash()]
+		if !ok {
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("no nft transfers for transaction found, skipping")
 			continue
 		}
 
 		// Finally, we assign the data to the sale if we have exactly one match.
-		if len(transfers) > 1 {
-			p.log.Warn().Msg("found multiple matching transfers for sale, skipping")
+		if len(nftTransfers) != 1 {
+			p.log.Warn().
+				Str("sale_id", sale.ID).
+				Msg("found multiple matching nft transfers for sale, skipping")
 			continue
 		}
 
-		transfer := transfers[0]
-		sale.CollectionAddress = transfer.CollectionAddress
-		sale.TokenID = transfer.TokenID
-		sale.TokenCount = transfer.TokenCount
+		nftTransfer := nftTransfers[0]
+		sale.CollectionAddress = nftTransfer.CollectionAddress
+		sale.TokenID = nftTransfer.TokenID
 	}
 
 	// Put everything together for the result.

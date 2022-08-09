@@ -1,10 +1,7 @@
 package parsers
 
 import (
-	"encoding/binary"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -15,15 +12,12 @@ import (
 
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 
-	data := make([]byte, 8+32+8)
-	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
-	copy(data[8:40], log.TxHash[:])
-	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
-	hash := sha3.Sum256(data)
-	transferID := uuid.Must(uuid.FromBytes(hash[:16]))
+	if len(log.Topics) != 3 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 3)
+	}
 
 	transfer := events.Transfer{
-		ID: transferID.String(),
+		ID: logID(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC721,
 		CollectionAddress: log.Address.Hex(),
@@ -33,7 +27,7 @@ func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 		TransactionHash:   log.TxHash.Hex(),
 		SenderAddress:     common.BytesToAddress(log.Topics[1].Bytes()).Hex(),
 		ReceiverAddress:   common.BytesToAddress(log.Topics[2].Bytes()).Hex(),
-		TokenCount:        1,
+		TokenCount:        "1",
 		// EmittedAt set after parsing
 	}
 

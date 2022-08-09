@@ -43,8 +43,8 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			"seller_address",
 			"buyer_address",
 			"token_count",
-			"currency_address",
 			"currency_value",
+			"currency_address",
 			"emitted_at",
 		).
 		Suffix("ON CONFLICT DO NOTHING")
@@ -62,8 +62,8 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			sale.SellerAddress,
 			sale.BuyerAddress,
 			sale.TokenCount,
-			sale.CurrencyAddress,
 			sale.CurrencyValue,
+			sale.CurrencyAddress,
 			sale.EmittedAt,
 		)
 	}
@@ -84,6 +84,8 @@ func (s *SaleRepository) Update(sales ...*events.Sale) error {
 			Update("sales").
 			Set("collection_address", sale.CollectionAddress).
 			Set("token_id", sale.TokenID).
+			Set("currency_value", sale.CurrencyValue).
+			Set("currency_address", sale.CurrencyAddress).
 			Where("id = ?", sale.ID)
 
 		_, err := query.Exec()

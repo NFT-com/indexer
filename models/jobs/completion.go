@@ -9,7 +9,6 @@ type Completion struct {
 	ChainID     uint64         `json:"chain_id"`
 	StartHeight uint64         `json:"block_height"`
 	EndHeight   uint64         `json:"end_height"`
-	EventHashes []string       `json:"event_hashes"`
 	Sales       []*events.Sale `json:"sales"`
 }
 

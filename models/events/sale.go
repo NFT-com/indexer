@@ -18,13 +18,18 @@ type Sale struct {
 	EventIndex         uint      `json:"event_index"`
 	SellerAddress      string    `json:"seller_address"`
 	BuyerAddress       string    `json:"buyer_address"`
-	CurrencyAddress    string    `json:"currency_address"`
 	CurrencyValue      string    `json:"currency_value"`
+	CurrencyAddress    string    `json:"currency_address"`
 	EmittedAt          time.Time `json:"emitted_at"`
 	NeedsCompletion    bool      `json:"completion"`
 }
 
 func (s Sale) Hash() string {
 	hash := sha3.Sum256([]byte(s.TransactionHash + s.SellerAddress + s.BuyerAddress))
+	return string(hash[:])
+}
+
+func (s Sale) PaymentHash() string {
+	hash := sha3.Sum256([]byte(s.TransactionHash + s.BuyerAddress + s.SellerAddress))
 	return string(hash[:])
 }
