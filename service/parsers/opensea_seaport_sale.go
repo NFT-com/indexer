@@ -36,6 +36,10 @@ type consideration struct {
 
 func OpenSeaSeaportSale(log types.Log) (*events.Sale, error) {
 
+	if len(log.Topics) != 2 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 2)
+	}
+
 	fields := make(map[string]interface{})
 	err := abis.OpenSeaSeaport.UnpackIntoMap(fields, eventOrdersFulfilled, log.Data)
 	if err != nil {

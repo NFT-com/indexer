@@ -1,6 +1,8 @@
 package parsers
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
@@ -9,6 +11,10 @@ import (
 )
 
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
+
+	if len(log.Topics) != 3 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 3)
+	}
 
 	transfer := events.Transfer{
 		ID: logID(log),

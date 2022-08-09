@@ -18,6 +18,10 @@ const (
 
 func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
 
+	if len(log.Topics) != 3 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 3)
+	}
+
 	fields := make(map[string]interface{})
 	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, eventOrdersMatched, log.Data)
 	if err != nil {

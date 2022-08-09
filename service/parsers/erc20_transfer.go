@@ -23,6 +23,10 @@ const (
 
 func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 
+	if len(log.Topics) != 3 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 3)
+	}
+
 	fields := make(map[string]interface{})
 	err := abis.ERC20.UnpackIntoMap(fields, eventTransfer, log.Data)
 	if err != nil {

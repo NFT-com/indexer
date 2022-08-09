@@ -24,6 +24,10 @@ const (
 
 func ERC1155Batch(log types.Log) ([]*events.Transfer, error) {
 
+	if len(log.Topics) != 4 {
+		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 4)
+	}
+
 	fields := make(map[string]interface{})
 	err := abis.ERC1155.UnpackIntoMap(fields, eventTransferBatch, log.Data)
 	if err != nil {
