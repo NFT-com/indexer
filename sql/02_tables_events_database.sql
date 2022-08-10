@@ -44,4 +44,6 @@ CREATE INDEX sales_marketplace_address_idx ON sales (LOWER(marketplace_address))
 
 CREATE INDEX sales_collection_address_idx ON sales (LOWER(collection_address));
 
+CREATE INDEX sales_currency_address_idx ON sales (LOWER(currency_address));
+
 CREATE INDEX sales_token_id_idx ON sales (token_id);
