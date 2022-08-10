@@ -6,18 +6,34 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
+	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/id"
 	"github.com/NFT-com/indexer/models/jobs"
+)
+
+const (
+	erc721Transfer = "Transfer"
 )
 
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 
-	if len(log.Topics) < 3 {
-		return nil, fmt.Errorf("invalid topic length have (%d) want >= (%d)", len(log.Topics), 3)
+	if len(log.Topics) != 4 {
+		return nil, fmt.Errorf("invalid number of topics (want: %d, have: %d)", 4, len(log.Topics))
+	}
+
+	fields := make(map[string]interface{})
+	err := abis.ERC721.UnpackIntoMap(fields, erc721Transfer, log.Data)
+	if err != nil {
+		return nil, fmt.Errorf("could not unpack fields: %w", err)
+	}
+
+	if len(fields) != 0 {
+		return nil, fmt.Errorf("invalid number of fields (want: %d, have: %d)", 0, len(fields))
 	}
 
 	transfer := events.Transfer{
-		ID: logID(log),
+		ID: id.Log(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC721,
 		CollectionAddress: log.Address.Hex(),

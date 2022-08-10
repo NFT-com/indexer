@@ -9,32 +9,54 @@ import (
 
 	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/id"
 )
 
 const (
-	eventOrdersMatched = "OrdersMatched"
-	fieldPrice         = "price"
+	wyvernMatch = "OrdersMatched"
+	wyvernBuy   = "buyHash"
+	wyvernSell  = "sellHash"
+	wyvernPrice = "price"
 )
 
-func OpenSeaWyvernSale(log types.Log) (*events.Sale, error) {
+func WyvernSale(log types.Log) (*events.Sale, error) {
 
-	if len(log.Topics) < 3 {
-		return nil, fmt.Errorf("invalid topic length have (%d) want >= (%d)", len(log.Topics), 3)
+	if len(log.Topics) != 4 {
+		return nil, fmt.Errorf("invalid number of topics (want: %d, have: %d)", 4, len(log.Topics))
 	}
 
 	fields := make(map[string]interface{})
-	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, eventOrdersMatched, log.Data)
+	err := abis.OpenSeaWyvern.UnpackIntoMap(fields, wyvernMatch, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
 
-	price, ok := fields[fieldPrice].(*big.Int)
+	if len(fields) != 3 {
+		return nil, fmt.Errorf("invalid number of fields (want: %d, have: %d)", 3, len(fields))
+	}
+
+	_, ok := fields[wyvernBuy]
 	if !ok {
-		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldPrice, fields[fieldPrice])
+		return nil, fmt.Errorf("missing field (%s)", wyvernBuy)
+	}
+
+	_, ok = fields[wyvernSell]
+	if !ok {
+		return nil, fmt.Errorf("missing field (%s)", wyvernSell)
+	}
+
+	fieldPrice, ok := fields[wyvernPrice]
+	if !ok {
+		return nil, fmt.Errorf("missing field (%s)", wyvernPrice)
+	}
+
+	price, ok := fieldPrice.(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", wyvernPrice, &big.Int{}, fieldPrice)
 	}
 
 	sale := events.Sale{
-		ID: logID(log),
+		ID: id.Log(log),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  "", // Done in completion pipeline

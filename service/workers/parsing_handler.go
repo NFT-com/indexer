@@ -114,7 +114,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC721 transfer: %w", err)
+				p.log.Warn().Err(err).Msg("could not parse ERC721 transfer, skipping log entry")
+				continue
 			}
 			transfers = append(transfers, transfer)
 
@@ -132,7 +133,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			transfer, err := parsers.ERC1155Transfer(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
+				p.log.Warn().Err(err).Msg("could not parse ERC1155 transfer, skipping log entry")
+				continue
 			}
 			transfers = append(transfers, transfer)
 
@@ -150,7 +152,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			batch, err := parsers.ERC1155Batch(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC1155 batch: %w", err)
+				p.log.Warn().Err(err).Msg("could not parse ERC1155 batch, skipping log entry")
+				continue
 			}
 			transfers = append(transfers, batch...)
 			for _, transfer := range batch {
@@ -166,11 +169,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("ERC115 batch parsed")
 			}
 
-		case params.HashOpenSeaWyvernTrade:
+		case params.HashOpenSeaWyvernSale:
 
-			sale, err := parsers.OpenSeaWyvernSale(log)
+			sale, err := parsers.WyvernSale(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse sale: %w", err)
+				p.log.Warn().Err(err).Msg("could not parse Wyvern sale, skipping log entry")
+				continue
 			}
 			sales = append(sales, sale)
 
@@ -179,11 +183,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Uint("index", log.Index).
 				Msg("OpenSea Wyvern sale parsed")
 
-		case params.HashOpenSeaSeaportTrade:
+		case params.HashOpenSeaSeaportSale:
 
-			sale, err := parsers.OpenSeaSeaportSale(log)
+			sale, err := parsers.SeaportSale(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse sale: %w", err)
+				p.log.Warn().Err(err).Msg("could not parse Seaport sale, skipping log entry")
+				continue
 			}
 			sales = append(sales, sale)
 
