@@ -12,8 +12,8 @@ import (
 
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 
-	if len(log.Topics) != 3 {
-		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 3)
+	if len(log.Topics) < 3 {
+		return nil, fmt.Errorf("invalid topic length have (%d) want >= (%d)", len(log.Topics), 3)
 	}
 
 	transfer := events.Transfer{

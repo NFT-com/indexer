@@ -19,8 +19,8 @@ const (
 
 func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 
-	if len(log.Topics) != 4 {
-		return nil, fmt.Errorf("invalid topic lenght have (%d) want (%d)", len(log.Topics), 4)
+	if len(log.Topics) < 4 {
+		return nil, fmt.Errorf("invalid topic length have (%d) want >= (%d)", len(log.Topics), 4)
 	}
 
 	fields := make(map[string]interface{})
