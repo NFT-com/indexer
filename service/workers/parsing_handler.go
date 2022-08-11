@@ -87,7 +87,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 	p.log.Debug().
 		Int("logs", len(logs)).
-		Msg("event logs fetched")
+		Msg("event log entries fetched")
 
 	// For each log, try to parse it into the respective events.
 	var transfers []*events.Transfer
@@ -100,7 +100,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Msg("skipping log for reverted transaction")
+				Msg("skipping log entry for reverted transaction")
 			continue
 		}
 
@@ -114,7 +114,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC721 transfer: %w", err)
+				p.log.Warn().
+					Err(err).
+					Hex("transaction", log.TxHash[:]).
+					Uint("index", log.Index).
+					Msg("could not parse ERC721 transfer, skipping log entry")
+				continue
 			}
 			transfers = append(transfers, transfer)
 
@@ -132,7 +137,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			transfer, err := parsers.ERC1155Transfer(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC1155 transfer: %w", err)
+				p.log.Warn().
+					Err(err).
+					Hex("transaction", log.TxHash[:]).
+					Uint("index", log.Index).
+					Msg("could not parse ERC1155 transfer, skipping log entry")
+				continue
 			}
 			transfers = append(transfers, transfer)
 
@@ -150,7 +160,12 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			batch, err := parsers.ERC1155Batch(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse ERC1155 batch: %w", err)
+				p.log.Warn().
+					Err(err).
+					Hex("transaction", log.TxHash[:]).
+					Uint("index", log.Index).
+					Msg("could not parse ERC1155 batch, skipping log entry")
+				continue
 			}
 			transfers = append(transfers, batch...)
 			for _, transfer := range batch {
@@ -166,11 +181,16 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("ERC115 batch parsed")
 			}
 
-		case params.HashOpenSeaWyvernTrade:
+		case params.HashWyvernSale:
 
-			sale, err := parsers.OpenSeaWyvernSale(log)
+			sale, err := parsers.WyvernSale(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse sale: %w", err)
+				p.log.Warn().
+					Err(err).
+					Hex("transaction", log.TxHash[:]).
+					Uint("index", log.Index).
+					Msg("could not parse Wyvern sale, skipping log entry")
+				continue
 			}
 			sales = append(sales, sale)
 
@@ -179,11 +199,16 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Uint("index", log.Index).
 				Msg("OpenSea Wyvern sale parsed")
 
-		case params.HashOpenSeaSeaportTrade:
+		case params.HashSeaportSale:
 
-			sale, err := parsers.OpenSeaSeaportSale(log)
+			sale, err := parsers.SeaportSale(log)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse sale: %w", err)
+				p.log.Warn().
+					Err(err).
+					Hex("transaction", log.TxHash[:]).
+					Uint("index", log.Index).
+					Msg("could not parse Seaport sale, skipping log entry")
+				continue
 			}
 			sales = append(sales, sale)
 
@@ -198,7 +223,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		Int("logs", len(logs)).
 		Int("transfers", len(transfers)).
 		Int("sales", len(sales)).
-		Msg("all logs parsed")
+		Msg("all log entries parsed")
 
 	// Get all the headers to assign timestamps to the events.
 	for height := range timestamps {

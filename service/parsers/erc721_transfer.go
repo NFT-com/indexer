@@ -7,17 +7,18 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/id"
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
 func ERC721Transfer(log types.Log) (*events.Transfer, error) {
 
-	if len(log.Topics) < 3 {
-		return nil, fmt.Errorf("invalid topic length have (%d) want >= (%d)", len(log.Topics), 3)
+	if len(log.Topics) != 4 {
+		return nil, fmt.Errorf("invalid number of topics (want: %d, have: %d)", 4, len(log.Topics))
 	}
 
 	transfer := events.Transfer{
-		ID: logID(log),
+		ID: id.Log(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC721,
 		CollectionAddress: log.Address.Hex(),

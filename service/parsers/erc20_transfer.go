@@ -1,45 +1,52 @@
 package parsers
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math/big"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/NFT-com/indexer/models/abis"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/id"
 	"github.com/NFT-com/indexer/models/jobs"
 )
 
 const (
-	eventTransfer = "Transfer"
-	fieldValue    = "value"
+	erc20Transfer = "Transfer"
+	erc20Value    = "value"
 )
 
+// ERC20Transfer takes a log entry and parses it as an ERC20 transfer.
 func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 
-	if len(log.Topics) < 3 {
-		return nil, fmt.Errorf("invalid topic length have (%d) want >= (%d)", len(log.Topics), 3)
+	if len(log.Topics) != 3 {
+		return nil, fmt.Errorf("invalid number of topics (want: %d, have: %d)", 3, len(log.Topics))
 	}
 
 	fields := make(map[string]interface{})
-	err := abis.ERC20.UnpackIntoMap(fields, eventTransfer, log.Data)
+	err := abis.ERC20.UnpackIntoMap(fields, erc20Transfer, log.Data)
 	if err != nil {
-		return nil, fmt.Errorf("could not unpack log fields: %w", err)
+		return nil, fmt.Errorf("could not unpack fields: %w", err)
 	}
 
-	value, ok := fields[fieldValue].(*big.Int)
+	if len(fields) != 1 {
+		return nil, fmt.Errorf("invalid number of fields (want: %d, have: %d)", 1, len(fields))
+	}
+
+	valueField, ok := fields[erc20Value]
 	if !ok {
-		return nil, fmt.Errorf("invalid type for %q field (%T)", fieldValue, fields[fieldValue])
+		return nil, fmt.Errorf("missing field (%s)", erc20Value)
+	}
+
+	value, ok := valueField.(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("invalid type (field: %s,  have: %T)", erc20Value, valueField)
 	}
 
 	transfer := events.Transfer{
-		ID: logID(log),
+		ID: id.Log(log),
 		// ChainID set after parsing
 		TokenStandard:     jobs.StandardERC20,
 		CollectionAddress: log.Address.Hex(),
@@ -53,15 +60,4 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 	}
 
 	return &transfer, nil
-}
-
-func logID(log types.Log) string {
-	data := make([]byte, 8+32+8)
-	binary.BigEndian.PutUint64(data[0:8], log.BlockNumber)
-	copy(data[8:40], log.TxHash[:])
-	binary.BigEndian.PutUint64(data[40:48], uint64(log.Index))
-	hash := sha3.Sum256(data)
-	transferID := uuid.Must(uuid.FromBytes(hash[:16]))
-
-	return transferID.String()
 }
