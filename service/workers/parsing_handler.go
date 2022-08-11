@@ -87,7 +87,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 	p.log.Debug().
 		Int("logs", len(logs)).
-		Msg("event logs fetched")
+		Msg("event log entries fetched")
 
 	// For each log, try to parse it into the respective events.
 	var transfers []*events.Transfer
@@ -100,7 +100,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 			p.log.Trace().
 				Str("transaction", log.TxHash.Hex()).
 				Uint("index", log.Index).
-				Msg("skipping log for reverted transaction")
+				Msg("skipping log entry for reverted transaction")
 			continue
 		}
 
@@ -203,7 +203,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		Int("logs", len(logs)).
 		Int("transfers", len(transfers)).
 		Int("sales", len(sales)).
-		Msg("all logs parsed")
+		Msg("all log entries parsed")
 
 	// Get all the headers to assign timestamps to the events.
 	for height := range timestamps {

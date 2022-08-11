@@ -26,7 +26,7 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 	}
 
 	fields := make(map[string]interface{})
-	err := abis.ERC1155.UnpackIntoMap(fields, erc1155Batch, log.Data)
+	err := abis.ERC1155.UnpackIntoMap(fields, erc1155Transfer, log.Data)
 	if err != nil {
 		return nil, fmt.Errorf("could not unpack log fields: %w", err)
 	}
@@ -35,24 +35,24 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 		return nil, fmt.Errorf("invalid number of fields (want: %d, have: %d)", 2, len(fields))
 	}
 
-	fieldID, ok := fields[erc1155IDs]
+	fieldID, ok := fields[erc1155ID]
 	if !ok {
-		return nil, fmt.Errorf("missing field (%s)", erc1155IDs)
+		return nil, fmt.Errorf("missing field (%s)", erc1155ID)
 	}
 
 	fieldValue, ok := fields[erc1155Value]
 	if !ok {
-		return nil, fmt.Errorf("missing field (%s)", erc1155Values)
+		return nil, fmt.Errorf("missing field (%s)", erc1155Value)
 	}
 
 	tokenID, ok := fieldID.(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc1155IDs, &big.Int{}, fieldID)
+		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc1155ID, &big.Int{}, fieldID)
 	}
 
 	value, ok := fieldValue.(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc1155Values, &big.Int{}, fieldValue)
+		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc1155Value, &big.Int{}, fieldValue)
 	}
 
 	transfer := events.Transfer{
