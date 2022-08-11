@@ -1,7 +1,6 @@
 package parsers
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -23,8 +22,19 @@ const (
 )
 
 var (
-	addressFee = common.HexToAddress("0x8De9C5A032463C561423387a9648c5C7BCC5BC90")
+	addressZero = common.Address{}
+	addressFee  = common.HexToAddress("0x8De9C5A032463C561423387a9648c5C7BCC5BC90")
 )
+
+type NFT struct {
+	Address    common.Address
+	Identifier *big.Int
+	Amount     *big.Int
+}
+
+func (n NFT) Valid() bool {
+	return n.Address != addressZero && n.Identifier != nil && n.Amount != nil
+}
 
 type Transfer struct {
 	Address common.Address
@@ -51,20 +61,17 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("invalid number of fields (want: %d, have: %d)", 4, len(fields))
 	}
 
-	out, _ := json.Marshal(fields)
-	fmt.Println(string(out))
+	offerer := common.BytesToAddress(log.Topics[1].Bytes())
 
 	_, ok := fields[seaportOrder]
 	if !ok {
 		return nil, fmt.Errorf("missing field key (%s)", seaportOrder)
 	}
 
-	fieldOfferer, ok := fields[seaportRecipient]
-	if !ok {
-		fieldOfferer, ok = fields[seaportFulfiller]
-		if !ok {
-			return nil, fmt.Errorf("missing field key (%s or %s)", seaportRecipient, seaportFulfiller)
-		}
+	_, hasFulfiller := fields[seaportFulfiller]
+	_, hasRecipient := fields[seaportRecipient]
+	if !hasFulfiller && !hasRecipient {
+		return nil, fmt.Errorf("missing field key (%s or %s)", seaportFulfiller, seaportRecipient)
 	}
 
 	fieldOffer, ok := fields[seaportOffer]
@@ -75,11 +82,6 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 	fieldConsideration, ok := fields[seaportConsideration]
 	if !ok {
 		return nil, fmt.Errorf("missing field key (%s)", seaportConsideration)
-	}
-
-	offerer, ok := fieldOfferer.(common.Address)
-	if !ok {
-		return nil, fmt.Errorf("invalid field type (field: %s, have: %T)", seaportRecipient, fieldOfferer)
 	}
 
 	// This is a bit messy, but unfortunately, we can't type assert slices with concrete named types when the decoded
@@ -112,52 +114,105 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("unsupported sale (multiple offer items")
 	}
 
-	// 2 and 3 correspond to ERC721 and ERC1155 NFT tokens respectively.
-	// We only support offers of NFTs without extra conditions, so that's what we want.
-	nft := offerItems[0]
-
-	// 0 and 1 correspond to native and ERC20 fungible tokens respectively.
-	// We don't support fungible tokens in the offer.
-	if nft.ItemType == 0 || nft.ItemType == 1 {
-		return nil, fmt.Errorf("unsupported sale (fungible token in offer)")
-	}
-
-	// 4 and 5 correspond to ERC721 and ERC1155 NFT tokens with additional sale criteria.
-	// We don't support additional criteria, as it makes the price untractable.
-	if nft.ItemType == 4 || nft.ItemType == 5 {
-		return nil, fmt.Errorf("unsupported sale (additional criteria in offer)")
-	}
-
-	// After identifying the offered NFT, we categorize the considerations.
+	// We are looking for 3 required and 1 optional component:
+	// - NFT;
+	// - payment;
+	// - fee;
+	// - tip.
+	var nft NFT
 	var payment Transfer
 	var fee Transfer
 	var tip Transfer
+
+	// The offer corresponds of either to the NFT or the payment.
+	offerItem := offerItems[0]
+	switch offerItem.ItemType {
+
+	// 0 - native token
+	// 1 - ERC20 token
+	case 0, 1:
+		payment = Transfer{
+			Address: offerItem.Token,
+			Amount:  offerItem.Amount,
+		}
+
+	// 2 - ERC721 token
+	// 3 - ERC1155 token
+	case 2, 3:
+		nft = NFT{
+			Address:    offerItem.Token,
+			Identifier: offerItem.Identifier,
+			Amount:     offerItem.Amount,
+		}
+
+	// 4 - ERC721 token with extra criteria
+	// 5 - ERC1155 token with extra criteria
+	case 4, 5:
+		return nil, fmt.Errorf("unsupported sale (additional criteria in offer)")
+
+	default:
+		return nil, fmt.Errorf("unsupported sale (unknown offer item type %d)", offerItem.ItemType)
+	}
+
+	// After identifying the offered NFT, we categorize the considerations.
 	for _, item := range considerationItems {
 
-		// 0 and 1 correspond to native and ERC20 fungible tokens respectively.
-		// That's what we need every consideration to be.
-		if item.ItemType != 0 && item.ItemType != 1 {
-			return nil, fmt.Errorf("unsupported sale (non-fungible token in consideration)")
+		// If we have two NFTs, we don't support this sale.
+		if (item.ItemType == 2 || item.ItemType == 3) && nft.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple non-fungible tokens)")
 		}
 
-		transfer := Transfer{
-			Address: item.Token,
-			Amount:  item.Amount,
+		// If we have two payments, we don't support this sale.
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == offerer && payment.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple payments)")
 		}
 
-		switch {
+		// If we have to fees, we don't support this sale.
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == addressFee && fee.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple fees)")
+		}
 
-		// If the recipient of a consideration is the offerer, this is the payment for the NFT.
-		case item.Recipient == offerer:
-			payment = transfer
+		// If we have multiple tips, we don't support this sale.
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient != offerer && item.Recipient != addressFee && tip.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple tips)")
+		}
 
-		// If the recipient of a consideration is the OpenSea fee address, it's the fee for the sale.
-		case item.Recipient == addressFee:
-			fee = transfer
+		switch item.ItemType {
 
-		// Otherwise, it's also possible that there is exactly on optional tip.
+		// 0 - native token
+		// 1 - ERC20 token
+		case 0, 1:
+
+			transfer := Transfer{
+				Address: item.Token,
+				Amount:  item.Amount,
+			}
+
+			switch item.Recipient {
+			case offerer:
+				payment = transfer
+			case addressFee:
+				fee = transfer
+			default:
+				tip = transfer
+			}
+
+		// 2 - ERC721 token
+		// 3 - ERC1155 token
+		case 2, 3:
+			nft = NFT{
+				Address:    item.Token,
+				Identifier: item.Identifier,
+				Amount:     item.Amount,
+			}
+
+		// 4 - ERC721 token with extra criteria
+		// 5 - ERC1155 token with extra criteria
+		case 4, 5:
+			return nil, fmt.Errorf("unsupported sale (additional criteria in consideration)")
+
 		default:
-			tip = transfer
+			return nil, fmt.Errorf("unsupported sale (unknown consideration item type %d)", offerItem.ItemType)
 		}
 	}
 
@@ -191,7 +246,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		ID: id.Log(log),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
-		CollectionAddress:  nft.Token.Hex(),
+		CollectionAddress:  nft.Address.Hex(),
 		TokenID:            nft.Identifier.String(),
 		TokenCount:         uint(nft.Amount.Uint64()),
 		BlockNumber:        log.BlockNumber,
