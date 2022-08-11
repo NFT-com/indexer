@@ -186,6 +186,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 			if tip.Amount.Cmp(payment.Amount) > 0 {
 				payment, tip = tip, payment
 			}
+			continue
 		}
 
 		switch item.ItemType {
