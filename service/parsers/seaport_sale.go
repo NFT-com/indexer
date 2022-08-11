@@ -157,26 +157,6 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 	// After identifying the offered NFT, we categorize the considerations.
 	for _, item := range considerationItems {
 
-		// If we have two NFTs, we don't support this sale.
-		if (item.ItemType == 2 || item.ItemType == 3) && nft.Valid() {
-			return nil, fmt.Errorf("unsupported sale (multiple non-fungible tokens)")
-		}
-
-		// If we have two payments, we don't support this sale.
-		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == offerer && payment.Valid() {
-			return nil, fmt.Errorf("unsupported sale (multiple payments)")
-		}
-
-		// If we have to fees, we don't support this sale.
-		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == addressFee && fee.Valid() {
-			return nil, fmt.Errorf("unsupported sale (multiple fees)")
-		}
-
-		// If we have multiple tips, we don't support this sale.
-		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient != offerer && item.Recipient != addressFee && tip.Valid() {
-			return nil, fmt.Errorf("unsupported sale (multiple tips)")
-		}
-
 		// Edge case: tip goes to seller. Make sure the smaller of the two is set as the tip.
 		if (item.ItemType == 0 || item.ItemType == 1) && payment.Valid() && !tip.Valid() && item.Recipient == offerer {
 			tip = Transfer{
@@ -187,6 +167,26 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 				payment, tip = tip, payment
 			}
 			continue
+		}
+
+		// If we have two NFTs, we don't support this sale.
+		if (item.ItemType == 2 || item.ItemType == 3) && nft.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple non-fungible tokens)")
+		}
+
+		// If we have two payments, we don't support this sale.
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == offerer && payment.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple payments)")
+		}
+
+		// If we have two fees, we don't support this sale.
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == addressFee && fee.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple fees)")
+		}
+
+		// If we have multiple tips, we don't support this sale.
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient != offerer && item.Recipient != addressFee && tip.Valid() {
+			return nil, fmt.Errorf("unsupported sale (multiple tips)")
 		}
 
 		switch item.ItemType {
