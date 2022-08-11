@@ -177,6 +177,17 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 			return nil, fmt.Errorf("unsupported sale (multiple tips)")
 		}
 
+		// Edge case: tip goes to seller. Make sure the smaller of the two is set as the tip.
+		if (item.ItemType == 0 || item.ItemType == 1) && payment.Valid() && !tip.Valid() && item.Recipient == offerer {
+			tip = Transfer{
+				Address: item.Token,
+				Amount:  item.Amount,
+			}
+			if tip.Amount.Cmp(payment.Amount) < 0 {
+				payment, tip = tip, payment
+			}
+		}
+
 		switch item.ItemType {
 
 		// 0 - native token
