@@ -47,12 +47,12 @@ func ERC1155Transfer(log types.Log) (*events.Transfer, error) {
 
 	tokenID, ok := fieldID.(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc1155ID, &big.Int{}, fieldID)
+		return nil, fmt.Errorf("invalid type (field: %s, have: %T)", erc1155ID, fieldID)
 	}
 
 	value, ok := fieldValue.(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc1155Value, &big.Int{}, fieldValue)
+		return nil, fmt.Errorf("invalid type (field: %s,  have: %T)", erc1155Value, fieldValue)
 	}
 
 	transfer := events.Transfer{

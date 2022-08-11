@@ -52,7 +52,7 @@ func WyvernSale(log types.Log) (*events.Sale, error) {
 
 	price, ok := fieldPrice.(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", wyvernPrice, &big.Int{}, fieldPrice)
+		return nil, fmt.Errorf("invalid type (field: %s,  have: %T)", wyvernPrice, fieldPrice)
 	}
 
 	sale := events.Sale{

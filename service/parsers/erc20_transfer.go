@@ -42,7 +42,7 @@ func ERC20Transfer(log types.Log) (*events.Transfer, error) {
 
 	value, ok := valueField.(*big.Int)
 	if !ok {
-		return nil, fmt.Errorf("invalid type (field: %s, want: %T, have: %T)", erc20Value, &big.Int{}, valueField)
+		return nil, fmt.Errorf("invalid type (field: %s,  have: %T)", erc20Value, valueField)
 	}
 
 	transfer := events.Transfer{
