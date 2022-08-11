@@ -183,7 +183,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 				Address: item.Token,
 				Amount:  item.Amount,
 			}
-			if tip.Amount.Cmp(payment.Amount) < 0 {
+			if tip.Amount.Cmp(payment.Amount) > 0 {
 				payment, tip = tip, payment
 			}
 		}
