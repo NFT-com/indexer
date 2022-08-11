@@ -114,7 +114,11 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 			transfer, err := parsers.ERC721Transfer(log)
 			if err != nil {
-				p.log.Warn().Err(err).Msg("could not parse ERC721 transfer, skipping log entry")
+				p.log.Warn().
+					Err(err).
+					Hex("transaction", log.TxHash[:]).
+					Uint("index", log.Index).
+					Msg("could not parse ERC721 transfer, skipping log entry")
 				continue
 			}
 			transfers = append(transfers, transfer)
@@ -177,7 +181,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("ERC115 batch parsed")
 			}
 
-		case params.HashOpenSeaWyvernSale:
+		case params.HashWyvernSale:
 
 			sale, err := parsers.WyvernSale(log)
 			if err != nil {
@@ -195,7 +199,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Uint("index", log.Index).
 				Msg("OpenSea Wyvern sale parsed")
 
-		case params.HashOpenSeaSeaportSale:
+		case params.HashSeaportSale:
 
 			sale, err := parsers.SeaportSale(log)
 			if err != nil {
