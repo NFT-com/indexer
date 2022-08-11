@@ -19,12 +19,6 @@ const (
 	seaportFulfiller     = "fulfiller"
 	seaportOffer         = "offer"
 	seaportConsideration = "consideration"
-
-	itemType       = "itemType"
-	itemToken      = "token"
-	itemIdentifier = "identifier"
-	itemAmount     = "amount"
-	itemRecipient  = "recipient"
 )
 
 var (
@@ -39,7 +33,7 @@ type NFT struct {
 }
 
 func (n NFT) Valid() bool {
-	return n.Address != addressZero && n.Amount.Cmp(big.NewInt(0)) != 0
+	return n.Address != addressZero && n.Identifier != nil && n.Amount != nil
 }
 
 type Transfer struct {
@@ -48,7 +42,7 @@ type Transfer struct {
 }
 
 func (t Transfer) Valid() bool {
-	return t.Amount.Cmp(big.NewInt(0)) != 0
+	return t.Amount != nil
 }
 
 func SeaportSale(log types.Log) (*events.Sale, error) {
@@ -95,14 +89,26 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("invalid field type (field: %s, want: %T, have: %T)", seaportRecipient, common.Address{}, fieldOfferer)
 	}
 
-	offerItems, ok := fieldOffer.([]interface{})
+	// This is a bit messy, but unfortunately, we can't type assert slices with concrete named types when the decoded
+	// type is a slice of anonymous structs.
+	offerItems, ok := fieldOffer.([]struct {
+		ItemType   uint8          `json:"itemType"`
+		Token      common.Address `json:"token"`
+		Identifier *big.Int       `json:"identifier"`
+		Amount     *big.Int       `json:"amount"`
+	})
 	if !ok {
-		return nil, fmt.Errorf("invalid field type (field: %s, want: %T, have: %T)", seaportOffer, []interface{}{}, fieldOffer)
+		return nil, fmt.Errorf("invalid field type (field: %s, have: %T)", seaportOffer, fieldOffer)
 	}
-
-	considerationItems, ok := fieldConsideration.([]interface{})
+	considerationItems, ok := fieldConsideration.([]struct {
+		ItemType   uint8          `json:"itemType"`
+		Token      common.Address `json:"token"`
+		Identifier *big.Int       `json:"identifier"`
+		Amount     *big.Int       `json:"amount"`
+		Recipient  common.Address `json:"recipient"`
+	})
 	if !ok {
-		return nil, fmt.Errorf("invalid field type (field: %s, want: %T, have: %T)", seaportConsideration, []interface{}{}, fieldConsideration)
+		return nil, fmt.Errorf("invalid field type (field: %s, have: %T)", seaportConsideration, fieldConsideration)
 	}
 
 	// A simple order on OpenSea has 3 or 4 components:
@@ -125,188 +131,86 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("unsupported sale (multiple offer items")
 	}
 
-	// Next, we identify whether the offerer is putting up an NFT for sale, or if he
-	// is offering a payment for a certain NFT.
-	item := offerItems[0]
-	lookup, ok := item.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("invalid offer item type (want: %T, have: %T)", map[string]interface{}{}, item)
-	}
-
-	fieldType, ok := lookup[itemType]
-	if !ok {
-		return nil, fmt.Errorf("missing offer field key (%s)", itemType)
-	}
-
-	fieldToken, ok := lookup[itemToken]
-	if !ok {
-		return nil, fmt.Errorf("missing offer field key (%s)", itemToken)
-	}
-
-	fieldIdentifier, ok := lookup[itemIdentifier]
-	if !ok {
-		return nil, fmt.Errorf("missing offer field key (%s)", itemIdentifier)
-	}
-
-	fieldAmount, ok := lookup[itemAmount]
-	if !ok {
-		return nil, fmt.Errorf("missing offer field key (%s)", itemAmount)
-	}
-
-	typ, ok := fieldType.(uint8)
-	if !ok {
-		return nil, fmt.Errorf("invalid order field type (field: %s, want: %T, have: %T)", itemType, uint8(0), fieldType)
-	}
-
-	token, ok := fieldToken.(common.Address)
-	if !ok {
-		return nil, fmt.Errorf("invalid order field type (field: %s, want: %T, have: %T)", itemToken, common.Address{}, fieldToken)
-	}
-
-	identifier, ok := fieldIdentifier.(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("invalid order field type (field: %s, want: %T, have: %T)", itemIdentifier, &big.Int{}, fieldIdentifier)
-	}
-
-	amount, ok := fieldAmount.(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("invalid order field type (field: %s, want: %T, have: %T)", itemAmount, &big.Int{}, fieldAmount)
-	}
-
 	// 0 and 1 correspond to native and ERC20 fungible tokens respectively.
 	// 2 and 3 correspond to ERC721 and ERC1155 NFT tokens respectively.
 	// 4 and 5 correspond to ERC721 and ERC1155 NFT tokens with additional sale criteria.
-	switch typ {
+	item := offerItems[0]
+	switch item.ItemType {
 
 	case 0, 1:
 		payment = Transfer{
-			Address: token,
-			Amount:  amount,
+			Address: item.Token,
+			Amount:  item.Amount,
 		}
 
 	case 2, 3:
 		nft = NFT{
-			Address:    token,
-			Identifier: identifier,
-			Amount:     amount,
+			Address:    item.Token,
+			Identifier: item.Identifier,
+			Amount:     item.Amount,
 		}
 
 	case 4, 5:
 		return nil, fmt.Errorf("unsupported sale (additional offer criteria)")
 
 	default:
-		return nil, fmt.Errorf("unknown item type (%d)", typ)
+		return nil, fmt.Errorf("unknown item type (%d)", item.ItemType)
 	}
 
 	// After identifying the offer, we look at the considerations to classify them.
 	for _, item := range considerationItems {
 
-		lookup, ok := item.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("invalid consideration item type (want: %T, have: %T)", map[string]interface{}{}, item)
-		}
-
-		fieldType, ok := lookup[itemType]
-		if !ok {
-			return nil, fmt.Errorf("missing consideration field key (%s)", itemType)
-		}
-
-		fieldToken, ok := lookup[itemToken]
-		if !ok {
-			return nil, fmt.Errorf("missing consideration field key (%s)", itemToken)
-		}
-
-		fieldIdentifier, ok := lookup[itemIdentifier]
-		if !ok {
-			return nil, fmt.Errorf("missing consideration field key (%s)", itemIdentifier)
-		}
-
-		fieldRecipient, ok := lookup[itemRecipient]
-		if !ok {
-			return nil, fmt.Errorf("missing consideration field key (%s)", itemRecipient)
-		}
-
-		fieldAmount, ok := lookup[itemAmount]
-		if !ok {
-			return nil, fmt.Errorf("missing consideration field key (%s)", itemAmount)
-		}
-
-		typ, ok := fieldType.(uint8)
-		if !ok {
-			return nil, fmt.Errorf("invalid consideration field type (field: %s, want: %T, have: %T)", itemType, uint8(0), fieldType)
-		}
-
-		token, ok := fieldToken.(common.Address)
-		if !ok {
-			return nil, fmt.Errorf("invalid consideration field type (field: %s, want: %T, have: %T)", itemToken, common.Address{}, fieldToken)
-		}
-
-		identifier, ok := fieldIdentifier.(*big.Int)
-		if !ok {
-			return nil, fmt.Errorf("invalid order field type (field: %s, want: %T, have: %T)", itemIdentifier, &big.Int{}, fieldIdentifier)
-		}
-
-		amount, ok := fieldAmount.(*big.Int)
-		if !ok {
-			return nil, fmt.Errorf("invalid consideration field type (field: %s, want: %T, have: %T)", itemAmount, &big.Int{}, fieldAmount)
-		}
-
-		recipient, ok := fieldRecipient.(common.Address)
-		if !ok {
-			return nil, fmt.Errorf("invalid consideration field type (field: %s, want: %T, have: %T)", itemRecipient, common.Address{}, fieldRecipient)
-		}
-
 		// We don't support extra criteria for now.
-		if typ == 4 || typ == 5 {
+		if item.ItemType == 4 || item.ItemType == 5 {
 			return nil, fmt.Errorf("unsupported sale (additional consideration criteria)")
 		}
 
 		// If there is a NFT, but we already had it, the trade has multiple NFTs and is unsupported.
-		if (typ == 2 || typ == 3) && nft.Valid() {
+		if (item.ItemType == 2 || item.ItemType == 3) && nft.Valid() {
 			return nil, fmt.Errorf("unsupported sale (multiple NFTs)")
 		}
 
 		// If there is a payment, but we already have one, the trade has multiple currencies and is unsupported.
-		if (typ == 0 || typ == 1) && recipient == offerer && payment.Valid() {
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == offerer && payment.Valid() {
 			return nil, fmt.Errorf("unsupported sale (multiple payments)")
 		}
 
 		// If there is a fee, but we already have one, the trade has multiple fees and is unsupported.
-		if (typ == 0 || typ == 1) && recipient == addressFee && fee.Valid() {
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient == addressFee && fee.Valid() {
 			return nil, fmt.Errorf("unsupported sale (multiple fees)")
 		}
 
 		// If there is a tip, but we already have one, the trade has multiple tips and is unsupported.
-		if (typ == 0 || typ == 1) && recipient != offerer && recipient != addressFee && tip.Valid() {
+		if (item.ItemType == 0 || item.ItemType == 1) && item.Recipient != offerer && item.Recipient != addressFee && tip.Valid() {
 			return nil, fmt.Errorf("unsupported sale (multiple fees)")
 		}
 
 		// At this point, we can extract the component depending on conditions.
 		switch {
 
-		case typ == 2 || typ == 3:
+		case item.ItemType == 2 || item.ItemType == 3:
 			nft = NFT{
-				Address:    token,
-				Identifier: identifier,
-				Amount:     amount,
+				Address:    item.Token,
+				Identifier: item.Identifier,
+				Amount:     item.Amount,
 			}
 
-		case recipient == offerer:
+		case item.Recipient == offerer:
 			payment = Transfer{
-				Address: token,
-				Amount:  amount,
+				Address: item.Token,
+				Amount:  item.Amount,
 			}
 
-		case recipient == addressFee:
+		case item.Recipient == addressFee:
 			fee = Transfer{
-				Address: token,
-				Amount:  amount,
+				Address: item.Token,
+				Amount:  item.Amount,
 			}
 
 		default:
 			tip = Transfer{
-				Address: token,
-				Amount:  amount,
+				Address: item.Token,
+				Amount:  item.Amount,
 			}
 		}
 	}
