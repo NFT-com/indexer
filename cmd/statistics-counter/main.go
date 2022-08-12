@@ -2,27 +2,21 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"math"
+	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
-	"github.com/nsqio/go-nsq"
+	"github.com/NFT-com/indexer/network/ethereum"
+	"github.com/NFT-com/indexer/network/web3"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"go.uber.org/ratelimit"
-
-	_ "github.com/lib/pq"
-
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
-
-	"github.com/NFT-com/indexer/config/nsqlog"
-	"github.com/NFT-com/indexer/config/params"
-	"github.com/NFT-com/indexer/service/pipeline"
-	"github.com/NFT-com/indexer/storage/graph"
-	"github.com/NFT-com/indexer/storage/jobs"
 )
 
 const (
@@ -35,6 +29,8 @@ func main() {
 }
 
 func run() int {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -42,38 +38,24 @@ func run() int {
 	var (
 		flagLogLevel string
 
-		flagGraphDB    string
-		flagJobsDB     string
-		flagNSQLookups []string
-		flagLambdaName string
+		flagNodeURL string
 
-		flagOpenConnections   uint
-		flagIdleConnections   uint
-		flagRateLimit         uint
-		flagLambdaConcurrency uint
+		flagStartingHeight uint64
+		flagAddresses      []string
+		flagEventHashes    []string
 
-		flagMinBackoff time.Duration
-		flagMaxBackoff time.Duration
-
-		flagDryRun bool
+		flagRateLimit int
 	)
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
 
-	pflag.StringVarP(&flagGraphDB, "graph-database", "g", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=graph sslmode=disable", "Postgres connection details for graph database")
-	pflag.StringVarP(&flagJobsDB, "jobs-database", "j", "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=jobs sslmode=disable", "Postgres connection details for jobs database")
-	pflag.StringSliceVarP(&flagNSQLookups, "nsq-lookups", "k", []string{"127.0.0.1:4161"}, "addresses for NSQ lookups to bootstrap consuming")
-	pflag.StringVarP(&flagLambdaName, "lambda-name", "n", "addition-worker", "name of the Lambda function to invoke")
+	pflag.StringVarP(&flagNodeURL, "node", "n", "", "ethereum node url")
 
-	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
-	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests per second")
-	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 900, "maximum number of concurrent Lambda invocations")
+	pflag.Uint64VarP(&flagStartingHeight, "starting-height", "s", 0, "counter starting block")
+	pflag.StringSliceVarP(&flagAddresses, "addresses", "a", []string{}, "addresses to count")
+	pflag.StringSliceVarP(&flagEventHashes, "hashes", "h", []string{}, "hashes to count")
 
-	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
-	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 15*time.Minute, "maximum backoff duration for NSQ consumers")
-
-	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
+	pflag.IntVarP(&flagRateLimit, "rate-limit", "r", 100, "node requests per second")
 
 	pflag.Parse()
 
@@ -86,62 +68,70 @@ func run() int {
 	}
 	log = log.Level(level)
 
-	awsCfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		log.Error().Err(err).Msg("could not load AWS configuration")
+	if flagStartingHeight == 0 {
+		log.Error().Msg("starting height must be defined")
 		return failure
 	}
 
-	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
-	if err != nil {
-		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not connect to graph database")
-		return failure
+	var api *ethclient.Client
+	close := func() {}
+	if strings.Contains(flagNodeURL, "ethereum.managedblockchain") {
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("could not load AWS configuration")
+			return failure
+		}
+		api, close, err = ethereum.NewSigningClient(ctx, flagNodeURL, cfg)
+		if err != nil {
+			log.Error().Err(err).Str("url", flagNodeURL).Msg("could not create signing client")
+			return failure
+		}
+	} else {
+		api, err = ethclient.DialContext(ctx, flagNodeURL)
+		if err != nil {
+			log.Error().Err(err).Str("url", flagNodeURL).Msg("could not create default client")
+			return failure
+		}
 	}
-	graphDB.SetMaxOpenConns(int(flagOpenConnections))
-	graphDB.SetMaxIdleConns(int(flagIdleConnections))
+	defer api.Close()
+	defer close()
 
-	collectionRepo := graph.NewCollectionRepository(graphDB)
-	nftRepo := graph.NewNFTRepository(graphDB)
-	ownerRepo := graph.NewOwnerRepository(graphDB)
-	traitRepo := graph.NewTraitRepository(graphDB)
-
-	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
+	header, err := api.HeaderByNumber(ctx, nil)
 	if err != nil {
-		log.Error().Err(err).Str("jobs_database", flagJobsDB).Msg("could not open jobs database")
-		return failure
-	}
-	jobsDB.SetMaxOpenConns(int(flagOpenConnections))
-	jobsDB.SetMaxIdleConns(int(flagIdleConnections))
-
-	failureRepo := jobs.NewFailureRepository(jobsDB)
-
-	nsqCfg := nsq.NewConfig()
-	nsqCfg.MaxInFlight = int(flagLambdaConcurrency)
-	nsqCfg.MaxAttempts = math.MaxUint16
-	nsqCfg.BackoffMultiplier = flagMinBackoff
-	nsqCfg.MaxBackoffDuration = flagMaxBackoff
-	consumer, err := nsq.NewConsumer(params.TopicAddition, params.ChannelDispatch, nsqCfg)
-	if err != nil {
-		log.Error().Err(err).Str("topic", params.TopicAddition).Str("channel", params.ChannelDispatch).Msg("could not create NSQ consumer")
-		return failure
-	}
-	consumer.SetLogger(nsqlog.WrapForNSQ(log), nsq.LogLevelDebug)
-	defer consumer.Stop()
-
-	lambda := lambda.NewFromConfig(awsCfg)
-	limit := ratelimit.New(int(flagRateLimit))
-	stage := pipeline.NewAdditionStage(context.Background(), log, lambda, flagLambdaName, collectionRepo, nftRepo, ownerRepo, traitRepo, failureRepo, limit, flagDryRun)
-	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
-
-	err = consumer.ConnectToNSQLookupds(flagNSQLookups)
-	if err != nil {
-		log.Error().Err(err).Strs("nsq_lookups", flagNSQLookups).Msg("could not connect to NSQ lookups")
+		log.Error().Err(err).Msg("could not get latest header")
 		return failure
 	}
 
-	log.Info().Msg("addition dispatcher started")
+	fetcher := web3.NewLogsFetcher(api)
+	counter := NewCounter()
+
+	limiter := ratelimit.New(flagRateLimit)
+
+	go func() {
+		for height := flagStartingHeight; height <= header.Number.Uint64(); height += 10 {
+			limiter.Take()
+			if height%1000 == 0 {
+				log.Info().Uint64("height", height).Msg("height processed")
+			}
+
+			logs, err := fetcher.Logs(ctx, flagAddresses, flagEventHashes, height, height+10)
+			if err != nil {
+				log.Error().Err(err).Msg("could not fetch logs")
+				continue
+			}
+
+			for _, log := range logs {
+				counter.Count(log)
+			}
+		}
+		sig <- os.Interrupt
+	}()
+
+	log.Info().Uint64("start", flagStartingHeight).Uint64("end", header.Number.Uint64()).Msg("counter started")
 
 	<-sig
+
+	fmt.Println(counter.String())
 
 	log.Info().Msg("initialized shutdown")
 
@@ -153,4 +143,39 @@ func run() int {
 	log.Info().Msg("shutdown complete")
 
 	return success
+}
+
+type Counter struct {
+	counts map[string]uint64
+}
+
+func NewCounter() *Counter {
+	c := Counter{
+		counts: make(map[string]uint64),
+	}
+
+	return &c
+}
+
+func (c *Counter) Count(log types.Log) {
+	address := log.Address.String()
+	hash := log.Topics[0].String()
+
+	key := strings.Join([]string{address, hash}, ",")
+
+	currentValue, _ := c.counts[key]
+	c.counts[key] = currentValue + 1
+}
+
+func (c *Counter) String() string {
+	if len(c.counts) == 0 {
+		return "No logs Found!"
+	}
+
+	output := fmt.Sprintf("%s | %s | %s\n", "Address", "Event Hash", "Count")
+	for key, count := range c.counts {
+		keys := strings.Split(key, ",")
+		output += fmt.Sprintf("%s | %s | %d\n", keys[0], keys[1], count)
+	}
+	return output
 }
