@@ -111,7 +111,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("invalid sale (no offer items)")
 	}
 	if len(offerItems) > 1 {
-		return nil, fmt.Errorf("unsupported sale (multiple offer items")
+		return nil, fmt.Errorf("unsupported sale (multiple offer items)")
 	}
 
 	// We are looking for 3 required and 1 optional component:
@@ -151,7 +151,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		return nil, fmt.Errorf("unsupported sale (additional criteria in offer)")
 
 	default:
-		return nil, fmt.Errorf("unsupported sale (unknown offer item type %d)", offerItem.ItemType)
+		return nil, fmt.Errorf("unsupported sale (unknown offer item type: %d)", offerItem.ItemType)
 	}
 
 	// After identifying the offered NFT, we categorize the considerations.
@@ -224,7 +224,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 			return nil, fmt.Errorf("unsupported sale (additional criteria in consideration)")
 
 		default:
-			return nil, fmt.Errorf("unsupported sale (unknown consideration item type %d)", offerItem.ItemType)
+			return nil, fmt.Errorf("unsupported sale (unknown consideration item type: %d)", offerItem.ItemType)
 		}
 	}
 
