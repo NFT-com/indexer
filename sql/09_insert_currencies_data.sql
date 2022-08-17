@@ -1909,4 +1909,22 @@ VALUES
 	'0xfFbF315f70E458e49229654DeA4cE192d26f9b25',
 	18,
     ''
+),
+(
+	'0f7700cd-ffc0-4852-90f0-a3092373158e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Terra Virtua Kolect',
+	'TVK',
+	'0xd084b83c305dafd76ae3e1b4e1f1fe2ecccb3988',
+	18,
+	''
+),
+(
+	'3063b88a-1f4e-4941-8ae0-d3ed9b9b3e36',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Neos Credits',
+	'NCR',
+	'0xdb5c3c46e28b53a39c255aa39a411dd64e5fed9c',
+	18,
+	''
 );
