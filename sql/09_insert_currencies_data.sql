@@ -1,0 +1,1912 @@
+-- Currency information scraped from Etherscan
+INSERT INTO currencies 
+    (id, network_id, name, symbol, address, decimals, endpoint)
+VALUES
+(
+	'd9942329-e96a-411b-8714-a47dc668ee21',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Ether',
+	'ETH',
+	'0x0000000000000000000000000000000000000000',
+	18,
+	''
+),
+(
+	'37cf3d43-080b-49fd-9b5c-e30aa143b28c',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'TrueUSD',
+	'TUSD',
+	'0x0000000000085d4780B73119b644AE5ecd22b376',
+	18,
+	''
+),
+(
+	'3f53fa05-3ee7-4825-b351-69540e70e866',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'F1® Delta Time Epic Crate Key',
+	'F1DT.ECK',
+	'0x012408Dd7D43a6b3949BdAA281C123B19652A0dC',
+	18,
+	''
+),
+(
+	'5cdf1916-193f-40d2-8faf-ce42892b617e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'kaprika',
+	'KAP',
+	'0x0228e9EfA309D6800a0338dd266D4193ED3ab33c',
+	2,
+	''
+),
+(
+	'f4d2c039-43a5-4ce7-8018-9b6b29657438',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SparkPoint',
+	'SRK',
+	'0x0488401c3F535193Fa8Df029d9fFe615A06E74E6',
+	18,
+	''
+),
+(
+	'75324017-33e5-4c0d-8858-5f3e516f50bc',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gemini dollar',
+	'GUSD',
+	'0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd',
+	2,
+	''
+),
+(
+	'51df0a45-5c57-4c92-93a5-06fcebe91d5e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'WTF',
+	'WTF',
+	'0x07E156DA9F07CB59E220456a362c44c198B9E0fa',
+	18,
+	''
+),
+(
+	'fc54d15a-9369-4558-82a4-5d328356abce',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ADORs',
+	'ADORs',
+	'0x099f95b0694A0D808f7C6c46A621f4E5E5E36dF5',
+	18,
+	''
+),
+(
+	'80b0b11d-1121-46b2-9e92-64448c1c53dd',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Nova Token',
+	'NVT',
+	'0x09D8b66C48424324b25754A873e290caE5dca439',
+	18,
+	''
+),
+(
+	'a5414288-c54f-481a-9a1a-398e44dd59ae',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Wrapped CryptoKitties',
+	'WCK',
+	'0x09fE5f0236F0Ea5D930197DCE254d77B04128075',
+	18,
+	''
+),
+(
+	'c60d8f16-5744-459f-840c-b0073155a3de',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'district0x',
+	'DNT',
+	'0x0AbdAce70D3790235af448C88547603b945604ea',
+	18,
+	''
+),
+(
+	'f6210ee0-d3d8-4059-9778-4a9b67788311',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'KOI',
+	'KOI',
+	'0x0be34c15f069663FF05eF5EA1E99ab3Dd2d0Fdce',
+	8,
+	''
+),
+(
+	'07abd9c3-c644-4589-be72-f8b2b8a51c63',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'BAT',
+	'BAT',
+	'0x0D8775F648430679A709E98d2b0Cb6250d2887EF',
+	18,
+	''
+),
+(
+	'dc0a3ef4-8c9c-4ee3-9023-21b170ac4309',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Cherry',
+	'CHERRY',
+	'0x0eeD7d6564fAE0c22A7dC9eBb3DB4a4C4A1473ee',
+	18,
+	''
+),
+(
+	'53fdfdb4-cc5f-4668-8b21-cfea94c5b25d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'TRASH',
+	'TRSH',
+	'0x0f46eba0Bafe2739d9F3C43A48BB84BEE1f6644f',
+	18,
+	''
+),
+(
+	'3d943cb8-fdd9-4d85-8b24-deec1b333ac5',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Decentraland',
+	'MANA',
+	'0x0F5D2fB29fb7d3CFeE444a200298f468908cC942',
+	18,
+	''
+),
+(
+	'1f777653-3abe-45fb-9646-0b9ba1a4003a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Arcona Distribution Contract',
+	'ARCONA',
+	'0x0f71B8De197A1C84d31de0F1fA7926c365F052B3',
+	18,
+	''
+),
+(
+	'b0ce429c-13fd-4f98-83ff-ef4ed23512ae',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Trip',
+	'TRIP',
+	'0x116a790417c31Ab790436A519D1C1F3353Edd4a2',
+	4,
+	''
+),
+(
+	'0023cf09-7e9a-4be6-96df-50bf16d73d79',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'EtherCats.io',
+	'ECAT',
+	'0x120cBc99bb2a713872C6B8d06306Ddb79c55E96f',
+	18,
+	''
+),
+(
+	'a5dae64e-7226-4c52-aa61-44fb9cecb65b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'CryptoNewsNet',
+	'NEWS',
+	'0x130Da3E198f092Fe2a6e6c21893dc77746d7e406',
+	8,
+	''
+),
+(
+	'93243522-2aa7-4976-a9a4-b155ffeb0430',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'3 Comma Club',
+	'THREE',
+	'0x14fD3063dfd3cE0A2C4C5eE43aB49988A989202C',
+	18,
+	''
+),
+(
+	'e4834d30-3acd-4408-82f3-c97e96039b29',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'DeltaHub Community',
+	'DHC',
+	'0x152687Bc4A7FCC89049cF119F9ac3e5aCF2eE7ef',
+	18,
+	''
+),
+(
+	'c5a27037-f9dc-4802-911a-e2aed2155186',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gala',
+	'GALA',
+	'0x15D4c048F83bd7e37d49eA4C83a07267Ec4203dA',
+	8,
+	''
+),
+(
+	'217c23d6-e48b-4ab6-8bf4-3a617e3dacc0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Decentralized Nations',
+	'DENA',
+	'0x15F0EEDF9Ce24fc4b6826E590A8292CE5524a1DA',
+	18,
+	''
+),
+(
+	'433593ae-6060-4cad-87fc-fe817443578a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Polkamon',
+	'PMON',
+	'0x1796ae0b0fa4862485106a0de9b654eFE301D0b2',
+	18,
+	''
+),
+(
+	'49a7ea27-74a5-48d6-83e7-53f4cd29e066',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Budget',
+	'BUDGET',
+	'0x1aa95F4ca4A9Bc258Ba848db4355aEEA6413e815',
+	4,
+	''
+),
+(
+	'13136db7-0fdc-4e6f-ade7-e1ba7ce15bcf',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Tippi',
+	'TIP',
+	'0x1aeB67a023c6DD6fcA4C78A83eEd6Ef60fc9e837',
+	18,
+	''
+),
+(
+	'6beb29b9-339d-478a-9e9c-e4d312fe4320',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Benzene',
+	'BZN',
+	'0x1BD223e638aEb3A943b8F617335E04f3e6B6fFfa',
+	18,
+	''
+),
+(
+	'4f25446a-a7dd-408e-a44e-234ae868c8f3',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Pixel',
+	'PIXEL',
+	'0x1e906717De2E4A4600F13b6909736b0346bDde3E',
+	4,
+	''
+),
+(
+	'de2cf2e3-fabc-4985-aa90-03795c5e955d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Bancor',
+	'BNT',
+	'0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
+	18,
+	''
+),
+(
+	'eeac9005-03e5-468b-8db5-178014c7a31b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Uniswap',
+	'UNI',
+	'0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+	18,
+	''
+),
+(
+	'14ad8d9c-9005-435f-baa4-aaf84ab8705e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ChainGuardians Governance Token',
+	'CGG',
+	'0x1fE24F25b1Cf609B9c4e7E12D802e3640dFA5e43',
+	18,
+	''
+),
+(
+	'b086b897-aa4e-4f76-9166-93a33fcac98f',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'kaprika',
+	'PASS',
+	'0x20557aD4DF63385D055D0610FD77ac88275cd063',
+	1,
+	''
+),
+(
+	'bc327ad3-9183-4754-afc7-a9dd78ef9a19',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Deia',
+	'DEIA',
+	'0x20BC390cA7F67e26EC8eCd4D83f4F925D580049C',
+	18,
+	''
+),
+(
+	'f55dfc16-4936-4a9d-90ba-6db0ecb95838',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'WGM',
+	'WGM',
+	'0x219803d17f3067eb53d521ba8948d2734f402f7d',
+	4,
+	''
+),
+(
+	'1c1677ba-d8fa-46cb-a425-59e34807bd9e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'OVR',
+	'OVR',
+	'0x21BfBDa47A0B4B5b1248c767Ee49F7caA9B23697',
+	18,
+	''
+),
+(
+	'7e28670b-7044-41e1-90f5-ed0d0a657622',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Wrapped BTC',
+	'WBTC',
+	'0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+	8,
+	''
+),
+(
+	'71c41379-735e-4961-b85c-490c9aa2cd40',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'HiveMind',
+	'HIVED',
+	'0x24eBA89651aa88810924D4669256Bb56832902fe',
+	4,
+	''
+),
+(
+	'cd990073-fbe9-4551-a100-c42e702f1ddf',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Yumi',
+	'YUMI',
+	'0x25859743ED0861665611B81E47682e889b48313B',
+	4,
+	''
+),
+(
+	'f41cc10e-2f78-4131-9542-e487f985335d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'RareCandy',
+	'RCDY',
+	'0x258B3D55941BC8BCE4a80e7AE7CF685D245A24dc',
+	4,
+	''
+),
+(
+	'013b0378-3bfe-4037-9748-4081eed8cf78',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'FUD.finance',
+	'FUD',
+	'0x2688213fEDd489762a281a67Ae4F2295D8E17ECc',
+	18,
+	''
+),
+(
+	'b43ee6f9-2a52-47d7-9321-f688cdfeb036',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Monavale',
+	'MONA',
+	'0x275f5Ad03be0Fa221B4C6649B8AeE09a42D9412A',
+	18,
+	''
+),
+(
+	'c4fdb469-ce8f-45bf-bf95-324b71282162',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SCOTT',
+	'SCOTT',
+	'0x27fD686Db10E0aE047fe8FE1DE9830C0e0dC3CFA',
+	4,
+	''
+),
+(
+	'6b54f11b-818c-4e3a-b4a9-aa9617466983',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Alpha Quark Token',
+	'AQT',
+	'0x2a9bDCFF37aB68B95A53435ADFd8892e86084F93',
+	18,
+	''
+),
+(
+	'2553cc3f-3f64-4140-960b-e7410000fe8e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'KIWI Token',
+	'KIWI',
+	'0x2BF91c18Cd4AE9C2f2858ef9FE518180F7B5096D',
+	8,
+	''
+),
+(
+	'8900b8a4-a15d-4e90-a107-0bb392b6dddc',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Slaughtermelon',
+	'MELON',
+	'0x2DB07f061f12f1Ef51C49B02Ad5A3EB71f60B69e',
+	4,
+	''
+),
+(
+	'e7e838f2-1223-4600-a41e-c80576c681f2',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'LITonium',
+	'LIT',
+	'0x2e3C062E16c1a3a04Ddc5003c62E294305d83684',
+	2,
+	''
+),
+(
+	'488e1be7-9c96-470c-ba05-b09f01ee9536',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ABSTRACT',
+	'ABST',
+	'0x2Feb105FBb4c922597b125C56822B3db7351B55d',
+	4,
+	''
+),
+(
+	'99f6e016-a5d4-4d20-bbb1-e68e8706e45a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Cargo Gems',
+	'GEM',
+	'0x30B1eFB052205E6CA3c4888C3C50C5b339cc0602',
+	18,
+	''
+),
+(
+	'746498d2-16ce-417d-a5ce-5458aeb7e35d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Defi DigitalNote',
+	'2XDN',
+	'0x310052769DE50103600981A02bba373f0e812a0d',
+	8,
+	''
+),
+(
+	'd984a700-d091-4bb0-a20c-67d81b264685',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'KEK',
+	'KEK',
+	'0x31AEe7Db3b390bAaD34213C173A9df0dd11D84bd',
+	18,
+	''
+),
+(
+	'47e723e5-e368-4c16-94d2-f3d79b569a6f',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Integrated Music Token',
+	'IMT',
+	'0x3216F1aFF1009A7A69DF5f3d42A71078A210a3fF',
+	18,
+	''
+),
+(
+	'9c0fe7cc-94c5-493e-967e-cdd44785fcd9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Lympo Market Token',
+	'LMT',
+	'0x327673aE6B33Bd3d90f0096870059994f30Dc8AF',
+	18,
+	''
+),
+(
+	'5bf75827-80bb-4b0d-a3ba-55c04993231c',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'RainbowToken',
+	'RAINBOW',
+	'0x33c23d44679433A88B89ca38D3311A9a3D160699',
+	18,
+	''
+),
+(
+	'd7fd8782-6a20-4e41-9497-d291a171dc97',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Etherland',
+	'ELAND',
+	'0x33E07f5055173cF8FeBedE8B21B12D1e2b523205',
+	18,
+	''
+),
+(
+	'1585043c-bdae-4585-8798-e9765b63eb61',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MemeGold',
+	'MGDv2',
+	'0x352eDF0a5e63e4C1Dd2150fF139F71f36e597B2e',
+	18,
+	''
+),
+(
+	'b7f93aa7-a113-4433-a1e3-0a38e7d4db43',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'1337',
+	'1337',
+	'0x35872fea6A4843fACBCDbCe99e3B69596A3680b8',
+	4,
+	''
+),
+(
+	'e191e42b-45fe-450a-9b34-b3e9e317510c',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Small Love Potion',
+	'SLP',
+	'0x37236CD05b34Cc79d3715AF2383E96dd7443dCF1',
+	0,
+	''
+),
+(
+	'e669d549-ae6d-4009-b6e0-60c5505249f4',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SAND',
+	'SAND',
+	'0x3845badAde8e6dFF049820680d1F14bD3903a5d0',
+	18,
+	''
+),
+(
+	'1eb661d6-5736-4763-8f05-ad7a5235c41b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Dapp Token',
+	'DAPPT',
+	'0x386cABc0b14A507A4e024DEA15554342865B20DE',
+	18,
+	''
+),
+(
+	'44c1cec8-8697-40a2-80e9-1cb333bc5508',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Bones',
+	'BONES',
+	'0x3A75731f9e16244dE01DD431636Db7c07D42A166',
+	4,
+	''
+),
+(
+	'8961e50e-61bd-4114-b3df-65ccb68487c9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'XMON',
+	'XMON',
+	'0x3aaDA3e213aBf8529606924d8D1c55CbDc70Bf74',
+	18,
+	''
+),
+(
+	'09678a4f-a85f-464c-91f9-a48e73bf7497',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'BULVRD',
+	'BLVD',
+	'0x3afe25a2739B5C2E08CFec439F9621D91Ff7FBFb',
+	18,
+	''
+),
+(
+	'74aefebe-faed-41f0-be49-2936ff231826',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'RADAR',
+	'RDR',
+	'0x3C9Ca73d5309d38c6F2C21b78b9aE1f4b2441188',
+	4,
+	''
+),
+(
+	'393e4b2c-19a8-4721-854e-69bf5522f7c1',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Vidya',
+	'VIDYA',
+	'0x3D3D35bb9bEC23b06Ca00fe472b50E7A4c692C30',
+	18,
+	''
+),
+(
+	'caa0ddfd-93bf-49b9-8cb5-5b10f7dc43c8',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'CircuitsOfValue',
+	'Coval',
+	'0x3D658390460295FB963f54dC0899cfb1c30776Df',
+	8,
+	''
+),
+(
+	'8d377dc9-74ec-4714-82bb-921b4c760f81',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Epic Cash',
+	'EPIC',
+	'0x4149195911EB592307d9aCb08aC6a5de08B8717d',
+	18,
+	''
+),
+(
+	'a3787344-f29d-4df9-8287-8cb9010f0824',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'NORMANCOMICS',
+	'NRMN',
+	'0x4282456d6d24332758fca738f98c3bb0F04da215',
+	4,
+	''
+),
+(
+	'aa15fe95-a871-4d36-943a-08347cda9779',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Ether Kingdoms Token',
+	'IMP',
+	'0x48FF53777F747cFB694101222a944dE070c15D36',
+	7,
+	''
+),
+(
+	'6604924e-d167-44e5-a914-f266eb2beef1',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ExtraCurio',
+	'CURIO',
+	'0x4b46636aFCb2BC4DD20C3D0424c4E1e6D296Fabe',
+	4,
+	''
+),
+(
+	'841a0960-710e-46ae-ab04-bf796e9f52f7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ApeCoin',
+	'APE',
+	'0x4d224452801ACEd8B2F0aebE155379bb5D594381',
+	18,
+	''
+),
+(
+	'ed3af243-140d-433a-835c-f4e54c6017d7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Fantom Token',
+	'FTM',
+	'0x4E15361FD6b4BB609Fa63C81A2be19d873717870',
+	18,
+	''
+),
+(
+	'2468b734-3698-4f71-8257-8a864384e8f4',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'GOKU',
+	'GOKU',
+	'0x4E44FE174e934ff78A77BEe3C2b752fD1BEeFDEf',
+	18,
+	''
+),
+(
+	'0e3da871-f588-4049-926a-af2076566f02',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Cherry',
+	'CHERRY',
+	'0x4eCB692B0fEDeCD7B486b4c99044392784877E8C',
+	4,
+	''
+),
+(
+	'db6b68d8-0c36-4501-a348-b74f50328ccf',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Firefly Token',
+	'FRFY',
+	'0x4eD040F2896761d1688Af5d772cc9138722ab9Ec',
+	18,
+	''
+),
+(
+	'c746545c-3c4e-457e-9b58-5cc8edccfcc7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'WaifuToken',
+	'WAIFU',
+	'0x50D812Bd2728E1bD7c7f57d97819E0bDC486D6FF',
+	18,
+	''
+),
+(
+	'b7741c96-52c8-424a-9adc-70bf079d125f',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ChainLink Token',
+	'LINK',
+	'0x514910771AF9Ca656af840dff83E8264EcF986CA',
+	18,
+	''
+),
+(
+	'2c493e34-5f7a-4077-97d6-b1fc4cd5fdd6',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ASLTToken',
+	'ASLT',
+	'0x52D1D1c87eB75a5D695bFfA343CaC71222cD518E',
+	8,
+	''
+),
+(
+	'18a1d47b-4261-41af-8bf3-43c7dea12d7e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Design',
+	'DSGN',
+	'0x537A9095b78517597b5f2058EDcd6E1978095909',
+	4,
+	''
+),
+(
+	'5d777e7f-84ab-4657-aa0c-28820b7ee8a9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'REVV',
+	'REVV',
+	'0x557B933a7C2c45672B610F8954A3deB39a51A8Ca',
+	18,
+	''
+),
+(
+	'4cf1d17e-9a60-48cf-8f05-7a435cec602a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Trism',
+	'TRISM',
+	'0x56b4F8C39E07D4d5D91692acf9d0F6d4d3493763',
+	18,
+	''
+),
+(
+	'07519aa7-14a4-4e11-8980-23aa34a22cc0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Pride',
+	'LGBTQ',
+	'0x5881dA4527BCdC44a100F8bA2efC4039243D2C07',
+	1,
+	''
+),
+(
+	'89ad02f8-06cc-42b1-b22b-c99a3c6b9859',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'KingToken',
+	'$KING',
+	'0x5a731151d6510Eb475cc7a0072200cFfC9a3bFe5',
+	18,
+	''
+),
+(
+	'7da6c4b7-04cb-4e87-9625-e5493bcfdc90',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SRSC Chiz Token',
+	'CHIZ',
+	'0x5c761c1a21637362374204000e383204d347064C',
+	18,
+	''
+),
+(
+	'f4bca6ae-184c-4814-ac1d-ec27dd9eb993',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SEXPOP Collective',
+	'EXPOP',
+	'0x5f9172EcEeaC7bBac9DD6A8013bfA9a30F5E5628',
+	4,
+	''
+),
+(
+	'54e7fb5d-744c-4916-9f60-0cb5416f8a74',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Linkart',
+	'LAR',
+	'0x6226caA1857AFBc6DFB6ca66071Eb241228031A1',
+	18,
+	''
+),
+(
+	'27033668-0f67-4429-b492-41d4a164e8a1',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Burn',
+	'ASH',
+	'0x64D91f12Ece7362F91A6f8E7940Cd55F05060b92',
+	18,
+	''
+),
+(
+	'e22f2283-98c4-4622-b94f-df73f594b6f7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Benzene',
+	'BZN',
+	'0x6524B87960c2d573AE514fd4181777E7842435d4',
+	18,
+	''
+),
+(
+	'88f1c7bc-259d-4490-b946-c985bd5fa19d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Atlantes Ink',
+	'INK',
+	'0x66bB0E4F4CA229f063b1611E3896731D2CB2F7EE',
+	4,
+	''
+),
+(
+	'dacfadc1-fda7-4a35-ba9e-4586019cc3aa',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'$BASED',
+	'$BASED',
+	'0x68A118Ef45063051Eac49c7e647CE5Ace48a68a5',
+	18,
+	''
+),
+(
+	'c991cef8-87ed-4812-9a85-97a184bd5843',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'YugiToken',
+	'YGT',
+	'0x693eeA0Cf4671748211fE97d0dE6a33076A89169',
+	18,
+	''
+),
+(
+	'2fc21c97-acb3-430f-9ba7-2b0d06852af7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Avastar Replicant Token',
+	'ART',
+	'0x69ad42A8726f161Bd4C76305DFa8F4ecc120115c',
+	18,
+	''
+),
+(
+	'e4209d1a-d67b-4540-9e4d-536b618d0d21',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'LovelyBonz Token',
+	'BONZ',
+	'0x69d3b9c3d795e0200C4a0774721Aeb0E12CADB1A',
+	18,
+	''
+),
+(
+	'9a32bd3a-cecd-4f9a-9be2-9b6ca05b0367',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'CryptoCrawlerz',
+	'BUGZ',
+	'0x6b023c1e3A860050ee3E608357AAe86A113b70f9',
+	18,
+	''
+),
+(
+	'9105187a-724c-46dd-8611-dfba8b2e738d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Dai Stablecoin',
+	'DAI',
+	'0x6B175474E89094C44Da98b954EedeAC495271d0F',
+	18,
+	''
+),
+(
+	'c4079d25-b14a-4b21-acbb-20ff387f015c',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SushiToken',
+	'SUSHI',
+	'0x6B3595068778DD592e39A122f4f5a5cF09C90fE2',
+	18,
+	''
+),
+(
+	'0cd2ab50-88f9-4e32-9709-f31666ecdadf',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'BAEPAY',
+	'BAEPAY',
+	'0x6BFfa07a1B0ceBC474cE6833eAf2bE6326252449',
+	4,
+	''
+),
+(
+	'9d117797-c528-4a6d-811d-e138765fba5b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Elementeum',
+	'ELET',
+	'0x6c37Bf4f042712C978A73e3fd56D1F5738dD7C43',
+	18,
+	''
+),
+(
+	'b387c8cc-f084-44b0-8f72-39dcb550eed0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'EGGS',
+	'EGGS',
+	'0x6C5A643F582408a640068Ed68443D9185Fb2b0B8',
+	4,
+	''
+),
+(
+	'a8790017-bd96-4025-8128-1e3b13720bc5',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Fazer',
+	'FAZR',
+	'0x6e4D93Efc2BeaC20992197278AD41f8d10b3EFAA',
+	18,
+	''
+),
+(
+	'4874027a-377d-4d24-a5e1-66d799226fe1',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Juggernaut DeFi',
+	'JGN',
+	'0x73374Ea518De7adDD4c2B624C0e8B113955ee041',
+	18,
+	''
+),
+(
+	'b0559e7a-2deb-41d4-b073-62fb2ee5006c',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'NodeRunners',
+	'NDR',
+	'0x739763a258640919981F9bA610AE65492455bE53',
+	18,
+	''
+),
+(
+	'8f57844a-012b-4416-8ce1-51f7d5a3d513',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Piandex',
+	'PIANDX',
+	'0x75FE5F25A39ac56083af564cFfA8F00c1b89011C',
+	4,
+	''
+),
+(
+	'e4478af2-83b5-4d27-96d0-1f4e7cfc344c',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Camel',
+	'CAMEL',
+	'0x7732aBAe70c3b9319e27fa2cEaE509F538D8e94F',
+	4,
+	''
+),
+(
+	'e222f598-c3b1-4728-86c9-cd598fde54a3',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Saint Fame: $ICK Mask',
+	'ICK',
+	'0x793e2602A8396468f3CE6E34C1B6C6Fd6D985bAD',
+	18,
+	''
+),
+(
+	'76977811-fcff-4b94-99be-8a6acd2b10cc',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Pornvisory',
+	'PVY',
+	'0x7bf878a25f7d34D392EBC8d14E33478966c7CA75',
+	18,
+	''
+),
+(
+	'1ae24073-6a6c-4775-9680-1b1fa72924fd',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Feathers',
+	'FTHR',
+	'0x7C918dF91f8F4e8D707a7A4013b8e7247C0293B1',
+	4,
+	''
+),
+(
+	'ea23c7e4-ef98-478c-92c0-594517658b84',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'LORDLESS TOKEN',
+	'LESS',
+	'0x7ca121b093e2FbD4bB9A894bD5Ff487d16f1F83b',
+	18,
+	''
+),
+(
+	'ae29d4a0-37a9-492f-8781-9a742317d941',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Matic Token',
+	'MATIC',
+	'0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0',
+	18,
+	''
+),
+(
+	'1b57afa3-eacb-4446-9b09-35919fd7bcb7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Budz',
+	'BUDZ',
+	'0x7F1AddbB144363730a433A21ACDaB7b36F988252',
+	0,
+	''
+),
+(
+	'9107a11a-3f36-4a22-af1b-25e5c3ae0e29',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Rare',
+	'RARE',
+	'0x81B1bFD6CB9Ad42DB395c2a27F73D4DCf5777e2D',
+	4,
+	''
+),
+(
+	'0aa265b5-c165-407d-8d73-6014b60d349b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Enigma Bazaar Byte',
+	'EBB',
+	'0x83e7439829564184Bb0e854889Bd39038c57d685',
+	18,
+	''
+),
+(
+	'c1ae0601-b8db-4579-86f8-1389c0e5debb',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ZeroUtility',
+	'ZUT',
+	'0x83F873388Cd14b83A9f47FabDe3C9850b5C74548',
+	18,
+	''
+),
+(
+	'2097e8a5-1a46-44f5-b874-deab9fce236a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'CHONK',
+	'CHONK',
+	'0x84679bc467DC6c2c40ab04538813AfF3796351f1',
+	18,
+	''
+),
+(
+	'67e5ec44-4e0f-4527-8668-9d49a956bd56',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'coin_artist',
+	'COIN',
+	'0x87b008E57F640D94Ee44Fd893F0323AF933F9195',
+	18,
+	''
+),
+(
+	'320edf7d-7488-4709-bde4-4bc53b16d5d0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Swag Token',
+	'SWAG',
+	'0x87eDfFDe3E14c7a66c9b9724747a1C5696b742e6',
+	18,
+	''
+),
+(
+	'e4f28575-2131-4c32-9457-ab6372d3cf08',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Marblecoin',
+	'MBC',
+	'0x8888889213DD4dA823EbDD1e235b09590633C150',
+	18,
+	''
+),
+(
+	'7dd474f4-ed98-46dd-b097-154fe77253ef',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Sai Stablecoin v1.0',
+	'SAI',
+	'0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359',
+	18,
+	''
+),
+(
+	'c6ad4b62-b60f-463b-8c02-330358b7c0bb',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'NameChangeToken',
+	'NCT',
+	'0x8A9c4dfe8b9D8962B31e4e16F8321C44d48e246E',
+	18,
+	''
+),
+(
+	'3ff23b96-da44-49c2-99ae-9053dfc535c1',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Wrapped MarbleCards',
+	'WMC',
+	'0x8AedB297FED4b6884b808ee61fAf0837713670d0',
+	18,
+	''
+),
+(
+	'fe6f983e-f41e-4dc0-9bdc-d9f479628176',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'VI',
+	'VI',
+	'0x8b6c3b7C01D9dB4393f9aa734750F36df1543E9A',
+	18,
+	''
+),
+(
+	'018e5845-4a3f-40f2-8dc2-4f86065b6ce4',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'People''s Punk',
+	'DDDD',
+	'0x8cA9a0fbd8DB501F013F2e9e33a1B9dC129A48E0',
+	18,
+	''
+),
+(
+	'bb505207-c04b-45c5-81bf-c86e8e670229',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Pixie Dust',
+	'PIXIE',
+	'0x9318105460626e7fA58308FA4bcE40e4616F3565',
+	18,
+	''
+),
+(
+	'6e984ac8-0ad5-41ad-b71f-bb637338be84',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'WHALE',
+	'WHALE',
+	'0x9355372396e3F6daF13359B7b607a3374cc638e0',
+	4,
+	''
+),
+(
+	'5f6b341d-ed3e-427b-a5f9-f6115a4a2678',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SHIBA INU',
+	'SHIB',
+	'0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE',
+	18,
+	''
+),
+(
+	'badce5a3-efac-4bae-a615-453897fb8fca',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'EtheremonToken',
+	'EMONT',
+	'0x95dAaaB98046846bF4B2853e23cba236fa394A31',
+	8,
+	''
+),
+(
+	'b6a11b0f-28eb-47d0-954d-091333358eec',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'TATR tech',
+	'TATR',
+	'0x97371b72B1e897103BEFd628e22a2829e86eBc3D',
+	18,
+	''
+),
+(
+	'8c7616ec-3e85-494b-9774-2763ed09c1d1',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Polyient Games Unity',
+	'PGU',
+	'0x98c36c0e953463BD5146C8783ce081CE1d187AcF',
+	18,
+	''
+),
+(
+	'd8f0e670-9e6a-41ad-88d0-0f6271382849',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Non-Fungible TOKE',
+	'TOKE',
+	'0x98ddC72bD02d448F68C4226f26122c66C5BD711E',
+	18,
+	''
+),
+(
+	'96c2d91d-f7de-458a-b105-87133b470c35',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Harrison First',
+	'FIRST',
+	'0x9903A4Cd589DA8e434f264deAFc406836418578E',
+	4,
+	''
+),
+(
+	'5f6096c5-575c-4cd3-8c75-74fee5c1d138',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Museum of Crypto Art',
+	'MOCA',
+	'0x9Ac07635DDBDE5db18648c360DEFb00F5f22537e',
+	18,
+	''
+),
+(
+	'c0988563-b89f-426e-8c0c-1b9c2581c054',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Reality Clash Coin',
+	'RCC',
+	'0x9b6443b0fB9C241A7fdAC375595cEa13e6B7807A',
+	18,
+	''
+),
+(
+	'3edbf5e5-1922-42dc-9a0a-9f1bf372801a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'$ROPE',
+	'$ROPE',
+	'0x9D47894f8BECB68B9cF3428d256311Affe8B068B',
+	18,
+	''
+),
+(
+	'72523cf2-aca7-4e72-8e11-a939015bdcb7',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Maker',
+	'MKR',
+	'0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
+	18,
+	''
+),
+(
+	'9812fda1-a53c-420b-b19d-d7d0cb04e051',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gold of Skulls',
+	'GSK',
+	'0xA0343eD4F61E131D8b9738d810F0AAaFA346d305',
+	18,
+	''
+),
+(
+	'7a407199-f969-4ddc-9187-e2b86698d581',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Video',
+	'VIDEO',
+	'0xa05a31924F767D23a03B0b1b2cF48654D0C87E0f',
+	4,
+	''
+),
+(
+	'3bea69bf-b3b0-452c-8a6e-291a3a357e18',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'USD Coin',
+	'USDC',
+	'0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+	6,
+	''
+),
+(
+	'e3725b5c-354c-4c44-80c8-8b439d7c0973',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'RFOX',
+	'RFOX',
+	'0xa1d6Df714F91DeBF4e0802A542E13067f31b8262',
+	18,
+	''
+),
+(
+	'51c66ad4-4fcc-4f42-8e77-608c01c43428',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SAUCY NUGS',
+	'NUGS',
+	'0xa25d75e60D2BDFB4BF0FE5e80Edadee69fd50513',
+	18,
+	''
+),
+(
+	'b43d0a47-8670-4886-8789-2a8147c5dbff',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Doom',
+	'DOOM',
+	'0xA4F9CEC920cA520a7FEB2c3A63050e08967bc111',
+	4,
+	''
+),
+(
+	'24412cb9-52e9-4edf-a8b8-965e236cfc6e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MutantToken',
+	'MUTANT',
+	'0xA663121582725aA0eb8BF20B0F56F1917762e873',
+	18,
+	''
+),
+(
+	'9d2953ad-0214-42e7-925d-6ad67fcbdf1b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gemx',
+	'GMX',
+	'0xA67C912303b5227D6D4Dc7d16088342718a05bdf',
+	4,
+	''
+),
+(
+	'6bc9001a-b1a9-4015-8ef5-2f36c8ccf7a3',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'RODZ',
+	'RODZ',
+	'0xA685D6f87E3bE27D72Ce216842147c4149e0Ce9a',
+	4,
+	''
+),
+(
+	'1865ee84-8d04-49c3-b1b6-7c0ab59ec9b2',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'LOAD',
+	'LOAD',
+	'0xa883E72c12473DeD50A5FbfFA60E4000fa5FE3C8',
+	8,
+	''
+),
+(
+	'9941fccc-296c-4c9e-a3c2-0dfb82418784',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'KOLLECTOR',
+	'KLTR',
+	'0xa92c49C403386111C1629AEe00936eED2A9E74a6',
+	18,
+	''
+),
+(
+	'3de26787-b0af-4ee4-90d4-a7a63294011a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'WIPcoin',
+	'WIPC',
+	'0xab47fbe8A0b75Baa4Ef846E99f6bB3b52007A115',
+	18,
+	''
+),
+(
+	'36146dec-af92-48e6-a31c-95901eb557a4',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Crowns',
+	'CWS',
+	'0xaC0104Cca91D167873B8601d2e71EB3D4D8c33e0',
+	18,
+	''
+),
+(
+	'cdcb1e76-dfef-4fbd-9d8a-d4ab9c41072e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'VeriSafe',
+	'VSF',
+	'0xAC9ce326e95f51B5005e9fE1DD8085a01F18450c',
+	18,
+	''
+),
+(
+	'68efd510-e58b-4f0f-a96f-f631e0ae0619',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gou',
+	'GOU',
+	'0xB19977B23b40D59254B8f5A0BdB67076B4FA0bC6',
+	4,
+	''
+),
+(
+	'3ab1e368-a508-4c39-990d-93082a4ac80a',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Waifu',
+	'WAIF',
+	'0xB2279B6769CFBa691416F00609b16244c0cF4b20',
+	18,
+	''
+),
+(
+	'909f03f2-745c-46e5-b7d9-beb1af3c7fb0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Initia',
+	'INI',
+	'0xb5fDe360d9d6D4Dddf6093a39F725081F9C601ae',
+	4,
+	''
+),
+(
+	'19c7e3be-eef2-47dd-9162-b7ce1cc64298',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Muse',
+	'MUSE',
+	'0xB6Ca7399B4F9CA56FC27cBfF44F4d2e4Eef1fc81',
+	18,
+	''
+),
+(
+	'a2c9a9bc-f988-4de7-9921-53f3872ed348',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'0xBitcoin Token',
+	'0xBTC',
+	'0xB6eD7644C69416d67B522e20bC294A9a9B405B31',
+	8,
+	''
+),
+(
+	'b1402abc-9200-4782-855b-927e2fcf7793',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'@EthernityChain $ERN Token',
+	'ERN',
+	'0xBBc2AE13b23d715c30720F079fcd9B4a74093505',
+	18,
+	''
+),
+(
+	'71f52b50-8623-4bae-b63f-9f602aa8d643',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'BEEF Token',
+	'BEEF',
+	'0xBc2908DE55877e6Baf2FaAD7aE63AC8b26bd3de5',
+	18,
+	''
+),
+(
+	'75f19daf-e9a7-445d-a055-242d03b6787b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Distant Universe Stardust Token',
+	'DUST',
+	'0xbCa3C97837A39099eC3082DF97e28CE91BE14472',
+	8,
+	''
+),
+(
+	'9ce2d91d-fed1-453c-bd38-7fa3056ccd77',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Skull',
+	'SKULL',
+	'0xBcc66ed2aB491e9aE7Bf8386541Fb17421Fa9d35',
+	4,
+	''
+),
+(
+	'8774ccf4-26d4-4205-b56e-0e8c922cfbfb',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'KEKToken',
+	'KEK',
+	'0xBD0D47d7EcF0978F13878615635F3D3Dc5Fecde1',
+	18,
+	''
+),
+(
+	'e76e4b38-546c-456b-8ee2-204a27d06ed5',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Wrapped Ether',
+	'WETH',
+	'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+	18,
+	''
+),
+(
+	'401f8f9a-bb09-4110-944b-c7cb93eb3dbf',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'B.20',
+	'B20',
+	'0xc4De189Abf94c57f396bD4c52ab13b954FebEfD8',
+	18,
+	''
+),
+(
+	'17e462bb-e9b7-4fd7-b16c-b4ce26c2e4b8',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Play',
+	'PLAY',
+	'0xC53a9c309Ee2F3E333BD6ecA806A31d0e2Dca5C5',
+	4,
+	''
+),
+(
+	'0d16a609-bfd8-410b-aa66-5b412fe4bb80',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gcash',
+	'GCASH',
+	'0xc53f6C2Ac35D30cc47Ddf3C320874b21dFA38791',
+	4,
+	''
+),
+(
+	'987cd1ee-e3b4-41cb-b198-234d3f4ef1db',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SAL',
+	'SAL',
+	'0xc687Cbe21Da4374597ac5a020D79A7c39536512C',
+	4,
+	''
+),
+(
+	'a095fe4c-0818-49aa-ae18-bdb2e059e2da',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'AnRKey X',
+	'$ANRX',
+	'0xCae72A7A0Fd9046cf6b165CA54c9e3a3872109E0',
+	18,
+	''
+),
+(
+	'64a1e10b-4336-45f2-b1d8-a73358f9b4ff',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Moose',
+	'MM',
+	'0xcf0425a35f1FA900bb347Cb996D3094D1dF3Cd48',
+	4,
+	''
+),
+(
+	'7abbd05c-110d-4169-a81e-8be429c90011',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MachiX Token',
+	'MCX',
+	'0xd15eCDCF5Ea68e3995b2D0527A0aE0a3258302F8',
+	18,
+	''
+),
+(
+	'1e29b132-0e99-4e89-8873-62d1eda46f07',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Bondly Token',
+	'BONDLY',
+	'0xD2dDa223b2617cB616c1580db421e4cFAe6a8a85',
+	18,
+	''
+),
+(
+	'773cb24b-31ac-46ba-a225-267810684259',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Ampleforth',
+	'AMPL',
+	'0xD46bA6D942050d489DBd938a2C909A5d5039A161',
+	9,
+	''
+),
+(
+	'7c126e06-584f-457b-b017-0a3681c97728',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'365DAYSWTF Rewards',
+	'HOUR',
+	'0xD48Cf65488486fa0d45B806aA51Ca35727D70880',
+	18,
+	''
+),
+(
+	'ceea1d11-049f-4f86-87b6-7989c9a09fed',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MEME',
+	'MEME',
+	'0xD5525D397898e5502075Ea5E830d8914f6F0affe',
+	8,
+	''
+),
+(
+	'ceefb3b8-fdf3-4587-9762-de6a9cfe3d84',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'meToken',
+	'goose',
+	'0xD59228A53f54b6F3b16c334550c77c3079220d28',
+	18,
+	''
+),
+(
+	'abf69321-d14e-488f-bcfe-a8fd0cf75726',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'NFTeGG Fame Token',
+	'eFAME',
+	'0xD821E91DB8aED33641ac5D122553cf10de49c8eF',
+	18,
+	''
+),
+(
+	'b7ce4fde-8709-4d79-8d9e-9b1bede161c3',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'AtariToken',
+	'ATRI',
+	'0xdacD69347dE42baBfAEcD09dC88958378780FB62',
+	0,
+	''
+),
+(
+	'e6415bd7-8c12-4014-b12b-5820a01bb6ec',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MNFT',
+	'MNFT',
+	'0xDB7eB3edE973665b1BB9F3016861E3255062E4ED',
+	4,
+	''
+),
+(
+	'520f0011-b4dd-4591-95af-6706fa2009c0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Smatoos Reward Platform Token',
+	'SMTS',
+	'0xDC97FDaADcbc1c77525B8a1c981865BD2e0425AA',
+	18,
+	''
+),
+(
+	'82bf5dfd-be3d-4694-b919-5a80ac4e17bc',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Hue',
+	'HUE',
+	'0xDcfE18bc46f5A0Cd0d3Af0c2155d2bCB5AdE2fc5',
+	4,
+	''
+),
+(
+	'18f8d5f3-ab18-4253-ad8e-f346febbfaa4',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'The Emperial Currency',
+	'B0T',
+	'0xDd60F9dd5B891b728955149BD59F42c6513C8dc6',
+	18,
+	''
+),
+(
+	'ce44d971-1bdb-4eec-8e05-0659a24a6526',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MOJI Experience Points',
+	'MEXP',
+	'0xDe201dAec04ba73166d9917Fdf08e1728E270F06',
+	18,
+	''
+),
+(
+	'c1f8254c-17bf-4d0a-8523-dbfb3686c932',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Somnium Space Cubes',
+	'CUBE',
+	'0xDf801468a808a32656D2eD2D2d80B72A129739f4',
+	8,
+	''
+),
+(
+	'f10fba6f-22f1-422b-ad71-7b0570ed6fe9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'BuschCoin',
+	'BUC',
+	'0xE0C3223Ae0Cb8b5a47fF7f4994F5FBcDE58496F8',
+	6,
+	''
+),
+(
+	'a9ec2beb-a370-4b7d-85f9-82d5a90eb865',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'MemeGold',
+	'MGD',
+	'0xe12E3Ae6544797404210243ff8f18Dc12B5325EB',
+	18,
+	''
+),
+(
+	'd9e18506-1fc2-4b62-a3ab-18a054004d6e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Banana',
+	'BANANA',
+	'0xE2311ae37502105b442bBef831E9b53c5d2e9B3b',
+	18,
+	''
+),
+(
+	'7a9753c5-5442-4a5e-84eb-12c4a2570138',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ART Token',
+	'ART',
+	'0xE51f24B251430A6e615f66e0d3c3A97c442aB38C',
+	18,
+	''
+),
+(
+	'5bc2c797-586b-4ce4-9ca8-41f9c008ee01',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'PrimeDAO Token',
+	'PRIME',
+	'0xE59064a8185Ed1Fca1D17999621eFedfab4425c9',
+	18,
+	''
+),
+(
+	'ef341f0a-e785-4b87-931f-36c7ccaffeb9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'nfZURU',
+	'ZURU',
+	'0xE6dd5041952f70cd3E3bBB448B5B30b3Ff1D845f',
+	18,
+	''
+),
+(
+	'67bb0390-e26f-44ec-a428-fe42938f69d9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'JBG',
+	'JBG',
+	'0xE85d69D5e7B91b1A0D2E93a3678315E6915197B2',
+	4,
+	''
+),
+(
+	'206f2e67-dcd4-4b1c-9f44-9180f4fd9122',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'CAMO',
+	'CAMO',
+	'0xE86A746330b0B691323d2CbB5c140F77D7F198A4',
+	4,
+	''
+),
+(
+	'23338a49-f56d-45e3-9e41-2ce4710ae171',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'PXart',
+	'PXART',
+	'0xE9cDA0749f2393254773Fd75A1Ca1639D9B25A17',
+	4,
+	''
+),
+(
+	'ecc43a62-16ef-4c2a-9ef7-ad42346314f2',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Street Cred',
+	'CRED',
+	'0xED7Fa212E100DFb3b13B834233E4B680332a3420',
+	18,
+	''
+),
+(
+	'47e03b21-d3e0-4156-8be1-fe2503067cfa',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'pulltherug.finance',
+	'RUGZ',
+	'0xEdFBd6c48c3dDfF5612Ade14B45bb19F916809ba',
+	18,
+	''
+),
+(
+	'a1800f4d-b8f2-4fa7-b0ad-4785a997791d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gold Pressed Latinum',
+	'GPL',
+	'0xEeDdaa78E0b2De769e969bd049c8faFf3280dF97',
+	18,
+	''
+),
+(
+	'2c93c821-5813-4a7b-94f2-aedae501c196',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Ethverse Token',
+	'ETHV',
+	'0xEeEeeeeEe2aF8D0e1940679860398308e0eF24d6',
+	18,
+	''
+),
+(
+	'47164b9d-32b2-4b5c-ba72-90e17a27b45b',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'VEGETA',
+	'VEGETA',
+	'0xf057D77Ba8ca6DC51427C1Dfd66dDba0664feD54',
+	18,
+	''
+),
+(
+	'cb85a32d-b6a6-4e77-94ea-b8e05ed65c3f',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'1Million Token',
+	'1MT',
+	'0xf0Bc1ae4eF7ffb126A8347D06Ac6f8AdD770e1CE',
+	7,
+	''
+),
+(
+	'bdc9d618-f4a9-444e-95ad-80237a3b16b0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Pepedex',
+	'PPDEX',
+	'0xf1F508c7C9f0d1b15a76fbA564eEf2d956220cf7',
+	18,
+	''
+),
+(
+	'7489928e-7a0c-4d13-b65d-55f0dc33dfa9',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Rally',
+	'RLY',
+	'0xf1f955016EcbCd7321c7266BccFB96c68ea5E49b',
+	18,
+	''
+),
+(
+	'bf1ce1c5-12d3-4337-a006-6f5a48723e14',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'BloodyPercent',
+	'BPC',
+	'0xF21D65979bD89b28f05EF19F3c65dd2A1D02946D',
+	4,
+	''
+),
+(
+	'0bac10f2-67aa-46af-8182-d2be5a544e58',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Roxel DAO',
+	'ROX',
+	'0xf4284A849C918eF676f54Ed938703F2EeeD3e058',
+	18,
+	''
+),
+(
+	'dc8e9ebd-4b45-49fd-9ef5-a0ae97dbf1ee',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Steady',
+	'STEADY',
+	'0xf42De14aBbdA1244D66b12387cb87fC91EfcFE85',
+	4,
+	''
+),
+(
+	'513dd60c-e4bb-490a-88a9-6a17436a8a8d',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Mork',
+	'MORK',
+	'0xf552b656022c218C26dAd43ad88881Fc04116F76',
+	4,
+	''
+),
+(
+	'49f8fa8d-4795-45c2-82aa-402cabad2cc6',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'EnjinCoin',
+	'ENJ',
+	'0xF629cBd94d3791C9250152BD8dfBDF380E2a3B9c',
+	18,
+	''
+),
+(
+	'f7f79e30-ed35-47cf-907b-5c1a50ac3181',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Mythex',
+	'MX',
+	'0xF6C868C4F2a48949ff9b01E67AcD206543352Fcd',
+	0,
+	''
+),
+(
+	'fe51a192-6463-4bdf-ba85-5704dbebe005',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'DANNY',
+	'DANNY',
+	'0xf97Ce80cd21e18006dd9c3Edc07c983c158F9371',
+	4,
+	''
+),
+(
+	'86324183-0b5f-428d-9ad3-e91bc6cf1b68',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Boutique72',
+	'BTQ',
+	'0xFa5551C53bd847CECBAeF93e34909e5D4551B5DA',
+	18,
+	''
+),
+(
+	'2b7dbd5b-f986-4109-aef9-254a02790bd0',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'ziot',
+	'ziot',
+	'0xfB22cED41B1267dA411F68c879f4Defd0bD4796a',
+	18,
+	''
+),
+(
+	'0a796940-50fd-4d7d-8586-440675b92380',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Gaia Coin',
+	'Gaia',
+	'0xFB6C3360E9c069eE48C9E1E4c6b3169427c9B84b',
+	18,
+	''
+),
+(
+	'd2d5ab4c-4058-437b-9dcd-9cc8c07626b6',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'DuckDaoDime',
+	'DDIM',
+	'0xFbEEa1C75E4c4465CB2FCCc9c6d6afe984558E20',
+	18,
+	''
+),
+(
+	'9116744d-85b3-46f3-bb21-4a43374af1a6',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Crypto Projects Token',
+	'CPT',
+	'0xfC86c646d2c90E38E0F0aF6D0baEe4ea95aA4893',
+	8,
+	''
+),
+(
+	'fa7a00bf-7025-4dcb-8f67-0637900b413e',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'Rarible',
+	'RARI',
+	'0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF',
+	18,
+	''
+),
+(
+	'91e0e515-6a5e-49f6-84a2-01083b139d45',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'SnowSwap',
+	'SNOW',
+	'0xfe9A29aB92522D14Fc65880d817214261D8479AE',
+	18,
+	''
+),
+(
+	'd709e6e2-9450-475b-911c-372e4ddae291',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'VIDT Datalink',
+	'VIDT',
+	'0xfeF4185594457050cC9c23980d301908FE057Bb1',
+	18,
+	''
+),
+(
+	'df2822f0-1587-426a-bc58-42c522917f41',
+	'94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+	'VOLTAGE',
+	'VOLT',
+	'0xfFbF315f70E458e49229654DeA4cE192d26f9b25',
+	18,
+    ''
+);
