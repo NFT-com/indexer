@@ -1,7 +1,7 @@
 CREATE TABLE networks
 (
     id          UUID PRIMARY KEY,
-    chain_id    NUMERIC     NOT NULL UNIQUE,
+    chain_id    BIGINT      NOT NULL UNIQUE,
     name        TEXT        NOT NULL,
     description TEXT        NOT NULL,
     symbol      VARCHAR(16) NOT NULL
@@ -20,7 +20,7 @@ CREATE TABLE collections
     id               UUID PRIMARY KEY,
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     contract_address VARCHAR(128) NOT NULL,
-    start_height     NUMERIC      NOT NULL,
+    start_height     BIGINT       NOT NULL,
     name             TEXT         NOT NULL,
     description      TEXT         NOT NULL,
     symbol           VARCHAR(16)  NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE networks_marketplaces
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     marketplace_id   UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
     contract_address VARCHAR(128) NOT NULL,
-    start_height     NUMERIC      NOT NULL,
+    start_height     BIGINT       NOT NULL,
     PRIMARY KEY (network_id, marketplace_id, contract_address)
 );
 
