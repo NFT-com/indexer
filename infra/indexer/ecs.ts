@@ -127,7 +127,7 @@ export const createParsingDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
     const resourceName = getResourceName('indexer-td-parsing-dispatcher')
-    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:parsing-dispatcher`
+    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:parsing-dispatcher-${process.env.GIT_SHA || 'latest'}`
     
     return new aws.ecs.TaskDefinition(resourceName, 
     {
@@ -181,7 +181,7 @@ export const createAdditionDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
     const resourceName = getResourceName('indexer-td-addition-dispatcher')
-    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:addition-dispatcher`
+    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:addition-dispatcher-${process.env.GIT_SHA || 'latest'}`
 
     return new aws.ecs.TaskDefinition(resourceName, 
     {
@@ -235,7 +235,7 @@ export const createCompletionDispatcherTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
     const resourceName = getResourceName('indexer-td-completion-dispatcher')
-    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:completion-dispatcher`
+    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:completion-dispatcher-${process.env.GIT_SHA || 'latest'}`
 
     return new aws.ecs.TaskDefinition(resourceName,
     {
@@ -289,7 +289,7 @@ export const createJobCreatorTaskDefinition = (
     infraOutput: SharedInfraOutput,
 ): aws.ecs.TaskDefinition => {
     const resourceName = getResourceName('indexer-td-jobs-creator')
-    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:jobs-creator`
+    const ecrImage = `${process.env.ECR_REGISTRY}/${infraOutput.indexerECRRepo}:jobs-creator-${process.env.GIT_SHA || 'latest'}`
 
     return new aws.ecs.TaskDefinition(resourceName, 
     {

@@ -78,19 +78,19 @@ runs:
       run: |
         export DOCKER_BUILDKIT=1
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile -t ${{ env.REPO }}:parsing-dispatcher -t ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/parsing-dispatcher/Dockerfile -t ${{ env.REPO }}:parsing-dispatcher-latest -t ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:parsing-dispatcher
         docker push ${{ env.REPO }}:parsing-dispatcher-${{ github.sha }}
 
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/addition-dispatcher/Dockerfile -t ${{ env.REPO }}:addition-dispatcher -t ${{ env.REPO }}:addition-dispatcher-${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/addition-dispatcher/Dockerfile -t ${{ env.REPO }}:addition-dispatcher-latest -t ${{ env.REPO }}:addition-dispatcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:addition-dispatcher
         docker push ${{ env.REPO }}:addition-dispatcher-${{ github.sha }}
 
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/completion-dispatcher/Dockerfile -t ${{ env.REPO }}:completion-dispatcher -t ${{ env.REPO }}:completion-dispatcher-${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/completion-dispatcher/Dockerfile -t ${{ env.REPO }}:completion-dispatcher-latest -t ${{ env.REPO }}:completion-dispatcher-${{ github.sha }} 
         docker push ${{ env.REPO }}:completion-dispatcher
         docker push ${{ env.REPO }}:completion-dispatcher-${{ github.sha }}
         
-        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}:jobs-creator -t ${{ env.REPO }}:jobs-creator-${{ github.sha }} 
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 -f cmd/jobs-creator/Dockerfile -t ${{ env.REPO }}:jobs-creator-latest -t ${{ env.REPO }}:jobs-creator-${{ github.sha }} 
         docker push ${{ env.REPO }}:jobs-creator
         docker push ${{ env.REPO }}:jobs-creator-${{ github.sha }}
     - name: Deploy Indexer ECS (Cluster and Task Definitions)
@@ -99,6 +99,7 @@ runs:
       env:
         STAGE: ${{ inputs.stage }}
         PULUMI_CONFIG_PASSPHRASE: ""
+        GIT_SHA: ${{ github.sha }}
         AWS_ACCOUNT_ID: ${{ fromJSON(inputs.secrets).AWS_ACCOUNT_ID }}
         AWS_ACCESS_KEY_ID: ${{ fromJSON(inputs.secrets).AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ fromJSON(inputs.secrets).AWS_SECRET_ACCESS_KEY }}
