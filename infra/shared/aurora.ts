@@ -84,8 +84,8 @@ const createMainJobDb = (
       },
     ],
   })
-  const instance = config.require('auroraMainInstance')
-  const numInstances = parseInt(config.require('auroraMainInstances')) || 1
+  const instance = config.require('auroraJobInstance')
+  const numInstances = parseInt(config.require('auroraJobInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
   for (let i = 0; i < numInstances; i++) {
     clusterInstances.push(new aws.rds.ClusterInstance(`aurora_job_instance_${i + 1}`, {
@@ -159,8 +159,8 @@ const createMainEventDb = (
       },
     ],
   })
-  const instance = config.require('auroraMainInstance')
-  const numInstances = parseInt(config.require('auroraMainInstances')) || 1
+  const instance = config.require('auroraEventInstance')
+  const numInstances = parseInt(config.require('auroraEventInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
   for (let i = 0; i < numInstances; i++) {
     clusterInstances.push(new aws.rds.ClusterInstance(`aurora_event_instance_${i + 1}`, {
@@ -234,8 +234,8 @@ const createMainGraphDb = (
       },
     ],
   })
-  const instance = config.require('auroraMainInstance')
-  const numInstances = parseInt(config.require('auroraMainInstances')) || 1
+  const instance = config.require('auroraGraphInstance')
+  const numInstances = parseInt(config.require('auroraGraphInstances')) || 1
   const clusterInstances: aws.rds.ClusterInstance[] = []
   for (let i = 0; i < numInstances; i++) {
     clusterInstances.push(new aws.rds.ClusterInstance(`aurora_graph_instance_${i + 1}`, {
