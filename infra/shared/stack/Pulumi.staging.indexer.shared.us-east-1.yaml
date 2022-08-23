@@ -1,6 +1,10 @@
 encryptionsalt: v1:rZUwYLniWB4=:v1:dKjZFwKQklwxe1Uz:RoennVhWSSi3nDorDXSQPHMFcFA2fQ==
 config:
+  nftcom:auroraEventInstance: db.r6g.xlarge
+  nftcom:auroraEventInstances: "1"
+  nftcom:auroraGraphInstance: db.r6g.large
+  nftcom:auroraGraphInstances: "1"
+  nftcom:auroraJobInstance: db.r6g.large
+  nftcom:auroraJobInstances: "1"
   nftcom:availabilityZones: us-east-1a,us-east-1b,us-east-1c
-  nftcom:auroraMainInstances: 1
-  nftcom:auroraMainInstance: db.t3.medium
-  nftcom:redisMainInstance: cache.t3.small
+  nftcom:redisMainInstance: cache.t3.medium

@@ -68,11 +68,13 @@ export const createSecurityGroups = (
     name: getResourceName('indexer-aurora-main'),
     description: 'Allow traffic to Aurora (Postgres) main instance',
     vpcId: vpc.id,
-    ingress: [
+    ingress: 
       isProduction()
-        ? buildIngressRule(5432, 'tcp', [web.id])
-        : buildIngressRule(5432),
-    ],
+        ? [
+          buildIngressRule(5432, 'tcp', [web.id]),
+          buildIngressRule(5432, 'tcp', [pulumi.output('sg-0b993daff55758b9c')]), //prod-analytics-sg created in a diff stack
+        ]
+        : [buildIngressRule(5432)],
     egress: [
       buildEgressRule(5432),
     ],
