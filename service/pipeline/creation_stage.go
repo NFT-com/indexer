@@ -81,9 +81,7 @@ func (c *CreationStage) execute(height uint64) error {
 	combinations = append(combinations, marketplaceCombinations...)
 
 	// Then, we get the latest job for each combination in order to update the
-	// start height where necessary. We also keep track of the lowest start height
-	// and the corresponding contract address.
-	lowest := uint64(math.MaxUint64)
+	// start height where necessary.
 	var sentinel string
 	for _, combination := range combinations {
 
@@ -109,21 +107,36 @@ func (c *CreationStage) execute(height uint64) error {
 				Str("event_hash", combination.EventHash).
 				Uint64("start_height", combination.StartHeight).
 				Uint64("last_height", last).
-				Msg("updating start height with latest heigth")
-		}
-
-		if combination.StartHeight < lowest {
-			lowest = combination.StartHeight
-			sentinel = combination.ContractAddress
+				Msg("updating start height with latest height")
 		}
 	}
 
-	// We use the sentinel contract address to determine the event types we want
-	// to allow in this run.
+	// After determining the start height for every combination, we identify one of the
+	// contract addresses with the lowest start height. We will limit the jobs to the
+	// event hashes of that contract.
+	lowest := uint64(math.MaxUint64)
+	for _, combination := range combinations {
+		if combination.StartHeight < lowest {
+			lowest = combination.StartHeight
+			sentinel = combination.ContractAddress
+			c.log.Debug().
+				Uint64("height", combination.StartHeight).
+				Str("contract_address", combination.ContractAddress).
+				Msg("updated sentinel smart contract for event hashes")
+		}
+	}
+
+	// Next, we gather all event types for the given sentinel address. This step is
+	// needed because we have split everything into combinations per event hash, so
+	// we just match all of those with the same address here.
 	hashSet := make(map[string]struct{})
 	for _, combination := range combinations {
 		if combination.ContractAddress == sentinel {
 			hashSet[combination.EventHash] = struct{}{}
+			c.log.Debug().
+				Str("contract_address", combination.ContractAddress).
+				Str("event_hash", combination.EventHash).
+				Msg("added event hash for sentinel smart contract")
 		}
 	}
 
