@@ -260,7 +260,7 @@ func SeaportSale(log types.Log) (*events.Sale, error) {
 		MarketplaceAddress: log.Address.Hex(),
 		CollectionAddress:  nft.Address.Hex(),
 		TokenID:            nft.Identifier.String(),
-		TokenCount:         uint(nft.Amount.Uint64()),
+		TokenCount:         nft.Amount.String(),
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
 		EventIndex:         log.Index,

@@ -194,6 +194,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 		nftTransfer := nftTransfers[0]
 		sale.CollectionAddress = nftTransfer.CollectionAddress
 		sale.TokenID = nftTransfer.TokenID
+		sale.TokenCount = nftTransfer.TokenCount
 	}
 
 	// Put everything together for the result.
