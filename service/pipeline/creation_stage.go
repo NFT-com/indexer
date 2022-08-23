@@ -144,14 +144,8 @@ func (c *CreationStage) execute(height uint64) error {
 	created := uint(0)
 	for created < c.cfg.BatchSize {
 
-		// First, go through all combinations and find the lowest start height, which
-		// we will use as the start height for the next job we are creating.
-		start := uint64(math.MaxUint64)
-		for _, combination := range combinations {
-			if combination.StartHeight < start {
-				start = combination.StartHeight
-			}
-		}
+		// We start at the lowest start height.
+		start := lowest
 
 		// The end height will be the lower between our configured height range and
 		// the height that is available.
@@ -169,17 +163,17 @@ func (c *CreationStage) execute(height uint64) error {
 		addressSet := make(map[string]struct{})
 		for _, combination := range combinations {
 
-			// stop if we have reached the maximum number of addresses
+			// Stop if we have reached the maximum number of addresses.
 			if uint(len(addressSet)) > c.cfg.AddressLimit {
 				break
 			}
 
-			// skip if start height above end
+			// Skip if start height above end.
 			if combination.StartHeight > end {
 				continue
 			}
 
-			// skip if event type not in current run
+			// Skip if event hash is not in current hash set.
 			_, ok := hashSet[combination.EventHash]
 			if !ok {
 				continue
