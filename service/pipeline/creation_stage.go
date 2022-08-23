@@ -81,8 +81,12 @@ func (c *CreationStage) execute(height uint64) error {
 	combinations = append(combinations, marketplaceCombinations...)
 
 	// Then, we get the latest job for each combination in order to update the
-	// start height where necessary.
+	// start height where necessary. We also keep track of the lowest start height
+	// and the corresponding contract address.
+	lowest := uint64(math.MaxUint64)
+	var sentinel string
 	for _, combination := range combinations {
+
 		last, err := c.boundaries.ForCombination(combination.ChainID, combination.ContractAddress, combination.EventHash)
 		if errors.Is(err, sql.ErrNoRows) {
 			c.log.Debug().
@@ -96,6 +100,7 @@ func (c *CreationStage) execute(height uint64) error {
 		if err != nil {
 			return fmt.Errorf("could not get latest parsing job: %w", err)
 		}
+
 		if last >= combination.StartHeight {
 			combination.StartHeight = last + 1
 			c.log.Debug().
@@ -105,6 +110,20 @@ func (c *CreationStage) execute(height uint64) error {
 				Uint64("start_height", combination.StartHeight).
 				Uint64("last_height", last).
 				Msg("updating start height with latest heigth")
+		}
+
+		if combination.StartHeight < lowest {
+			lowest = combination.StartHeight
+			sentinel = combination.ContractAddress
+		}
+	}
+
+	// We use the sentinel contract address to determine the event types we want
+	// to allow in this run.
+	hashSet := make(map[string]struct{})
+	for _, combination := range combinations {
+		if combination.ContractAddress == sentinel {
+			hashSet[combination.EventHash] = struct{}{}
 		}
 	}
 
@@ -132,16 +151,29 @@ func (c *CreationStage) execute(height uint64) error {
 			break
 		}
 
-		// Now we want to include all of the contract addresses and all of the event hashes
-		// that have a start height at or below our end height.
+		// Now we want to include all of the contract addresses that have a start height
+		// at or below our end height, and an event type that is part of the current run.
 		addressSet := make(map[string]struct{})
-		hashSet := make(map[string]struct{})
 		for _, combination := range combinations {
-			if combination.StartHeight <= end {
-				addressSet[combination.ContractAddress] = struct{}{}
-				hashSet[combination.EventHash] = struct{}{}
-				combination.StartHeight = end + 1
+
+			// stop if we have reached the maximum number of addresses
+			if uint(len(addressSet)) > c.cfg.AddressLimit {
+				break
 			}
+
+			// skip if start height above end
+			if combination.StartHeight > end {
+				continue
+			}
+
+			// skip if event type not in current run
+			_, ok := hashSet[combination.EventHash]
+			if !ok {
+				continue
+			}
+
+			addressSet[combination.ContractAddress] = struct{}{}
+			combination.StartHeight = end + 1
 		}
 
 		// Now, we simply need to create the next job with the list of contract addresses
