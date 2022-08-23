@@ -164,7 +164,7 @@ func (c *CreationStage) execute(height uint64) error {
 		for _, combination := range combinations {
 
 			// Stop if we have reached the maximum number of addresses.
-			if uint(len(addressSet)) > c.cfg.AddressLimit {
+			if uint(len(addressSet)) >= c.cfg.AddressLimit {
 				break
 			}
 
