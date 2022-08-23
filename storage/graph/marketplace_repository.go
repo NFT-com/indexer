@@ -35,8 +35,9 @@ func (m *MarketplaceRepository) Combinations(chainID uint64) ([]*jobs.Combinatio
 		).
 		From("networks, networks_marketplaces_standards, standards, standards_events, events").
 		Where("networks.chain_id = ?", chainID).
-		Where("networks_marketplaces_standards.network_id = networks.id").
+		Where("networks.id = networks_marketplaces_standards.network_id").
 		Where("networks_marketplaces_standards.standard_id = standards.id").
+		Where("standards.id = standards_events.standard_id").
 		Where("standards_events.event_id = events.id").
 		Query()
 	if err != nil {
