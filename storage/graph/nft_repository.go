@@ -23,20 +23,20 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 	return &n
 }
 
-func (n *NFTRepository) Touch(dummies ...*graph.NFT) error {
+func (n *NFTRepository) Touch(touches ...*graph.NFT) error {
 
-	if len(dummies) == 0 {
+	if len(touches) == 0 {
 		return nil
 	}
 
-	set := make(map[string]*graph.NFT, len(dummies))
-	for _, dummy := range dummies {
-		set[dummy.ID] = dummy
+	set := make(map[string]*graph.NFT, len(touches))
+	for _, touch := range touches {
+		set[touch.ID] = touch
 	}
 
-	dummies = make([]*graph.NFT, 0, len(set))
-	for _, dummy := range set {
-		dummies = append(dummies, dummy)
+	touches = make([]*graph.NFT, 0, len(set))
+	for _, touch := range set {
+		touches = append(touches, touch)
 	}
 
 	query := n.build.
@@ -54,11 +54,11 @@ func (n *NFTRepository) Touch(dummies ...*graph.NFT) error {
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"updated_at = EXCLUDED.updated_at")
 
-	for _, dummy := range dummies {
+	for _, touch := range touches {
 		query = query.Values(
-			dummy.ID,
-			dummy.CollectionID,
-			dummy.TokenID,
+			touch.ID,
+			touch.CollectionID,
+			touch.TokenID,
 			"",
 			"",
 			"",
@@ -112,20 +112,20 @@ func (n *NFTRepository) Upsert(nft *graph.NFT) error {
 	return nil
 }
 
-func (n *NFTRepository) Delete(dummies ...*graph.NFT) error {
+func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
 
-	if len(dummies) == 0 {
+	if len(deletions) == 0 {
 		return nil
 	}
 
-	set := make(map[string]*graph.NFT, len(dummies))
-	for _, dummy := range dummies {
-		set[dummy.ID] = dummy
+	set := make(map[string]*graph.NFT, len(deletions))
+	for _, deletion := range deletions {
+		set[deletion.ID] = deletion
 	}
 
-	dummies = make([]*graph.NFT, 0, len(set))
-	for _, dummy := range set {
-		dummies = append(dummies, dummy)
+	deletions = make([]*graph.NFT, 0, len(set))
+	for _, deletion := range set {
+		deletions = append(deletions, deletion)
 	}
 
 	query := n.build.
@@ -144,11 +144,11 @@ func (n *NFTRepository) Delete(dummies ...*graph.NFT) error {
 			"deleted = TRUE" +
 			"deleted_at = EXCLUDED.deleted_at")
 
-	for _, dummy := range dummies {
+	for _, deletion := range deletions {
 		query = query.Values(
-			dummy.ID,
-			dummy.CollectionID,
-			dummy.TokenID,
+			deletion.ID,
+			deletion.CollectionID,
+			deletion.TokenID,
 			"",
 			"",
 			"",

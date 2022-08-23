@@ -140,7 +140,8 @@ func (p *ParsingStage) process(payload []byte) error {
 	}
 
 	// We can go through the transfers and process those with zero address as mints.
-	var dummies []*graph.NFT
+	var touches []*graph.NFT
+	var deletions []*graph.NFT
 	var additionPayloads [][]byte
 	var owners []*events.Transfer
 	for _, transfer := range result.Transfers {
@@ -160,33 +161,41 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 
 		// Create a placeholder NFT that we will create in the DB.
-		dummy := graph.NFT{
+		touch := graph.NFT{
 			ID:           transfer.NFTID(),
 			CollectionID: collection.ID,
 			TokenID:      transfer.TokenID,
 		}
-		dummies = append(dummies, &dummy)
+		touches = append(touches, &touch)
 
-		// Skip transfers that do not originate from the zero address, so we process
-		// only mints.
-		if transfer.SenderAddress != params.AddressZero {
-			continue
+		// Create addition jobs for transfers that come from the zero address.
+		if transfer.SenderAddress == params.AddressZero {
+			addition := jobs.Addition{
+				ID:              uuid.NewString(),
+				ChainID:         transfer.ChainID,
+				CollectionID:    collection.ID,
+				ContractAddress: transfer.CollectionAddress,
+				TokenID:         transfer.TokenID,
+				TokenStandard:   transfer.TokenStandard,
+			}
+			payload, err := json.Marshal(addition)
+			if err != nil {
+				return fmt.Errorf("could not encode addition job: %w", err)
+			}
+			additionPayloads = append(additionPayloads, payload)
 		}
 
-		// Create an addition job to complete the data for the NFT.
-		addition := jobs.Addition{
-			ID:              uuid.NewString(),
-			ChainID:         transfer.ChainID,
-			CollectionID:    collection.ID,
-			ContractAddress: transfer.CollectionAddress,
-			TokenID:         transfer.TokenID,
-			TokenStandard:   transfer.TokenStandard,
+		// Create deletion jobs for transfers that go to the zero address, or another
+		// known burn address.
+		if transfer.ReceiverAddress == params.AddressZero || transfer.ReceiverAddress == params.AddressDead {
+			deletion := graph.NFT{
+				ID:           transfer.NFTID(),
+				CollectionID: collection.ID,
+				TokenID:      transfer.TokenID,
+			}
+			deletions = append(deletions, &deletion)
 		}
-		payload, err := json.Marshal(addition)
-		if err != nil {
-			return fmt.Errorf("could not encode addition job: %w", err)
-		}
-		additionPayloads = append(additionPayloads, payload)
+
 	}
 
 	if len(additionPayloads) > 0 {
@@ -230,9 +239,16 @@ func (p *ParsingStage) process(payload []byte) error {
 
 	// Touch all the NFTs that have been created, so that we can apply owner changes
 	// out of order, before the full NFT information is available from the addition.
-	err = p.nfts.Touch(dummies...)
+	err = p.nfts.Touch(touches...)
 	if err != nil {
 		return fmt.Errorf("could not touch dummies: %w", err)
+	}
+
+	// Delete all the NFTs that have been deleted, so that we can apply deletions
+	// out of order before the full NFT information is available from the addition.
+	err = p.nfts.Delete(deletions...)
+	if err != nil {
+		return fmt.Errorf("could not delete dummies: %w", err)
 	}
 
 	// Next, we can store all the raw events for transfers and sales.
