@@ -111,38 +111,38 @@ func (c *CreationStage) execute(height uint64) error {
 		}
 	}
 
-	// After determining the start height for every combination, we identify one of the
-	// contract addresses with the lowest start height. We will limit the jobs to the
-	// event hashes of that contract.
-	lowest := uint64(math.MaxUint64)
-	for _, combination := range combinations {
-		if combination.StartHeight < lowest {
-			lowest = combination.StartHeight
-			sentinel = combination.ContractAddress
-			c.log.Debug().
-				Uint64("height", combination.StartHeight).
-				Str("contract_address", combination.ContractAddress).
-				Msg("updated sentinel smart contract for event hashes")
-		}
-	}
-
-	// Next, we gather all event types for the given sentinel address. This step is
-	// needed because we have split everything into combinations per event hash, so
-	// we just match all of those with the same address here.
-	hashSet := make(map[string]struct{})
-	for _, combination := range combinations {
-		if combination.ContractAddress == sentinel {
-			hashSet[combination.EventHash] = struct{}{}
-			c.log.Debug().
-				Str("contract_address", combination.ContractAddress).
-				Str("event_hash", combination.EventHash).
-				Msg("added event hash for sentinel smart contract")
-		}
-	}
-
 	// We then enter a loop where we keep creating jobs until we hit the stop condition...
 	created := uint(0)
 	for created < c.cfg.BatchSize {
+
+		// After determining the start height for every combination, we identify one of the
+		// contract addresses with the lowest start height. We will limit the jobs to the
+		// event hashes of that contract.
+		lowest := uint64(math.MaxUint64)
+		for _, combination := range combinations {
+			if combination.StartHeight < lowest {
+				lowest = combination.StartHeight
+				sentinel = combination.ContractAddress
+				c.log.Debug().
+					Uint64("height", combination.StartHeight).
+					Str("contract_address", combination.ContractAddress).
+					Msg("updated sentinel smart contract for event hashes")
+			}
+		}
+
+		// Next, we gather all event types for the given sentinel address. This step is
+		// needed because we have split everything into combinations per event hash, so
+		// we just match all of those with the same address here.
+		hashSet := make(map[string]struct{})
+		for _, combination := range combinations {
+			if combination.ContractAddress == sentinel {
+				hashSet[combination.EventHash] = struct{}{}
+				c.log.Debug().
+					Str("contract_address", combination.ContractAddress).
+					Str("event_hash", combination.EventHash).
+					Msg("added event hash for sentinel smart contract")
+			}
+		}
 
 		// We start at the lowest start height.
 		start := lowest
