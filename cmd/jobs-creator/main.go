@@ -56,7 +56,8 @@ func run() int {
 		flagOpenConnections uint
 		flagIdleConnections uint
 		flagWriteInterval   time.Duration
-		flagHeightRange     uint
+		flagAddressLimit    uint
+		flagHeightLimit     uint
 	)
 
 	pflag.StringVarP(&flagLogLevel, "log-level", "l", "info", "severity level for log output")
@@ -69,7 +70,8 @@ func run() int {
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
 	pflag.DurationVar(&flagWriteInterval, "write-interval", 100*time.Millisecond, "interval between checks for job writing")
-	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights to include in a single job")
+	pflag.UintVar(&flagAddressLimit, "address-limit", 10, "maximum number of addresses to include in a single job")
+	pflag.UintVar(&flagHeightLimit, "height-limit", 10, "maximum number of heights to include in a single job")
 
 	pflag.Parse()
 
@@ -133,7 +135,8 @@ func run() int {
 	for _, network := range networks {
 		creator := pipeline.NewCreationStage(log, collectionRepo, marketplaceRepo, boundaryRepo, producer,
 			pipeline.WithChainID(network.ChainID),
-			pipeline.WithHeightLimit(flagHeightRange),
+			pipeline.WithAddressLimit(flagAddressLimit),
+			pipeline.WithHeightLimit(flagHeightLimit),
 		)
 		creators = append(creators, creator)
 
