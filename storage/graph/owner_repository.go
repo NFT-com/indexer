@@ -68,9 +68,10 @@ func (o *OwnerRepository) Sanitize() error {
 
 	result, err := o.build.
 		Select(
-			"owner",
-			"nft_id",
-			"event_id",
+			"a.owner",
+			"a.nft_id",
+			"a.event_id",
+			"b.event_id",
 		).
 		From("owners as a, owners as b").
 		Where("a.owner = b.owner").
@@ -88,11 +89,12 @@ func (o *OwnerRepository) Sanitize() error {
 			return fmt.Errorf("could not get next row: %w", result.Err())
 		}
 
-		var owner, nftID, eventID string
+		var owner, nftID, eventID1, eventID2 string
 		err = result.Scan(
 			&owner,
 			&nftID,
-			&eventID,
+			&eventID1,
+			&eventID2,
 		)
 		if err != nil {
 			return fmt.Errorf("could not scan next row: %w", err)
@@ -102,7 +104,7 @@ func (o *OwnerRepository) Sanitize() error {
 			Delete("owners").
 			Where("owner = ?", owner).
 			Where("nft_id = ?", nftID).
-			Where("event_id = ?", eventID).
+			Where("(event_id = ? OR event_id = ?)", eventID1, eventID2).
 			Exec()
 		if err != nil {
 			return fmt.Errorf("could not delete row: %w", err)
