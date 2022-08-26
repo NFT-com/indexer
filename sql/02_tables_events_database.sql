@@ -16,13 +16,13 @@ CREATE TABLE transfers
     UNIQUE (block_number, transaction_hash, event_index)
 );
 
-CREATE INDEX transfers_collection_address_idx ON transfers (LOWER(collection_address));
-
-CREATE INDEX transfers_token_id_idx ON transfers (token_id);
+CREATE INDEX transfers_collection_address_idx ON transfers (LOWER(collection_address), token_id);
 
 CREATE INDEX transfers_sender_address_idx ON transfers (LOWER(sender_address));
 
 CREATE INDEX transfers_receiver_address_idx ON transfers (LOWER(receiver_address));
+
+CREATE INDEX transfers_token_id_idx ON transfers (token_id);
 
 CREATE TABLE sales
 (
