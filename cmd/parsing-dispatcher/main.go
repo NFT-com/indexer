@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"math"
+	"math/rand"
 	"os"
 	"os/signal"
 	"time"
@@ -85,6 +86,8 @@ func run() int {
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
 	pflag.Parse()
+
+	rand.Seed(time.Now().UnixNano())
 
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
