@@ -61,6 +61,18 @@ VALUES
     'openstore',
     'https://opensea.io',
     ''
+  ),
+  (
+    'ffedccc4-dd22-4f9e-afb0-a681163e38f1',
+    '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+    '0xa342f5D851E866E18ff98F351f2c6637f4478dB5',
+    11664919,
+    'The Sandbox',
+    '',
+    'ASSET',
+    'sandbox',
+    'https://www.sandbox.game',
+    ''
   );
 
 
@@ -73,4 +85,5 @@ VALUES
   ('37f5eff7-e355-4d8b-9a35-8bfa4f819fef', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
   ('c34f1bd8-c0d9-47d8-b4a4-6447a019a9cd', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
   ('17d5f376-954f-4167-ac7c-0007df5efa62', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
-  ('f2225dde-11b0-4ad6-8998-2d88f6b1ed06', '4c2574d1-bd73-446b-94bb-1362f03700c0');
+  ('f2225dde-11b0-4ad6-8998-2d88f6b1ed06', '4c2574d1-bd73-446b-94bb-1362f03700c0'),
+  ('ffedccc4-dd22-4f9e-afb0-a681163e38f1', '4c2574d1-bd73-446b-94bb-1362f03700c0');
