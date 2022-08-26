@@ -241,14 +241,14 @@ func (p *ParsingStage) process(payload []byte) error {
 	// out of order, before the full NFT information is available from the addition.
 	err = p.nfts.Touch(touches...)
 	if err != nil {
-		return fmt.Errorf("could not touch dummies: %w", err)
+		return fmt.Errorf("could not execute touches: %w", err)
 	}
 
 	// Delete all the NFTs that have been deleted, so that we can apply deletions
 	// out of order before the full NFT information is available from the addition.
 	err = p.nfts.Delete(deletions...)
 	if err != nil {
-		return fmt.Errorf("could not delete dummies: %w", err)
+		return fmt.Errorf("could not execution deletions: %w", err)
 	}
 
 	// Next, we can store all the raw events for transfers and sales.
