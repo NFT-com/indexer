@@ -248,7 +248,7 @@ func (p *ParsingStage) process(payload []byte) error {
 	// out of order before the full NFT information is available from the addition.
 	err = p.nfts.Delete(deletions...)
 	if err != nil {
-		return fmt.Errorf("could not execution deletions: %w", err)
+		return fmt.Errorf("could not execute deletions: %w", err)
 	}
 
 	// Next, we can store all the raw events for transfers and sales.
