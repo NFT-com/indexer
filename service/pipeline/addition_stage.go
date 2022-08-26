@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
@@ -113,7 +114,7 @@ func (a *AdditionStage) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not decode execution error: %w", err)
 	}
-	if results.Deleted(execErr) {
+	if execErr != nil && strings.Contains(execErr.Error(), "URI query for nonexistent token") {
 		return a.delete(payload)
 	}
 	if execErr != nil {
