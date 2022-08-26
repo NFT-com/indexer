@@ -59,9 +59,9 @@ func WyvernSale(log types.Log) (*events.Sale, error) {
 		ID: id.Log(log),
 		// ChainID set after parsing
 		MarketplaceAddress: log.Address.Hex(),
-		CollectionAddress:  "", // Done in completion pipeline
-		TokenID:            "", // Done in completion pipeline
-		TokenCount:         "", // Done in completion pipeline
+		CollectionAddress:  "",  // Done in completion pipeline
+		TokenID:            "",  // Done in completion pipeline
+		TokenCount:         "0", // Done in completion pipeline
 		BlockNumber:        log.BlockNumber,
 		TransactionHash:    log.TxHash.Hex(),
 		EventIndex:         log.Index,
