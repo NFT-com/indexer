@@ -2,7 +2,7 @@ package pipeline
 
 var DefaultParsingConfig = ParsingConfig{
 	DryRun:           false,
-	SanitizeInterval: 100,
+	SanitizeInterval: 1000,
 }
 
 type ParsingConfig struct {
