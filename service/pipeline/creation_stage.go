@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -189,10 +191,16 @@ func (c *CreationStage) execute(height uint64) error {
 		for address := range addressSet {
 			addresses = append(addresses, address)
 		}
+		sort.Slice(addresses, func(i int, j int) bool {
+			return strings.Compare(addresses[i], addresses[j]) < 0
+		})
 		hashes := make([]string, 0, len(hashSet))
 		for hash := range hashSet {
 			hashes = append(hashes, hash)
 		}
+		sort.Slice(hashes, func(i int, j int) bool {
+			return strings.Compare(hashes[i], hashes[j]) < 0
+		})
 		parsing := jobs.Parsing{
 			ID:                uuid.NewString(),
 			ChainID:           c.cfg.ChainID,
