@@ -81,20 +81,15 @@ CREATE TABLE events
     name       TEXT         NOT NULL
 );
 
-CREATE TABLE networks_marketplaces
+CREATE TABLE networks_marketplaces_standards
 (
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     marketplace_id   UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
+    deployment       TEXT         NOT NULL,
     contract_address VARCHAR(128) NOT NULL,
+    standard_id      UUID         NOT NULL REFERENCES standards ON DELETE CASCADE,
     start_height     BIGINT       NOT NULL,
     PRIMARY KEY (network_id, marketplace_id, contract_address)
-);
-
-CREATE TABLE marketplaces_standards
-(
-    marketplace_id UUID NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
-    standard_id    UUID NOT NULL REFERENCES standards ON DELETE CASCADE,
-    PRIMARY KEY (marketplace_id, standard_id)
 );
 
 CREATE TABLE marketplaces_collections

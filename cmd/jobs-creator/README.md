@@ -22,7 +22,8 @@ Usage of jobs-creator:
       --db-idle-connection-limit uint   maximum number of idle database connections (default 4)
       --write-interval duration         interval between checks for job writing (default 1s)
       --pending-limit uint              maximum number of pending jobs per combination (default 1000)
-      --height-range uint               maximum heights to include in a single job (default 10)
+      --address-limit uint              maximum number of addresses to include in a single job (default 10)
+      --height-limit uint               maximum number of heights to include in a single job (default 10)
 ```
 
 ## Database Address — Data Source Name

@@ -83,6 +83,7 @@ func (c *CreationStage) execute(height uint64) error {
 	// Then, we get the latest job for each combination in order to update the
 	// start height where necessary.
 	for _, combination := range combinations {
+
 		last, err := c.boundaries.ForCombination(combination.ChainID, combination.ContractAddress, combination.EventHash)
 		if errors.Is(err, sql.ErrNoRows) {
 			c.log.Debug().
@@ -96,6 +97,7 @@ func (c *CreationStage) execute(height uint64) error {
 		if err != nil {
 			return fmt.Errorf("could not get latest parsing job: %w", err)
 		}
+
 		if last >= combination.StartHeight {
 			combination.StartHeight = last + 1
 			c.log.Debug().
@@ -104,7 +106,7 @@ func (c *CreationStage) execute(height uint64) error {
 				Str("event_hash", combination.EventHash).
 				Uint64("start_height", combination.StartHeight).
 				Uint64("last_height", last).
-				Msg("updating start height with latest heigth")
+				Msg("updating start height with latest height")
 		}
 	}
 
@@ -112,14 +114,38 @@ func (c *CreationStage) execute(height uint64) error {
 	created := uint(0)
 	for created < c.cfg.BatchSize {
 
-		// First, go through all combinations and find the lowest start height, which
-		// we will use as the start height for the next job we are creating.
-		start := uint64(math.MaxUint64)
+		// After determining the start height for every combination, we identify one of the
+		// contract addresses with the lowest start height. We will limit the jobs to the
+		// event hashes of that contract.
+		lowest := uint64(math.MaxUint64)
+		var sentinel string
 		for _, combination := range combinations {
-			if combination.StartHeight < start {
-				start = combination.StartHeight
+			if combination.StartHeight < lowest {
+				lowest = combination.StartHeight
+				sentinel = combination.ContractAddress
+				c.log.Debug().
+					Uint64("height", combination.StartHeight).
+					Str("contract_address", combination.ContractAddress).
+					Msg("updated sentinel smart contract for event hashes")
 			}
 		}
+
+		// Next, we gather all event types for the given sentinel address. This step is
+		// needed because we have split everything into combinations per event hash, so
+		// we just match all of those with the same address here.
+		hashSet := make(map[string]struct{})
+		for _, combination := range combinations {
+			if combination.ContractAddress == sentinel {
+				hashSet[combination.EventHash] = struct{}{}
+				c.log.Debug().
+					Str("contract_address", combination.ContractAddress).
+					Str("event_hash", combination.EventHash).
+					Msg("added event hash for sentinel smart contract")
+			}
+		}
+
+		// We start at the lowest start height.
+		start := lowest
 
 		// The end height will be the lower between our configured height range and
 		// the height that is available.
@@ -132,16 +158,29 @@ func (c *CreationStage) execute(height uint64) error {
 			break
 		}
 
-		// Now we want to include all of the contract addresses and all of the event hashes
-		// that have a start height at or below our end height.
+		// Now we want to include all of the contract addresses that have a start height
+		// at or below our end height, and an event type that is part of the current run.
 		addressSet := make(map[string]struct{})
-		hashSet := make(map[string]struct{})
 		for _, combination := range combinations {
-			if combination.StartHeight <= end {
-				addressSet[combination.ContractAddress] = struct{}{}
-				hashSet[combination.EventHash] = struct{}{}
-				combination.StartHeight = end + 1
+
+			// Stop if we have reached the maximum number of addresses.
+			if uint(len(addressSet)) >= c.cfg.AddressLimit {
+				break
 			}
+
+			// Skip if start height above end.
+			if combination.StartHeight > end {
+				continue
+			}
+
+			// Skip if event hash is not in current hash set.
+			_, ok := hashSet[combination.EventHash]
+			if !ok {
+				continue
+			}
+
+			addressSet[combination.ContractAddress] = struct{}{}
+			combination.StartHeight = end + 1
 		}
 
 		// Now, we simply need to create the next job with the list of contract addresses
