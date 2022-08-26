@@ -82,7 +82,6 @@ func (c *CreationStage) execute(height uint64) error {
 
 	// Then, we get the latest job for each combination in order to update the
 	// start height where necessary.
-	var sentinel string
 	for _, combination := range combinations {
 
 		last, err := c.boundaries.ForCombination(combination.ChainID, combination.ContractAddress, combination.EventHash)
@@ -119,6 +118,7 @@ func (c *CreationStage) execute(height uint64) error {
 		// contract addresses with the lowest start height. We will limit the jobs to the
 		// event hashes of that contract.
 		lowest := uint64(math.MaxUint64)
+		var sentinel string
 		for _, combination := range combinations {
 			if combination.StartHeight < lowest {
 				lowest = combination.StartHeight
