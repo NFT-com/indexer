@@ -51,15 +51,15 @@ VALUES
     ''
   ),
   (
-    '17d5f376-954f-4167-ac7c-0007df5efa62',
+    'f2225dde-11b0-4ad6-8998-2d88f6b1ed06',
     '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
-    '0xbcd4f1ecff4318e7a0c791c7728f3830db506c71',
-    11662151,
+    '0x495f947276749Ce646f68AC8c248420045cb7b5e',
+    11374506,
+    'OpenSea Shared Storefront',
     '',
-    'Cometh is a DeFi powered game with yield generating NFT. Get spaceships, explore the galaxy and earn tokens.',
-    'SPACESHIP',
-    'cometh',
-    'https://cometh.io',
+    'OPENSTORE',
+    'openstore',
+    'https://opensea.io',
     ''
   );
 
@@ -72,4 +72,5 @@ VALUES
   ('42321e81-38a8-4a3d-8ee9-4a9b4ad68d1b', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
   ('37f5eff7-e355-4d8b-9a35-8bfa4f819fef', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
   ('c34f1bd8-c0d9-47d8-b4a4-6447a019a9cd', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
-  ('17d5f376-954f-4167-ac7c-0007df5efa62', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
+  ('17d5f376-954f-4167-ac7c-0007df5efa62', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
+  ('f2225dde-11b0-4ad6-8998-2d88f6b1ed06', '4c2574d1-bd73-446b-94bb-1362f03700c0');
