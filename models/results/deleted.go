@@ -7,7 +7,7 @@ import (
 func Deleted(err error) bool {
 
 	if err == nil {
-		return true
+		return false
 	}
 
 	msg := err.Error()
