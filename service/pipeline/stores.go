@@ -7,8 +7,9 @@ import (
 )
 
 type NFTStore interface {
-	Touch(dummies ...*graph.NFT) error
+	Touch(touches ...*graph.NFT) error
 	Upsert(nft *graph.NFT) error
+	Delete(deletions ...*graph.NFT) error
 }
 
 type TraitStore interface {

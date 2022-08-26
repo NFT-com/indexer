@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
+	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 )
@@ -112,6 +114,9 @@ func (a *AdditionStage) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not decode execution error: %w", err)
 	}
+	if execErr != nil && strings.Contains(execErr.Error(), "URI query for nonexistent token") {
+		return a.delete(payload)
+	}
 	if execErr != nil {
 		return fmt.Errorf("could not execute lambda: %w", execErr)
 	}
@@ -166,6 +171,29 @@ func (a *AdditionStage) failure(payload []byte, message string) error {
 	err = a.failures.Addition(&addition, message)
 	if err != nil {
 		return fmt.Errorf("could not persist addition failure: %w", err)
+	}
+
+	return nil
+}
+
+func (a *AdditionStage) delete(payload []byte) error {
+
+	// Decode the payload into the addition job for the deleted NFT.
+	var addition jobs.Addition
+	err := json.Unmarshal(payload, &addition)
+	if err != nil {
+		return fmt.Errorf("could not decode addition job: %w", err)
+	}
+
+	// Create the dummy NFT to mark it deleted in the database.
+	deletion := graph.NFT{
+		ID:           addition.NFTID(),
+		CollectionID: addition.CollectionID,
+		TokenID:      addition.TokenID,
+	}
+	err = a.nfts.Delete(&deletion)
+	if err != nil {
+		return fmt.Errorf("could not delete NFT: %w", err)
 	}
 
 	return nil

@@ -41,8 +41,10 @@ CREATE TABLE nfts
     uri           TEXT         NOT NULL,
     image         TEXT         NOT NULL,
     description   TEXT         NOT NULL,
+    deleted       BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at    TIMESTAMP,
     updated_at    TIMESTAMP,
+    deleted_at    TIMESTAMP,
     UNIQUE (collection_id, token_id)
 );
 
