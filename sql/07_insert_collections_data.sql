@@ -73,7 +73,32 @@ VALUES
     'sandbox',
     'https://www.sandbox.game',
     ''
-  );
+  ),
+  (
+    '4513e18e-dfde-4b53-a920-e413e7299531',
+    '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+    '0x8fB5a7894AB461a59ACdfab8918335768e411414',
+    14681374,
+    'NFT.com Genesis Key',
+    '',
+    'NFTCOMGENE',
+    'nftcomgene',
+    'https://www.nft.com',
+    ''
+  ),
+  (
+    'afc33879-9934-4499-9457-fbdc98ce443c',
+    '94c754fe-e06c-4d2b-bb76-2faa240b5bb8',
+    '0x98ca78e89Dd1aBE48A53dEe5799F24cC1A462F2D',
+    14681511,
+    'NFT.com Profile',
+    '',
+    'NFTCOMPROF',
+    'nftcomprof',
+    'https://www.nft.com',
+    ''
+  )
+  ;
 
 
 -- ERC-721 contracts scraped from Etherscan.io
@@ -86,4 +111,6 @@ VALUES
   ('c34f1bd8-c0d9-47d8-b4a4-6447a019a9cd', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
   ('17d5f376-954f-4167-ac7c-0007df5efa62', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
   ('f2225dde-11b0-4ad6-8998-2d88f6b1ed06', '4c2574d1-bd73-446b-94bb-1362f03700c0'),
-  ('ffedccc4-dd22-4f9e-afb0-a681163e38f1', '4c2574d1-bd73-446b-94bb-1362f03700c0');
+  ('ffedccc4-dd22-4f9e-afb0-a681163e38f1', '4c2574d1-bd73-446b-94bb-1362f03700c0'),
+  ('4513e18e-dfde-4b53-a920-e413e7299531', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a'),
+  ('afc33879-9934-4499-9457-fbdc98ce443c', 'f7d4c503-3a75-49c8-b72b-e18b30e14d6a');
