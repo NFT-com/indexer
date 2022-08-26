@@ -138,6 +138,7 @@ func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
 			"uri",
 			"image",
 			"description",
+			"deleted",
 			"deleted_at",
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
@@ -153,6 +154,7 @@ func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
 			"",
 			"",
 			"",
+			true,
 			"NOW()",
 		)
 	}
