@@ -12,7 +12,7 @@ type Sale struct {
 	MarketplaceAddress string    `json:"marketplace_address"`
 	CollectionAddress  string    `json:"collection_address"`
 	TokenID            string    `json:"token_id"`
-	TokenCount         uint      `json:"token_count"`
+	TokenCount         string    `json:"token_count"`
 	BlockNumber        uint64    `json:"block_number"`
 	TransactionHash    string    `json:"transaction_hash"`
 	EventIndex         uint      `json:"event_index"`
