@@ -107,7 +107,7 @@ func (o *OwnerRepository) Sanitize() error {
 			Where("(event_id = ? OR event_id = ?)", eventID1, eventID2).
 			Exec()
 		if err != nil {
-			return fmt.Errorf("could not delete row: %w", err)
+			return fmt.Errorf("could not delete rows: %w", err)
 		}
 	}
 
