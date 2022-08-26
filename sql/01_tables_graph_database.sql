@@ -85,6 +85,7 @@ CREATE TABLE networks_marketplaces_standards
 (
     network_id       UUID         NOT NULL REFERENCES networks ON DELETE CASCADE,
     marketplace_id   UUID         NOT NULL REFERENCES marketplaces ON DELETE CASCADE,
+    deployment       TEXT         NOT NULL,
     contract_address VARCHAR(128) NOT NULL,
     standard_id      UUID         NOT NULL REFERENCES standards ON DELETE CASCADE,
     start_height     BIGINT       NOT NULL,
