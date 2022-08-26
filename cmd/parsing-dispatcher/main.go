@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"math"
+	"math/rand"
 	"os"
 	"os/signal"
 	"time"
@@ -86,6 +87,8 @@ func run() int {
 
 	pflag.Parse()
 
+	rand.Seed(time.Now().UnixNano())
+
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	level, err := zerolog.ParseLevel(flagLogLevel)
@@ -157,7 +160,9 @@ func run() int {
 
 	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit, flagDryRun)
+	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit,
+		pipeline.WithDryRun(flagDryRun),
+	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)

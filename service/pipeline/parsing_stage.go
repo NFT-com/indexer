@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/google/uuid"
 	"github.com/nsqio/go-nsq"
@@ -33,7 +34,7 @@ type ParsingStage struct {
 	failures    FailureStore
 	publisher   Publisher
 	limit       ratelimit.Limiter
-	dryRun      bool
+	cfg         ParsingConfig
 }
 
 func NewParsingStage(
@@ -49,8 +50,13 @@ func NewParsingStage(
 	failures FailureStore,
 	publisher Publisher,
 	limit ratelimit.Limiter,
-	dryRun bool,
+	options ...ParsingOption,
 ) *ParsingStage {
+
+	cfg := DefaultParsingConfig
+	for _, option := range options {
+		option(&cfg)
+	}
 
 	p := ParsingStage{
 		ctx:         ctx,
@@ -65,7 +71,7 @@ func NewParsingStage(
 		failures:    failures,
 		publisher:   publisher,
 		limit:       limit,
-		dryRun:      dryRun,
+		cfg:         cfg,
 	}
 
 	return &p
@@ -95,7 +101,7 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 func (p *ParsingStage) process(payload []byte) error {
 
 	// If we are doing a dry-run, we skip all of the processing here.
-	if p.dryRun {
+	if p.cfg.DryRun {
 		return nil
 	}
 
@@ -243,6 +249,15 @@ func (p *ParsingStage) process(payload []byte) error {
 	err = p.owners.Upsert(owners...)
 	if err != nil {
 		return fmt.Errorf("could not upsert owners: %w", err)
+	}
+
+	// ... and sanitize the owners table every so often.
+	dice := rand.Intn(int(p.cfg.SanitizeInterval))
+	if dice == 0 {
+		err = p.owners.Sanitize()
+		if err != nil {
+			return fmt.Errorf("could not sanitize owners: %w", err)
+		}
 	}
 
 	p.log.Info().
