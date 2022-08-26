@@ -143,7 +143,8 @@ func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
 		).
 		Suffix("ON CONFLICT (id) DO UPDATE SET " +
 			"deleted = TRUE" +
-			"deleted_at = EXCLUDED.deleted_at")
+			"deleted_at = EXCLUDED.deleted_at" +
+			"WHERE deleted = FALSE")
 
 	for _, deletion := range deletions {
 		query = query.Values(

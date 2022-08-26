@@ -177,15 +177,14 @@ func (a *AdditionStage) failure(payload []byte, message string) error {
 
 func (a *AdditionStage) delete(payload []byte) error {
 
-	// Decode the payload into the failed addition job.
+	// Decode the payload into the addition job for the deleted NFT.
 	var addition jobs.Addition
 	err := json.Unmarshal(payload, &addition)
 	if err != nil {
 		return fmt.Errorf("could not decode addition job: %w", err)
 	}
 
-	// Persist the addition failure in the DB so it can be reviewed and potentially
-	// retried at a later point.
+	// Create the dummy NFT to mark it deleted in the database.
 	deletion := graph.NFT{
 		ID:           addition.NFTID(),
 		CollectionID: addition.CollectionID,
