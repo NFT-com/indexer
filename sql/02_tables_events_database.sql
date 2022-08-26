@@ -20,6 +20,10 @@ CREATE INDEX transfers_collection_address_idx ON transfers (LOWER(collection_add
 
 CREATE INDEX transfers_token_id_idx ON transfers (token_id);
 
+CREATE INDEX transfers_sender_address_idx ON transfers (LOWER(sender_address));
+
+CREATE INDEX transfers_receiver_address_idx ON transfers (LOWER(receiver_address));
+
 CREATE TABLE sales
 (
     id                  UUID PRIMARY KEY,
@@ -45,5 +49,9 @@ CREATE INDEX sales_marketplace_address_idx ON sales (LOWER(marketplace_address))
 CREATE INDEX sales_collection_address_idx ON sales (LOWER(collection_address), token_id);
 
 CREATE INDEX sales_currency_address_idx ON sales (LOWER(currency_address));
+
+CREATE INDEX sales_seller_address_idx ON sales (LOWER(seller_address));
+
+CREATE INDEX sales_buyer_address_idx ON sales (LOWER(buyer_address));
 
 CREATE INDEX sales_token_id_idx ON sales (token_id);
