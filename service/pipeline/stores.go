@@ -17,6 +17,7 @@ type TraitStore interface {
 
 type OwnerStore interface {
 	Upsert(transfers ...*events.Transfer) error
+	Sanitize() error
 }
 
 type BoundaryStore interface {

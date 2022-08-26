@@ -245,6 +245,12 @@ func (p *ParsingStage) process(payload []byte) error {
 		return fmt.Errorf("could not upsert owners: %w", err)
 	}
 
+	// ... and sanitize the owners table.
+	err = p.owners.Sanitize()
+	if err != nil {
+		return fmt.Errorf("could not sanitize owners: %w", err)
+	}
+
 	p.log.Info().
 		Str("job_id", result.Job.ID).
 		Uint64("chain_id", result.Job.ChainID).
