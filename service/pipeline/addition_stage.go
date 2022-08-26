@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
+	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
 )
@@ -112,6 +113,9 @@ func (a *AdditionStage) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not decode execution error: %w", err)
 	}
+	if results.Deleted(execErr) {
+		return a.delete(payload)
+	}
 	if execErr != nil {
 		return fmt.Errorf("could not execute lambda: %w", execErr)
 	}
@@ -166,6 +170,30 @@ func (a *AdditionStage) failure(payload []byte, message string) error {
 	err = a.failures.Addition(&addition, message)
 	if err != nil {
 		return fmt.Errorf("could not persist addition failure: %w", err)
+	}
+
+	return nil
+}
+
+func (a *AdditionStage) delete(payload []byte) error {
+
+	// Decode the payload into the failed addition job.
+	var addition jobs.Addition
+	err := json.Unmarshal(payload, &addition)
+	if err != nil {
+		return fmt.Errorf("could not decode addition job: %w", err)
+	}
+
+	// Persist the addition failure in the DB so it can be reviewed and potentially
+	// retried at a later point.
+	deletion := graph.NFT{
+		ID:           addition.NFTID(),
+		CollectionID: addition.CollectionID,
+		TokenID:      addition.TokenID,
+	}
+	err = a.nfts.Delete(&deletion)
+	if err != nil {
+		return fmt.Errorf("could not delete NFT: %w", err)
 	}
 
 	return nil
