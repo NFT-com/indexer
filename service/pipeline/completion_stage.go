@@ -67,16 +67,9 @@ func (c *CompletionStage) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	if m.Attempts >= uint16(c.cfg.MaxAttempts) {
-		c.log.Error().
-			Uint16("attempts", m.Attempts).
-			Uint("maximum", c.cfg.MaxAttempts).
-			Err(err).
-			Msg("maximum number of attempts reached, aborting")
-		return err
-	}
-
-	if !results.Permanent(err) {
+	// We only retry if we don't have a permanent error, and we have not reached
+	// the maximum number of attempts.
+	if !results.Permanent(err) && m.Attempts < uint16(c.cfg.MaxAttempts) {
 		c.log.Warn().
 			Uint16("attempts", m.Attempts).
 			Uint("maximum", c.cfg.MaxAttempts).
@@ -84,12 +77,24 @@ func (c *CompletionStage) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 
-	c.log.Error().Err(err).Msg("permanent error encountered, aborting")
+	// Otherwise, we either have a permanent error, or maximum number of retries.
+	// Log the error accordingly, and proceed without retrying (return `nil`).
+	if results.Permanent(err) {
+		c.log.Error().Err(err).Msg("permanent error encountered, aborting")
+	} else {
+		c.log.Error().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", c.cfg.MaxAttempts).
+			Err(err).
+			Msg("maximum number of attempts reached, aborting")
+	}
 
+	// The below code stores the error in the database and fatally fails the service
+	// if we don't manage to do so.
 	message := err.Error()
 	err = c.failure(m.Body, message)
 	if err != nil {
-		c.log.Fatal().Err(err).Str("message", message).Msg("could not persist completion failure")
+		c.log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
 		return err
 	}
 
