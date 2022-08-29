@@ -2,13 +2,13 @@ package pipeline
 
 var DefaultParsingConfig = ParsingConfig{
 	DryRun:           false,
-	MaxRetries:       10,
+	MaxAttempts:      10,
 	SanitizeInterval: 1000,
 }
 
 type ParsingConfig struct {
 	DryRun           bool
-	MaxRetries       uint
+	MaxAttempts      uint
 	SanitizeInterval uint
 }
 
@@ -20,14 +20,14 @@ func WithParsingDryRun(enabled bool) ParsingOption {
 	}
 }
 
-func WithParsingMaxRetries(retries uint) ParsingOption {
+func WithParsingMaxAttempts(attempts uint) ParsingOption {
 	return func(cfg *ParsingConfig) {
-		cfg.MaxRetries = retries
+		cfg.MaxAttempts = attempts
 	}
 }
 
-func WithSanitizeInterval(numJobs uint) ParsingOption {
+func WithSanitizeInterval(jobs uint) ParsingOption {
 	return func(cfg *ParsingConfig) {
-		cfg.SanitizeInterval = numJobs
+		cfg.SanitizeInterval = jobs
 	}
 }

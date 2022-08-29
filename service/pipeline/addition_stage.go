@@ -75,13 +75,20 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	if m.Attempts >= uint16(a.cfg.MaxRetries) {
-		a.log.Error().Err(err).Msg("maximum number of retries reached, aborting")
+	if m.Attempts >= uint16(a.cfg.MaxAttempts) {
+		a.log.Error().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", a.cfg.MaxAttempts).
+			Err(err).
+			Msg("maximum number of attempts reached, aborting")
 		return err
 	}
 
 	if !results.Permanent(err) {
-		a.log.Warn().Err(err).Msg("temporary error encountered, retrying")
+		a.log.Warn().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", a.cfg.MaxAttempts).
+			Err(err).Msg("could not process job, retrying")
 		return err
 	}
 

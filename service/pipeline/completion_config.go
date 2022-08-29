@@ -1,13 +1,13 @@
 package pipeline
 
 var DefaultCompletionConfig = CompletionConfig{
-	DryRun:     false,
-	MaxRetries: 10,
+	DryRun:      false,
+	MaxAttempts: 10,
 }
 
 type CompletionConfig struct {
-	DryRun     bool
-	MaxRetries uint
+	DryRun      bool
+	MaxAttempts uint
 }
 
 type CompletionOption func(*CompletionConfig)
@@ -18,8 +18,8 @@ func WithCompletionDryRun(enabled bool) CompletionOption {
 	}
 }
 
-func WithCompletionMaxRetries(retries uint) CompletionOption {
+func WithCompletionMaxAttempts(attempts uint) CompletionOption {
 	return func(cfg *CompletionConfig) {
-		cfg.MaxRetries = retries
+		cfg.MaxAttempts = attempts
 	}
 }

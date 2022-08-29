@@ -58,9 +58,9 @@ func run() int {
 		flagRateLimit         uint
 		flagLambdaConcurrency uint
 
-		flagMinBackoff time.Duration
-		flagMaxBackoff time.Duration
-		flagMaxRetries uint16
+		flagMinBackoff  time.Duration
+		flagMaxBackoff  time.Duration
+		flagMaxAttempts uint16
 
 		flagDryRun bool
 	)
@@ -82,7 +82,7 @@ func run() int {
 
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
 	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 15*time.Minute, "maximum backoff duration for NSQ consumers")
-	pflag.Uint16Var(&flagMaxRetries, "max-retries", 10, "maximum number of retries per job")
+	pflag.Uint16Var(&flagMaxAttempts, "max-attempts", 10, "maximum number of attempts per job")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
@@ -140,7 +140,7 @@ func run() int {
 
 	nsqCfg := nsq.NewConfig()
 	nsqCfg.MaxInFlight = int(flagLambdaConcurrency)
-	nsqCfg.MaxAttempts = flagMaxRetries + 1
+	nsqCfg.MaxAttempts = flagMaxAttempts
 	nsqCfg.BackoffMultiplier = flagMinBackoff
 	nsqCfg.MaxBackoffDuration = flagMaxBackoff
 	consumer, err := nsq.NewConsumer(params.TopicParsing, params.ChannelDispatch, nsqCfg)
@@ -163,7 +163,7 @@ func run() int {
 	limit := ratelimit.New(int(flagRateLimit))
 	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit,
 		pipeline.WithParsingDryRun(flagDryRun),
-		pipeline.WithParsingMaxRetries(uint(flagMaxRetries)),
+		pipeline.WithParsingMaxAttempts(uint(flagMaxAttempts)),
 	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 

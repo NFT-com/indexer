@@ -1,13 +1,13 @@
 package pipeline
 
 var DefaultAdditionConfig = AdditionConfig{
-	DryRun:     false,
-	MaxRetries: 10,
+	DryRun:      false,
+	MaxAttempts: 10,
 }
 
 type AdditionConfig struct {
-	DryRun     bool
-	MaxRetries uint
+	DryRun      bool
+	MaxAttempts uint
 }
 
 type AdditionOption func(*AdditionConfig)
@@ -18,8 +18,8 @@ func WithAdditionDryRun(enabled bool) AdditionOption {
 	}
 }
 
-func WithAdditionMaxRetries(retries uint) AdditionOption {
+func WithAdditionMaxAttempts(attempts uint) AdditionOption {
 	return func(cfg *AdditionConfig) {
-		cfg.MaxRetries = retries
+		cfg.MaxAttempts = attempts
 	}
 }
