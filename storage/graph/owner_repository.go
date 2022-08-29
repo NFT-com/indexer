@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 
+	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/events"
 )
 
@@ -25,40 +26,49 @@ func NewOwnerRepository(db *sql.DB) *OwnerRepository {
 
 func (o *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 
-	if len(transfers) == 0 {
-		return nil
-	}
+	for start := 0; start > len(transfers); start += database.BatchSize {
 
-	query := o.build.
-		Insert("owners").
-		Columns(
-			"owner",
-			"nft_id",
-			"event_id",
-			"number",
-		).
-		Suffix("ON CONFLICT DO NOTHING")
+		end := start + database.BatchSize
+		if end > len(transfers) {
+			end = len(transfers)
+		}
 
-	for _, transfer := range transfers {
+		batch := transfers[start:end]
+		if len(batch) == 0 {
+			continue
+		}
 
-		query = query.Values(
-			transfer.SenderAddress,
-			transfer.NFTID(),
-			transfer.EventID(),
-			fmt.Sprintf("-%s", transfer.TokenCount),
-		)
+		query := o.build.
+			Insert("owners").
+			Columns(
+				"owner",
+				"nft_id",
+				"event_id",
+				"number",
+			).
+			Suffix("ON CONFLICT DO NOTHING")
 
-		query = query.Values(
-			transfer.ReceiverAddress,
-			transfer.NFTID(),
-			transfer.EventID(),
-			transfer.TokenCount,
-		)
-	}
+		for _, transfer := range batch {
 
-	_, err := query.Exec()
-	if err != nil {
-		return fmt.Errorf("could not execute query: %w", err)
+			query = query.Values(
+				transfer.SenderAddress,
+				transfer.NFTID(),
+				transfer.EventID(),
+				fmt.Sprintf("-%s", transfer.TokenCount),
+			)
+
+			query = query.Values(
+				transfer.ReceiverAddress,
+				transfer.NFTID(),
+				transfer.EventID(),
+				transfer.TokenCount,
+			)
+		}
+
+		_, err := query.Exec()
+		if err != nil {
+			return fmt.Errorf("could not execute query: %w", err)
+		}
 	}
 
 	return nil
