@@ -26,7 +26,8 @@ Usage of parsing-dispatcher:
       --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 100)
 
       --min-backoff duration            minimum backoff duration for NSQ consumers (default "20s")
-      --max-backoff duration            makimum backoff duration for NSQ consumers (default "10m")
+      --max-backoff duration            maximum backoff duration for NSQ consumers (default "10m")
+      --max-retries uint                maximum number of retries per job (default "10")
 
       --dry-run                         executing as dry run disables invocation of Lambda function
 ```

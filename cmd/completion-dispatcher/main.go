@@ -56,6 +56,7 @@ func run() int {
 
 		flagMinBackoff time.Duration
 		flagMaxBackoff time.Duration
+		flagMaxRetries uint
 
 		flagDryRun bool
 	)
@@ -75,6 +76,7 @@ func run() int {
 
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 20*time.Second, "minimum backoff duration for NSQ consumers")
 	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 10*time.Minute, "maximum backoff duration for NSQ consumers")
+	pflag.UintVar(&flagMaxRetries, "max-retries", 10, "maximum number of retries per job")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
