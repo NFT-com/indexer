@@ -93,7 +93,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
 
-		a.log.Info().
+		a.log.Debug().
 			Str("token_uri", tokenURI).
 			Msg("ERC721 token URI retrieved")
 
@@ -104,7 +104,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
 
-		a.log.Info().
+		a.log.Debug().
 			Str("token_uri", tokenURI).
 			Msg("ERC1155 token URI retrieved")
 
@@ -114,21 +114,32 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	// In a first step, we substitute public internet gateways for protocols we know.
+	publicURI := tokenURI
 	switch {
 
-	case strings.HasPrefix(tokenURI, protocol.IPFS):
-		tokenURI = gateway.IPFS + strings.TrimPrefix(tokenURI, protocol.IPFS)
+	case strings.HasPrefix(publicURI, protocol.IPFS):
+		publicURI = gateway.IPFS + strings.TrimPrefix(publicURI, protocol.IPFS)
+		a.log.Debug().
+			Str("public_uri", publicURI).
+			Msg("IPFS gateway substituted")
 
-	case strings.HasPrefix(tokenURI, protocol.ARWeave):
-		tokenURI = gateway.ARWeave + strings.TrimPrefix(tokenURI, protocol.ARWeave)
+	case strings.HasPrefix(publicURI, protocol.ARWeave):
+		publicURI = gateway.ARWeave + strings.TrimPrefix(publicURI, protocol.ARWeave)
+		a.log.Debug().
+			Str("public_uri", publicURI).
+			Msg("ARWeave gateway substituted")
 	}
 
 	// Next, we see if the first part of the URL is a CID hash.
-	parts := strings.Split(tokenURI, "/")
+	prefixedURI := publicURI
+	parts := strings.Split(prefixedURI, "/")
 	first := parts[0]
 	_, err = cid.Decode(first)
 	if err == nil {
-		tokenURI = gateway.IPFS + tokenURI
+		prefixedURI = gateway.IPFS + prefixedURI
+		a.log.Debug().
+			Str("prefixed_uri", prefixedURI).
+			Msg("content hash prefixed")
 	}
 
 	// Now, we try to detect the payload, depending on content or protocol prefix.
@@ -140,9 +151,15 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata (url: %s): %w", tokenURI, err)
 		}
+		a.log.Debug().
+			Str("payload", string(payload)).
+			Msg("payload fetched remotely")
 
 	case strings.HasPrefix(tokenURI, content.UTF8):
 		payload = []byte(strings.TrimPrefix(tokenURI, content.UTF8+","))
+		a.log.Debug().
+			Str("payload", string(payload)).
+			Msg("payload read from UTF-8")
 
 	case strings.HasPrefix(tokenURI, content.Base64):
 		tokenURI = strings.TrimPrefix(tokenURI, content.Base64+",")
@@ -150,6 +167,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		if err != nil {
 			return nil, fmt.Errorf("could not decode base64 metadata (base64: %s): %w", tokenURI, err)
 		}
+		a.log.Debug().
+			Str("payload", string(payload)).
+			Msg("payload decoded from Base64")
 	}
 
 	var token metadata.Token
@@ -159,6 +179,10 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	a.log.Info().
+		Str("uri", tokenURI).
+		Str("public", publicURI).
+		Str("prefixed", prefixedURI).
+		Str("payload", string(payload)).
 		Str("name", token.Name).
 		Str("description", token.Description).
 		Str("image", token.Image).
