@@ -121,13 +121,22 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	nftID := addition.NFTID()
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
 	for i, att := range token.Attributes {
+
+		var value string
+		if att.Value != nil {
+			value = fmt.Sprint(att.Value)
+		}
+		if att.TraitValue != nil {
+			value = fmt.Sprint(att.TraitValue)
+		}
+
 		traitID := addition.TraitID(uint(i))
 		trait := graph.Trait{
 			ID:    traitID,
 			NFTID: nftID,
 			Name:  att.TraitType,
 			Type:  att.DisplayType,
-			Value: fmt.Sprint(att.Value),
+			Value: value,
 		}
 		traits = append(traits, &trait)
 	}
