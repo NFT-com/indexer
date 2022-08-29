@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 
+	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/graph"
 )
 
@@ -25,10 +26,6 @@ func NewNFTRepository(db *sql.DB) *NFTRepository {
 
 func (n *NFTRepository) Touch(touches ...*graph.NFT) error {
 
-	if len(touches) == 0 {
-		return nil
-	}
-
 	set := make(map[string]*graph.NFT, len(touches))
 	for _, touch := range touches {
 		set[touch.ID] = touch
@@ -39,38 +36,52 @@ func (n *NFTRepository) Touch(touches ...*graph.NFT) error {
 		touches = append(touches, touch)
 	}
 
-	query := n.build.
-		Insert("nfts").
-		Columns(
-			"id",
-			"collection_id",
-			"token_id",
-			"name",
-			"uri",
-			"image",
-			"description",
-			"updated_at",
-		).
-		Suffix("ON CONFLICT (id) DO UPDATE SET " +
-			"updated_at = EXCLUDED.updated_at")
+	for start := 0; start > len(touches); start += database.BatchSize {
 
-	for _, touch := range touches {
-		query = query.Values(
-			touch.ID,
-			touch.CollectionID,
-			touch.TokenID,
-			"",
-			"",
-			"",
-			"",
-			"NOW()",
-		)
+		end := start + database.BatchSize
+		if end > len(touches) {
+			end = len(touches)
+		}
+
+		batch := touches[start:end]
+		if len(batch) == 0 {
+			continue
+		}
+
+		query := n.build.
+			Insert("nfts").
+			Columns(
+				"id",
+				"collection_id",
+				"token_id",
+				"name",
+				"uri",
+				"image",
+				"description",
+				"updated_at",
+			).
+			Suffix("ON CONFLICT (id) DO UPDATE SET " +
+				"updated_at = EXCLUDED.updated_at")
+
+		for _, touch := range batch {
+			query = query.Values(
+				touch.ID,
+				touch.CollectionID,
+				touch.TokenID,
+				"",
+				"",
+				"",
+				"",
+				"NOW()",
+			)
+		}
+
+		_, err := query.Exec()
+		if err != nil {
+			return fmt.Errorf("could not execute touches (start: %d, end: %d): %w", start, end, err)
+		}
 	}
 
-	_, err := query.Exec()
-	if err != nil {
-		return fmt.Errorf("could not execute query: %w", err)
-	}
 	return nil
 }
 
@@ -106,17 +117,13 @@ func (n *NFTRepository) Upsert(nft *graph.NFT) error {
 			"created_at = EXCLUDED.created_at").
 		Exec()
 	if err != nil {
-		return fmt.Errorf("could not execute query: %w", err)
+		return fmt.Errorf("could not execute upsert: %w", err)
 	}
 
 	return nil
 }
 
 func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
-
-	if len(deletions) == 0 {
-		return nil
-	}
 
 	set := make(map[string]*graph.NFT, len(deletions))
 	for _, deletion := range deletions {
@@ -128,41 +135,55 @@ func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
 		deletions = append(deletions, deletion)
 	}
 
-	query := n.build.
-		Insert("nfts").
-		Columns(
-			"id",
-			"collection_id",
-			"token_id",
-			"name",
-			"uri",
-			"image",
-			"description",
-			"deleted",
-			"deleted_at",
-		).
-		Suffix("ON CONFLICT (id) DO UPDATE SET " +
-			"deleted = TRUE, " +
-			"deleted_at = EXCLUDED.deleted_at " +
-			"WHERE nfts.deleted = FALSE")
+	for start := 0; start > len(deletions); start += database.BatchSize {
 
-	for _, deletion := range deletions {
-		query = query.Values(
-			deletion.ID,
-			deletion.CollectionID,
-			deletion.TokenID,
-			"",
-			"",
-			"",
-			"",
-			true,
-			"NOW()",
-		)
+		end := start + database.BatchSize
+		if end > len(deletions) {
+			end = len(deletions)
+		}
+
+		batch := deletions[start:end]
+		if len(batch) == 0 {
+			continue
+		}
+
+		query := n.build.
+			Insert("nfts").
+			Columns(
+				"id",
+				"collection_id",
+				"token_id",
+				"name",
+				"uri",
+				"image",
+				"description",
+				"deleted",
+				"deleted_at",
+			).
+			Suffix("ON CONFLICT (id) DO UPDATE SET " +
+				"deleted = TRUE, " +
+				"deleted_at = EXCLUDED.deleted_at " +
+				"WHERE nfts.deleted = FALSE")
+
+		for _, deletion := range batch {
+			query = query.Values(
+				deletion.ID,
+				deletion.CollectionID,
+				deletion.TokenID,
+				"",
+				"",
+				"",
+				"",
+				true,
+				"NOW()",
+			)
+		}
+
+		_, err := query.Exec()
+		if err != nil {
+			return fmt.Errorf("could not execute deletions (start: %d, end: %d): %w", start, end, err)
+		}
 	}
 
-	_, err := query.Exec()
-	if err != nil {
-		return fmt.Errorf("could not execute query: %w", err)
-	}
 	return nil
 }

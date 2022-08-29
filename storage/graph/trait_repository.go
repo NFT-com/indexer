@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 
+	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/graph"
 )
 
@@ -25,37 +26,46 @@ func NewTraitRepository(db *sql.DB) *TraitRepository {
 
 func (t *TraitRepository) Upsert(traits ...*graph.Trait) error {
 
-	if len(traits) == 0 {
-		return nil
-	}
+	for start := 0; start > len(traits); start += database.BatchSize {
 
-	query := t.build.
-		Insert("traits").
-		Columns(
-			"id",
-			"nft_id",
-			"name",
-			"type",
-			"value",
-		).
-		Suffix("ON CONFLICT (id) DO UPDATE SET " +
-			"name = EXCLUDED.name, " +
-			"type = EXCLUDED.type, " +
-			"value = EXCLUDED.value")
+		end := start + database.BatchSize
+		if end > len(traits) {
+			end = len(traits)
+		}
 
-	for _, trait := range traits {
-		query = query.Values(
-			trait.ID,
-			trait.NFTID,
-			trait.Name,
-			trait.Type,
-			trait.Value,
-		)
-	}
+		batch := traits[start:end]
+		if len(batch) == 0 {
+			continue
+		}
 
-	_, err := query.Exec()
-	if err != nil {
-		return fmt.Errorf("could not upsert trait: %w", err)
+		query := t.build.
+			Insert("traits").
+			Columns(
+				"id",
+				"nft_id",
+				"name",
+				"type",
+				"value",
+			).
+			Suffix("ON CONFLICT (id) DO UPDATE SET " +
+				"name = EXCLUDED.name, " +
+				"type = EXCLUDED.type, " +
+				"value = EXCLUDED.value")
+
+		for _, trait := range batch {
+			query = query.Values(
+				trait.ID,
+				trait.NFTID,
+				trait.Name,
+				trait.Type,
+				trait.Value,
+			)
+		}
+
+		_, err := query.Exec()
+		if err != nil {
+			return fmt.Errorf("could not upsert trait batch (start: %d, end: %d): %w", start, end, err)
+		}
 	}
 
 	return nil
