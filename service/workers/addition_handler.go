@@ -113,8 +113,20 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		return nil, fmt.Errorf("unknown token standard (%s)", addition.TokenStandard)
 	}
 
-	// In a first step, we substitute public internet gateways for protocols we know.
-	publicURI := tokenURI
+	// First, we check if the URI starts with a CID hash, in which case we add the IPFS prefix.
+	prefixedURI := tokenURI
+	parts := strings.Split(prefixedURI, "/")
+	first := parts[0]
+	_, err = cid.Decode(first)
+	if err == nil {
+		prefixedURI = protocol.IPFS + prefixedURI
+		a.log.Debug().
+			Str("prefixed_uri", prefixedURI).
+			Msg("CID hash prefixed")
+	}
+
+	// Then, we substitute the known protocols with known public gateways.
+	publicURI := prefixedURI
 	switch {
 
 	case strings.HasPrefix(publicURI, protocol.IPFS):
@@ -130,45 +142,36 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			Msg("ARWeave gateway substituted")
 	}
 
-	// Next, we see if the first part of the URL is a CID hash.
-	prefixedURI := publicURI
-	parts := strings.Split(prefixedURI, "/")
-	first := parts[0]
-	_, err = cid.Decode(first)
-	if err == nil {
-		prefixedURI = gateway.IPFS + prefixedURI
-		a.log.Debug().
-			Str("prefixed_uri", prefixedURI).
-			Msg("CID hash prefixed")
-	}
-
-	// Now, we try to detect the payload, depending on content or protocol prefix.
+	// Finally, we check if we have a payload already, or if we need to fetch it remotely.
 	var payload []byte
 	switch {
 
-	case strings.HasPrefix(prefixedURI, protocol.HTTPS), strings.HasPrefix(prefixedURI, protocol.HTTPS):
-		payload, err = fetchMetadata.Payload(ctx, prefixedURI)
+	case strings.HasPrefix(publicURI, protocol.HTTPS), strings.HasPrefix(publicURI, protocol.HTTPS):
+		payload, err = fetchMetadata.Payload(ctx, publicURI)
 		if err != nil {
-			return nil, fmt.Errorf("could not fetch remote metadata (prefixed: %s): %w", prefixedURI, err)
+			return nil, fmt.Errorf("could not fetch remote metadata (%s): %w", publicURI, err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("remote payload fetched")
 
-	case strings.HasPrefix(prefixedURI, content.UTF8):
-		payload = []byte(strings.TrimPrefix(prefixedURI, content.UTF8+","))
+	case strings.HasPrefix(publicURI, content.UTF8):
+		payload = []byte(strings.TrimPrefix(publicURI, content.UTF8+","))
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("UTF-8 payload trimmed")
 
-	case strings.HasPrefix(prefixedURI, content.Base64):
-		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(prefixedURI, content.Base64+","))
+	case strings.HasPrefix(publicURI, content.Base64):
+		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(publicURI, content.Base64+","))
 		if err != nil {
-			return nil, fmt.Errorf("could not decode base64 metadata (prefixed: %s): %w", prefixedURI, err)
+			return nil, fmt.Errorf("could not decode base64 metadata (%s): %w", publicURI, err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("Base64 payload decoded")
+
+	default:
+		return nil, fmt.Errorf("unknown URI format (%s)", publicURI)
 	}
 
 	var token metadata.Token
