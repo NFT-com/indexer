@@ -80,16 +80,19 @@ func NewParsingStage(
 func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 	err := p.process(m.Body)
+	if err == nil {
+		return nil
+	}
+
 	if !results.Permanent(err) {
 		p.log.Warn().Err(err).Msg("could not process message, retrying")
 		return err
 	}
-	var message string
-	if err != nil {
-		p.log.Error().Err(err).Msg("could not process message, discarding")
-		message = err.Error()
-		err = p.failure(m.Body, message)
-	}
+
+	p.log.Error().Err(err).Msg("could not process message, discarding")
+
+	message := err.Error()
+	err = p.failure(m.Body, message)
 	if err != nil {
 		p.log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
 		return err
