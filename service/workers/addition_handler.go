@@ -138,7 +138,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	case strings.HasPrefix(tokenURI, protocol.HTTPS), strings.HasPrefix(tokenURI, protocol.HTTPS):
 		payload, err = fetchMetadata.Payload(ctx, tokenURI)
 		if err != nil {
-			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
+			return nil, fmt.Errorf("could not fetch remote metadata (url: %s): %w", tokenURI, err)
 		}
 
 	case strings.HasPrefix(tokenURI, content.UTF8):
@@ -148,14 +148,14 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		tokenURI = strings.TrimPrefix(tokenURI, content.Base64+",")
 		payload, err = base64.StdEncoding.DecodeString(tokenURI)
 		if err != nil {
-			return nil, fmt.Errorf("could not decode base64 metadata: %w", err)
+			return nil, fmt.Errorf("could not decode base64 metadata (base64: %s): %w", tokenURI, err)
 		}
 	}
 
 	var token metadata.Token
 	err = json.Unmarshal(payload, &token)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode metadata: %w", err)
+		return nil, fmt.Errorf("could not decode json metadata (json: %s): %w", string(payload), err)
 	}
 
 	a.log.Info().
