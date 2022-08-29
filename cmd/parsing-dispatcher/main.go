@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"math"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -61,7 +60,7 @@ func run() int {
 
 		flagMinBackoff time.Duration
 		flagMaxBackoff time.Duration
-		flagMaxRetries uint
+		flagMaxRetries uint16
 
 		flagDryRun bool
 	)
@@ -83,7 +82,7 @@ func run() int {
 
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
 	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 15*time.Minute, "maximum backoff duration for NSQ consumers")
-	pflag.UintVar(&flagMaxRetries, "max-retries", 10, "maximum number of retries per job")
+	pflag.Uint16Var(&flagMaxRetries, "max-retries", 10, "maximum number of retries per job")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
@@ -141,7 +140,7 @@ func run() int {
 
 	nsqCfg := nsq.NewConfig()
 	nsqCfg.MaxInFlight = int(flagLambdaConcurrency)
-	nsqCfg.MaxAttempts = math.MaxUint16
+	nsqCfg.MaxAttempts = flagMaxRetries + 1
 	nsqCfg.BackoffMultiplier = flagMinBackoff
 	nsqCfg.MaxBackoffDuration = flagMaxBackoff
 	consumer, err := nsq.NewConsumer(params.TopicParsing, params.ChannelDispatch, nsqCfg)
@@ -163,7 +162,8 @@ func run() int {
 	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
 	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit,
-		pipeline.WithDryRun(flagDryRun),
+		pipeline.WithParsingDryRun(flagDryRun),
+		pipeline.WithParsingMaxRetries(uint(flagMaxRetries)),
 	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 

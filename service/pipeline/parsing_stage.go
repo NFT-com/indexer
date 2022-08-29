@@ -84,12 +84,17 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	if !results.Permanent(err) {
-		p.log.Warn().Err(err).Msg("could not process message, retrying")
+	if m.Attempts >= uint16(p.cfg.MaxRetries) {
+		p.log.Error().Err(err).Msg("maximum number of retries reached, aborting")
 		return err
 	}
 
-	p.log.Error().Err(err).Msg("could not process message, discarding")
+	if !results.Permanent(err) {
+		p.log.Warn().Err(err).Msg("temporary error encountered, retrying")
+		return err
+	}
+
+	p.log.Error().Err(err).Msg("permanent error encountered, discarding")
 
 	message := err.Error()
 	err = p.failure(m.Body, message)

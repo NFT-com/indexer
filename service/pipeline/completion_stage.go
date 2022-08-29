@@ -25,7 +25,7 @@ type CompletionStage struct {
 	sales       SaleStore
 	failures    FailureStore
 	limit       ratelimit.Limiter
-	dryRun      bool
+	cfg         CompletionConfig
 }
 
 func NewCompletionStage(
@@ -37,8 +37,13 @@ func NewCompletionStage(
 	sales SaleStore,
 	failures FailureStore,
 	limit ratelimit.Limiter,
-	dryRun bool,
+	options ...CompletionOption,
 ) *CompletionStage {
+
+	cfg := DefaultCompletionConfig
+	for _, option := range options {
+		option(&cfg)
+	}
 
 	a := CompletionStage{
 		ctx:         ctx,
@@ -49,7 +54,7 @@ func NewCompletionStage(
 		sales:       sales,
 		failures:    failures,
 		limit:       limit,
-		dryRun:      dryRun,
+		cfg:         cfg,
 	}
 
 	return &a
@@ -62,12 +67,17 @@ func (c *CompletionStage) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	if !results.Permanent(err) {
-		c.log.Warn().Err(err).Msg("could not process message, retrying")
+	if m.Attempts >= uint16(c.cfg.MaxRetries) {
+		c.log.Error().Err(err).Msg("maximum number of retries reached, aborting")
 		return err
 	}
 
-	c.log.Error().Err(err).Msg("could not process message, discarding")
+	if !results.Permanent(err) {
+		c.log.Warn().Err(err).Msg("temporary error encountered, retrying")
+		return err
+	}
+
+	c.log.Error().Err(err).Msg("permanent error encountered, aborting")
 
 	message := err.Error()
 	err = c.failure(m.Body, message)
@@ -82,7 +92,7 @@ func (c *CompletionStage) HandleMessage(m *nsq.Message) error {
 func (c *CompletionStage) process(payload []byte) error {
 
 	// If we are doing a dry run, we skip any kind of processing.
-	if c.dryRun {
+	if c.cfg.DryRun {
 		return nil
 	}
 

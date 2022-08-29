@@ -25,7 +25,7 @@ Usage of action-dispatcher:
       
       --min-backoff duration            minimum backoff duration for NSQ consumers (default "20s")
       --max-backoff duration            maximum backoff duration for NSQ consumers (default "10m")
-      --max-retries uint                maximum number of retries per job (default "10")
+      --max-retries uint16              maximum number of retries per job (default "10")
 
       --dry-run                         executing as dry run disables invocation of Lambda function
 ```

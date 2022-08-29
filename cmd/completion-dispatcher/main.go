@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"math"
 	"os"
 	"os/signal"
 	"time"
@@ -56,7 +55,7 @@ func run() int {
 
 		flagMinBackoff time.Duration
 		flagMaxBackoff time.Duration
-		flagMaxRetries uint
+		flagMaxRetries uint16
 
 		flagDryRun bool
 	)
@@ -76,7 +75,7 @@ func run() int {
 
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 20*time.Second, "minimum backoff duration for NSQ consumers")
 	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 10*time.Minute, "maximum backoff duration for NSQ consumers")
-	pflag.UintVar(&flagMaxRetries, "max-retries", 10, "maximum number of retries per job")
+	pflag.Uint16Var(&flagMaxRetries, "max-retries", 10, "maximum number of retries per job")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
@@ -129,7 +128,7 @@ func run() int {
 
 	nsqCfg := nsq.NewConfig()
 	nsqCfg.MaxInFlight = int(flagLambdaConcurrency)
-	nsqCfg.MaxAttempts = math.MaxUint16
+	nsqCfg.MaxAttempts = flagMaxRetries + 1
 	nsqCfg.BackoffMultiplier = flagMinBackoff
 	nsqCfg.MaxBackoffDuration = flagMaxBackoff
 	consumer, err := nsq.NewConsumer(params.TopicCompletion, params.ChannelDispatch, nsqCfg)
@@ -142,7 +141,10 @@ func run() int {
 
 	lambda := lambda.NewFromConfig(awsCfg)
 	limit := ratelimit.New(int(flagRateLimit))
-	stage := pipeline.NewCompletionStage(context.Background(), log, lambda, flagLambdaName, collectionRepo, saleRepo, failureRepo, limit, flagDryRun)
+	stage := pipeline.NewCompletionStage(context.Background(), log, lambda, flagLambdaName, collectionRepo, saleRepo, failureRepo, limit,
+		pipeline.WithCompletionDryRun(flagDryRun),
+		pipeline.WithCompletionMaxRetries(uint(flagMaxRetries)),
+	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
 	err = consumer.ConnectToNSQLookupds(flagNSQLookups)

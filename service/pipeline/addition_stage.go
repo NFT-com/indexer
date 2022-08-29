@@ -29,7 +29,7 @@ type AdditionStage struct {
 	traits      TraitStore
 	failures    FailureStore
 	limit       ratelimit.Limiter
-	dryRun      bool
+	cfg         AdditionConfig
 }
 
 func NewAdditionStage(
@@ -43,8 +43,13 @@ func NewAdditionStage(
 	traits TraitStore,
 	failures FailureStore,
 	limit ratelimit.Limiter,
-	dryRun bool,
+	options ...AdditionOption,
 ) *AdditionStage {
+
+	cfg := DefaultAdditionConfig
+	for _, option := range options {
+		option(&cfg)
+	}
 
 	a := AdditionStage{
 		ctx:         ctx,
@@ -57,7 +62,7 @@ func NewAdditionStage(
 		traits:      traits,
 		failures:    failures,
 		limit:       limit,
-		dryRun:      dryRun,
+		cfg:         cfg,
 	}
 
 	return &a
@@ -70,12 +75,17 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 		return nil
 	}
 
-	if !results.Permanent(err) {
-		a.log.Warn().Err(err).Msg("could not process message, retrying")
+	if m.Attempts >= uint16(a.cfg.MaxRetries) {
+		a.log.Error().Err(err).Msg("maximum number of retries reached, aborting")
 		return err
 	}
 
-	a.log.Error().Err(err).Msg("could not process message, discarding")
+	if !results.Permanent(err) {
+		a.log.Warn().Err(err).Msg("temporary error encountered, retrying")
+		return err
+	}
+
+	a.log.Error().Err(err).Msg("permanent error encountered, aborting")
 
 	message := err.Error()
 	err = a.failure(m.Body, message)
@@ -90,7 +100,7 @@ func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 func (a *AdditionStage) process(payload []byte) error {
 
 	// If we are doing a dry run, we skip any kind of processing.
-	if a.dryRun {
+	if a.cfg.DryRun {
 		return nil
 	}
 
