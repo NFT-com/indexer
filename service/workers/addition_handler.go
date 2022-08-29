@@ -123,10 +123,10 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	for i, att := range token.Attributes {
 
 		var value string
-		if att.Value != nil {
+		switch {
+		case att.Value != nil:
 			value = fmt.Sprint(att.Value)
-		}
-		if att.TraitValue != nil {
+		case att.TraitValue != nil:
 			value = fmt.Sprint(att.TraitValue)
 		}
 
