@@ -76,17 +76,13 @@ func (o *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 
 func (o *OwnerRepository) Sanitize() error {
 
+	// SELECT owner, nft_id, SUM(o.number) AS number FROM owners GROUP BY owner, nft_id HAVING SUM(number) = 0;
+
 	result, err := o.build.
-		Select(
-			"a.owner",
-			"a.nft_id",
-			"a.event_id",
-			"b.event_id",
-		).
-		From("owners as a, owners as b").
-		Where("a.owner = b.owner").
-		Where("a.nft_id = b.nft_id").
-		Where("a.number = -b.number").
+		Select("owner", "nft_id").
+		From("owners").
+		GroupBy("owner, nft_id").
+		Having("SUM(number) = 0").
 		Query()
 	if err != nil {
 		return fmt.Errorf("could not execute query: %w", err)
@@ -99,12 +95,10 @@ func (o *OwnerRepository) Sanitize() error {
 			return fmt.Errorf("could not get next row: %w", result.Err())
 		}
 
-		var owner, nftID, eventID1, eventID2 string
+		var owner, nftID string
 		err = result.Scan(
 			&owner,
 			&nftID,
-			&eventID1,
-			&eventID2,
 		)
 		if err != nil {
 			return fmt.Errorf("could not scan next row: %w", err)
@@ -114,7 +108,6 @@ func (o *OwnerRepository) Sanitize() error {
 			Delete("owners").
 			Where("owner = ?", owner).
 			Where("nft_id = ?", nftID).
-			Where("(event_id = ? OR event_id = ?)", eventID1, eventID2).
 			Exec()
 		if err != nil {
 			return fmt.Errorf("could not delete rows: %w", err)
