@@ -179,6 +179,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			Str("payload", string(payload)).
 			Msg("UTF-8 payload trimmed")
 
+	case strings.HasPrefix(publicURI, content.ASCII):
+		payload = []byte(strings.TrimPrefix(publicURI, content.UTF8+","))
+		a.log.Debug().
+			Str("payload", string(payload)).
+			Msg("ASCII payload trimmed")
+
 	case strings.HasPrefix(publicURI, content.Base64):
 		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(publicURI, content.Base64+","))
 		if err != nil {
