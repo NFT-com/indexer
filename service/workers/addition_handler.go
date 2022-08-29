@@ -142,6 +142,24 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			Msg("ARWeave gateway substituted")
 	}
 
+	// Then, we substitute known public gateways with our own private address.
+	privateURI := publicURI
+	switch {
+
+	case strings.HasPrefix(privateURI, gateway.IPFS):
+		privateURI = gateway.Immutable + strings.TrimPrefix(privateURI, gateway.IPFS)
+		a.log.Debug().
+			Str("private_uri", privateURI).
+			Msg("IPFS gateway replaced")
+
+	case strings.HasPrefix(privateURI, gateway.Pinata):
+		privateURI = gateway.Immutable + strings.TrimPrefix(privateURI, gateway.Pinata)
+		a.log.Debug().
+			Str("private_uri", privateURI).
+			Msg("Pinata gateway replaced")
+
+	}
+
 	// Finally, we check if we have a payload already, or if we need to fetch it remotely.
 	var payload []byte
 	switch {
@@ -184,6 +202,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		Str("uri", tokenURI).
 		Str("prefixed", prefixedURI).
 		Str("public", publicURI).
+		Str("private", privateURI).
 		Str("payload", string(payload)).
 		Str("name", token.Name).
 		Str("description", token.Description).
