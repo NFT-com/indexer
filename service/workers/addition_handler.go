@@ -139,43 +139,42 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		prefixedURI = gateway.IPFS + prefixedURI
 		a.log.Debug().
 			Str("prefixed_uri", prefixedURI).
-			Msg("content hash prefixed")
+			Msg("CID hash prefixed")
 	}
 
 	// Now, we try to detect the payload, depending on content or protocol prefix.
 	var payload []byte
 	switch {
 
-	case strings.HasPrefix(tokenURI, protocol.HTTPS), strings.HasPrefix(tokenURI, protocol.HTTPS):
-		payload, err = fetchMetadata.Payload(ctx, tokenURI)
+	case strings.HasPrefix(prefixedURI, protocol.HTTPS), strings.HasPrefix(prefixedURI, protocol.HTTPS):
+		payload, err = fetchMetadata.Payload(ctx, prefixedURI)
 		if err != nil {
-			return nil, fmt.Errorf("could not fetch remote metadata (url: %s): %w", tokenURI, err)
+			return nil, fmt.Errorf("could not fetch remote metadata (prefixed: %s): %w", prefixedURI, err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
-			Msg("payload fetched remotely")
+			Msg("remote payload fetched")
 
-	case strings.HasPrefix(tokenURI, content.UTF8):
-		payload = []byte(strings.TrimPrefix(tokenURI, content.UTF8+","))
+	case strings.HasPrefix(prefixedURI, content.UTF8):
+		payload = []byte(strings.TrimPrefix(prefixedURI, content.UTF8+","))
 		a.log.Debug().
 			Str("payload", string(payload)).
-			Msg("payload read from UTF-8")
+			Msg("UTF-8 payload trimmed")
 
-	case strings.HasPrefix(tokenURI, content.Base64):
-		tokenURI = strings.TrimPrefix(tokenURI, content.Base64+",")
-		payload, err = base64.StdEncoding.DecodeString(tokenURI)
+	case strings.HasPrefix(prefixedURI, content.Base64):
+		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(prefixedURI, content.Base64+","))
 		if err != nil {
-			return nil, fmt.Errorf("could not decode base64 metadata (base64: %s): %w", tokenURI, err)
+			return nil, fmt.Errorf("could not decode base64 metadata (prefixed: %s): %w", prefixedURI, err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
-			Msg("payload decoded from Base64")
+			Msg("Base64 payload decoded")
 	}
 
 	var token metadata.Token
 	err = json.Unmarshal(payload, &token)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode json metadata (json: %s): %w", string(payload), err)
+		return nil, fmt.Errorf("could not decode json metadata (payload: %s): %w", string(payload), err)
 	}
 
 	a.log.Info().
