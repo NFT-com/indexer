@@ -180,7 +180,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			Msg("UTF-8 payload trimmed")
 
 	case strings.HasPrefix(publicURI, content.ASCII):
-		payload = []byte(strings.TrimPrefix(publicURI, content.UTF8+","))
+		payload = []byte(strings.TrimPrefix(publicURI, content.ASCII+","))
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("ASCII payload trimmed")
