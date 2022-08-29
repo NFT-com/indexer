@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -75,8 +74,6 @@ func (u *URIFetcher) fetch(ctx context.Context, address string, tokenID string, 
 	if !ok {
 		return "", fmt.Errorf("invalid field type (have: %T, want: string)", fields[0])
 	}
-
-	uri = strings.ReplaceAll(uri, "ipfs://", "https://ipfs.io/ipfs/")
 
 	return uri, nil
 }
