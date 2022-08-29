@@ -2,12 +2,9 @@ package web2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/NFT-com/indexer/models/metadata"
 )
 
 type MetadataFetcher struct {
@@ -28,7 +25,7 @@ func NewMetadataFetcher(options ...MetadataOption) *MetadataFetcher {
 	return &m
 }
 
-func (m *MetadataFetcher) Token(_ context.Context, uri string) (*metadata.Token, error) {
+func (m *MetadataFetcher) Payload(_ context.Context, uri string) ([]byte, error) {
 
 	res, err := http.Get(uri)
 	if err != nil {
@@ -50,11 +47,5 @@ func (m *MetadataFetcher) Token(_ context.Context, uri string) (*metadata.Token,
 		return nil, fmt.Errorf("could not read response body: %w", err)
 	}
 
-	var token metadata.Token
-	err = json.Unmarshal(payload, &token)
-	if err != nil {
-		return nil, fmt.Errorf("could not decode token metadata: %w", err)
-	}
-
-	return &token, nil
+	return payload, nil
 }

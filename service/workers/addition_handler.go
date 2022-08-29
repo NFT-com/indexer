@@ -2,17 +2,24 @@ package workers
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/NFT-com/indexer/models/content"
+	"github.com/NFT-com/indexer/models/gateway"
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
+	"github.com/NFT-com/indexer/models/metadata"
+	"github.com/NFT-com/indexer/models/protocol"
 	"github.com/NFT-com/indexer/models/results"
 	"github.com/NFT-com/indexer/network/ethereum"
 	"github.com/NFT-com/indexer/network/web2"
@@ -106,9 +113,49 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		return nil, fmt.Errorf("unknown token standard (%s)", addition.TokenStandard)
 	}
 
-	token, err := fetchMetadata.Token(ctx, tokenURI)
+	// In a first step, we substitute public internet gateways for protocols we know.
+	switch {
+
+	case strings.HasPrefix(tokenURI, protocol.IPFS):
+		tokenURI = gateway.IPFS + strings.TrimPrefix(tokenURI, protocol.IPFS)
+
+	case strings.HasPrefix(tokenURI, protocol.ARWeave):
+		tokenURI = gateway.ARWeave + strings.TrimPrefix(tokenURI, protocol.ARWeave)
+	}
+
+	// Next, we see if the first part of the URL is a CID hash.
+	parts := strings.Split(tokenURI, "/")
+	first := parts[0]
+	_, err = cid.Decode(first)
+	if err == nil {
+		tokenURI = gateway.IPFS + tokenURI
+	}
+
+	// Now, we try to detect the payload, depending on content or protocol prefix.
+	var payload []byte
+	switch {
+
+	case strings.HasPrefix(tokenURI, protocol.HTTPS), strings.HasPrefix(tokenURI, protocol.HTTPS):
+		payload, err = fetchMetadata.Payload(ctx, tokenURI)
+		if err != nil {
+			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
+		}
+
+	case strings.HasPrefix(tokenURI, content.UTF8):
+		payload = []byte(strings.TrimPrefix(tokenURI, content.UTF8+","))
+
+	case strings.HasPrefix(tokenURI, content.Base64):
+		tokenURI = strings.TrimPrefix(tokenURI, content.Base64+",")
+		payload, err = base64.StdEncoding.DecodeString(tokenURI)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode base64 metadata: %w", err)
+		}
+	}
+
+	var token metadata.Token
+	err = json.Unmarshal(payload, &token)
 	if err != nil {
-		return nil, fmt.Errorf("could not fetch metadata: %w", err)
+		return nil, fmt.Errorf("could not decode metadata: %w", err)
 	}
 
 	a.log.Info().
