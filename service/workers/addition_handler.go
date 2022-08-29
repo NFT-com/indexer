@@ -51,7 +51,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		Str("token_standard", addition.TokenStandard).
 		Logger()
 
-	log.Info().
+	log.Debug().
 		Str("node_url", a.url).
 		Msg("initiating connection to Ethereum node")
 
@@ -76,7 +76,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	defer api.Close()
 	defer close()
 
-	log.Info().
+	log.Debug().
 		Str("node_url", a.url).
 		Msg("connection to Ethereum node established")
 
