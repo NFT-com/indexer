@@ -182,8 +182,8 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	a.log.Info().
 		Str("uri", tokenURI).
-		Str("public", publicURI).
 		Str("prefixed", prefixedURI).
+		Str("public", publicURI).
 		Str("payload", string(payload)).
 		Str("name", token.Name).
 		Str("description", token.Description).
