@@ -76,8 +76,6 @@ func (o *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 
 func (o *OwnerRepository) Sanitize() error {
 
-	// SELECT owner, nft_id, SUM(o.number) AS number FROM owners GROUP BY owner, nft_id HAVING SUM(number) = 0;
-
 	result, err := o.build.
 		Select("owner", "nft_id").
 		From("owners").
