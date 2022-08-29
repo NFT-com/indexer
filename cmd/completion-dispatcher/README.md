@@ -24,7 +24,8 @@ Usage of action-dispatcher:
       --rate-limit uint                 maximum number of API requests per second (default 100)
       
       --min-backoff duration            minimum backoff duration for NSQ consumers (default "20s")
-      --max-backoff duration            makimum backoff duration for NSQ consumers (default "10m")
+      --max-backoff duration            maximum backoff duration for NSQ consumers (default "10m")
+      --max-attempts uint16             maximum number of attempts per job (default "10")
 
       --dry-run                         executing as dry run disables invocation of Lambda function
 ```

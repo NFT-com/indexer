@@ -80,16 +80,36 @@ func NewParsingStage(
 func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 
 	err := p.process(m.Body)
-	if !results.Permanent(err) {
-		p.log.Warn().Err(err).Msg("could not process message, retrying")
+	if err == nil {
+		return nil
+	}
+
+	// We only retry if we don't have a permanent error, and we have not reached
+	// the maximum number of attempts.
+	if !results.Permanent(err) && m.Attempts < uint16(p.cfg.MaxAttempts) {
+		p.log.Warn().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", p.cfg.MaxAttempts).
+			Err(err).Msg("could not process job, retrying")
 		return err
 	}
-	var message string
-	if err != nil {
-		p.log.Error().Err(err).Msg("could not process message, discarding")
-		message = err.Error()
-		err = p.failure(m.Body, message)
+
+	// Otherwise, we either have a permanent error, or maximum number of retries.
+	// Log the error accordingly, and proceed without retrying (return `nil`).
+	if results.Permanent(err) {
+		p.log.Error().Err(err).Msg("permanent error encountered, aborting")
+	} else {
+		p.log.Error().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", p.cfg.MaxAttempts).
+			Err(err).
+			Msg("maximum number of attempts reached, aborting")
 	}
+
+	// The below code stores the error in the database and fatally fails the service
+	// if we don't manage to do so.
+	message := err.Error()
+	err = p.failure(m.Body, message)
 	if err != nil {
 		p.log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
 		return err

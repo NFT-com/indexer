@@ -25,7 +25,7 @@ type CompletionStage struct {
 	sales       SaleStore
 	failures    FailureStore
 	limit       ratelimit.Limiter
-	dryRun      bool
+	cfg         CompletionConfig
 }
 
 func NewCompletionStage(
@@ -37,8 +37,13 @@ func NewCompletionStage(
 	sales SaleStore,
 	failures FailureStore,
 	limit ratelimit.Limiter,
-	dryRun bool,
+	options ...CompletionOption,
 ) *CompletionStage {
+
+	cfg := DefaultCompletionConfig
+	for _, option := range options {
+		option(&cfg)
+	}
 
 	a := CompletionStage{
 		ctx:         ctx,
@@ -49,50 +54,70 @@ func NewCompletionStage(
 		sales:       sales,
 		failures:    failures,
 		limit:       limit,
-		dryRun:      dryRun,
+		cfg:         cfg,
 	}
 
 	return &a
 }
 
-func (a *CompletionStage) HandleMessage(m *nsq.Message) error {
+func (c *CompletionStage) HandleMessage(m *nsq.Message) error {
 
-	err := a.process(m.Body)
-	if !results.Permanent(err) {
-		a.log.Warn().Err(err).Msg("could not process message, retrying")
+	err := c.process(m.Body)
+	if err == nil {
+		return nil
+	}
+
+	// We only retry if we don't have a permanent error, and we have not reached
+	// the maximum number of attempts.
+	if !results.Permanent(err) && m.Attempts < uint16(c.cfg.MaxAttempts) {
+		c.log.Warn().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", c.cfg.MaxAttempts).
+			Err(err).Msg("could not process job, retrying")
 		return err
 	}
-	var message string
-	if err != nil {
-		a.log.Error().Err(err).Msg("could not process message, discarding")
-		message = err.Error()
-		err = a.failure(m.Body, message)
+
+	// Otherwise, we either have a permanent error, or maximum number of retries.
+	// Log the error accordingly, and proceed without retrying (return `nil`).
+	if results.Permanent(err) {
+		c.log.Error().Err(err).Msg("permanent error encountered, aborting")
+	} else {
+		c.log.Error().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", c.cfg.MaxAttempts).
+			Err(err).
+			Msg("maximum number of attempts reached, aborting")
 	}
+
+	// The below code stores the error in the database and fatally fails the service
+	// if we don't manage to do so.
+	message := err.Error()
+	err = c.failure(m.Body, message)
 	if err != nil {
-		a.log.Fatal().Err(err).Str("message", message).Msg("could not persist completion failure")
+		c.log.Fatal().Err(err).Str("message", message).Msg("could not persist completion failure")
 		return err
 	}
 
 	return nil
 }
 
-func (a *CompletionStage) process(payload []byte) error {
+func (c *CompletionStage) process(payload []byte) error {
 
 	// If we are doing a dry run, we skip any kind of processing.
-	if a.dryRun {
+	if c.cfg.DryRun {
 		return nil
 	}
 
 	// We then take up a slot in the rate limiter to make sure the Ethereum node
 	// API is not overloaded.
-	a.limit.Take()
+	c.limit.Take()
 
 	// Next, we invoke the Lambda, which will get the token URI, query it and parse it.
 	input := &lambda.InvokeInput{
-		FunctionName: aws.String(a.name),
+		FunctionName: aws.String(c.name),
 		Payload:      payload,
 	}
-	output, err := a.lambda.Invoke(a.ctx, input)
+	output, err := c.lambda.Invoke(c.ctx, input)
 	if err != nil {
 		return fmt.Errorf("could not invoke lambda: %w", err)
 	}
@@ -118,12 +143,12 @@ func (a *CompletionStage) process(payload []byte) error {
 	}
 
 	// Finally, we make the necessary changes to the DB: update sale event.
-	err = a.sales.Update(result.Job.Sales...)
+	err = c.sales.Update(result.Job.Sales...)
 	if err != nil {
 		return fmt.Errorf("could not update sale event: %w", err)
 	}
 
-	a.log.Info().
+	c.log.Info().
 		Str("job_id", result.Job.ID).
 		Uint64("chain_id", result.Job.ChainID).
 		Uint64("start_height", result.Job.StartHeight).
@@ -134,13 +159,13 @@ func (a *CompletionStage) process(payload []byte) error {
 	// As we can't know in advance how many requests a Lambda will make, we will
 	// wait here to take as many slots on the rate limiter as were needed.
 	for i := 0; i < int(result.Requests); i++ {
-		a.limit.Take()
+		c.limit.Take()
 	}
 
 	return nil
 }
 
-func (a *CompletionStage) failure(payload []byte, message string) error {
+func (c *CompletionStage) failure(payload []byte, message string) error {
 
 	// Decode the payload into the failed completion job.
 	var completion jobs.Completion
@@ -151,7 +176,7 @@ func (a *CompletionStage) failure(payload []byte, message string) error {
 
 	// Persist the completion failure in the DB, so it can be reviewed and potentially
 	// retried at a later point.
-	err = a.failures.Completion(&completion, message)
+	err = c.failures.Completion(&completion, message)
 	if err != nil {
 		return fmt.Errorf("could not persist completion failure: %w", err)
 	}
