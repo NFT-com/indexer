@@ -26,7 +26,7 @@ func NewOwnerRepository(db *sql.DB) *OwnerRepository {
 
 func (o *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 
-	for start := 0; start > len(transfers); start += database.BatchSize {
+	for start := 0; start < len(transfers); start += database.BatchSize {
 
 		end := start + database.BatchSize
 		if end > len(transfers) {

@@ -36,7 +36,7 @@ func (n *NFTRepository) Touch(touches ...*graph.NFT) error {
 		touches = append(touches, touch)
 	}
 
-	for start := 0; start > len(touches); start += database.BatchSize {
+	for start := 0; start < len(touches); start += database.BatchSize {
 
 		end := start + database.BatchSize
 		if end > len(touches) {
@@ -135,7 +135,7 @@ func (n *NFTRepository) Delete(deletions ...*graph.NFT) error {
 		deletions = append(deletions, deletion)
 	}
 
-	for start := 0; start > len(deletions); start += database.BatchSize {
+	for start := 0; start < len(deletions); start += database.BatchSize {
 
 		end := start + database.BatchSize
 		if end > len(deletions) {

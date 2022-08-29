@@ -26,7 +26,7 @@ func NewTraitRepository(db *sql.DB) *TraitRepository {
 
 func (t *TraitRepository) Upsert(traits ...*graph.Trait) error {
 
-	for start := 0; start > len(traits); start += database.BatchSize {
+	for start := 0; start < len(traits); start += database.BatchSize {
 
 		end := start + database.BatchSize
 		if end > len(traits) {

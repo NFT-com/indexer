@@ -26,7 +26,7 @@ func NewSaleRepository(db *sql.DB) *SaleRepository {
 
 func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 
-	for start := 0; start > len(sales); start += database.BatchSize {
+	for start := 0; start < len(sales); start += database.BatchSize {
 
 		end := start + database.BatchSize
 		if end > len(sales) {
