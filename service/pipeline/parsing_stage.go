@@ -111,7 +111,7 @@ func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
 	message := err.Error()
 	err = p.failure(m.Body, message)
 	if err != nil {
-		p.log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
+		p.log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
 		return err
 	}
 

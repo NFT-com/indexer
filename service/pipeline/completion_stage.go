@@ -94,7 +94,7 @@ func (c *CompletionStage) HandleMessage(m *nsq.Message) error {
 	message := err.Error()
 	err = c.failure(m.Body, message)
 	if err != nil {
-		c.log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
+		c.log.Fatal().Err(err).Str("message", message).Msg("could not persist completion failure")
 		return err
 	}
 
