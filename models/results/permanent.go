@@ -6,10 +6,6 @@ import (
 
 func Permanent(err error) bool {
 
-	if err == nil {
-		return true
-	}
-
 	msg := err.Error()
 	switch {
 
@@ -27,6 +23,10 @@ func Permanent(err error) bool {
 
 	// no token URI exists for token
 	case strings.Contains(msg, "token URI empty"):
+		return true
+
+	// we don't know how to load token metadata
+	case strings.Contains(msg, "unknown URI format"):
 		return true
 
 	// too many logs returned from node API should not retry
