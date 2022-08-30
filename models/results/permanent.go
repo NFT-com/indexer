@@ -25,7 +25,7 @@ func Permanent(err error) bool {
 	case strings.Contains(msg, "cannot unmarshal object into Go struct field Token.attributes of type []metadata.Attribute"):
 		return true
 
-	// no token metadata exists for token
+	// no token URI exists for token
 	case strings.Contains(msg, "no metadata for token"):
 		return true
 

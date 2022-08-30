@@ -93,7 +93,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			return nil, fmt.Errorf("could not fetch ERC721 URI: %w", err)
 		}
 
-		a.log.Debug().
+		log.Debug().
 			Str("token_uri", tokenURI).
 			Msg("ERC721 token URI retrieved")
 
@@ -104,7 +104,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			return nil, fmt.Errorf("could not fetch ERC1155 URI: %w", err)
 		}
 
-		a.log.Debug().
+		log.Debug().
 			Str("token_uri", tokenURI).
 			Msg("ERC1155 token URI retrieved")
 
@@ -126,7 +126,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	_, err = cid.Decode(first)
 	if err == nil {
 		prefixedURI = protocol.IPFS + prefixedURI
-		a.log.Debug().
+		log.Debug().
 			Str("prefixed_uri", prefixedURI).
 			Msg("CID hash prefixed")
 	}
@@ -137,13 +137,13 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	case strings.HasPrefix(publicURI, protocol.IPFS):
 		publicURI = gateway.IPFS + strings.TrimPrefix(publicURI, protocol.IPFS)
-		a.log.Debug().
+		log.Debug().
 			Str("public_uri", publicURI).
 			Msg("IPFS gateway substituted")
 
 	case strings.HasPrefix(publicURI, protocol.ARWeave):
 		publicURI = gateway.ARWeave + strings.TrimPrefix(publicURI, protocol.ARWeave)
-		a.log.Debug().
+		log.Debug().
 			Str("public_uri", publicURI).
 			Msg("ARWeave gateway substituted")
 	}
@@ -154,13 +154,13 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	case strings.HasPrefix(privateURI, gateway.IPFS):
 		privateURI = gateway.Immutable + strings.TrimPrefix(privateURI, gateway.IPFS)
-		a.log.Debug().
+		log.Debug().
 			Str("private_uri", privateURI).
 			Msg("IPFS gateway replaced")
 
 	case strings.HasPrefix(privateURI, gateway.Pinata):
 		privateURI = gateway.Immutable + strings.TrimPrefix(privateURI, gateway.Pinata)
-		a.log.Debug().
+		log.Debug().
 			Str("private_uri", privateURI).
 			Msg("Pinata gateway replaced")
 	}
@@ -174,19 +174,19 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
 		}
-		a.log.Debug().
+		log.Debug().
 			Str("payload", string(payload)).
 			Msg("remote payload fetched")
 
 	case strings.HasPrefix(privateURI, content.UTF8):
 		payload = []byte(strings.TrimPrefix(privateURI, content.UTF8))
-		a.log.Debug().
+		log.Debug().
 			Str("payload", string(payload)).
 			Msg("UTF-8 payload trimmed")
 
 	case strings.HasPrefix(privateURI, content.ASCII):
 		payload = []byte(strings.TrimPrefix(privateURI, content.ASCII))
-		a.log.Debug().
+		log.Debug().
 			Str("payload", string(payload)).
 			Msg("ASCII payload trimmed")
 
@@ -195,7 +195,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		if err != nil {
 			return nil, fmt.Errorf("could not decode base64 metadata: %w", err)
 		}
-		a.log.Debug().
+		log.Debug().
 			Str("payload", string(payload)).
 			Msg("Base64 payload decoded")
 
@@ -209,7 +209,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		return nil, fmt.Errorf("could not decode json metadata: %w", err)
 	}
 
-	a.log.Info().
+	log.Info().
 		Str("uri", tokenURI).
 		Str("prefixed", prefixedURI).
 		Str("public", publicURI).

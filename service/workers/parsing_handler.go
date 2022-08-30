@@ -80,52 +80,52 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
 	requests := uint(1)
-	logs, err := fetch.Logs(ctx, parsing.ContractAddresses, parsing.EventHashes, parsing.StartHeight, parsing.EndHeight)
+	entries, err := fetch.Logs(ctx, parsing.ContractAddresses, parsing.EventHashes, parsing.StartHeight, parsing.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
 	}
 
-	p.log.Debug().
-		Int("logs", len(logs)).
+	log.Debug().
+		Int("entries", len(entries)).
 		Msg("event log entries fetched")
 
 	// For each log, try to parse it into the respective events.
 	var transfers []*events.Transfer
 	var sales []*events.Sale
 	timestamps := make(map[uint64]time.Time)
-	for _, log := range logs {
+	for _, entry := range entries {
 
 		// skip logs for reverted transactions
-		if log.Removed {
-			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
-				Uint("index", log.Index).
+		if entry.Removed {
+			log.Trace().
+				Str("transaction", entry.TxHash.Hex()).
+				Uint("index", entry.Index).
 				Msg("skipping log entry for reverted transaction")
 			continue
 		}
 
 		// keep track of all heightSet we need to process to get timestamps
-		timestamps[log.BlockNumber] = time.Time{}
+		timestamps[entry.BlockNumber] = time.Time{}
 
-		eventType := log.Topics[0]
+		eventType := entry.Topics[0]
 		switch eventType.String() {
 
 		case params.HashERC721Transfer:
 
-			transfer, err := parsers.ERC721Transfer(log)
+			transfer, err := parsers.ERC721Transfer(entry)
 			if err != nil {
-				p.log.Warn().
+				log.Warn().
 					Err(err).
-					Hex("transaction", log.TxHash[:]).
-					Uint("index", log.Index).
+					Hex("transaction", entry.TxHash[:]).
+					Uint("index", entry.Index).
 					Msg("could not parse ERC721 transfer, skipping log entry")
 				continue
 			}
 			transfers = append(transfers, transfer)
 
-			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
-				Uint("index", log.Index).
+			log.Trace().
+				Str("transaction", entry.TxHash.Hex()).
+				Uint("index", entry.Index).
 				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
 				Str("sender_address", transfer.SenderAddress).
@@ -135,20 +135,20 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 		case params.HashERC1155Transfer:
 
-			transfer, err := parsers.ERC1155Transfer(log)
+			transfer, err := parsers.ERC1155Transfer(entry)
 			if err != nil {
-				p.log.Warn().
+				log.Warn().
 					Err(err).
-					Hex("transaction", log.TxHash[:]).
-					Uint("index", log.Index).
+					Hex("transaction", entry.TxHash[:]).
+					Uint("index", entry.Index).
 					Msg("could not parse ERC1155 transfer, skipping log entry")
 				continue
 			}
 			transfers = append(transfers, transfer)
 
-			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
-				Uint("index", log.Index).
+			log.Trace().
+				Str("transaction", entry.TxHash.Hex()).
+				Uint("index", entry.Index).
 				Str("collection_address", transfer.CollectionAddress).
 				Str("token_id", transfer.TokenID).
 				Str("sender_address", transfer.SenderAddress).
@@ -158,21 +158,21 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 		case params.HashERC1155Batch:
 
-			batch, err := parsers.ERC1155Batch(log)
+			batch, err := parsers.ERC1155Batch(entry)
 			if err != nil {
-				p.log.Warn().
+				log.Warn().
 					Err(err).
-					Hex("transaction", log.TxHash[:]).
-					Uint("index", log.Index).
+					Hex("transaction", entry.TxHash[:]).
+					Uint("index", entry.Index).
 					Msg("could not parse ERC1155 batch, skipping log entry")
 				continue
 			}
 			transfers = append(transfers, batch...)
 			for _, transfer := range batch {
 
-				p.log.Trace().
-					Str("transaction", log.TxHash.Hex()).
-					Uint("index", log.Index).
+				log.Trace().
+					Str("transaction", entry.TxHash.Hex()).
+					Uint("index", entry.Index).
 					Str("collection_address", transfer.CollectionAddress).
 					Str("token_id", transfer.TokenID).
 					Str("sender_address", transfer.SenderAddress).
@@ -183,44 +183,44 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 
 		case params.HashWyvernSale:
 
-			sale, err := parsers.WyvernSale(log)
+			sale, err := parsers.WyvernSale(entry)
 			if err != nil {
-				p.log.Warn().
+				log.Warn().
 					Err(err).
-					Hex("transaction", log.TxHash[:]).
-					Uint("index", log.Index).
+					Hex("transaction", entry.TxHash[:]).
+					Uint("index", entry.Index).
 					Msg("could not parse Wyvern sale, skipping log entry")
 				continue
 			}
 			sales = append(sales, sale)
 
-			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
-				Uint("index", log.Index).
+			log.Trace().
+				Str("transaction", entry.TxHash.Hex()).
+				Uint("index", entry.Index).
 				Msg("OpenSea Wyvern sale parsed")
 
 		case params.HashSeaportSale:
 
-			sale, err := parsers.SeaportSale(log)
+			sale, err := parsers.SeaportSale(entry)
 			if err != nil {
-				p.log.Warn().
+				log.Warn().
 					Err(err).
-					Hex("transaction", log.TxHash[:]).
-					Uint("index", log.Index).
+					Hex("transaction", entry.TxHash[:]).
+					Uint("index", entry.Index).
 					Msg("could not parse Seaport sale, skipping log entry")
 				continue
 			}
 			sales = append(sales, sale)
 
-			p.log.Trace().
-				Str("transaction", log.TxHash.Hex()).
-				Uint("index", log.Index).
+			log.Trace().
+				Str("transaction", entry.TxHash.Hex()).
+				Uint("index", entry.Index).
 				Msg("OpenSea Seaport sale parsed")
 		}
 	}
 
-	p.log.Info().
-		Int("logs", len(logs)).
+	log.Info().
+		Int("entries", len(entries)).
 		Int("transfers", len(transfers)).
 		Int("sales", len(sales)).
 		Msg("all log entries parsed")
@@ -235,7 +235,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		timestamps[height] = time.Unix(int64(header.Time), 0)
 	}
 
-	p.log.Info().
+	log.Info().
 		Int("heights", len(timestamps)).
 		Msg("block heights retrieved")
 
