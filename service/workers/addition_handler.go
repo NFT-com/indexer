@@ -113,6 +113,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		return nil, fmt.Errorf("unknown token standard (%s)", addition.TokenStandard)
 	}
 
+	// Trim any spaces.
+	tokenURI = strings.TrimSpace(tokenURI)
+
 	// First, we check if the URI starts with a CID hash, in which case we add the IPFS prefix.
 	prefixedURI := tokenURI
 	parts := strings.Split(prefixedURI, "/")
@@ -157,7 +160,6 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		a.log.Debug().
 			Str("private_uri", privateURI).
 			Msg("Pinata gateway replaced")
-
 	}
 
 	// Finally, we check if we have a payload already, or if we need to fetch it remotely.
