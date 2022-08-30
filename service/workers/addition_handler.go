@@ -159,6 +159,12 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		log.Debug().
 			Str("private_uri", privateURI).
 			Msg("Pinata gateway replaced")
+
+	case strings.HasPrefix(privateURI, gateway.Parallel):
+		privateURI = gateway.Immutable + strings.TrimPrefix(privateURI, gateway.Parallel)
+		log.Debug().
+			Str("private_uri", privateURI).
+			Msg("Parallel gateway replaced")
 	}
 
 	// Finally, we check if we have a payload already, or if we need to fetch it remotely.
