@@ -26,7 +26,7 @@ func Permanent(err error) bool {
 		return true
 
 	// no token URI exists for token
-	case strings.Contains(msg, "no metadata for token"):
+	case strings.Contains(msg, "token URI empty"):
 		return true
 
 	// too many logs returned from node API should not retry
