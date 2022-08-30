@@ -25,6 +25,10 @@ func Permanent(err error) bool {
 	case strings.Contains(msg, "cannot unmarshal object into Go struct field Token.attributes of type []metadata.Attribute"):
 		return true
 
+	// no token metadata exists for token
+	case strings.Contains(msg, "no metadata for token"):
+		return true
+
 	// too many logs returned from node API should not retry
 	case strings.Contains(msg, "the message response is too large"):
 		return true

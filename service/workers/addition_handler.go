@@ -115,6 +115,9 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	// Trim any spaces.
 	tokenURI = strings.TrimSpace(tokenURI)
+	if tokenURI == "" {
+		return nil, fmt.Errorf("no metadata for token")
+	}
 
 	// First, we check if the URI starts with a CID hash, in which case we add the IPFS prefix.
 	prefixedURI := tokenURI
@@ -169,7 +172,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	case strings.HasPrefix(privateURI, protocol.HTTPS), strings.HasPrefix(privateURI, protocol.HTTPS):
 		payload, err = fetchMetadata.Payload(ctx, privateURI)
 		if err != nil {
-			return nil, fmt.Errorf("could not fetch remote metadata (%s): %w", privateURI, err)
+			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
@@ -190,7 +193,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	case strings.HasPrefix(privateURI, content.Base64):
 		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(privateURI, content.Base64))
 		if err != nil {
-			return nil, fmt.Errorf("could not decode base64 metadata (%s): %w", privateURI, err)
+			return nil, fmt.Errorf("could not decode base64 metadata: %w", err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
@@ -203,7 +206,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	var token metadata.Token
 	err = json.Unmarshal(payload, &token)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode json metadata (payload: %s): %w", string(payload), err)
+		return nil, fmt.Errorf("could not decode json metadata: %w", err)
 	}
 
 	a.log.Info().
