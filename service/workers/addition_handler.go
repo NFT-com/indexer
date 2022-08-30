@@ -166,38 +166,38 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	var payload []byte
 	switch {
 
-	case strings.HasPrefix(publicURI, protocol.HTTPS), strings.HasPrefix(publicURI, protocol.HTTPS):
-		payload, err = fetchMetadata.Payload(ctx, publicURI)
+	case strings.HasPrefix(privateURI, protocol.HTTPS), strings.HasPrefix(privateURI, protocol.HTTPS):
+		payload, err = fetchMetadata.Payload(ctx, privateURI)
 		if err != nil {
-			return nil, fmt.Errorf("could not fetch remote metadata (%s): %w", publicURI, err)
+			return nil, fmt.Errorf("could not fetch remote metadata (%s): %w", privateURI, err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("remote payload fetched")
 
-	case strings.HasPrefix(publicURI, content.UTF8):
-		payload = []byte(strings.TrimPrefix(publicURI, content.UTF8+","))
+	case strings.HasPrefix(privateURI, content.UTF8):
+		payload = []byte(strings.TrimPrefix(privateURI, content.UTF8+","))
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("UTF-8 payload trimmed")
 
-	case strings.HasPrefix(publicURI, content.ASCII):
-		payload = []byte(strings.TrimPrefix(publicURI, content.ASCII+","))
+	case strings.HasPrefix(privateURI, content.ASCII):
+		payload = []byte(strings.TrimPrefix(privateURI, content.ASCII+","))
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("ASCII payload trimmed")
 
-	case strings.HasPrefix(publicURI, content.Base64):
-		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(publicURI, content.Base64+","))
+	case strings.HasPrefix(privateURI, content.Base64):
+		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(privateURI, content.Base64+","))
 		if err != nil {
-			return nil, fmt.Errorf("could not decode base64 metadata (%s): %w", publicURI, err)
+			return nil, fmt.Errorf("could not decode base64 metadata (%s): %w", privateURI, err)
 		}
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("Base64 payload decoded")
 
 	default:
-		return nil, fmt.Errorf("unknown URI format (%s)", publicURI)
+		return nil, fmt.Errorf("unknown URI format (%s)", privateURI)
 	}
 
 	var token metadata.Token
