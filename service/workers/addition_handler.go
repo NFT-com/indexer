@@ -169,7 +169,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	var payload []byte
 	switch {
 
-	case strings.HasPrefix(privateURI, protocol.HTTPS), strings.HasPrefix(privateURI, protocol.HTTPS):
+	case strings.HasPrefix(privateURI, protocol.HTTP), strings.HasPrefix(privateURI, protocol.HTTPS):
 		payload, err = fetchMetadata.Payload(ctx, privateURI)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
