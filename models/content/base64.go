@@ -1,5 +1,5 @@
 package content
 
 const (
-	Base64 = "data:application/json;base64"
+	Base64 = "data:application/json;base64,"
 )

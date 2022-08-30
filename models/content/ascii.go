@@ -1,5 +1,5 @@
 package content
 
 const (
-	ASCII = "data:application/json;ascii"
+	ASCII = "data:application/json;ascii,"
 )

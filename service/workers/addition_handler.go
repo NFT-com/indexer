@@ -176,19 +176,19 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			Msg("remote payload fetched")
 
 	case strings.HasPrefix(privateURI, content.UTF8):
-		payload = []byte(strings.TrimPrefix(privateURI, content.UTF8+","))
+		payload = []byte(strings.TrimPrefix(privateURI, content.UTF8))
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("UTF-8 payload trimmed")
 
 	case strings.HasPrefix(privateURI, content.ASCII):
-		payload = []byte(strings.TrimPrefix(privateURI, content.ASCII+","))
+		payload = []byte(strings.TrimPrefix(privateURI, content.ASCII))
 		a.log.Debug().
 			Str("payload", string(payload)).
 			Msg("ASCII payload trimmed")
 
 	case strings.HasPrefix(privateURI, content.Base64):
-		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(privateURI, content.Base64+","))
+		payload, err = base64.StdEncoding.DecodeString(strings.TrimPrefix(privateURI, content.Base64))
 		if err != nil {
 			return nil, fmt.Errorf("could not decode base64 metadata (%s): %w", privateURI, err)
 		}
