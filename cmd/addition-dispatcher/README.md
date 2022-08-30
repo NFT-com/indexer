@@ -22,9 +22,9 @@ Usage of action-dispatcher:
       --lambda-concurrency uint         maximum number of concurrent Lambda invocations (default 900)
       --rate-limit uint                 maximum number of API requests per second (default 100)
       
-      --min-backoff duration            minimum backoff duration for NSQ consumers (default "20s")
+      --min-backoff duration            minimum backoff duration for NSQ consumers (default "1s")
       --max-backoff duration            maximum backoff duration for NSQ consumers (default "10m")
-      --max-attempts uint16             maximum number of attempts per job (default "10")
+      --max-attempts uint16             maximum number of attempts per job (default "3")
 
       --dry-run                         executing as dry run disables invocation of Lambda function
 ```
