@@ -200,7 +200,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 			Msg("Base64 payload decoded")
 
 	default:
-		return nil, fmt.Errorf("unknown URI format (%s)", privateURI)
+		return nil, fmt.Errorf("unknown URI format")
 	}
 
 	var token metadata.Token
