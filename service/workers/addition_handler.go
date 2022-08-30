@@ -76,10 +76,6 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	defer api.Close()
 	defer close()
 
-	log.Debug().
-		Str("node_url", a.url).
-		Msg("connection to Ethereum node established")
-
 	fetchURI := web3.NewURIFetcher(api)
 	fetchMetadata := web2.NewMetadataFetcher(web2.WithDisableValidation(true))
 
@@ -116,7 +112,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	// Trim any spaces.
 	tokenURI = strings.TrimSpace(tokenURI)
 	if tokenURI == "" {
-		return nil, fmt.Errorf("no metadata for token")
+		return nil, fmt.Errorf("token URI empty")
 	}
 
 	// First, we check if the URI starts with a CID hash, in which case we add the IPFS prefix.
@@ -206,7 +202,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	var token metadata.Token
 	err = json.Unmarshal(payload, &token)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode json metadata: %w", err)
+		return nil, fmt.Errorf("could not decode metadata: %w", err)
 	}
 
 	log.Info().
@@ -219,7 +215,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		Str("description", token.Description).
 		Str("image", token.Image).
 		Int("attributes", len(token.Attributes)).
-		Msg("token metadata fetched")
+		Msg("token metadata extracted")
 
 	nftID := addition.NFTID()
 	traits := make([]*graph.Trait, 0, len(token.Attributes))
