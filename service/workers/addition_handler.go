@@ -81,7 +81,7 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		Msg("connection to Ethereum node established")
 
 	fetchURI := web3.NewURIFetcher(api)
-	fetchMetadata := web2.NewMetadataFetcher()
+	fetchMetadata := web2.NewMetadataFetcher(web2.WithDisableValidation(true))
 
 	var tokenURI string
 	switch addition.TokenStandard {

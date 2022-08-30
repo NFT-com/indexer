@@ -2,13 +2,15 @@ package web2
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 )
 
 type MetadataFetcher struct {
-	cfg MetadataConfig
+	client *http.Client
+	cfg    MetadataConfig
 }
 
 func NewMetadataFetcher(options ...MetadataOption) *MetadataFetcher {
@@ -18,8 +20,14 @@ func NewMetadataFetcher(options ...MetadataOption) *MetadataFetcher {
 		option(&cfg)
 	}
 
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.DisableValidation},
+	}
+	client := &http.Client{Transport: transport}
+
 	m := MetadataFetcher{
-		cfg: cfg,
+		client: client,
+		cfg:    cfg,
 	}
 
 	return &m
@@ -27,19 +35,14 @@ func NewMetadataFetcher(options ...MetadataOption) *MetadataFetcher {
 
 func (m *MetadataFetcher) Payload(_ context.Context, uri string) ([]byte, error) {
 
-	res, err := http.Get(uri)
+	res, err := m.client.Get(uri)
 	if err != nil {
 		return nil, fmt.Errorf("could not execute request: %w", err)
 	}
 	defer res.Body.Close()
 
-	_, ok := m.cfg.RetryCodes[res.StatusCode]
-	if ok {
+	if res.StatusCode != 200 {
 		return nil, fmt.Errorf("bad response code (%d)", res.StatusCode)
-	}
-
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, fmt.Errorf("invalid response code (%d)", res.StatusCode)
 	}
 
 	payload, err := io.ReadAll(res.Body)
