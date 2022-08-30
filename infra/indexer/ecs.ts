@@ -133,7 +133,7 @@ export const createParsingDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n',process.env.PARSING_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-n',process.env.PARSER_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'-q',`${process.env.EC2_PUBLIC_IP}:4150`,'--height-range',process.env.PARSER_HEIGHT_RANGE,'--rate-limit',process.env.PARSER_RATE_LIMIT,'-j',job_db,'-e',event_db,'-g',graph_db,'-l',process.env.PARSER_LOG_LEVEL],
                 cpu: 0,
                 logConfiguration: {
                     logDriver: 'awslogs',
@@ -187,7 +187,7 @@ export const createAdditionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n',process.env.ADDITION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-n',process.env.ADDITION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.ADDITION_RATE_LIMIT,'-g',graph_db,'-j',job_db,'-l',process.env.ADDITION_LOG_LEVEL,'--max-attempts',process.env.ADDITION_MAX_ATTEMPTS,'--max-backoff',process.env.ADDITION_MAX_BACKOFF],
                 cpu: 0,
                 logConfiguration: {
                     logDriver: 'awslogs',
@@ -241,7 +241,7 @@ export const createCompletionDispatcherTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-n',process.env.COMPLETION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-n',process.env.COMPLETION_LAMBDA_NAME,'-k',`${process.env.EC2_PUBLIC_IP}:4161`,'--rate-limit',process.env.COMPLETION_RATE_LIMIT,'-g',graph_db,'-e',event_db,'-j',job_db,'-l',process.env.COMPLETION_LOG_LEVEL],
                 cpu: 0,
                 entryPoint: ['/dispatcher'],
                 logConfiguration: {
@@ -295,7 +295,7 @@ export const createJobCreatorTaskDefinition = (
     {
         containerDefinitions: JSON.stringify([
             {
-                command: ['-q',`${process.env.EC2_PUBLIC_IP}:4150`,'-w',process.env.ZMOK_WS_URL,'-g',graph_db,'-j',job_db,'-l',process.env.INDEXER_LOG_LEVEL],
+                command: ['-q',`${process.env.EC2_PUBLIC_IP}:4150`,'-w',process.env.ZMOK_WS_URL,'-g',graph_db,'-j',job_db,'-l',process.env.JOBCREATOR_LOG_LEVEL,'--address-limit',process.env.JOBCREATOR_ADDRESS_LIMIT],
                 cpu: 0,
                 entryPoint: ['/creator'],
                 logConfiguration: {

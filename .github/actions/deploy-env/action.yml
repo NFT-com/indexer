@@ -112,15 +112,21 @@ runs:
         DB_NAME: ${{ fromJSON(inputs.secrets).DB_NAME }}
         DB_USER: ${{ fromJSON(inputs.secrets).DB_USER }}
         DB_PASSWORD: ${{ fromJSON(inputs.secrets).DB_PASSWORD }}
-        PARSING_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).PARSING_LAMBDA_NAME }}
-        ADDITION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).ADDITION_LAMBDA_NAME }}
-        COMPLETION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).COMPLETION_LAMBDA_NAME }}
-        INDEXER_LOG_LEVEL: ${{ fromJSON(inputs.secrets).INDEXER_LOG_LEVEL }}
-        COMPLETION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).COMPLETION_RATE_LIMIT }}
-        EC2_PUBLIC_IP: ${{ fromJSON(inputs.secrets).EC2_PUBLIC_IP }}
+        PARSER_LOG_LEVEL: ${{ fromJSON(inputs.secrets).PARSER_LOG_LEVEL }}
+        PARSER_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).PARSER_LAMBDA_NAME }}
         PARSER_HEIGHT_RANGE: ${{ fromJSON(inputs.secrets).PARSER_HEIGHT_RANGE }}
         PARSER_RATE_LIMIT: ${{ fromJSON(inputs.secrets).PARSER_RATE_LIMIT }}
+        ADDITION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).ADDITION_LAMBDA_NAME }}
         ADDITION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).ADDITION_RATE_LIMIT }}
+        ADDITION_MAX_ATTEMPTS: ${{ fromJSON(inputs.secrets).ADDITION_MAX_ATTEMPTS }}
+        ADDITION_MAX_BACKOFF: ${{ fromJSON(inputs.secrets).ADDITION_MAX_BACKOFF }}
+        COMPLETION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).COMPLETION_LAMBDA_NAME }}
+        COMPLETION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).COMPLETION_RATE_LIMIT }}
+        COMPLETION_LOG_LEVEL: ${{ fromJSON(inputs.secrets).COMPLETION_LOG_LEVEL }}
+        JOBCREATOR_LOG_LEVEL: ${{ fromJSON(inputs.secrets).JOBCREATOR_LOG_LEVEL }}
+        JOBCREATOR_ADDRESS_LIMIT: ${{ fromJSON(inputs.secrets).JOBCREATOR_ADDRESS_LIMIT }}
+        INDEXER_LOG_LEVEL: ${{ fromJSON(inputs.secrets).INDEXER_LOG_LEVEL }}
+        EC2_PUBLIC_IP: ${{ fromJSON(inputs.secrets).EC2_PUBLIC_IP }}
         ZMOK_HTTP_URL: ${{ fromJSON(inputs.secrets).ZMOK_HTTP_URL }}
         ZMOK_WS_URL: ${{ fromJSON(inputs.secrets).ZMOK_WS_URL }}
       run: npm run deploy:indexer
