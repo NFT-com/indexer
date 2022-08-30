@@ -13,10 +13,16 @@ func Permanent(err error) bool {
 	msg := err.Error()
 	switch {
 
-	// retrieval of URI for deleted NFT should not retry
+	// retrieval of token URI for deleted Fighter NFT
 	case strings.Contains(msg, "URI query for nonexistent token"):
 		return true
+
+	// retrieval of token URI for ENS NFT
 	case strings.Contains(msg, "execution reverted"):
+		return true
+
+	// decoding of JSON payload for Crypto Kitties NFT
+	case strings.Contains(msg, "cannot unmarshal object into Go struct field Token.attributes of type []metadata.Attribute"):
 		return true
 
 	// too many logs returned from node API should not retry
