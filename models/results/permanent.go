@@ -16,6 +16,8 @@ func Permanent(err error) bool {
 	// retrieval of URI for deleted NFT should not retry
 	case strings.Contains(msg, "URI query for nonexistent token"):
 		return true
+	case strings.Contains(msg, "execution reverted"):
+		return true
 
 	// too many logs returned from node API should not retry
 	case strings.Contains(msg, "the message response is too large"):
