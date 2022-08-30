@@ -29,6 +29,14 @@ func Permanent(err error) bool {
 	case strings.Contains(msg, "unknown URI format"):
 		return true
 
+	// the URI can't be loaded (deleted NFT or defunct gateway)
+	case strings.Contains(msg, "bad response code (500)"):
+		return true
+
+	// the URI is no longer being served (deleted NFT)
+	case strings.Contains(msg, "bad response code (404)"):
+		return true
+
 	// too many logs returned from node API should not retry
 	case strings.Contains(msg, "the message response is too large"):
 		return true
