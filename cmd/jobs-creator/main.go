@@ -70,8 +70,8 @@ func run() int {
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
 	pflag.DurationVar(&flagCheckInterval, "check-interval", 2*time.Second, "interval between checks for new job combinations")
-	pflag.UintVar(&flagAddressLimit, "address-limit", 10, "maximum number of addresses to include in a single job")
-	pflag.UintVar(&flagHeightLimit, "height-limit", 10, "maximum number of heights to include in a single job")
+	pflag.UintVar(&flagAddressLimit, "address-limit", 1000, "maximum number of addresses to include in a single job")
+	pflag.UintVar(&flagHeightLimit, "height-limit", 100, "maximum number of heights to include in a single job")
 
 	pflag.Parse()
 
