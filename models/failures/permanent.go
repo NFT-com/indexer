@@ -61,6 +61,11 @@ func Permanent(err error) bool {
 	case strings.Contains(msg, "bad response code (404)"):
 		return true
 
+	// for now, this only happened on one collection where the domain is no longer
+	// available
+	case strings.Contains(msg, "bad response code (403)"):
+		return true
+
 	default:
 		return false
 	}
