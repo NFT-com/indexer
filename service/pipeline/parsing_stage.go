@@ -142,7 +142,8 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 		case addresses > 1:
 			addresses = addresses / p.cfg.SplitRatio
 		default:
-			log.Fatal().Msg("cannot further split job")
+			// just requeue
+			return err
 		}
 
 		// Make sure we didn't round down to zero.
