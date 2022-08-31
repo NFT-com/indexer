@@ -114,7 +114,7 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 	// jobs that we add into the pipeline again. This might delay the processing of
 	// these heights, but that's OK for the overall speed-up we will get.
 	if failures.TooLarge(err) {
-		log.Debug().
+		log.Warn().
 			Err(err).
 			Msg("API response too large, splitting job")
 
