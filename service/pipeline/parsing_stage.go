@@ -388,12 +388,6 @@ func (p *ParsingStage) process(payload []byte) error {
 		Int("sales", len(result.Sales)).
 		Msg("parsing job processed")
 
-	// As we can't know in advance how many requests a Lambda will make, we will
-	// wait here to take up any requests above one that we needed.
-	for i := 1; i < int(result.Requests); i++ {
-		p.limit.Take()
-	}
-
 	return nil
 }
 

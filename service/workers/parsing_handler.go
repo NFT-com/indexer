@@ -254,7 +254,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		Job:       parsing,
 		Sales:     sales,
 		Transfers: transfers,
-		Requests:  requests,
 	}
 
 	return &result, nil

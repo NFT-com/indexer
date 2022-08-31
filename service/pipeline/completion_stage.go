@@ -156,12 +156,6 @@ func (c *CompletionStage) process(payload []byte) error {
 		Int("sales", len(result.Job.Sales)).
 		Msg("completion job processed")
 
-	// As we can't know in advance how many requests a Lambda will make, we will
-	// wait here to take as many slots on the rate limiter as were needed.
-	for i := 0; i < int(result.Requests); i++ {
-		c.limit.Take()
-	}
-
 	return nil
 }
 

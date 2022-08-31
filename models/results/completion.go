@@ -5,6 +5,5 @@ import (
 )
 
 type Completion struct {
-	Job      *jobs.Completion `json:"job"`
-	Requests uint             `json:"requests"`
+	Job *jobs.Completion `json:"job"`
 }

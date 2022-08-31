@@ -6,8 +6,7 @@ import (
 )
 
 type Addition struct {
-	Job      *jobs.Addition `json:"job"`
-	NFT      *graph.NFT     `json:"nft"`
-	Traits   []*graph.Trait `json:"traits"`
-	Requests uint           `json:"requests"`
+	Job    *jobs.Addition `json:"job"`
+	NFT    *graph.NFT     `json:"nft"`
+	Traits []*graph.Trait `json:"traits"`
 }
