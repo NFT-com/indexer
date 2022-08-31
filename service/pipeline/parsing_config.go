@@ -3,12 +3,18 @@ package pipeline
 var DefaultParsingConfig = ParsingConfig{
 	DryRun:           false,
 	MaxAttempts:      10,
-	SanitizeInterval: 1000,
+	MaxAddresses:     1000,
+	MaxHeights:       100,
+	SplitRatio:       2,
+	SanitizeInterval: 10000,
 }
 
 type ParsingConfig struct {
 	DryRun           bool
 	MaxAttempts      uint16
+	MaxAddresses     uint
+	MaxHeights       uint
+	SplitRatio       uint
 	SanitizeInterval uint
 }
 
@@ -23,6 +29,24 @@ func WithParsingDryRun(enabled bool) ParsingOption {
 func WithParsingMaxAttempts(attempts uint16) ParsingOption {
 	return func(cfg *ParsingConfig) {
 		cfg.MaxAttempts = attempts
+	}
+}
+
+func WithParsingMaxAddresses(addresses uint) ParsingOption {
+	return func(cfg *ParsingConfig) {
+		cfg.MaxAddresses = addresses
+	}
+}
+
+func WithParsingMaxHeights(heights uint) ParsingOption {
+	return func(cfg *ParsingConfig) {
+		cfg.MaxHeights = heights
+	}
+}
+
+func WithSplitRatio(ratio uint) ParsingOption {
+	return func(cfg *ParsingConfig) {
+		cfg.SplitRatio = ratio
 	}
 }
 

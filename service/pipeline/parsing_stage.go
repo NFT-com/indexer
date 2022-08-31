@@ -80,20 +80,12 @@ func NewParsingStage(
 
 func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 
-	// We process the job and if there was no error at all, we just return `nil`, so
-	// NSQ marks the message as successfully processed.
-	err := p.process(msg.Body)
-	if err == nil {
-		return nil
-	}
-
-	// In most other code paths, we need to decode the addition job for further
-	// processing and/or logging, so we just do it once here.
+	// We need the decoded job for processing and logging
 	var parsing jobs.Parsing
-	dErr := json.Unmarshal(msg.Body, &parsing)
-	if dErr != nil {
+	err := json.Unmarshal(msg.Body, &parsing)
+	if err != nil {
 		p.log.Fatal().
-			Err(dErr).
+			Err(err).
 			Hex("msg_id", msg.ID[:]).
 			Int64("msg_timestamp", msg.Timestamp).
 			Uint16("msg_attempts", msg.Attempts).
@@ -110,6 +102,28 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 		Strs("event_hashes", parsing.EventHashes).
 		Logger()
 
+	// We do a sanity check on the job size here, just to make sure we stay within
+	// the limits as defined in the command line.
+	if parsing.Heights() > p.cfg.MaxHeights || parsing.Addresses() > p.cfg.MaxAddresses {
+
+		parsings := parsing.Split(parsing.Heights(), parsing.Addresses())
+		err = p.publish(parsings...)
+		if err != nil {
+			p.log.Fatal().
+				Err(err).
+				Msg("could not publish parsings")
+		}
+
+		return nil
+	}
+
+	// We process the job and if there was no error at all, we just return `nil`, so
+	// NSQ marks the message as successfully processed.
+	err = p.process(msg.Body)
+	if err == nil {
+		return nil
+	}
+
 	// If the Ethereum node API response is too large, we split the job into smaller
 	// jobs that we add into the pipeline again. This might delay the processing of
 	// these heights, but that's OK for the overall speed-up we will get.
@@ -118,12 +132,31 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 			Err(err).
 			Msg("API response too large, splitting job")
 
-		err = p.split(&parsing)
-		if err != nil {
-			log.Fatal().
-				Err(err).
-				Msg("could not split parsing job")
+		// Reduce maximum height and addresses according to what we have too much of.
+		heights, addresses := parsing.Heights(), parsing.Addresses()
+		switch {
+		case heights > 1:
+			heights = heights / p.cfg.SplitRatio
+		case addresses > 1:
+			addresses = addresses / p.cfg.SplitRatio
+		default:
+			log.Fatal().Msg("cannot further split job")
 		}
+
+		// Make sure we didn't round down to zero.
+		if heights == 0 {
+			heights = 1
+		}
+		if addresses == 0 {
+			addresses = 1
+		}
+
+		parsings := parsing.Split(heights, addresses)
+		err = p.publish(parsings...)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not publish split jobs")
+		}
+
 		return nil
 	}
 
@@ -134,7 +167,7 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 			Err(err).
 			Msg("aborting job")
 
-		err = p.fail(&parsing, err)
+		err = p.failures.Parsing(&parsing, err.Error())
 		if err != nil {
 			log.Fatal().
 				Err(err).
@@ -152,7 +185,7 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 			Uint16("max_attempts", p.cfg.MaxAttempts).
 			Msg("discarding job")
 
-		err = p.fail(&parsing, err)
+		err = p.failures.Parsing(&parsing, err.Error())
 		if err != nil {
 			log.Fatal().
 				Err(err).
@@ -376,13 +409,40 @@ func (p *ParsingStage) process(payload []byte) error {
 	return nil
 }
 
-func (p *ParsingStage) split(parsing *jobs.Parsing) error {
+func (p *ParsingStage) publish(parsings ...*jobs.Parsing) error {
+
+	payloads := make([][]byte, 0, len(parsings))
+	for _, parsing := range parsings {
+		payload, err := json.Marshal(parsing)
+		if err != nil {
+			return fmt.Errorf("could not encode parsing job: %w", err)
+		}
+		payloads = append(payloads, payload)
+	}
+
+	err := p.publisher.MultiPublish(params.TopicParsing, payloads)
+	if err != nil {
+		return fmt.Errorf("could not publish parsing jobs: %w", err)
+	}
+
+	return nil
+
+}
+
+func (p *ParsingStage) split(parsing *jobs.Parsing) ([]jobs.Parsing, error) {
 
 	// As a starting point, we will copy the original job twice. Each of them will
 	// include half of the workload of the original job after processing.
 	jobs := []jobs.Parsing{*parsing, *parsing}
 	length := len(parsing.ContractAddresses)
 	switch {
+
+	// If we have several heights in the parsing job, we split those into two instead
+	// to have two jobs with half the heights each.
+	case parsing.StartHeight != parsing.EndHeight:
+		pivot := (parsing.StartHeight + parsing.EndHeight) / 2
+		jobs[0].EndHeight = pivot
+		jobs[1].StartHeight = pivot + 1
 
 	// If we have several contract addresses in the parsing job, we split them into
 	// two groups of equal size (plus minus one).
@@ -391,38 +451,11 @@ func (p *ParsingStage) split(parsing *jobs.Parsing) error {
 		jobs[0].ContractAddresses = jobs[0].ContractAddresses[0:pivot]
 		jobs[1].ContractAddresses = jobs[1].ContractAddresses[pivot:length]
 
-		// If we have several heights in the parsing job, we split those into two instead
-		// to have two jobs with half the heights each.
-	case parsing.StartHeight != parsing.EndHeight:
-		pivot := (parsing.StartHeight + parsing.EndHeight) / 2
-		jobs[0].EndHeight = pivot
-		jobs[1].StartHeight = pivot + 1
-
 	// If neither of these are applicable, we don't know how to further split the
 	// job, so we should explode and investigate manually how to improve the pipeline.
 	default:
-		return fmt.Errorf("cannot further split parsing job")
+		return nil, fmt.Errorf("cannot further split parsing job")
 	}
 
-	// Then, we encode the payloads...
-	payloads := make([][]byte, 0, len(jobs))
-	for _, job := range jobs {
-		payload, err := json.Marshal(job)
-		if err != nil {
-			return fmt.Errorf("could not encode parsing job: %w", err)
-		}
-		payloads = append(payloads, payload)
-	}
-
-	// ... and publish the jobs on the parsing pipeline.
-	err := p.publisher.MultiPublish(params.TopicParsing, payloads)
-	if err != nil {
-		return fmt.Errorf("could not publish parsing jobs: %w", err)
-	}
-
-	return nil
-}
-
-func (p *ParsingStage) fail(parsing *jobs.Parsing, err error) error {
-	return p.failures.Parsing(parsing, err.Error())
+	return jobs, nil
 }

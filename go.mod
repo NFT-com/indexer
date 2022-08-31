@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.23.2
 	github.com/cenkalti/backoff/v4 v4.1.3
 	github.com/ethereum/go-ethereum v1.10.16
+	github.com/gammazero/deque v0.2.0
 	github.com/google/uuid v1.3.0
 	github.com/ipfs/go-cid v0.3.0
 	github.com/lib/pq v1.10.4
