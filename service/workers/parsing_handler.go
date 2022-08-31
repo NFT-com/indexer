@@ -104,9 +104,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 			continue
 		}
 
-		// keep track of all heightSet we need to process to get timestamps
-		timestamps[entry.BlockNumber] = time.Time{}
-
 		eventType := entry.Topics[0]
 		switch eventType.String() {
 
@@ -121,6 +118,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse ERC721 transfer, skipping log entry")
 				continue
 			}
+
+			timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, transfer)
 
 			log.Trace().
@@ -144,6 +143,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse ERC1155 transfer, skipping log entry")
 				continue
 			}
+
+			timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, transfer)
 
 			log.Trace().
@@ -167,7 +168,10 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse ERC1155 batch, skipping log entry")
 				continue
 			}
+
+			timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, batch...)
+
 			for _, transfer := range batch {
 
 				log.Trace().
@@ -192,6 +196,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse Wyvern sale, skipping log entry")
 				continue
 			}
+
+			timestamps[entry.BlockNumber] = time.Time{}
 			sales = append(sales, sale)
 
 			log.Trace().
@@ -210,6 +216,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse Seaport sale, skipping log entry")
 				continue
 			}
+
+			timestamps[entry.BlockNumber] = time.Time{}
 			sales = append(sales, sale)
 
 			log.Trace().
