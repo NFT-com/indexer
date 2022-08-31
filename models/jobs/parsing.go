@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/gammazero/deque"
+	"github.com/google/uuid"
 )
 
 // Parsing is a job that parses an NFT's data from block data.
@@ -29,24 +30,25 @@ func (p *Parsing) Split(heights uint, addresses uint) []*Parsing {
 	queue.PushBack(p)
 	for queue.Len() != 0 {
 		parsing := queue.PopFront()
-		if parsing.Heights() > heights {
+		if parsing.Heights() <= heights && parsing.Addresses() <= addresses {
+			parsings = append(parsings, parsing)
+			continue
+		}
+		left, right := *parsing, *parsing
+		left.ID, right.ID = uuid.NewString(), uuid.NewString()
+		switch {
+		case parsing.Heights() > heights:
 			pivot := (parsing.StartHeight + parsing.EndHeight) / 2
-			left, right := *parsing, *parsing
-			left.EndHeight, right.StartHeight = pivot, pivot+1
-			queue.PushBack(&left)
-			queue.PushBack(&right)
-			continue
+			left.EndHeight = pivot
+			right.StartHeight = pivot + 1
+		case parsing.Addresses() > addresses:
+			end := parsing.Addresses()
+			pivot := end / 2
+			left.ContractAddresses = left.ContractAddresses[0:pivot]
+			right.ContractAddresses = right.ContractAddresses[pivot:end]
 		}
-		if parsing.Addresses() > addresses {
-			length := parsing.Addresses()
-			pivot := length / 2
-			left, right := *parsing, *parsing
-			left.ContractAddresses, right.ContractAddresses = left.ContractAddresses[0:pivot], right.ContractAddresses[pivot:length]
-			queue.PushBack(&left)
-			queue.PushBack(&right)
-			continue
-		}
-		parsings = append(parsings, parsing)
+		queue.PushBack(&left)
+		queue.PushBack(&right)
 	}
 	return parsings
 }
