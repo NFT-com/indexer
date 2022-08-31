@@ -3,7 +3,6 @@ package workers
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 
@@ -79,7 +78,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
-	requests := uint(1)
 	entries, err := fetch.Logs(ctx, parsing.ContractAddresses, parsing.EventHashes, parsing.StartHeight, parsing.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
@@ -233,29 +231,28 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		Int("sales", len(sales)).
 		Msg("all log entries parsed")
 
-	// Get all the headers to assign timestamps to the events.
-	for height := range timestamps {
-		requests++
-		header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
-		if err != nil {
-			return nil, fmt.Errorf("could not get header: %w", err)
-		}
-		timestamps[height] = time.Unix(int64(header.Time), 0)
-	}
+	// // Get all the headers to assign timestamps to the events.
+	// for height := range timestamps {
+	// 	header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("could not get header: %w", err)
+	// 	}
+	// 	timestamps[height] = time.Unix(int64(header.Time), 0)
+	// }
 
-	log.Info().
-		Int("heights", len(timestamps)).
-		Msg("block heights retrieved")
+	// log.Info().
+	// 	Int("heights", len(timestamps)).
+	// 	Msg("block heights retrieved")
 
-	// Go through all logs and assign timestamp of emission
-	for _, transfer := range transfers {
-		transfer.ChainID = parsing.ChainID
-		transfer.EmittedAt = timestamps[transfer.BlockNumber]
-	}
-	for _, sale := range sales {
-		sale.ChainID = parsing.ChainID
-		sale.EmittedAt = timestamps[sale.BlockNumber]
-	}
+	// // Go through all logs and assign timestamp of emission
+	// for _, transfer := range transfers {
+	// 	transfer.ChainID = parsing.ChainID
+	// 	transfer.EmittedAt = timestamps[transfer.BlockNumber]
+	// }
+	// for _, sale := range sales {
+	// 	sale.ChainID = parsing.ChainID
+	// 	sale.EmittedAt = timestamps[sale.BlockNumber]
+	// }
 
 	// Put everything together for the result.
 	result := results.Parsing{
