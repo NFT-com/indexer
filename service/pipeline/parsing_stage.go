@@ -105,6 +105,8 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 	// We do a sanity check on the job size here, just to make sure we stay within
 	// the limits as defined in the command line.
 	if parsing.Heights() > p.cfg.MaxHeights || parsing.Addresses() > p.cfg.MaxAddresses {
+		log.Warn().
+			Msg("API request too large, splitting job")
 
 		parsings := parsing.Split(parsing.Heights(), parsing.Addresses())
 		err = p.publish(parsings...)
