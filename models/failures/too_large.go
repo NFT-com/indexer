@@ -14,6 +14,9 @@ func TooLarge(err error) bool {
 
 	case strings.Contains(msg, "request timed out"):
 		return true
+
+	case strings.Contains(msg, "unexpected EOF"):
+		return true
 	}
 
 	return false
