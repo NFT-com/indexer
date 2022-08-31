@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 
+	"github.com/gammazero/deque"
 	"github.com/google/uuid"
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
@@ -397,20 +399,39 @@ func (p *ParsingStage) process(payload []byte) error {
 
 func (p *ParsingStage) publish(parsings ...*jobs.Parsing) error {
 
-	payloads := make([][]byte, 0, len(parsings))
-	for _, parsing := range parsings {
-		payload, err := json.Marshal(parsing)
-		if err != nil {
-			return fmt.Errorf("could not encode parsing job: %w", err)
-		}
-		payloads = append(payloads, payload)
-	}
+	var queue deque.Deque[[]*jobs.Parsing]
+	queue.PushBack(parsings)
+	for queue.Len() > 0 {
 
-	err := p.publisher.MultiPublish(params.TopicParsing, payloads)
-	if err != nil {
-		return fmt.Errorf("could not publish parsing jobs: %w", err)
+		parsings = queue.PopFront()
+		payloads := make([][]byte, 0, len(parsings))
+		for _, parsing := range parsings {
+			payload, err := json.Marshal(parsing)
+			if err != nil {
+				return fmt.Errorf("could not encode parsing job: %w", err)
+			}
+			payloads = append(payloads, payload)
+		}
+
+		err := p.publisher.MultiPublish(params.TopicParsing, payloads)
+		if err == nil {
+			continue
+		}
+
+		if strings.Contains(err.Error(), "MPUB body too big") {
+			end := len(parsings)
+			pivot := end / 2
+			part1 := parsings[0:pivot]
+			part2 := parsings[pivot:end]
+			queue.PushBack(part1)
+			queue.PushBack(part2)
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("could not publish parsing jobs: %w", err)
+		}
 	}
 
 	return nil
-
 }
