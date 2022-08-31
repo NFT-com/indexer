@@ -21,6 +21,10 @@ func Permanent(err error) bool {
 	case strings.Contains(msg, "no such host"):
 		return true
 
+	// if the connection can't be created, the server is probably gone
+	case strings.Contains(msg, "connection timed out"):
+		return true
+
 	// if the message response is too large once, it will always be, so we should hard fail
 	// TODO: implement adaptive job size to split them down further
 	// => https://github.com/NFT-com/indexer/issues/238
