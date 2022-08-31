@@ -108,7 +108,7 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 		log.Debug().
 			Msg("API request too large, splitting job")
 
-		parsings := parsing.Split(parsing.Heights(), parsing.Addresses())
+		parsings := parsing.Split(p.cfg.MaxHeights, p.cfg.MaxAddresses)
 		err = p.publish(parsings...)
 		if err != nil {
 			p.log.Fatal().
