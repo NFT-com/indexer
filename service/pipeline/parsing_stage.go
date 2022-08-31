@@ -16,6 +16,7 @@ import (
 
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/models/failures"
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -77,45 +78,98 @@ func NewParsingStage(
 	return &p
 }
 
-func (p *ParsingStage) HandleMessage(m *nsq.Message) error {
+func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 
-	err := p.process(m.Body)
+	// We process the job and if there was no error at all, we just return `nil`, so
+	// NSQ marks the message as successfully processed.
+	err := p.process(msg.Body)
 	if err == nil {
 		return nil
 	}
 
-	// We only retry if we don't have a permanent error, and we have not reached
-	// the maximum number of attempts.
-	if !results.Permanent(err) && m.Attempts < uint16(p.cfg.MaxAttempts) {
-		p.log.Warn().
-			Uint16("attempts", m.Attempts).
-			Uint("maximum", p.cfg.MaxAttempts).
-			Err(err).Msg("could not process job, retrying")
-		return err
-	}
-
-	// Otherwise, we either have a permanent error, or maximum number of retries.
-	// Log the error accordingly, and proceed without retrying (return `nil`).
-	if results.Permanent(err) {
-		p.log.Error().Err(err).Msg("permanent error encountered, aborting")
-	} else {
-		p.log.Error().
-			Uint16("attempts", m.Attempts).
-			Uint("maximum", p.cfg.MaxAttempts).
-			Err(err).
-			Msg("maximum number of attempts reached, aborting")
-	}
-
-	// The below code stores the error in the database and fatally fails the service
-	// if we don't manage to do so.
-	message := err.Error()
-	err = p.failure(m.Body, message)
+	// In most other code paths, we need to decode the addition job for further
+	// processing and/or logging, so we just do it once here.
+	var parsing jobs.Parsing
+	err = json.Unmarshal(msg.Body, &parsing)
 	if err != nil {
-		p.log.Fatal().Err(err).Str("message", message).Msg("could not persist parsing failure")
-		return err
+		p.log.Fatal().
+			Err(err).
+			Hex("msg_id", msg.ID[:]).
+			Int64("msg_timestamp", msg.Timestamp).
+			Uint16("msg_attempts", msg.Attempts).
+			Str("msg_body", string(msg.Body)).
+			Msg("could not decode parsing job")
 	}
 
-	return nil
+	log := p.log.With().
+		Str("parsing_id", parsing.ID).
+		Uint64("chain_id", parsing.ChainID).
+		Uint64("start_height", parsing.StartHeight).
+		Uint64("end_height", parsing.EndHeight).
+		Strs("contract_addresses", parsing.ContractAddresses).
+		Strs("event_hashes", parsing.EventHashes).
+		Logger()
+
+	// If the Ethereum node API response is too large, we split the job into smaller
+	// jobs that we add into the pipeline again. This might delay the processing of
+	// these heights, but that's OK for the overall speed-up we will get.
+	if failures.TooLarge(err) {
+		log.Debug().
+			Err(err).
+			Msg("API response too large, splitting job")
+
+		err = p.split(&parsing)
+		if err != nil {
+			log.Fatal().
+				Err(err).
+				Msg("could not split parsing job")
+		}
+		return nil
+	}
+
+	// If we have a permanent error, we store the error in the database and we return
+	// `nil` to NSQ to signal that it should not be requeued.
+	if failures.Permanent(err) {
+		log.Error().
+			Err(err).
+			Msg("aborting job")
+
+		err = p.fail(&parsing, err)
+		if err != nil {
+			log.Fatal().
+				Err(err).
+				Msg("could not persist parsing failure")
+		}
+		return nil
+	}
+
+	// If we have reached the maximum number of attempts, we also store the error in
+	// the database and return `nil` to NSQ to stop further attempts.
+	if msg.Attempts >= uint16(p.cfg.MaxAttempts) {
+		log.Error().
+			Err(err).
+			Uint16("msg_attempts", msg.Attempts).
+			Uint16("max_attempts", p.cfg.MaxAttempts).
+			Msg("discarding job")
+
+		err = p.fail(&parsing, err)
+		if err != nil {
+			log.Fatal().
+				Err(err).
+				Msg("could not persist parsing failure")
+		}
+		return nil
+	}
+
+	// At this point, we simply want to retry the job, because we it's not a permanent
+	// failure and we have not reached the maximum attempts yet.
+	log.Warn().
+		Err(err).
+		Uint16("msg_attempts", msg.Attempts).
+		Uint16("max_attempts", p.cfg.MaxAttempts).
+		Msg("retrying job")
+
+	return err
 }
 
 func (p *ParsingStage) process(payload []byte) error {
@@ -322,21 +376,10 @@ func (p *ParsingStage) process(payload []byte) error {
 	return nil
 }
 
-func (p *ParsingStage) failure(payload []byte, message string) error {
-
-	// Decode the payload into the failed parsing job.
-	var parsing jobs.Parsing
-	err := json.Unmarshal(payload, &parsing)
-	if err != nil {
-		return fmt.Errorf("could not decode parsing job: %w", err)
-	}
-
-	// Persist the parsing failure in the DB, so it can be reviewed and potentially
-	// retried at a later point.
-	err = p.failures.Parsing(&parsing, message)
-	if err != nil {
-		return fmt.Errorf("could not persist parsing failure: %w", err)
-	}
-
+func (p *ParsingStage) split(parsing *jobs.Parsing) error {
 	return nil
+}
+
+func (p *ParsingStage) fail(parsing *jobs.Parsing, err error) error {
+	return p.failures.Parsing(parsing, err.Error())
 }

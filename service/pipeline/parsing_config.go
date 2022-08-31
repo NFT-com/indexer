@@ -8,7 +8,7 @@ var DefaultParsingConfig = ParsingConfig{
 
 type ParsingConfig struct {
 	DryRun           bool
-	MaxAttempts      uint
+	MaxAttempts      uint16
 	SanitizeInterval uint
 }
 
@@ -20,7 +20,7 @@ func WithParsingDryRun(enabled bool) ParsingOption {
 	}
 }
 
-func WithParsingMaxAttempts(attempts uint) ParsingOption {
+func WithParsingMaxAttempts(attempts uint16) ParsingOption {
 	return func(cfg *ParsingConfig) {
 		cfg.MaxAttempts = attempts
 	}

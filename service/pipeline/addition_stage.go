@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
-	"github.com/NFT-com/indexer/models/failures"
 	"github.com/NFT-com/indexer/models/graph"
 	"github.com/NFT-com/indexer/models/jobs"
 	"github.com/NFT-com/indexer/models/results"
@@ -69,80 +68,39 @@ func NewAdditionStage(
 	return &a
 }
 
-func (a *AdditionStage) HandleMessage(msg *nsq.Message) error {
+func (a *AdditionStage) HandleMessage(m *nsq.Message) error {
 
-	// We process the job and if there was no error at all, we just return `nil`, so
-	// NSQ marks the message as successfully processed.
-	err := a.process(msg.Body)
+	err := a.process(m.Body)
 	if err == nil {
 		return nil
 	}
 
-	// In most other code paths, we need to decode the addition job for further
-	// processing and/or logging, so we just do it once here.
-	var addition jobs.Addition
-	err = json.Unmarshal(msg.Body, &addition)
-	if err != nil {
-		a.log.Fatal().
-			Hex("msg_id", msg.ID[:]).
-			Int64("msg_timestamp", msg.Timestamp).
-			Uint16("msg_attempts", msg.Attempts).
-			Str("msg_body", string(msg.Body)).
-			Err(err).
-			Msg("could not decode addition job")
+	// We only retry if we don't have a permanent error, and we have not reached
+	// the maximum number of attempts.
+	if !results.Permanent(err) && m.Attempts < uint16(a.cfg.MaxAttempts) {
+		a.log.Warn().
+			Uint16("attempts", m.Attempts).
+			Uint("maximum", a.cfg.MaxAttempts).
+			Err(err).Msg("could not process job, retrying")
 		return err
 	}
 
-	log := a.log.With().
-		Str("addition_id", addition.ID).
-		Uint64("chain_id", addition.ChainID).
-		Str("collection_id", addition.CollectionID).
-		Str("contract_address", addition.ContractAddress).
-		Str("token_id", addition.TokenID).
-		Str("token_standard", addition.TokenStandard).
-		Logger()
-
-	// If the Ethereum node API response is too large, we split the job into smaller
-	// jobs that we add into the pipeline again. This might delay the processing of
-	// these heights, but that's OK for the overall speed-up we will get.
-	if failures.TooLarge(err) {
-		log.Debug().
-			Msg("API response too large, splitting job")
-		return a.split(&addition)
-	}
-
-	// If we have a temporary error and we have not reached the maximum number of
-	// attempts on it yet, we will return an error, which will cause NSQ to requeue
-	// the job.
-	if !results.Permanent(err) && msg.Attempts < uint16(a.cfg.MaxAttempts) {
-		log.Warn().
-			Uint16("msg_attempts", msg.Attempts).
-			Uint("max_attempts", a.cfg.MaxAttempts).
-			Err(err).Msg("could not process job, retrying job")
-		return err
-	}
-
-	// Finally, if we don't have a temporary error, it's either a permanent one, or
-	// we have reached the maximum number of attempts. We handle both of these the
-	// same, but we log a different message.
+	// Otherwise, we either have a permanent error, or maximum number of retries.
+	// Log the error accordingly, and proceed without retrying (return `nil`).
 	if results.Permanent(err) {
-		log.Error().
-			Err(err).
-			Msg("permanent error encountered, discarding job")
+		a.log.Error().Err(err).Msg("permanent error encountered, aborting")
 	} else {
-		log.Error().
-			Uint16("attempts", msg.Attempts).
+		a.log.Error().
+			Uint16("attempts", m.Attempts).
 			Uint("maximum", a.cfg.MaxAttempts).
 			Err(err).
-			Msg("maximum number of attempts reached, discarding job")
+			Msg("maximum number of attempts reached, aborting")
 	}
 
-	// In any case, if we don't want to execute the job again, either because it's
-	// permanent, or we reached the maximum number of attempts, we try to store it
-	// in the database for analytics / review purposes. If that fails, we just crash
-	// the service.
+	// The below code stores the error in the database and fatally fails the service
+	// if we don't manage to do so.
 	message := err.Error()
-	err = a.fail(&addition, message)
+	err = a.failure(m.Body, message)
 	if err != nil {
 		a.log.Fatal().Err(err).Str("message", message).Msg("could not persist addition failure")
 		return err
@@ -224,13 +182,23 @@ func (a *AdditionStage) process(payload []byte) error {
 	return nil
 }
 
-func (a *AdditionStage) split(addition *jobs.Addition) error {
+func (a *AdditionStage) failure(payload []byte, message string) error {
+
+	// Decode the payload into the failed addition job.
+	var addition jobs.Addition
+	err := json.Unmarshal(payload, &addition)
+	if err != nil {
+		return fmt.Errorf("could not decode addition job: %w", err)
+	}
+
+	// Persist the addition failure in the DB so it can be reviewed and potentially
+	// retried at a later point.
+	err = a.failures.Addition(&addition, message)
+	if err != nil {
+		return fmt.Errorf("could not persist addition failure: %w", err)
+	}
 
 	return nil
-}
-
-func (a *AdditionStage) fail(addition *jobs.Addition, message string) error {
-	return a.failures.Addition(addition, message)
 }
 
 func (a *AdditionStage) delete(payload []byte) error {

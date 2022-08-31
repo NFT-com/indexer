@@ -166,7 +166,7 @@ func run() int {
 	limit := ratelimit.New(int(flagRateLimit))
 	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit,
 		pipeline.WithParsingDryRun(flagDryRun),
-		pipeline.WithParsingMaxAttempts(uint(flagMaxAttempts)),
+		pipeline.WithParsingMaxAttempts(flagMaxAttempts),
 	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
