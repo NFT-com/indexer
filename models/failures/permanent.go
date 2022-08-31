@@ -1,6 +1,8 @@
 package failures
 
-import "strings"
+import (
+	"strings"
+)
 
 func Permanent(err error) bool {
 

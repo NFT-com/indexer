@@ -90,10 +90,10 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 	// In most other code paths, we need to decode the addition job for further
 	// processing and/or logging, so we just do it once here.
 	var parsing jobs.Parsing
-	err = json.Unmarshal(msg.Body, &parsing)
-	if err != nil {
+	dErr := json.Unmarshal(msg.Body, &parsing)
+	if dErr != nil {
 		p.log.Fatal().
-			Err(err).
+			Err(dErr).
 			Hex("msg_id", msg.ID[:]).
 			Int64("msg_timestamp", msg.Timestamp).
 			Uint16("msg_attempts", msg.Attempts).
