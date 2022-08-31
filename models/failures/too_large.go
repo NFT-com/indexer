@@ -17,6 +17,9 @@ func TooLarge(err error) bool {
 
 	case strings.Contains(msg, "unexpected EOF"):
 		return true
+
+	case strings.Contains(msg, "body size is too long"):
+		return true
 	}
 
 	return false
