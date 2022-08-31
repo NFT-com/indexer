@@ -117,6 +117,7 @@ runs:
         PARSER_HEIGHT_RANGE: ${{ fromJSON(inputs.secrets).PARSER_HEIGHT_RANGE }}
         PARSER_RATE_LIMIT: ${{ fromJSON(inputs.secrets).PARSER_RATE_LIMIT }}
         ADDITION_LAMBDA_NAME: ${{ fromJSON(inputs.secrets).ADDITION_LAMBDA_NAME }}
+        ADDITION_LOG_LEVEL: ${{ fromJSON(inputs.secrets).ADDITION_LOG_LEVEL }}
         ADDITION_RATE_LIMIT: ${{ fromJSON(inputs.secrets).ADDITION_RATE_LIMIT }}
         ADDITION_MAX_ATTEMPTS: ${{ fromJSON(inputs.secrets).ADDITION_MAX_ATTEMPTS }}
         ADDITION_MAX_BACKOFF: ${{ fromJSON(inputs.secrets).ADDITION_MAX_BACKOFF }}
