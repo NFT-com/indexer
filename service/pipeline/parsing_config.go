@@ -3,8 +3,8 @@ package pipeline
 var DefaultParsingConfig = ParsingConfig{
 	DryRun:           false,
 	MaxAttempts:      10,
-	MaxAddresses:     1000,
-	MaxHeights:       100,
+	MaxAddresses:     100,
+	MaxHeights:       10,
 	SplitRatio:       2,
 	SanitizeInterval: 10000,
 }

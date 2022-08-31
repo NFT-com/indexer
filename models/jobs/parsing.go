@@ -15,7 +15,7 @@ type Parsing struct {
 }
 
 func (p Parsing) Heights() uint {
-	return uint(p.StartHeight - p.EndHeight + 1)
+	return uint(p.EndHeight - p.StartHeight + 1)
 }
 
 func (p Parsing) Addresses() uint {

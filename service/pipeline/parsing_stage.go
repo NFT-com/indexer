@@ -430,34 +430,3 @@ func (p *ParsingStage) publish(parsings ...*jobs.Parsing) error {
 	return nil
 
 }
-
-func (p *ParsingStage) split(parsing *jobs.Parsing) ([]jobs.Parsing, error) {
-
-	// As a starting point, we will copy the original job twice. Each of them will
-	// include half of the workload of the original job after processing.
-	jobs := []jobs.Parsing{*parsing, *parsing}
-	length := len(parsing.ContractAddresses)
-	switch {
-
-	// If we have several heights in the parsing job, we split those into two instead
-	// to have two jobs with half the heights each.
-	case parsing.StartHeight != parsing.EndHeight:
-		pivot := (parsing.StartHeight + parsing.EndHeight) / 2
-		jobs[0].EndHeight = pivot
-		jobs[1].StartHeight = pivot + 1
-
-	// If we have several contract addresses in the parsing job, we split them into
-	// two groups of equal size (plus minus one).
-	case length > 1:
-		pivot := length / 2
-		jobs[0].ContractAddresses = jobs[0].ContractAddresses[0:pivot]
-		jobs[1].ContractAddresses = jobs[1].ContractAddresses[pivot:length]
-
-	// If neither of these are applicable, we don't know how to further split the
-	// job, so we should explode and investigate manually how to improve the pipeline.
-	default:
-		return nil, fmt.Errorf("cannot further split parsing job")
-	}
-
-	return jobs, nil
-}
