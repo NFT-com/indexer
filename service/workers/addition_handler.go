@@ -178,19 +178,18 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
 		}
-		if code == http.StatusInternalServerError {
+		switch code {
+		case http.StatusInternalServerError, http.StatusNotFound:
 			var reqErr *results.Error
 			err = json.Unmarshal(payload, &reqErr)
 			if err != nil {
 				return nil, fmt.Errorf("could not decode execution error: %w", err)
 			}
-			switch reqErr.Error() {
-			case "Token not found",
-				"URI query for nonexistent token":
+			if reqErr.Error() == "Token not found" ||
+				strings.Contains(reqErr.Error(), "URI query for nonexistent token") ||
+				strings.Contains(reqErr.Error(), "no link named") {
 				// This is an application-level deletion.
 				return nil, results.ErrTokenNotFound
-			default:
-				// This is just a standard 500 error, no need to trigger an error on our side.
 			}
 		}
 		log.Debug().
