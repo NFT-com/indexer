@@ -28,8 +28,6 @@ Usage of parsing-dispatcher:
       --min-backoff duration            minimum backoff duration for NSQ consumers (default "1s")
       --max-backoff duration            maximum backoff duration for NSQ consumers (default "10m")
       --max-attempts uint16             maximum number of attempts per job (default "3")
-      --max-addresses uint              maximum number of addresses to include in a single job (default 1000)
-      --max-heights uint                maximum number of heights to include in a single job (default 100)
 
       --dry-run                         executing as dry run disables invocation of Lambda function
 ```

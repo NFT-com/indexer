@@ -102,23 +102,6 @@ func (p *ParsingStage) HandleMessage(msg *nsq.Message) error {
 		Strs("event_hashes", parsing.EventHashes).
 		Logger()
 
-	// We do a sanity check on the job size here, just to make sure we stay within
-	// the limits as defined in the command line.
-	if parsing.Heights() > p.cfg.MaxHeights || parsing.Addresses() > p.cfg.MaxAddresses {
-		log.Debug().
-			Msg("API request too large, splitting job")
-
-		parsings := parsing.Split(p.cfg.MaxHeights, p.cfg.MaxAddresses)
-		err = p.publish(parsings...)
-		if err != nil {
-			p.log.Fatal().
-				Err(err).
-				Msg("could not publish parsings")
-		}
-
-		return nil
-	}
-
 	// We process the job and if there was no error at all, we just return `nil`, so
 	// NSQ marks the message as successfully processed.
 	err = p.process(msg.Body)

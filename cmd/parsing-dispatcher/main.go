@@ -59,11 +59,9 @@ func run() int {
 		flagRateLimit         uint
 		flagLambdaConcurrency uint
 
-		flagMinBackoff   time.Duration
-		flagMaxBackoff   time.Duration
-		flagMaxAttempts  uint16
-		flagMaxAddresses uint
-		flagMaxHeights   uint
+		flagMinBackoff  time.Duration
+		flagMaxBackoff  time.Duration
+		flagMaxAttempts uint16
 
 		flagDryRun bool
 	)
@@ -86,8 +84,6 @@ func run() int {
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
 	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 10*time.Minute, "maximum backoff duration for NSQ consumers")
 	pflag.Uint16Var(&flagMaxAttempts, "max-attempts", 3, "maximum number of attempts per job")
-	pflag.UintVar(&flagMaxAddresses, "max-addresses", 1000, "maximum number of addresses to include in a single job")
-	pflag.UintVar(&flagMaxHeights, "max-heights", 100, "maximum number of heights to include in a single job")
 
 	pflag.BoolVar(&flagDryRun, "dry-run", false, "executing as dry run disables invocation of Lambda function")
 
@@ -171,8 +167,6 @@ func run() int {
 	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit,
 		pipeline.WithParsingDryRun(flagDryRun),
 		pipeline.WithParsingMaxAttempts(flagMaxAttempts),
-		pipeline.WithParsingMaxAddresses(flagMaxAddresses),
-		pipeline.WithParsingMaxHeights(flagMaxHeights),
 	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 

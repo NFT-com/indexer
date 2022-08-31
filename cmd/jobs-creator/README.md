@@ -21,8 +21,13 @@ Usage of jobs-creator:
       --db-connection-limit uint        maximum number of open database connections (default 16)
       --db-idle-connection-limit uint   maximum number of idle database connections (default 4)
       --write-interval duration         interval between checks for job writing (default 1s)
+<<<<<<< HEAD
       --address-limit uint              maximum number of addresses to include in a single job (default 10)
       --height-limit uint               maximum number of heights to include in a single job (default 10)
+=======
+      --address-limit uint              maximum number of addresses to include in a single job (default 1000)
+      --height-limit uint               maximum number of heights to include in a single job (default 100)
+>>>>>>> eb4953e (Move command line flag back to jobs creator)
 ```
 
 ## Database Address — Data Source Name
