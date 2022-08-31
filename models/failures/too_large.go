@@ -5,5 +5,16 @@ import (
 )
 
 func TooLarge(err error) bool {
-	return strings.Contains(err.Error(), "the message response is too large")
+
+	msg := err.Error()
+	switch {
+
+	case strings.Contains(msg, "the message response is too large"):
+		return true
+
+	case strings.Contains(msg, "request timed out"):
+		return true
+	}
+
+	return false
 }
