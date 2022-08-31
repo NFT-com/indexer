@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/rs/zerolog"
@@ -90,7 +89,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	// For each log, try to parse it into the respective events.
 	var transfers []*events.Transfer
 	var sales []*events.Sale
-	timestamps := make(map[uint64]time.Time)
+	// timestamps := make(map[uint64]time.Time)
 	for _, entry := range entries {
 
 		// skip logs for reverted transactions
@@ -117,7 +116,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				continue
 			}
 
-			timestamps[entry.BlockNumber] = time.Time{}
+			// timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, transfer)
 
 			log.Trace().
@@ -142,7 +141,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				continue
 			}
 
-			timestamps[entry.BlockNumber] = time.Time{}
+			// timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, transfer)
 
 			log.Trace().
@@ -167,7 +166,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				continue
 			}
 
-			timestamps[entry.BlockNumber] = time.Time{}
+			// timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, batch...)
 
 			for _, transfer := range batch {
@@ -195,7 +194,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				continue
 			}
 
-			timestamps[entry.BlockNumber] = time.Time{}
+			// timestamps[entry.BlockNumber] = time.Time{}
 			sales = append(sales, sale)
 
 			log.Trace().
@@ -215,7 +214,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				continue
 			}
 
-			timestamps[entry.BlockNumber] = time.Time{}
+			// timestamps[entry.BlockNumber] = time.Time{}
 			sales = append(sales, sale)
 
 			log.Trace().
@@ -245,14 +244,14 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	// 	Msg("block heights retrieved")
 
 	// // Go through all logs and assign timestamp of emission
-	// for _, transfer := range transfers {
-	// 	transfer.ChainID = parsing.ChainID
-	// 	transfer.EmittedAt = timestamps[transfer.BlockNumber]
-	// }
-	// for _, sale := range sales {
-	// 	sale.ChainID = parsing.ChainID
-	// 	sale.EmittedAt = timestamps[sale.BlockNumber]
-	// }
+	for _, transfer := range transfers {
+		transfer.ChainID = parsing.ChainID
+		// 	transfer.EmittedAt = timestamps[transfer.BlockNumber]
+	}
+	for _, sale := range sales {
+		sale.ChainID = parsing.ChainID
+		// 	sale.EmittedAt = timestamps[sale.BlockNumber]
+	}
 
 	// Put everything together for the result.
 	result := results.Parsing{
