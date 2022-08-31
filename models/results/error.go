@@ -1,5 +1,11 @@
 package results
 
+import (
+	"errors"
+)
+
+var ErrTokenNotFound = errors.New("token not found")
+
 type Error struct {
 	Message string `json:"errorMessage"`
 	Type    string `json:"errorType"`

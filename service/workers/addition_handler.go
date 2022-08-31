@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/ipfs/go-cid"
@@ -169,12 +170,28 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	// Finally, we check if we have a payload already, or if we need to fetch it remotely.
 	var payload []byte
+	var code int
 	switch {
 
 	case strings.HasPrefix(privateURI, protocol.HTTP), strings.HasPrefix(privateURI, protocol.HTTPS):
-		payload, err = fetchMetadata.Payload(ctx, privateURI)
+		payload, code, err = fetchMetadata.Payload(ctx, privateURI)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
+		}
+		if code == http.StatusInternalServerError {
+			var reqErr *results.Error
+			err = json.Unmarshal(payload, &reqErr)
+			if err != nil {
+				return nil, fmt.Errorf("could not decode execution error: %w", err)
+			}
+			switch reqErr.Error() {
+			case "Token not found",
+				"URI query for nonexistent token":
+				// This is an application-level deletion.
+				return nil, results.ErrTokenNotFound
+			default:
+				// This is just a standard 500 error, no need to trigger an error on our side.
+			}
 		}
 		log.Debug().
 			Str("payload", string(payload)).

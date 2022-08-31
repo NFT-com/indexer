@@ -3,8 +3,8 @@ package pipeline
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
@@ -139,7 +139,7 @@ func (a *AdditionStage) process(payload []byte) error {
 	if err != nil {
 		return fmt.Errorf("could not decode execution error: %w", err)
 	}
-	if execErr != nil && strings.Contains(execErr.Error(), "URI query for nonexistent token") {
+	if errors.Is(execErr, results.ErrTokenNotFound) {
 		return a.delete(payload)
 	}
 	if execErr != nil {
