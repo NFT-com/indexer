@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/lib/pq"
 
 	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/graph"
@@ -25,6 +26,56 @@ func NewNFTRepository(db *sql.DB, retrier storage.Retrier) *NFTRepository {
 	}
 
 	return &n
+}
+
+func (n *NFTRepository) Missing(touches ...*graph.NFT) ([]*graph.NFT, error) {
+
+	set := make(map[string]struct{}, len(touches))
+	for _, touch := range touches {
+		set[touch.ID] = struct{}{}
+	}
+
+	nftIDs := make([]string, 0, len(set))
+	for nftID := range set {
+		nftIDs = append(nftIDs, nftID)
+	}
+
+	result, err := n.build.
+		Select("nfts").
+		Columns("id").
+		Where("id IN (?)", pq.Array(nftIDs)).
+		Query()
+	if err != nil {
+		return nil, fmt.Errorf("could not execute query: %w", err)
+	}
+	defer result.Close()
+
+	existing := make(map[string]struct{})
+	for result.Next() {
+
+		if result.Err() != nil {
+			return nil, fmt.Errorf("could not get next row: %w", result.Err())
+		}
+
+		var nftID string
+		err = result.Scan(&nftID)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan next row: %w", err)
+		}
+
+		existing[nftID] = struct{}{}
+	}
+
+	var filtered []*graph.NFT
+	for _, touch := range touches {
+		_, ok := existing[touch.ID]
+		if ok {
+			continue
+		}
+		filtered = append(filtered, touch)
+	}
+
+	return filtered, nil
 }
 
 func (n *NFTRepository) Touch(touches ...*graph.NFT) error {

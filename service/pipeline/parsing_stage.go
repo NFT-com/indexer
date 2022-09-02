@@ -257,6 +257,12 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 	}
 
+	// Filter the touches so we only create them for NFTs that are not yet in the DB.
+	touches, err = p.nfts.Missing(touches...)
+	if err != nil {
+		return fmt.Errorf("could not filter touches: %w", err)
+	}
+
 	// Touch all the NFTs that have been created, so that we can apply owner changes
 	// out of order, before the full NFT information is available from the addition.
 	err = p.nfts.Touch(touches...)
