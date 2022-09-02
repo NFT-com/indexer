@@ -8,17 +8,20 @@ import (
 
 	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/storage"
 )
 
 type OwnerRepository struct {
-	build squirrel.StatementBuilderType
+	build   squirrel.StatementBuilderType
+	retrier storage.Retrier
 }
 
-func NewOwnerRepository(db *sql.DB) *OwnerRepository {
+func NewOwnerRepository(db *sql.DB, retrier storage.Retrier) *OwnerRepository {
 
 	cache := squirrel.NewStmtCache(db)
 	n := OwnerRepository{
-		build: squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		build:   squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		retrier: retrier,
 	}
 
 	return &n
@@ -65,7 +68,7 @@ func (o *OwnerRepository) Upsert(transfers ...*events.Transfer) error {
 			)
 		}
 
-		_, err := query.Exec()
+		err := o.retrier.Insert(query)
 		if err != nil {
 			return fmt.Errorf("could not execute query: %w", err)
 		}
@@ -102,11 +105,12 @@ func (o *OwnerRepository) Sanitize() error {
 			return fmt.Errorf("could not scan next row: %w", err)
 		}
 
-		_, err = o.build.
+		query := o.build.
 			Delete("owners").
 			Where("owner = ?", owner).
-			Where("nft_id = ?", nftID).
-			Exec()
+			Where("nft_id = ?", nftID)
+
+		err := o.retrier.Delete(query)
 		if err != nil {
 			return fmt.Errorf("could not delete rows: %w", err)
 		}

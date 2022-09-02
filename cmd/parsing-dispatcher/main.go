@@ -21,6 +21,7 @@ import (
 	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/storage/db"
 	"github.com/NFT-com/indexer/storage/events"
 	"github.com/NFT-com/indexer/storage/graph"
 	"github.com/NFT-com/indexer/storage/jobs"
@@ -105,6 +106,8 @@ func run() int {
 		return failure
 	}
 
+	retrier := db.NewRetrier()
+
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
 		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not open graph database")
@@ -114,8 +117,8 @@ func run() int {
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	collectionRepo := graph.NewCollectionRepository(graphDB)
-	nftRepo := graph.NewNFTRepository(graphDB)
-	ownerRepo := graph.NewOwnerRepository(graphDB)
+	nftRepo := graph.NewNFTRepository(graphDB, retrier)
+	ownerRepo := graph.NewOwnerRepository(graphDB, retrier)
 
 	eventsDB, err := sql.Open(params.DialectPostgres, flagEventsDB)
 	if err != nil {
@@ -125,8 +128,8 @@ func run() int {
 	eventsDB.SetMaxOpenConns(int(flagOpenConnections))
 	eventsDB.SetMaxIdleConns(int(flagIdleConnections))
 
-	transferRepo := events.NewTransferRepository(eventsDB)
-	saleRepo := events.NewSaleRepository(eventsDB)
+	transferRepo := events.NewTransferRepository(eventsDB, retrier)
+	saleRepo := events.NewSaleRepository(eventsDB, retrier)
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {

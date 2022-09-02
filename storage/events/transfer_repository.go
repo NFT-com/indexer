@@ -8,17 +8,20 @@ import (
 
 	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/storage"
 )
 
 type TransferRepository struct {
-	build squirrel.StatementBuilderType
+	build   squirrel.StatementBuilderType
+	retrier storage.Retrier
 }
 
-func NewTransferRepository(db *sql.DB) *TransferRepository {
+func NewTransferRepository(db *sql.DB, retrier storage.Retrier) *TransferRepository {
 
 	cache := squirrel.NewStmtCache(db)
 	t := TransferRepository{
-		build: squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		build:   squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		retrier: retrier,
 	}
 
 	return &t
@@ -73,7 +76,7 @@ func (t *TransferRepository) Upsert(transfers ...*events.Transfer) error {
 			)
 		}
 
-		_, err := query.Exec()
+		err := t.retrier.Insert(query)
 		if err != nil {
 			return fmt.Errorf("could not upsert transfer batch (start: %d, end: %d): %w", start, end, err)
 		}

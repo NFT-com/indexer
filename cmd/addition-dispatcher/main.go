@@ -20,6 +20,7 @@ import (
 	"github.com/NFT-com/indexer/config/nsqlog"
 	"github.com/NFT-com/indexer/config/params"
 	"github.com/NFT-com/indexer/service/pipeline"
+	"github.com/NFT-com/indexer/storage/db"
 	"github.com/NFT-com/indexer/storage/graph"
 	"github.com/NFT-com/indexer/storage/jobs"
 )
@@ -93,6 +94,8 @@ func run() int {
 		return failure
 	}
 
+	retrier := db.NewRetrier()
+
 	graphDB, err := sql.Open(params.DialectPostgres, flagGraphDB)
 	if err != nil {
 		log.Error().Err(err).Str("graph_database", flagGraphDB).Msg("could not connect to graph database")
@@ -102,9 +105,9 @@ func run() int {
 	graphDB.SetMaxIdleConns(int(flagIdleConnections))
 
 	collectionRepo := graph.NewCollectionRepository(graphDB)
-	nftRepo := graph.NewNFTRepository(graphDB)
-	ownerRepo := graph.NewOwnerRepository(graphDB)
-	traitRepo := graph.NewTraitRepository(graphDB)
+	nftRepo := graph.NewNFTRepository(graphDB, retrier)
+	ownerRepo := graph.NewOwnerRepository(graphDB, retrier)
+	traitRepo := graph.NewTraitRepository(graphDB, retrier)
 
 	jobsDB, err := sql.Open(params.DialectPostgres, flagJobsDB)
 	if err != nil {
