@@ -44,7 +44,11 @@ func Permanent(err error) bool {
 	// => https://github.com/NFT-com/indexer/issues/225
 	// TODO: implement support for Enjin metadata format
 	// => https://github.com/NFT-com/indexer/issues/237
+	// TODO: support numeric token names
+	// => https://github.com/NFT-com/indexer/issues/252
 	case strings.Contains(msg, "cannot unmarshal object into Go struct field Token.attributes of type []metadata.Attribute"):
+		return true
+	case strings.Contains(msg, "cannot unmarshal number into Go struct field Token.name of type string"):
 		return true
 
 	// we can't retrieve metadata if we have no token ID
