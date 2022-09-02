@@ -43,92 +43,39 @@ type Token struct {
 }
 
 func (t *Token) UnmarshalJSON(data []byte) error {
+
+	// Since calling UnmarshalJSON on a Token would cause an infinite loop,
+	// use a type alias to automatically unmarshal fields that do not require
+	// any special attention.
+	type Alias Token
+	var auxiliary Alias
+	if err := json.Unmarshal(data, &auxiliary); err != nil {
+		return err
+	}
+	t.Image = auxiliary.Image
+	t.ImageData = auxiliary.ImageData
+	t.ExternalURL = auxiliary.ExternalURL
+	t.Description = auxiliary.Description
+	t.Name = auxiliary.Name
+	t.BackgroundColor = auxiliary.BackgroundColor
+	t.AnimationURL = auxiliary.AnimationURL
+	t.YoutubeURL = auxiliary.YoutubeURL
+	t.Attributes = auxiliary.Attributes
+	t.Extras = make(map[string]interface{})
+
+	// Unmarshal into a map[string]interface to look for the properties field if it exists,
+	// as well as any extra fields at the root level that are not part of the supported
+	// standards.
 	kv := map[string]interface{}{}
 	if err := json.Unmarshal(data, &kv); err != nil {
 		return err
 	}
 
-	t.Extras = make(map[string]interface{})
-
 	for k, v := range kv {
-		var ok bool
 		switch k {
-		case fieldImage:
-			t.Image, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldImage, v)
-			}
-		case fieldImageData:
-			t.ImageData, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldImage, v)
-			}
-		case fieldExternalURL:
-			t.ExternalURL, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldExternalURL, v)
-			}
-		case fieldDescription:
-			t.Description, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldDescription, v)
-			}
-		case fieldName:
-			t.Name, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldName, v)
-			}
-		case fieldBackgroundColor:
-			t.BackgroundColor, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldBackgroundColor, v)
-			}
-		case fieldAnimationURL:
-			t.AnimationURL, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldAnimationURL, v)
-			}
-		case fieldYoutubeURL:
-			t.YoutubeURL, ok = v.(string)
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldYoutubeURL, v)
-			}
-		case fieldAttributes:
-			// Attributes — used in the OpenSea Metadata Standard.
-			// See https://docs.opensea.io/docs/metadata-standards#attributes
-			attributes, ok := v.([]interface{})
-			if !ok {
-				return fmt.Errorf("wrong type for field %q: %T", fieldAttributes, v)
-			}
+		case fieldImage, fieldImageData, fieldExternalURL, fieldDescription, fieldName, fieldBackgroundColor, fieldAnimationURL, fieldYoutubeURL, fieldAttributes:
+			// Nothing to do here, those fields are handled by the auxiliary struct automatically.
 
-			for _, value := range attributes {
-				a, ok := value.(map[string]interface{})
-				if !ok {
-					return fmt.Errorf("wrong type for array element in %q: %T", fieldAttributes, value)
-				}
-
-				var attribute Attribute
-				for name, value := range a {
-					switch name {
-					case fieldAttributeDisplayType:
-						attribute.DisplayType, ok = value.(string)
-						if !ok {
-							return fmt.Errorf("wrong type for field %q: %T", "display_type", value)
-						}
-					case fieldAttributeTraitType:
-						attribute.TraitType, ok = value.(string)
-						if !ok {
-							return fmt.Errorf("wrong type for field %q: %T", "trait_type", value)
-						}
-					case fieldAttributeValue:
-						attribute.Value = value
-					case fieldAttributeTraitValue:
-						attribute.TraitValue = value
-					}
-				}
-
-				t.Attributes = append(t.Attributes, attribute)
-			}
 		case fieldProperties:
 			// Properties — used by the ERC-1155 metadata schema.
 			// See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md#erc-1155-metadata-uri-json-schema
@@ -147,6 +94,8 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 			}
 
 		default:
+			// This field is not part of the supported standards, therefore it is added
+			// to the Extras map.
 			t.Extras[k] = v
 		}
 	}
