@@ -72,7 +72,7 @@ func run() int {
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
 	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests per second")
-	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 900, "maximum number of concurrent Lambda invocations")
+	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
 	pflag.DurationVar(&flagMaxBackoff, "max-backoff", 10*time.Minute, "maximum backoff duration for NSQ consumers")

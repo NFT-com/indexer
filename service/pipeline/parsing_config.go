@@ -2,13 +2,15 @@ package pipeline
 
 var DefaultParsingConfig = ParsingConfig{
 	DryRun:           false,
-	MaxAttempts:      10,
-	SanitizeInterval: 1000,
+	MaxAttempts:      3,
+	SplitRatio:       2,
+	SanitizeInterval: 10000,
 }
 
 type ParsingConfig struct {
 	DryRun           bool
-	MaxAttempts      uint
+	MaxAttempts      uint16
+	SplitRatio       uint
 	SanitizeInterval uint
 }
 
@@ -20,9 +22,15 @@ func WithParsingDryRun(enabled bool) ParsingOption {
 	}
 }
 
-func WithParsingMaxAttempts(attempts uint) ParsingOption {
+func WithParsingMaxAttempts(attempts uint16) ParsingOption {
 	return func(cfg *ParsingConfig) {
 		cfg.MaxAttempts = attempts
+	}
+}
+
+func WithSplitRatio(ratio uint) ParsingOption {
+	return func(cfg *ParsingConfig) {
+		cfg.SplitRatio = ratio
 	}
 }
 

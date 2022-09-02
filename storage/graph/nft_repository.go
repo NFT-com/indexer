@@ -112,10 +112,8 @@ func (n *NFTRepository) Touch(touches ...*graph.NFT) error {
 				"uri",
 				"image",
 				"description",
-				"updated_at",
 			).
-			Suffix("ON CONFLICT (id) DO UPDATE SET " +
-				"updated_at = EXCLUDED.updated_at")
+			Suffix("ON CONFLICT (id) DO NOTHING")
 
 		for _, touch := range batch {
 			query = query.Values(
@@ -126,7 +124,6 @@ func (n *NFTRepository) Touch(touches ...*graph.NFT) error {
 				"",
 				"",
 				"",
-				"NOW()",
 			)
 		}
 

@@ -77,7 +77,6 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all the addresses and event types for the given block range.
-	requests := uint(1)
 	logs, err := fetch.Logs(ctx, nil, params.TransferHashes, completion.StartHeight, completion.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
@@ -199,8 +198,7 @@ func (p *CompletionHandler) Handle(ctx context.Context, completion *jobs.Complet
 
 	// Put everything together for the result.
 	result := results.Completion{
-		Job:      completion,
-		Requests: requests,
+		Job: completion,
 	}
 
 	return &result, nil

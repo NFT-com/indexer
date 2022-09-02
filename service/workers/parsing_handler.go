@@ -3,9 +3,7 @@ package workers
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/rs/zerolog"
@@ -79,7 +77,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	fetch := web3.NewLogsFetcher(api)
 
 	// Retrieve the logs for all of the addresses and event types for the given block range.
-	requests := uint(1)
 	entries, err := fetch.Logs(ctx, parsing.ContractAddresses, parsing.EventHashes, parsing.StartHeight, parsing.EndHeight)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch logs: %w", err)
@@ -92,7 +89,7 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 	// For each log, try to parse it into the respective events.
 	var transfers []*events.Transfer
 	var sales []*events.Sale
-	timestamps := make(map[uint64]time.Time)
+	// timestamps := make(map[uint64]time.Time)
 	for _, entry := range entries {
 
 		// skip logs for reverted transactions
@@ -103,9 +100,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 				Msg("skipping log entry for reverted transaction")
 			continue
 		}
-
-		// keep track of all heightSet we need to process to get timestamps
-		timestamps[entry.BlockNumber] = time.Time{}
 
 		eventType := entry.Topics[0]
 		switch eventType.String() {
@@ -121,6 +115,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse ERC721 transfer, skipping log entry")
 				continue
 			}
+
+			// timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, transfer)
 
 			log.Trace().
@@ -144,6 +140,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse ERC1155 transfer, skipping log entry")
 				continue
 			}
+
+			// timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, transfer)
 
 			log.Trace().
@@ -167,7 +165,10 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse ERC1155 batch, skipping log entry")
 				continue
 			}
+
+			// timestamps[entry.BlockNumber] = time.Time{}
 			transfers = append(transfers, batch...)
+
 			for _, transfer := range batch {
 
 				log.Trace().
@@ -192,6 +193,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse Wyvern sale, skipping log entry")
 				continue
 			}
+
+			// timestamps[entry.BlockNumber] = time.Time{}
 			sales = append(sales, sale)
 
 			log.Trace().
@@ -210,6 +213,8 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 					Msg("could not parse Seaport sale, skipping log entry")
 				continue
 			}
+
+			// timestamps[entry.BlockNumber] = time.Time{}
 			sales = append(sales, sale)
 
 			log.Trace().
@@ -225,28 +230,27 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		Int("sales", len(sales)).
 		Msg("all log entries parsed")
 
-	// Get all the headers to assign timestamps to the events.
-	for height := range timestamps {
-		requests++
-		header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
-		if err != nil {
-			return nil, fmt.Errorf("could not get header: %w", err)
-		}
-		timestamps[height] = time.Unix(int64(header.Time), 0)
-	}
+	// // Get all the headers to assign timestamps to the events.
+	// for height := range timestamps {
+	// 	header, err := api.HeaderByNumber(ctx, big.NewInt(0).SetUint64(height))
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("could not get header: %w", err)
+	// 	}
+	// 	timestamps[height] = time.Unix(int64(header.Time), 0)
+	// }
 
-	log.Info().
-		Int("heights", len(timestamps)).
-		Msg("block heights retrieved")
+	// log.Info().
+	// 	Int("heights", len(timestamps)).
+	// 	Msg("block heights retrieved")
 
-	// Go through all logs and assign timestamp of emission
+	// // Go through all logs and assign timestamp of emission
 	for _, transfer := range transfers {
 		transfer.ChainID = parsing.ChainID
-		transfer.EmittedAt = timestamps[transfer.BlockNumber]
+		// 	transfer.EmittedAt = timestamps[transfer.BlockNumber]
 	}
 	for _, sale := range sales {
 		sale.ChainID = parsing.ChainID
-		sale.EmittedAt = timestamps[sale.BlockNumber]
+		// 	sale.EmittedAt = timestamps[sale.BlockNumber]
 	}
 
 	// Put everything together for the result.
@@ -254,7 +258,6 @@ func (p *ParsingHandler) Handle(ctx context.Context, parsing *jobs.Parsing) (*re
 		Job:       parsing,
 		Sales:     sales,
 		Transfers: transfers,
-		Requests:  requests,
 	}
 
 	return &result, nil

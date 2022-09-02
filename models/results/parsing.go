@@ -9,5 +9,4 @@ type Parsing struct {
 	Job       *jobs.Parsing      `json:"job"`
 	Transfers []*events.Transfer `json:"transfers"`
 	Sales     []*events.Sale     `json:"sales"`
-	Requests  uint               `json:"requests"`
 }

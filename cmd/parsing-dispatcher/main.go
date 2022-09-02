@@ -55,7 +55,6 @@ func run() int {
 
 		flagOpenConnections   uint
 		flagIdleConnections   uint
-		flagHeightRange       uint
 		flagRateLimit         uint
 		flagLambdaConcurrency uint
 
@@ -77,8 +76,7 @@ func run() int {
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 128, "maximum number of database connections, -1 for unlimited")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 32, "maximum number of idle connections")
-	pflag.UintVar(&flagHeightRange, "height-range", 10, "maximum heights per parsing job")
-	pflag.UintVar(&flagRateLimit, "rate-limit", 10, "maximum number of API requests per second")
+	pflag.UintVar(&flagRateLimit, "rate-limit", 100, "maximum number of API requests per second")
 	pflag.UintVar(&flagLambdaConcurrency, "lambda-concurrency", 100, "maximum number of concurrent Lambda invocations")
 
 	pflag.DurationVar(&flagMinBackoff, "min-backoff", 1*time.Second, "minimum backoff duration for NSQ consumers")
@@ -166,7 +164,7 @@ func run() int {
 	limit := ratelimit.New(int(flagRateLimit))
 	stage := pipeline.NewParsingStage(context.Background(), log, lambda, flagLambdaName, transferRepo, saleRepo, collectionRepo, nftRepo, ownerRepo, failureRepo, producer, limit,
 		pipeline.WithParsingDryRun(flagDryRun),
-		pipeline.WithParsingMaxAttempts(uint(flagMaxAttempts)),
+		pipeline.WithParsingMaxAttempts(flagMaxAttempts),
 	)
 	consumer.AddConcurrentHandlers(stage, int(flagLambdaConcurrency))
 
