@@ -8,17 +8,20 @@ import (
 
 	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/graph"
+	"github.com/NFT-com/indexer/storage"
 )
 
 type TraitRepository struct {
-	build squirrel.StatementBuilderType
+	build   squirrel.StatementBuilderType
+	retrier storage.Retrier
 }
 
-func NewTraitRepository(db *sql.DB) *TraitRepository {
+func NewTraitRepository(db *sql.DB, retrier storage.Retrier) *TraitRepository {
 
 	cache := squirrel.NewStmtCache(db)
 	s := TraitRepository{
-		build: squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		build:   squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		retrier: retrier,
 	}
 
 	return &s
@@ -62,7 +65,7 @@ func (t *TraitRepository) Upsert(traits ...*graph.Trait) error {
 			)
 		}
 
-		_, err := query.Exec()
+		err := t.retrier.Insert(query)
 		if err != nil {
 			return fmt.Errorf("could not upsert trait batch (start: %d, end: %d): %w", start, end, err)
 		}

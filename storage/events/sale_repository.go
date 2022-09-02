@@ -8,17 +8,20 @@ import (
 
 	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/events"
+	"github.com/NFT-com/indexer/storage"
 )
 
 type SaleRepository struct {
-	build squirrel.StatementBuilderType
+	build   squirrel.StatementBuilderType
+	retrier storage.Retrier
 }
 
-func NewSaleRepository(db *sql.DB) *SaleRepository {
+func NewSaleRepository(db *sql.DB, retrier storage.Retrier) *SaleRepository {
 
 	cache := squirrel.NewStmtCache(db)
 	s := SaleRepository{
-		build: squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		build:   squirrel.StatementBuilder.RunWith(cache).PlaceholderFormat(squirrel.Dollar),
+		retrier: retrier,
 	}
 
 	return &s
@@ -77,7 +80,7 @@ func (s *SaleRepository) Upsert(sales ...*events.Sale) error {
 			)
 		}
 
-		_, err := query.Exec()
+		err := s.retrier.Insert(query)
 		if err != nil {
 			return fmt.Errorf("could not upsert sales batch (start: %d, end: %d): %w", start, end, err)
 		}
@@ -99,7 +102,7 @@ func (s *SaleRepository) Update(sales ...*events.Sale) error {
 			Set("currency_address", sale.CurrencyAddress).
 			Where("id = ?", sale.ID)
 
-		_, err := query.Exec()
+		err := s.retrier.Update(query)
 		if err != nil {
 			return fmt.Errorf("could not update sale event (id: %s): %w", sale.ID, err)
 		}

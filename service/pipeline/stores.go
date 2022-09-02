@@ -7,6 +7,7 @@ import (
 )
 
 type NFTStore interface {
+	Missing(touches ...*graph.NFT) ([]*graph.NFT, error)
 	Touch(touches ...*graph.NFT) error
 	Upsert(nft *graph.NFT) error
 	Delete(deletions ...*graph.NFT) error
