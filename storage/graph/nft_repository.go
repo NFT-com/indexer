@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/lib/pq"
 
 	"github.com/NFT-com/indexer/models/database"
 	"github.com/NFT-com/indexer/models/graph"
@@ -43,7 +42,7 @@ func (n *NFTRepository) Missing(touches ...*graph.NFT) ([]*graph.NFT, error) {
 	result, err := n.build.
 		Select("id").
 		From("nfts").
-		Where("id IN (?)", pq.Array(nftIDs)).
+		Where("id IN ?", nftIDs).
 		Query()
 	if err != nil {
 		return nil, fmt.Errorf("could not execute query: %w", err)
