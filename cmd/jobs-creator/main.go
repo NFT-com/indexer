@@ -73,9 +73,6 @@ func run() int {
 	pflag.UintVar(&flagAddressLimit, "address-limit", 1000, "maximum number of addresses to include in a single job")
 	pflag.UintVar(&flagHeightLimit, "height-limit", 100, "maximum number of heights to include in a single job")
 
-	pflag.UintVar(&flagAddressLimit, "max-addresses", 1000, "maximum number of addresses to include in a single job")
-	pflag.UintVar(&flagHeightLimit, "max-heights", 100, "maximum number of heights to include in a single job")
-
 	pflag.Parse()
 
 	// Logger initialization.
