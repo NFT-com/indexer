@@ -151,8 +151,7 @@ func run() int {
 	// same time, a ticker notifier that will trigger it each interval, and a heads
 	// notifier that will update its height.
 	multi := notifier.NewMultiNotifier(creators...)
-	ticker := notifier.NewTickerNotifier(log, ctx, multi)
-	_, err = notifier.NewBlocksNotifier(log, ctx, flagWSURL, ticker)
+	_, err = notifier.NewBlocksNotifier(log, ctx, flagWSURL, multi)
 	if err != nil {
 		log.Error().Err(err).Str("node_websocket", flagWSURL).Msg("could not initialize blocks notifier")
 		return failure
@@ -164,7 +163,7 @@ func run() int {
 		log.Error().Err(err).Msg("could not get latest block")
 		return failure
 	}
-	ticker.Notify(latest)
+	multi.Notify(latest)
 
 	log.Info().Uint64("height", latest).Msg("jobs creator started")
 	select {
