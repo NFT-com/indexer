@@ -41,7 +41,7 @@ func (n *NFTRepository) Missing(touches ...*graph.NFT) ([]*graph.NFT, error) {
 	}
 
 	result, err := n.build.
-		Select("ids").
+		Select("id").
 		From("nfts").
 		Where("id IN (?)", pq.Array(nftIDs)).
 		Query()
