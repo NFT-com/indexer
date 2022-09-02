@@ -178,19 +178,11 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
 		}
-		switch code {
-		case http.StatusInternalServerError, http.StatusNotFound:
-			var reqErr *results.Error
-			err = json.Unmarshal(payload, &reqErr)
-			if err != nil {
-				return nil, fmt.Errorf("could not decode execution error: %w", err)
-			}
-			if reqErr.Error() == "Token not found" ||
-				strings.Contains(reqErr.Error(), "URI query for nonexistent token") ||
-				strings.Contains(reqErr.Error(), "no link named") {
-				// This is an application-level deletion.
-				return nil, results.ErrTokenNotFound
-			}
+		if code == http.StatusInternalServerError && isTokenNotFound(payload) {
+			return nil, results.ErrTokenNotFound
+		}
+		if code == http.StatusNotFound && isIPFSMissingLink(payload) {
+			return nil, results.ErrTokenNotFound
 		}
 		log.Debug().
 			Str("payload", string(payload)).
@@ -279,4 +271,29 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	return &result, nil
+}
+
+func isTokenNotFound(payload []byte) bool {
+	var reqErr *results.Error
+	err := json.Unmarshal(payload, &reqErr)
+	if err != nil {
+		return false
+	}
+	if reqErr.Error() == "Token not found" {
+		return true
+	}
+	return false
+}
+
+func isIPFSMissingLink(payload []byte) bool {
+	var reqErr *results.Error
+	err := json.Unmarshal(payload, &reqErr)
+	if err != nil {
+		return false
+	}
+	if strings.Contains(reqErr.Error(), "URI query for nonexistent token") ||
+		strings.Contains(reqErr.Error(), "no link named") {
+		return true
+	}
+	return false
 }
