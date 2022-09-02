@@ -75,6 +75,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 		switch k {
 		case fieldImage, fieldImageData, fieldExternalURL, fieldDescription, fieldName, fieldBackgroundColor, fieldAnimationURL, fieldYoutubeURL, fieldAttributes:
 			// Nothing to do here, those fields are handled by the auxiliary struct automatically.
+			continue
 
 		case fieldProperties:
 			// Properties — used by the ERC-1155 metadata schema.
