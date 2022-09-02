@@ -15,12 +15,7 @@ const (
 	fieldAnimationURL    = "animation_url"
 	fieldYoutubeURL      = "youtube_url"
 	fieldProperties      = "properties"
-
-	fieldAttributes           = "attributes"
-	fieldAttributeDisplayType = "display_type"
-	fieldAttributeTraitType   = "trait_type"
-	fieldAttributeValue       = "value"
-	fieldAttributeTraitValue  = "trait_value"
+	fieldAttributes      = "attributes"
 )
 
 type Token struct {
