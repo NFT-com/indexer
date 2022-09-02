@@ -293,45 +293,6 @@ func (p *ParsingStage) process(payload []byte) error {
 
 	}
 
-	if len(additionPayloads) > 0 {
-		err = p.publisher.MultiPublish(params.TopicAddition, additionPayloads)
-		if err != nil {
-			return fmt.Errorf("could not publish addition jobs: %w", err)
-		}
-	}
-
-	// We can go through the sales and process the completion.
-	salesMap := make(map[uint64][]*events.Sale)
-	for _, sale := range result.Sales {
-		if !sale.NeedsCompletion {
-			continue
-		}
-		salesMap[sale.BlockNumber] = append(salesMap[sale.BlockNumber], sale)
-	}
-
-	var completionPayloads [][]byte
-	for height, sales := range salesMap {
-		completion := jobs.Completion{
-			ID:          uuid.NewString(),
-			ChainID:     result.Job.ChainID,
-			StartHeight: height,
-			EndHeight:   height,
-			Sales:       sales,
-		}
-		payload, err := json.Marshal(completion)
-		if err != nil {
-			return fmt.Errorf("could not encode completion job: %w", err)
-		}
-		completionPayloads = append(completionPayloads, payload)
-	}
-
-	if len(completionPayloads) > 0 {
-		err = p.publisher.MultiPublish(params.TopicCompletion, completionPayloads)
-		if err != nil {
-			return fmt.Errorf("could not publish completion job: %w", err)
-		}
-	}
-
 	// Filter the touches so we only create them for NFTs that are not yet in the DB.
 	touches, err = p.nfts.Missing(touches...)
 	if err != nil {
@@ -374,6 +335,45 @@ func (p *ParsingStage) process(payload []byte) error {
 		err = p.owners.Sanitize()
 		if err != nil {
 			return fmt.Errorf("could not sanitize owners: %w", err)
+		}
+	}
+
+	if len(additionPayloads) > 0 {
+		err = p.publisher.MultiPublish(params.TopicAddition, additionPayloads)
+		if err != nil {
+			return fmt.Errorf("could not publish addition jobs: %w", err)
+		}
+	}
+
+	// We can go through the sales and process the completion.
+	salesMap := make(map[uint64][]*events.Sale)
+	for _, sale := range result.Sales {
+		if !sale.NeedsCompletion {
+			continue
+		}
+		salesMap[sale.BlockNumber] = append(salesMap[sale.BlockNumber], sale)
+	}
+
+	var completionPayloads [][]byte
+	for height, sales := range salesMap {
+		completion := jobs.Completion{
+			ID:          uuid.NewString(),
+			ChainID:     result.Job.ChainID,
+			StartHeight: height,
+			EndHeight:   height,
+			Sales:       sales,
+		}
+		payload, err := json.Marshal(completion)
+		if err != nil {
+			return fmt.Errorf("could not encode completion job: %w", err)
+		}
+		completionPayloads = append(completionPayloads, payload)
+	}
+
+	if len(completionPayloads) > 0 {
+		err = p.publisher.MultiPublish(params.TopicCompletion, completionPayloads)
+		if err != nil {
+			return fmt.Errorf("could not publish completion job: %w", err)
 		}
 	}
 
