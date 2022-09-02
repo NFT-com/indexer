@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/NFT-com/indexer/models/jobs"
 )
 
 type BoundaryRepository struct {
@@ -21,35 +22,44 @@ func NewBoundaryRepository(db *sql.DB) *BoundaryRepository {
 	return &b
 }
 
-func (b *BoundaryRepository) ForCombination(chainID uint64, address string, event string) (uint64, error) {
+func (b *BoundaryRepository) All() ([]*jobs.Boundary, error) {
 
 	result, err := b.build.
-		Select("last_height").
+		Select(
+			"chain_id",
+			"contract_address",
+			"event_hash",
+			"next_height",
+		).
 		From("boundaries").
-		Where("chain_id = ?", chainID).
-		Where("LOWER(contract_address) = LOWER(?)", address).
-		Where("event_hash = ?", event).
 		Query()
 	if err != nil {
-		return 0, fmt.Errorf("could not query collection: %w", err)
+		return nil, fmt.Errorf("could not execute query: %w", err)
 	}
 	defer result.Close()
 
-	if result.Err() != nil {
-		return 0, fmt.Errorf("could not get row: %w", result.Err())
-	}
-	if !result.Next() {
-		return 0, sql.ErrNoRows
+	var boundaries []*jobs.Boundary
+	for result.Next() {
+
+		if result.Err() != nil {
+			return nil, fmt.Errorf("could not get next row: %w", result.Err())
+		}
+
+		var boundary jobs.Boundary
+		err = result.Scan(
+			&boundary.ChainID,
+			&boundary.ContractAddress,
+			&boundary.EventHash,
+			&boundary.NextHeight,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("could not scan next row: %w", err)
+		}
+
+		boundaries = append(boundaries, &boundary)
 	}
 
-	var height uint64
-	err = result.Scan(&height)
-	if err != nil {
-		return 0, fmt.Errorf("could not scan row: %w", err)
-	}
-
-	return height, nil
-
+	return boundaries, nil
 }
 
 func (b *BoundaryRepository) Upsert(chainID uint64, addresses []string, events []string, height uint64, jobID string) error {
@@ -64,12 +74,12 @@ func (b *BoundaryRepository) Upsert(chainID uint64, addresses []string, events [
 			"chain_id",
 			"contract_address",
 			"event_hash",
-			"last_height",
+			"next_height",
 			"last_id",
 			"updated_at",
 		).
 		Suffix("ON CONFLICT (chain_id, contract_address, event_hash) DO UPDATE SET " +
-			"last_height = EXCLUDED.last_height, " +
+			"next_height = EXCLUDED.next_height, " +
 			"last_id = EXCLUDED.last_id, " +
 			"updated_at = EXCLUDED.updated_at")
 

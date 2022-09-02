@@ -2,13 +2,12 @@ package pipeline
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -64,70 +63,74 @@ func (c *CreationStage) Notify(height uint64) {
 
 func (c *CreationStage) execute(height uint64) error {
 
-	var combinations []*jobs.Combination
-
-	// Build a list of all possible combinations of collection
-	// and event hash for this chain.
-	collectionCombinations, err := c.collections.Combinations(c.cfg.ChainID)
-	if err != nil {
-		return fmt.Errorf("could not get collection combinations: %w", err)
-	}
-	combinations = append(combinations, collectionCombinations...)
-
-	// Build a list of all possible combinations of marketplace
-	// address and event hash for this chain.
-	marketplaceCombinations, err := c.marketplaces.Combinations(c.cfg.ChainID)
-	if err != nil {
-		return fmt.Errorf("could not get marketplace combinations: %w", err)
-	}
-	combinations = append(combinations, marketplaceCombinations...)
-
-	// Then, we get the latest job for each combination in order to update the
-	// start height where necessary.
-	for _, combination := range combinations {
-
-		last, err := c.boundaries.ForCombination(combination.ChainID, combination.ContractAddress, combination.EventHash)
-		if errors.Is(err, sql.ErrNoRows) {
-			c.log.Debug().
-				Uint64("chain_id", combination.ChainID).
-				Str("contract_address", combination.ContractAddress).
-				Str("event_hash", combination.EventHash).
-				Uint64("start_height", combination.StartHeight).
-				Msg("no last job found, using start height")
-			continue
-		}
-		if err != nil {
-			return fmt.Errorf("could not get latest parsing job: %w", err)
-		}
-
-		if last >= combination.StartHeight {
-			combination.StartHeight = last + 1
-			c.log.Debug().
-				Uint64("chain_id", combination.ChainID).
-				Str("contract_address", combination.ContractAddress).
-				Str("event_hash", combination.EventHash).
-				Uint64("start_height", combination.StartHeight).
-				Uint64("last_height", last).
-				Msg("updating start height with latest height")
-		}
-	}
-
 	// We then enter a loop where we keep creating jobs until we hit the stop condition...
-	created := uint(0)
-	for created < c.cfg.BatchSize {
+	var last time.Time
+	var boundaries []*jobs.Boundary
+	for {
+
+		// If we haven't checked for new combinations since check interval duration,
+		// we do so now and update our boundaries.
+		now := time.Now()
+		if now.Sub(last) > c.cfg.CheckInterval {
+			last = now
+
+			var combinations []*jobs.Combination
+
+			// Build a list of all possible combinations of collection
+			// and event hash for this chain.
+			collectionCombinations, err := c.collections.Combinations(c.cfg.ChainID)
+			if err != nil {
+				return fmt.Errorf("could not get collection combinations: %w", err)
+			}
+			combinations = append(combinations, collectionCombinations...)
+
+			// Build a list of all possible combinations of marketplace
+			// address and event hash for this chain.
+			marketplaceCombinations, err := c.marketplaces.Combinations(c.cfg.ChainID)
+			if err != nil {
+				return fmt.Errorf("could not get marketplace combinations: %w", err)
+			}
+			combinations = append(combinations, marketplaceCombinations...)
+
+			// Get the current boundaries from the DB.
+			boundaries, err = c.boundaries.All()
+			if err != nil {
+				return fmt.Errorf("could not get boundaries: %w", err)
+			}
+
+			// Then we figure out which combination is lacking a boundary and insert it
+			// into the database.
+			boundaryLookup := make(map[string]*jobs.Boundary)
+			for _, boundary := range boundaries {
+				boundaryLookup[boundary.Key()] = boundary
+			}
+			for _, combination := range combinations {
+				_, ok := boundaryLookup[combination.Key()]
+				if ok {
+					continue
+				}
+				boundary := jobs.Boundary{
+					ChainID:         combination.ChainID,
+					ContractAddress: combination.ContractAddress,
+					EventHash:       combination.EventHash,
+					NextHeight:      combination.StartHeight,
+				}
+				boundaries = append(boundaries, &boundary)
+			}
+		}
 
 		// After determining the start height for every combination, we identify one of the
 		// contract addresses with the lowest start height. We will limit the jobs to the
 		// event hashes of that contract.
 		lowest := uint64(math.MaxUint64)
 		var sentinel string
-		for _, combination := range combinations {
-			if combination.StartHeight < lowest {
-				lowest = combination.StartHeight
-				sentinel = combination.ContractAddress
+		for _, boundary := range boundaries {
+			if boundary.NextHeight < lowest {
+				lowest = boundary.NextHeight
+				sentinel = boundary.ContractAddress
 				c.log.Debug().
-					Uint64("height", combination.StartHeight).
-					Str("contract_address", combination.ContractAddress).
+					Uint64("height", boundary.NextHeight).
+					Str("contract_address", boundary.ContractAddress).
 					Msg("updated sentinel smart contract for event hashes")
 			}
 		}
@@ -136,12 +139,12 @@ func (c *CreationStage) execute(height uint64) error {
 		// needed because we have split everything into combinations per event hash, so
 		// we just match all of those with the same address here.
 		hashSet := make(map[string]struct{})
-		for _, combination := range combinations {
-			if combination.ContractAddress == sentinel {
-				hashSet[combination.EventHash] = struct{}{}
+		for _, boundary := range boundaries {
+			if boundary.ContractAddress == sentinel {
+				hashSet[boundary.EventHash] = struct{}{}
 				c.log.Debug().
-					Str("contract_address", combination.ContractAddress).
-					Str("event_hash", combination.EventHash).
+					Str("contract_address", boundary.ContractAddress).
+					Str("event_hash", boundary.EventHash).
 					Msg("added event hash for sentinel smart contract")
 			}
 		}
@@ -163,7 +166,7 @@ func (c *CreationStage) execute(height uint64) error {
 		// Now we want to include all of the contract addresses that have a start height
 		// at or below our end height, and an event type that is part of the current run.
 		addressSet := make(map[string]struct{})
-		for _, combination := range combinations {
+		for _, boundary := range boundaries {
 
 			// Stop if we have reached the maximum number of addresses.
 			if uint(len(addressSet)) >= c.cfg.AddressLimit {
@@ -171,18 +174,18 @@ func (c *CreationStage) execute(height uint64) error {
 			}
 
 			// Skip if start height above end.
-			if combination.StartHeight > end {
+			if boundary.NextHeight > end {
 				continue
 			}
 
 			// Skip if event hash is not in current hash set.
-			_, ok := hashSet[combination.EventHash]
+			_, ok := hashSet[boundary.EventHash]
 			if !ok {
 				continue
 			}
 
-			addressSet[combination.ContractAddress] = struct{}{}
-			combination.StartHeight = end + 1
+			addressSet[boundary.ContractAddress] = struct{}{}
+			boundary.NextHeight = end + 1
 		}
 
 		// Now, we simply need to create the next job with the list of contract addresses
@@ -218,9 +221,7 @@ func (c *CreationStage) execute(height uint64) error {
 			return fmt.Errorf("could not insert parsing job: %w", err)
 		}
 
-		created++
-
-		err = c.boundaries.Upsert(c.cfg.ChainID, parsing.ContractAddresses, parsing.EventHashes, parsing.EndHeight, parsing.ID)
+		err = c.boundaries.Upsert(c.cfg.ChainID, parsing.ContractAddresses, parsing.EventHashes, parsing.EndHeight+1, parsing.ID)
 		if err != nil {
 			return fmt.Errorf("could not update combination boundaries: %w", err)
 		}

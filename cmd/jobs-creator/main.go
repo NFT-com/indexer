@@ -55,7 +55,7 @@ func run() int {
 
 		flagOpenConnections uint
 		flagIdleConnections uint
-		flagWriteInterval   time.Duration
+		flagCheckInterval   time.Duration
 		flagAddressLimit    uint
 		flagHeightLimit     uint
 	)
@@ -69,7 +69,7 @@ func run() int {
 
 	pflag.UintVar(&flagOpenConnections, "db-connection-limit", 16, "maximum number of open database connections")
 	pflag.UintVar(&flagIdleConnections, "db-idle-connection-limit", 4, "maximum number of idle database connections")
-	pflag.DurationVar(&flagWriteInterval, "write-interval", 100*time.Millisecond, "interval between checks for job writing")
+	pflag.DurationVar(&flagCheckInterval, "check-interval", 2*time.Second, "interval between checks for new job combinations")
 	pflag.UintVar(&flagAddressLimit, "address-limit", 10, "maximum number of addresses to include in a single job")
 	pflag.UintVar(&flagHeightLimit, "height-limit", 10, "maximum number of heights to include in a single job")
 
@@ -135,6 +135,7 @@ func run() int {
 	for _, network := range networks {
 		creator := pipeline.NewCreationStage(log, collectionRepo, marketplaceRepo, boundaryRepo, producer,
 			pipeline.WithChainID(network.ChainID),
+			pipeline.WithCheckInterval(flagCheckInterval),
 			pipeline.WithAddressLimit(flagAddressLimit),
 			pipeline.WithHeightLimit(flagHeightLimit),
 		)
@@ -150,10 +151,7 @@ func run() int {
 	// same time, a ticker notifier that will trigger it each interval, and a heads
 	// notifier that will update its height.
 	multi := notifier.NewMultiNotifier(creators...)
-	ticker := notifier.NewTickerNotifier(log, ctx, multi,
-		notifier.WithNotifyInterval(flagWriteInterval),
-	)
-	_, err = notifier.NewBlocksNotifier(log, ctx, flagWSURL, ticker)
+	_, err = notifier.NewBlocksNotifier(log, ctx, flagWSURL, multi)
 	if err != nil {
 		log.Error().Err(err).Str("node_websocket", flagWSURL).Msg("could not initialize blocks notifier")
 		return failure
@@ -165,7 +163,7 @@ func run() int {
 		log.Error().Err(err).Msg("could not get latest block")
 		return failure
 	}
-	ticker.Notify(latest)
+	multi.Notify(latest)
 
 	log.Info().Uint64("height", latest).Msg("jobs creator started")
 	select {

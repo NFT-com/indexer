@@ -3,7 +3,7 @@ CREATE TABLE boundaries
     chain_id         NUMERIC      NOT NULL,
     contract_address VARCHAR(128) NOT NULL,
     event_hash       VARCHAR(256) NOT NULL,
-    last_height      NUMERIC      NOT NULL,
+    next_height      NUMERIC      NOT NULL,
     last_id          UUID         NOT NULL,
     updated_at       TIMESTAMP    NOT NULL,
     PRIMARY KEY (chain_id, contract_address, event_hash)
