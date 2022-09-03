@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/gammazero/deque"
 	"github.com/google/uuid"
 	"github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"go.uber.org/ratelimit"
+
+	cache "github.com/Code-Hex/go-generics-cache"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -36,6 +39,7 @@ type ParsingStage struct {
 	owners      OwnerStore
 	failures    FailureStore
 	publisher   Publisher
+	cache       *cache.Cache[string, struct{}]
 	limit       ratelimit.Limiter
 	cfg         ParsingConfig
 }
@@ -74,6 +78,7 @@ func NewParsingStage(
 		failures:    failures,
 		publisher:   publisher,
 		limit:       limit,
+		cache:       cache.New[string, struct{}](),
 		cfg:         cfg,
 	}
 
@@ -256,12 +261,15 @@ func (p *ParsingStage) process(payload []byte) error {
 		}
 
 		// Create a placeholder NFT that we will create in the DB.
-		touch := graph.NFT{
-			ID:           transfer.NFTID(),
-			CollectionID: collection.ID,
-			TokenID:      transfer.TokenID,
+		if !p.cache.Contains(transfer.NFTID()) {
+			p.cache.Set(transfer.NFTID(), struct{}{}, cache.WithExpiration(15*time.Minute))
+			touch := graph.NFT{
+				ID:           transfer.NFTID(),
+				CollectionID: collection.ID,
+				TokenID:      transfer.TokenID,
+			}
+			touches = append(touches, &touch)
 		}
-		touches = append(touches, &touch)
 
 		// Create addition jobs for transfers that come from the zero address.
 		if transfer.SenderAddress == params.AddressZero {
