@@ -61,11 +61,8 @@ func Permanent(err error) bool {
 	case strings.Contains(msg, "unknown URI format"):
 		return true
 
-	// this should be retried, but we should first properly handle collections
-	// where this means it will never work to avoid pipeline clogging
-	// TODO: implement proper handling where 500 means deletion
-	// => https://github.com/NFT-com/indexer/issues/228
-	case strings.Contains(msg, "bad response code (500)"):
+	// forbidden is always a permanent error
+	case strings.Contains(msg, "bad response code (403)"):
 		return true
 
 	// this should be retried, we we should first properly handle collections
@@ -73,6 +70,13 @@ func Permanent(err error) bool {
 	// TODO: properly handle IPFS-based deletion of tokens
 	// => https://github.com/NFT-com/indexer/issues/230
 	case strings.Contains(msg, "bad response code (404)"):
+		return true
+
+	// this should be retried, but we should first properly handle collections
+	// where this means it will never work to avoid pipeline clogging
+	// TODO: implement proper handling where 500 means deletion
+	// => https://github.com/NFT-com/indexer/issues/228
+	case strings.Contains(msg, "bad response code (500)"):
 		return true
 
 	default:
