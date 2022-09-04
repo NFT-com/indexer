@@ -9,6 +9,7 @@ import (
 
 	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog"
+	"github.com/tailscale/hujson"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 
@@ -209,6 +210,11 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	default:
 		return nil, fmt.Errorf("unknown URI format")
+	}
+
+	payload, err = hujson.Standardize(payload)
+	if err != nil {
+		return nil, fmt.Errorf("could not standardize payload: %w", err)
 	}
 
 	var token metadata.Token
