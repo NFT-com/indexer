@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/ipfs/go-cid"
@@ -176,12 +177,19 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 
 	// Finally, we check if we have a payload already, or if we need to fetch it remotely.
 	var payload []byte
+	var code int
 	switch {
 
 	case strings.HasPrefix(privateURI, protocol.HTTP), strings.HasPrefix(privateURI, protocol.HTTPS):
-		payload, err = fetchMetadata.Payload(ctx, privateURI)
+		payload, code, err = fetchMetadata.Payload(ctx, privateURI)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch remote metadata: %w", err)
+		}
+		if code == http.StatusInternalServerError && isTokenNotFound(payload) {
+			return nil, results.ErrTokenNotFound
+		}
+		if code == http.StatusNotFound && isIPFSMissingLink(payload) {
+			return nil, results.ErrTokenNotFound
 		}
 		log.Debug().
 			Str("payload", string(payload)).
@@ -275,4 +283,29 @@ func (a *AdditionHandler) Handle(ctx context.Context, addition *jobs.Addition) (
 	}
 
 	return &result, nil
+}
+
+func isTokenNotFound(payload []byte) bool {
+	var reqErr *results.Error
+	err := json.Unmarshal(payload, &reqErr)
+	if err != nil {
+		return false
+	}
+	if reqErr.Error() == "Token not found" {
+		return true
+	}
+	return false
+}
+
+func isIPFSMissingLink(payload []byte) bool {
+	var reqErr *results.Error
+	err := json.Unmarshal(payload, &reqErr)
+	if err != nil {
+		return false
+	}
+	if strings.Contains(reqErr.Error(), "URI query for nonexistent token") ||
+		strings.Contains(reqErr.Error(), "no link named") {
+		return true
+	}
+	return false
 }

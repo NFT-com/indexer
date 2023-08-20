@@ -33,22 +33,18 @@ func NewMetadataFetcher(options ...MetadataOption) *MetadataFetcher {
 	return &m
 }
 
-func (m *MetadataFetcher) Payload(_ context.Context, uri string) ([]byte, error) {
+func (m *MetadataFetcher) Payload(_ context.Context, uri string) ([]byte, int, error) {
 
 	res, err := m.client.Get(uri)
 	if err != nil {
-		return nil, fmt.Errorf("could not execute request: %w", err)
+		return nil, 0, fmt.Errorf("could not execute request: %w", err)
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("bad response code (%d)", res.StatusCode)
-	}
-
 	payload, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("could not read response body: %w", err)
+		return nil, res.StatusCode, fmt.Errorf("could not read response body: %w", err)
 	}
 
-	return payload, nil
+	return payload, res.StatusCode, nil
 }
